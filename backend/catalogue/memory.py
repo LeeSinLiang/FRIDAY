@@ -4,14 +4,14 @@ from collections.abc import Callable, Sequence
 
 from catalogue.colour import is_near
 from catalogue.facets import memory_facets, without_fit
-from catalogue.text import tokenize
+from catalogue.text import title_words, tokenize
 from catalogue.types import Listing, SearchResponse
 
 
 def _token_hits(listing: Listing, token: str) -> bool:
     # Same three ways a token can hit as to_es_query: a title word, the category, or part of a material.
     return (
-        token in tokenize(listing.title)
+        token in title_words(listing.title)
         or token == listing.category
         or any(token in material.lower() for material in listing.materials)
     )

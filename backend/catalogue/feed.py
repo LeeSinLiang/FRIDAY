@@ -36,3 +36,4 @@ def seed_count() -> int:
 def load_catalogue() -> tuple[Listing, ...]:
     """The full catalogue both backends serve: the hero feed plus deterministic seed listings."""
     return load_listings() + tuple(generate(seed_count()))
+

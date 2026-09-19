@@ -41,6 +41,13 @@ def _to_int(name: str, raw: str) -> int:
         raise ValueError(f"{name} must be an integer, got {raw!r}") from exc
 
 
+def _values(params: Mapping[str, str], name: str) -> list[str]:
+    # A param may repeat (material=oak&material=steel): a Program can hold several clauses of one kind,
+    # and they are ANDed. Django's QueryDict exposes repeats through getlist; a plain dict has one value.
+    raw_values = params.getlist(name) if hasattr(params, "getlist") else [params.get(name) or ""]
+    return [value.strip() for value in raw_values if value and value.strip()]
+
+
 def parse_search_params(params: Mapping[str, str]) -> SearchQuery:
     """Build a SearchQuery from request params.
 
@@ -49,8 +56,7 @@ def parse_search_params(params: Mapping[str, str]) -> SearchQuery:
     """
     raw_clauses = []
     for name, (kind, field, is_int) in PARAM_TO_CLAUSE.items():
-        raw = (params.get(name) or "").strip()
-        if raw:
+        for raw in _values(params, name):
             raw_clauses.append({"k": kind, field: _to_int(name, raw) if is_int else raw})
     limit = _to_int("limit", params.get("limit") or str(DEFAULT_LIMIT))
     offset = _to_int("offset", params.get("offset") or "0")
