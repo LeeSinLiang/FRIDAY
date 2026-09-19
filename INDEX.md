@@ -15,6 +15,9 @@ Start here to find project docs and team work logs. Add links as docs are create
 
 ## Feature documentation
 
+- [Furniture collaborator handoff and approved design image](docs/frontend/3d-object/collaborator-handoff.md)
+- [Rendering engine and furniture creation workflow](docs/frontend/rendering-and-furniture-workflow.md)
+
 - [Local setup and full-stack launcher](README.md#local-setup)
 - [Backend API, frontend/3D entry points, and configuration paths](README.md#layout)
 - [Verification and dependency commands](README.md#checks-and-common-commands)
