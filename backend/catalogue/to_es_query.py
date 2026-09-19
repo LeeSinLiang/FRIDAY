@@ -6,6 +6,7 @@ Structured constraints go in filter context (cached, unscored). Only free text g
 from collections.abc import Callable, Sequence
 
 from catalogue.colour import is_near
+from catalogue.facets import es_aggs
 from catalogue.text import tokenize
 
 _WILDCARD_SPECIALS = str.maketrans({"*": r"\*", "?": r"\?", "\\": "\\\\"})
@@ -72,6 +73,7 @@ def to_es_query(find: Sequence, palette: Sequence[str], limit: int, offset: int)
         "from": offset,
         "size": limit,
         "track_total_hits": True,
+        "aggs": es_aggs(find),
         # id tiebreak keeps paging stable when scores tie, which is always without a text clause.
         "sort": [{"_score": "desc"}, {"id": "asc"}],
     }

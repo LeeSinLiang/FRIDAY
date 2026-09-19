@@ -1,6 +1,6 @@
 # Catalogue, search and language layer
 
-Owner: Saketh. Status: `GET /api/search` live on the in-memory backend; Elasticsearch backend live and verified against the cluster (40 listings indexed). `compile()` lands next.
+Owner: Saketh. Status: `GET /api/search` live on the in-memory backend; Elasticsearch backend live and verified against the cluster (12,040 listings indexed), with facets. `compile()` lands next.
 
 ## What this is
 
@@ -22,6 +22,8 @@ This layer never does geometry.
 | `backend/catalogue/params.py` | Query params → find clauses. Pure |
 | `backend/catalogue/memory.py` | In-memory search backend. Pure. Default and demo fallback |
 | `backend/catalogue/colour.py` | "About this colour" matching by RGB distance |
+| `backend/catalogue/seed.py` | 12,000 deterministic synthetic listings (`source: seed`), colours from the hero palette only |
+| `backend/catalogue/facets.py` | Facet definitions for both backends: memory counting and the matching Elasticsearch aggregations. Pure |
 | `backend/catalogue/to_es_query.py` | Find clauses → Elasticsearch body. Pure; the model never sees this |
 | `backend/catalogue/es.py` | Elasticsearch client and search backend. The only search code that does cluster I/O |
 | `backend/catalogue/ingest.py` | Bulk-indexes the feed: `uv run python -m catalogue.ingest` from `backend/` |
@@ -44,9 +46,17 @@ Public (`AllowAny`). Trailing slash optional. All params optional and ANDed toge
 | `colour` | `#rrggbb`; matches listings with a nearby shade, not an exact hex |
 | `material` | Case-insensitive substring of a material |
 | `fits_w_mm` | Integer **mm**; keeps listings whose width is at most this |
-| `limit`, `offset` | Paging. `limit` 1–100, default 24 |
+| `limit`, `offset` | Paging. `limit` 1–100, default 24. `offset + limit` at most 10,000 (the Elasticsearch result window) |
 
-Returns `SearchResponse`: `{ items: Listing[], total }`. `facets` is absent until aggregations ship.
+Returns `SearchResponse`: `{ items, total, facets }`. Facets describe the whole result set, not the page:
+
+| Facet | Meaning | Elasticsearch |
+| --- | --- | --- |
+| `category` | `{ key, count }[]`, count descending then key; empty categories omitted | `terms` |
+| `price_band` | `{ key, count }[]` in band order, empty bands kept. Keys are cent ranges, upper bound exclusive: `0-10000`, `10000-25000`, `25000-50000`, `50000-100000`, `100000+` | `range` |
+| `fits_room` | How many matching listings are at most `fits_w_mm` wide. Present only when `fits_w_mm` is given | `filter` |
+
+Band keys are identifiers; the UI owns the display text.
 A malformed param returns `400 { error: "invalid_search_params", detail }`.
 
 ```bash
@@ -78,7 +88,7 @@ different order than from memory.
 
 Colour is where the backends could drift: memory tests RGB distance per listing, Elasticsearch
 filters on the indexed hexes near the requested colour. They agree exactly while the palette holds
-every indexed colour. The palette is read from the index with a terms aggregation (up to 2,000
+every indexed colour. Seed listings only use the 30 hero colours, so it stays far below the cap. The palette is read from the index with a terms aggregation (up to 2,000
 distinct colours) and cached per process, so restart the API after re-ingesting new colours.
 
 Only free text scores. No embeddings, vector search or `semantic_text`, by design.
@@ -86,6 +96,12 @@ Only free text scores. No embeddings, vector search or `semantic_text`, by desig
 The index is created by hand with the agreed mapping. `ingest` refuses to run if the index is
 missing (exit 2), because a bulk write would auto-create it with a guessed mapping. Index name
 defaults to `listings`; override with `ELASTIC_INDEX`. Re-ingesting overwrites by listing id.
+
+## Catalogue size
+
+The catalogue is the 40 hero items plus `CATALOGUE_SEED_COUNT` seed listings (default 12,000),
+generated deterministically so the memory backend and the index always hold the same data.
+`uv run python -m catalogue.ingest` indexes all of it in about three seconds.
 
 ## Rules
 

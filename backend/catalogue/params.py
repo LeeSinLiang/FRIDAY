@@ -9,6 +9,9 @@ from catalogue.dsl.schema import FindClause
 
 DEFAULT_LIMIT = 24
 MAX_LIMIT = 100
+# Elasticsearch refuses from + size beyond index.max_result_window. Both backends share the cap,
+# so paging behaves the same whichever one answers.
+MAX_WINDOW = 10000
 
 # param name -> (clause kind, clause field, is integer)
 PARAM_TO_CLAUSE: dict[str, tuple[str, str, bool]] = {
@@ -53,4 +56,6 @@ def parse_search_params(params: Mapping[str, str]) -> SearchQuery:
     offset = _to_int("offset", params.get("offset") or "0")
     if not 1 <= limit <= MAX_LIMIT or offset < 0:
         raise ValueError(f"limit must be 1..{MAX_LIMIT} and offset must be >= 0")
+    if offset + limit > MAX_WINDOW:
+        raise ValueError(f"offset + limit must be <= {MAX_WINDOW}; narrow the search instead of paging deeper")
     return SearchQuery(find=_FIND_LIST.validate_python(raw_clauses), limit=limit, offset=offset)

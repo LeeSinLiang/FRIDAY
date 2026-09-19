@@ -80,6 +80,16 @@ function DevSearch() {
       <p>GET /api/search?{query}</p>
       {error && <p style={{ color: 'crimson' }}>error: {error}</p>}
       {result && <p>{result.total} total, showing {result.items.length}</p>}
+      {result?.facets?.fits_room !== undefined && (
+        <p style={{ fontSize: 20 }}><strong>{result.facets.fits_room}</strong> fit a {filters.fits_w_mm} mm gap</p>
+      )}
+      {result?.facets && (
+        <p>
+          {result.facets.category.map((bucket) => `${bucket.key} ${bucket.count}`).join(' · ')}
+          <br />
+          {result.facets.price_band.map((bucket) => `${bucket.key}¢ ${bucket.count}`).join(' · ')}
+        </p>
+      )}
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {result?.items.map((item) => (
           <li key={item.id} style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 8 }}>

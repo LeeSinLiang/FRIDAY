@@ -6,6 +6,7 @@ from functools import lru_cache
 
 from elasticsearch import Elasticsearch
 
+from catalogue.facets import facets_from_aggs
 from catalogue.to_es_query import to_es_query
 from catalogue.types import Listing, SearchResponse
 
@@ -58,4 +59,5 @@ def search(find: Sequence, limit: int, offset: int) -> SearchResponse:
     return SearchResponse(
         items=[Listing.model_validate(hit["_source"]) for hit in hits["hits"]],
         total=hits["total"]["value"],
+        facets=facets_from_aggs(response["aggregations"]),
     )

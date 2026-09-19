@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from catalogue import es, memory
-from catalogue.feed import load_listings
+from catalogue.feed import load_catalogue
 from catalogue.params import SearchQuery, parse_search_params
 from catalogue.types import SearchResponse, to_wire
 
@@ -25,8 +25,8 @@ def run_search(query: SearchQuery) -> tuple[SearchResponse, str]:
             logger.warning("elastic search failed, using memory: HTTP %s", exc.status_code)
         except (TransportError, KeyError) as exc:
             logger.warning("elastic search unavailable, using memory: %s", type(exc).__name__)
-        return memory.search(load_listings(), query.find, query.limit, query.offset), "memory-fallback"
-    return memory.search(load_listings(), query.find, query.limit, query.offset), "memory"
+        return memory.search(load_catalogue(), query.find, query.limit, query.offset), "memory-fallback"
+    return memory.search(load_catalogue(), query.find, query.limit, query.offset), "memory"
 
 
 # Browsing the catalogue is public, like any storefront. Cart and checkout auth are decided elsewhere.

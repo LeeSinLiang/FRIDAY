@@ -1,3 +1,5 @@
+from unittest import mock
+
 from django.test import SimpleTestCase
 from rest_framework.test import APIClient
 
@@ -67,17 +69,29 @@ class MemorySearchTests(SimpleTestCase):
 class ParamTests(SimpleTestCase):
     def test_bad_values_raise(self):
         for params in ({"price_max": "cheap"}, {"category": "spaceship"}, {"colour": "green"},
-                       {"limit": "0"}, {"fits_w_mm": "-5"}):
+                       {"limit": "0"}, {"fits_w_mm": "-5"}, {"limit": "100", "offset": "9901"}):
             with self.assertRaises(ValueError, msg=str(params)):
                 parse_search_params(params)
 
 
+    def test_deepest_allowed_page(self):
+        query = parse_search_params({"limit": "100", "offset": "9900"})
+        self.assertEqual((query.limit, query.offset), (100, 9900))
+
+
 class SearchEndpointTests(SimpleTestCase):
+    def setUp(self):
+        # Hero feed only, so the expected totals stay readable.
+        patcher = mock.patch("catalogue.views.load_catalogue", return_value=load_listings())
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_public_and_shaped_like_search_response(self):
         response = APIClient().get("/api/search?category=armchair&fits_w_mm=900")
         self.assertEqual(response.status_code, 200)
         body = response.json()
-        self.assertEqual(set(body), {"items", "total"})
+        self.assertEqual(set(body), {"items", "total", "facets"})
+        self.assertEqual(body["facets"]["fits_room"], 4)
         self.assertEqual(body["total"], 4)
         SearchResponse.model_validate(body)
 
