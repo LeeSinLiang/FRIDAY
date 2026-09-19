@@ -6,12 +6,19 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## In progress
 
-- **Region solver** on `codex/saketh-region-solver` (pure TypeScript in `frontend/src/region/`, binds to Sin's scene types). Halfway check-in after floor mask, erosion and SVG debug view; then the six place clauses. Deepgram transcription follows as its own phase.
+- None. Next, each off fresh `main`: catalogue products placeable in a scene; floor overlay on the Three.js scene; Deepgram transcription.
 
 ## Next
 
 
 ## Done
+
+- **Region solver (2026-09-19).** Branch `codex/saketh-region-solver`. Doc: [docs/frontend/region-solver.md](docs/frontend/region-solver.md), linked from `INDEX.md`. Handoff notes appended to `TODO_SIN.md`.
+  - `frontend/src/region/`: `types.ts`, `boundary.ts` (only unit crossing, listing adapter, wall mapping), `grid.ts`, `occupancy.ts`, `invariants.ts` (calls Sin's `validatePlacement` per grid point), `geometry.ts`, `clauses.ts` (six clause rules, every/some split, tunables, `ALLOW_STACKING = false`), `solve.ts`, `svg.ts`, `debugScenes.ts`, `devScene.ts`, `rng.ts`, tests. `frontend/scripts/region-debug.mjs`.
+  - Decisions by Saketh: edge-to-edge distances; `against` fixes yaw with 5 cm tolerance; `near` default 75 cm; door swing always kept free; 90 cm sill is a commented assumption; `on(item)` dropped behind a flag; dropped clauses shown on the dev page.
+  - Dev page solves the compiled sentence against a stub of the mock room and shows the floor, legal counts per rotation and dropped clauses in red.
+  - Shared files touched, additively: `frontend/src/scene/all-tests.ts` (one import), `frontend/package.json` (one script), `INDEX.md`, `TODO_SIN.md` (appended section).
+  - Verification: `npm test` — 51 tests (24 new), `npm run build` OK, backend 123 tests OK. Property tests, seeded, no new dependency: mask equals `validatePlacement` at every grid point over 40 random scenes × 4 rotations; 2,000 snapped drag poses each land on a sample; no lit point overlaps blocked or unknown occupancy; over 60 random scenes with random clauses every lit point (>100,000) is accepted by the editor and clauses only ever narrow. Dev page driven in headless Chrome: dropped `on(sofa-1)` shown with its reason; "nothing fits" shown when 5 ft from every wall is impossible in a 4.2 × 3.6 m room. Debug SVGs inspected by eye.
 
 - **Merge and sync before the solver (2026-09-19).** Merged PR #13 (wall exceptions) to `main`; `any_wall` dual meaning approved by Saketh. Synced `main` after Sin's Three.js editor merge: `./setup.sh` OK, 123 backend tests OK (1 skipped), `npm run build` OK, 27 frontend tests OK. Re-read `AGENTS.md` (one new rule: every doc under `docs/` needs a working `INDEX.md` link before handing back) and `INDEX.md`. Read `docs/frontend/3d-engine-plan.md`, the splatting pivot doc, `docs/backend/contracts/scene-api.md`, and `frontend/src/scene/{types,units,placement,useFurnitureDrag}.ts`. Findings reported to Saketh and decided: sample the mask at grid points so it coincides with drag snap; fixed `CELL_CM = 5`, never derived from `SCENE_UNIT_CM`; emit and accept Sin's `floor-grid-v1`; unknown is never lit; walls west=x0, east=x=width, north=z0, south=z=depth (Sin to confirm); no new test dependency; tests join `all-tests.ts`. Integration blocker raised by Saketh with Sin: the scene accepts only the 3 fixture products, so a catalogue `Listing` cannot be placed yet.
 
