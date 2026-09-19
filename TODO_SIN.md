@@ -4,13 +4,23 @@ Record all agent work here when working for Sin. Include status, file paths, ver
 
 ## In progress
 
+- Preparing the user-requested merge of the Three.js build into local main, followed by a new codex/gaussian-splatting branch. Reviewed pending research documentation. Fresh checks passed: 27 frontend tests, 22 backend tests, TypeScript/Vite build, Django check, migration consistency, all nine docs indexed with valid local links, and diff whitespace. Existing large Three.js chunk warning remains; no fetch or push requested.
+
 - Foundation implemented on feat/3d-engine-frontend. Incoming production furniture models remain pending; user-supplied Mori OTF fonts are now integrated.
 
 ## Next
 
+- Selected pivot: migrate the viewport to first-person PlayCanvas with SuperSplat-prepared fixed rooms; preserve GLB furniture, React/Mori UI and Django contracts. First prove one calibrated splat plus one movable GLB; renderer migration is not implemented yet.
+
 - Integrate collaborator GLBs/metadata and agreed reconstructed room input. Run a final physical trackpad/reduced-motion/device rehearsal. Full mesh/clearance validation and valid-space overlay follow separately.
 
 ## Done
+
+- 2026-09-19: Found existing room splat candidates and recorded them in the already-indexed docs/frontend/room-capture/research-and-integration-plan.md. Inspected Studio 11's live preview and verified its download requires login; verified the creator-linked Modlinek Villa room 03 public export folder contains an 831.2 MB ZIP with a download control. Recorded Mirror Room v3 as a smaller synthetic fallback, page-listed licenses/sizes, provenance and unverified scale/format/collision/performance. Documentation indexing and whitespace checks passed. No asset downloads, runtime changes or application tests; no commit, branch switch, fetch or push.
+
+- 2026-09-19: Recorded the user-selected first-person PlayCanvas/SuperSplat pivot in the indexed room-capture research plan and foundation-plan banner. Updated furniture collaborator guidance to retain GLB/PBR/scale/pivot deliverables and inspect close-range surfaces. Verified current PlayCanvas model/React/collision documentation; updated INDEX description and checked all documentation indexing/local links plus diff whitespace. Planning/docs only; no runtime migration, installs, tests, commit, branch switch, fetch or push.
+
+- 2026-09-19: Researched and documented local phone-video room reconstruction in docs/frontend/room-capture/research-and-integration-plan.md and indexed it. Incorporated user constraints: phone walkthrough, scanned room/furniture fixed, laptop-only processing. Compared local COLMAP/OpenMVS mesh pipeline, Brush/Spark splats, voxel/floor maps, Apple capture APIs, and DA3/VGGT alternatives from primary sources. Recommended preserving Three.js/R3F, first proving one calibrated mesh, and adding a versioned fixed-obstacle/free/unknown map. Plan includes repository integration points, proposed manifest, local job/storage model, calibration, capture/occlusion handling, staged estimates and acceptance criteria. Verified nine-doc indexing, local links, JSON example, voxel calculations and diff whitespace. No models installed, video processed or runtime benchmark; no application tests needed for documentation-only change. No runtime edits, commit, fetch, push or branch switch.
 
 - 2026-09-19: Prepared the user-requested commit of engine placement results/capture jobs and migrations, frontend capture controls and rendering, room/glass polish, bundled Mori fonts/license, shared furniture asset serving/build packaging, and indexed documentation. Fresh verification: 27 frontend tests, 22 Django tests, TypeScript/Vite build, Django check and migration consistency passed. Existing Three.js chunk warning remains; captures require an open same-session editor and font public-use licensing remains a handoff. Staying on feat/3d-engine-frontend; no push.
 

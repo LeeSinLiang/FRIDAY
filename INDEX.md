@@ -22,6 +22,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 | Document | Purpose |
 | --- | --- |
 | [docs/frontend/editor-implementation.md](docs/frontend/editor-implementation.md) | Implemented editor, integration contracts, commands, verification, and remaining handoff |
+| [docs/frontend/room-capture/research-and-integration-plan.md](docs/frontend/room-capture/research-and-integration-plan.md) | Selected first-person PlayCanvas/SuperSplat pivot, local reconstruction research, GLB furniture and spatial integration |
 | [docs/frontend/3d-engine-plan.md](docs/frontend/3d-engine-plan.md) | Current 3D foundation scope, contracts, multi-agent build plan, and quality gates |
 | [docs/frontend/rendering-and-furniture-workflow.md](docs/frontend/rendering-and-furniture-workflow.md) | Rendering-engine comparison and furniture asset workflow research |
 | [docs/frontend/3d-object/collaborator-handoff.md](docs/frontend/3d-object/collaborator-handoff.md) | Furniture collaborator instructions, GLB deliverables, dimensions, and acceptance checks |

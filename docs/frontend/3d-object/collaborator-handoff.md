@@ -8,7 +8,7 @@ Please deliver **one sofa and one table** before building the full catalogue. We
 
 Your scope is the furniture models, textures, product dimensions, and preview images. The frontend workstream owns the test room, grid, loading, selection, camera, and manipulation. Another teammate owns room reconstruction. Spatial validation and the valid-space overlay follow later; you do not need to build them.
 
-The proposed frontend is Three.js through React Three Fiber. Deliver ordinary GLB meshes: the same assets can also work with PlayCanvas if the renderer changes. You do not need SuperSplat for this furniture deliverable.
+The selected frontend direction is now first-person PlayCanvas with a SuperSplat-prepared fixed room. The current runtime remains Three.js until the migration is implemented. Continue delivering ordinary GLB furniture meshes; SuperSplat handles the scanned room, not this furniture deliverable. PlayCanvas recommends GLB for models. Keep an editable Blender source, correctly scaled mesh, PBR textures, centimeter dimensions and a floor-centered pivot. First-person viewing makes backs, undersides, texture detail and materials at close range especially important. [PlayCanvas model guidance](https://developer.playcanvas.com/user-manual/assets/models/building/)
 
 ## Approved visual reference
 

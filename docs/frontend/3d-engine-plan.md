@@ -1,5 +1,7 @@
 # 3D frontend foundation: reviewed build plan
 
+> Direction update, 2026-09-19: the user selected a first-person PlayCanvas runtime with SuperSplat-prepared fixed rooms and GLB furniture. See the [selected pivot and reconstruction research](room-capture/research-and-integration-plan.md). The Three.js foundation below describes the existing implementation; it is not the target renderer for the next phase.
+
 > Scope update, 2026-09-19: the user authorized green/red footprint placement checks, easier dragging, Django persistence, and agent command transport after the original foundation. These are now implemented; the original phase boundaries below are historical. See [implementation](editor-implementation.md) and [scene API](../backend/contracts/scene-api.md).
 
 2026-09-19 · Sin · Foundation implemented with three subagents; see [implementation and verification](editor-implementation.md).
