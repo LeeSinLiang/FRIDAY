@@ -9,18 +9,23 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from django.core.cache import cache
 from django.test import SimpleTestCase
-from openai import APITimeoutError
+from openai import APITimeoutError, AuthenticationError
 from rest_framework.test import APIClient
 
+from catalogue import memory
 from catalogue.dsl import compile as compile_module
 from catalogue.dsl.compile import InvalidProgram, compile_text, fallback_program
 from catalogue.dsl.prompt import build_instructions
 from catalogue.dsl.render import render
 from catalogue.dsl.schema import Program
 from catalogue.dsl.units import format_cents, format_mm
+from catalogue.feed import load_catalogue
 from catalogue.mock.room import MOCK_ROOM, room_refs
+from catalogue.text import content_words, keep_matching
 from catalogue.types import to_wire
+from catalogue.views import CompileThrottle, text_search_has_results
 
 FIXTURE = Path(__file__).resolve().parent / "dsl" / "fixtures" / "compile_cases.json"
 REFS = room_refs(MOCK_ROOM)
@@ -83,15 +88,31 @@ class FailureHandlingTests(SimpleTestCase):
         call = replay([InvalidProgram("schema"), InvalidProgram("schema"), self.GOOD])
         result = compile_text(self.TEXT, REFS, call=call)
         self.assertEqual(result.source, "fallback")
-        self.assertEqual(to_wire(result.program), {"find": [{"k": "text", "q": self.TEXT}], "place": []})
+        self.assertEqual(to_wire(result.program), {"find": [{"k": "text", "q": "reading chair"}], "place": []})
         self.assertEqual(len(call.remaining), 1)
 
     def test_an_id_the_room_does_not_have_counts_as_invalid(self):
         result = compile_text(self.TEXT, REFS, call=replay([self.BAD_REF, self.BAD_REF]))
         self.assertEqual(result.source, "fallback")
 
-    def test_a_failed_call_is_not_retried(self):
+    def test_a_timeout_gets_the_one_retry(self):
         call = replay([APITimeoutError(request=mock.Mock()), self.GOOD])
+        result = compile_text(self.TEXT, REFS, call=call)
+        self.assertEqual((result.source, call.remaining), ("model-retry", []))
+
+    def test_two_timeouts_degrade_without_a_third_call(self):
+        call = replay([APITimeoutError(request=mock.Mock()), TimeoutError(), self.GOOD])
+        result = compile_text(self.TEXT, REFS, call=call)
+        self.assertEqual((result.source, len(call.remaining)), ("fallback", 1))
+
+    def test_a_timeout_and_an_invalid_program_share_the_single_retry(self):
+        call = replay([TimeoutError(), InvalidProgram("schema"), self.GOOD])
+        self.assertEqual(compile_text(self.TEXT, REFS, call=call).source, "fallback")
+        self.assertEqual(len(call.remaining), 1)
+
+    def test_an_error_that_would_repeat_is_not_retried(self):
+        error = AuthenticationError("bad key", response=mock.Mock(status_code=401), body=None)
+        call = replay([error, self.GOOD])
         result = compile_text(self.TEXT, REFS, call=call)
         self.assertEqual((result.source, len(call.remaining)), ("fallback", 1))
 
@@ -103,6 +124,45 @@ class FailureHandlingTests(SimpleTestCase):
         seen = []
         compile_text("x" * 1000, REFS, call=lambda text, _: seen.append(text) or fallback_program(text))
         self.assertEqual(len(seen[0]), compile_module.MAX_INPUT_CHARS)
+
+
+class FallbackSearchTests(SimpleTestCase):
+    """A fallback that finds nothing is a failure, not a degradation."""
+
+    HERO = "a reading chair by the window, under $400, 5 feet from any wall"
+
+    def test_stop_words_numbers_and_repeats_are_dropped(self):
+        self.assertEqual(content_words(self.HERO), ["reading", "chair"])
+        self.assertEqual(content_words("cosy velvet corner sofa"), ["cosy", "velvet", "corner", "sofa"])
+        # Sub-types that look like room words are product words and must survive.
+        self.assertEqual(content_words("a floor lamp and a side table"), ["floor", "lamp", "side", "table"])
+        self.assertEqual(content_words("a chair, the CHAIR, 2 chairs"), ["chair", "chairs"])
+
+    def test_a_word_survives_only_if_results_remain_with_it(self):
+        # "wall" and "lamp" are both real catalogue words, but no listing is a wall lamp.
+        self.assertTrue(text_search_has_results(["wall"]) and text_search_has_results(["lamp"]))
+        self.assertEqual(keep_matching(["steel", "lamp", "wall", "xyzzy"], text_search_has_results), ["steel", "lamp"])
+
+    def test_the_hero_sentence_still_finds_reading_chairs_when_the_model_is_down(self):
+        program = fallback_program(self.HERO, text_search_has_results)
+        self.assertEqual(to_wire(program), {"find": [{"k": "text", "q": "reading chair"}], "place": []})
+        result = memory.search(load_catalogue(), program.find, limit=24, offset=0)
+        self.assertGreater(result.total, 0)
+        self.assertTrue(all("reading chair" in item.title for item in result.items))
+
+    def test_the_whole_sentence_would_have_found_nothing(self):
+        whole = Program.model_validate({"find": [{"k": "text", "q": self.HERO}], "place": []})
+        self.assertEqual(memory.search(load_catalogue(), whole.find, limit=24, offset=0).total, 0)
+
+    def test_every_fixture_sentence_degrades_to_a_search_with_results(self):
+        for case in CASES:
+            program = fallback_program(case["text"], text_search_has_results)
+            total = memory.search(load_catalogue(), program.find, limit=1, offset=0).total
+            self.assertGreater(total, 0, msg=f"{case['text']} -> {to_wire(program)}")
+
+    def test_nothing_searchable_means_browse_everything_not_an_invalid_clause(self):
+        program = fallback_program("something for the balcony", text_search_has_results)
+        self.assertEqual(to_wire(program), {"find": [], "place": []})
 
 
 class NormaliseTests(SimpleTestCase):
@@ -145,6 +205,9 @@ class RenderTests(SimpleTestCase):
 
 
 class CompileEndpointTests(SimpleTestCase):
+    def setUp(self):
+        cache.clear()  # throttle counters live in the cache
+
     def post(self, body):
         return APIClient().post("/api/compile", body, format="json")
 
@@ -152,7 +215,8 @@ class CompileEndpointTests(SimpleTestCase):
         case = CASES[0]
         with mock.patch("catalogue.dsl.compile.call_model", replay([case["recorded"]])), \
                 mock.patch("catalogue.views.compile_text",
-                           lambda text, refs: compile_text(text, refs, call=compile_module.call_model)):
+                           lambda text, refs, has_results: compile_text(text, refs, has_results,
+                                                                        call=compile_module.call_model)):
             response = self.post({"text": case["text"]})
         self.assertEqual(response.status_code, 200)
         body = response.json()
@@ -160,12 +224,25 @@ class CompileEndpointTests(SimpleTestCase):
         self.assertEqual((body["program"], body["chips"], body["source"]), (wire(case["expected"]), case["chips"], "model"))
 
     def test_model_failure_is_a_200_with_a_text_search(self):
+        failing = replay([InvalidProgram("x")] * 2)
         with mock.patch("catalogue.views.compile_text",
-                        lambda text, refs: compile_text(text, refs, call=replay([InvalidProgram("x")] * 2))):
-            response = self.post({"text": "anything at all"})
+                        lambda text, refs, has_results: compile_text(text, refs, has_results, call=failing)):
+            response = self.post({"text": "a green oak desk by the door please"})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["program"], {"find": [{"k": "text", "q": "anything at all"}], "place": []})
-        self.assertEqual(response.json()["source"], "fallback")
+        self.assertEqual(response.json()["program"], {"find": [{"k": "text", "q": "oak desk"}], "place": []})
+        self.assertEqual((response.json()["source"], response.json()["chips"]), ("fallback", ["\u201coak desk\u201d"]))
+
+    def test_the_paid_endpoint_is_throttled_per_client(self):
+        ok = mock.Mock(return_value=compile_module.CompileResult(Program(find=[], place=[]), "model", 1))
+        with mock.patch.object(CompileThrottle, "rate", "2/min"), mock.patch("catalogue.views.compile_text", ok):
+            statuses = [self.post({"text": "a chair"}).status_code for _ in range(3)]
+        self.assertEqual(statuses, [200, 200, 429])
+        self.assertEqual(ok.call_count, 2)
+
+    def test_search_is_not_throttled(self):
+        with mock.patch.object(CompileThrottle, "rate", "1/min"):
+            statuses = [APIClient().get("/api/search?limit=1").status_code for _ in range(3)]
+        self.assertEqual(statuses, [200, 200, 200])
 
     def test_bad_input_is_rejected_before_any_model_call(self):
         with mock.patch("catalogue.views.compile_text", side_effect=AssertionError("must not be called")):

@@ -29,24 +29,33 @@ const dims = ({ w, d, h }: Listing['dims_mm']) => `${w} × ${d} × ${h} mm`
 
 type CompileResponse = { program: Program; chips: string[]; source: string; ms: number }
 
-// How a find clause maps onto a GET /api/search param.
+// How a find clause maps onto a GET /api/search param. A Program may hold several clauses of one
+// kind ("oak and steel"); they are ANDed, so none may be dropped. In these text boxes they are
+// comma-separated, and on the wire the param repeats: material=oak&material=steel.
 function toFilters(find: FindClause[]): Filters {
   const filters = { ...EMPTY }
+  const add = (key: keyof Filters, value: string) => {
+    filters[key] = filters[key] ? `${filters[key]}, ${value}` : value
+  }
   for (const clause of find) {
-    if (clause.k === 'text') filters.q = clause.q
-    if (clause.k === 'category') filters.category = clause.value
-    if (clause.k === 'price_max') filters.price_max = String(clause.cents)
-    if (clause.k === 'price_min') filters.price_min = String(clause.cents)
-    if (clause.k === 'colour') filters.colour = clause.hex
-    if (clause.k === 'material') filters.material = clause.value
-    if (clause.k === 'fits_w_max') filters.fits_w_mm = String(clause.mm)
+    if (clause.k === 'text') add('q', clause.q)
+    if (clause.k === 'category') add('category', clause.value)
+    if (clause.k === 'price_max') add('price_max', String(clause.cents))
+    if (clause.k === 'price_min') add('price_min', String(clause.cents))
+    if (clause.k === 'colour') add('colour', clause.hex)
+    if (clause.k === 'material') add('material', clause.value)
+    if (clause.k === 'fits_w_max') add('fits_w_mm', String(clause.mm))
   }
   return filters
 }
 
 function toQueryString(filters: Filters): string {
   const params = new URLSearchParams()
-  for (const [key, value] of Object.entries(filters)) if (value.trim()) params.set(key, value.trim())
+  for (const [key, value] of Object.entries(filters)) {
+    // q is free text and keeps its commas; every other box may list several values.
+    const values = key === 'q' ? [value] : value.split(',')
+    for (const item of values) if (item.trim()) params.append(key, item.trim())
+  }
   return params.toString()
 }
 

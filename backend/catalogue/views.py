@@ -2,13 +2,15 @@ import logging
 import os
 
 from elasticsearch import ApiError, TransportError
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 
 from catalogue import es, memory
 from catalogue.dsl.compile import MAX_INPUT_CHARS, compile_text
 from catalogue.dsl.render import render
+from catalogue.dsl.schema import TextClause
 from catalogue.feed import load_catalogue
 from catalogue.mock.room import MOCK_ROOM, room_refs
 from catalogue.params import SearchQuery, parse_search_params
@@ -44,10 +46,25 @@ def search(request):
     return Response(to_wire(result), headers={BACKEND_HEADER: backend})
 
 
-# Public for the same reason as search. Input is length-capped and the model call is bounded
-# (one retry, short timeout, small output), so an anonymous caller cannot run up an open-ended cost.
+def text_search_has_results(words: list[str]) -> bool:
+    """Whether a text search for these words finds any listing. Only used to shape the compile fallback,
+    which must work with the model and Elasticsearch both down, so it asks the memory catalogue."""
+    clause = TextClause(k="text", q=" ".join(words))
+    return any(memory.matches(listing, [clause]) for listing in load_catalogue())
+
+
+class CompileThrottle(AnonRateThrottle):
+    """Per-client cap on the one endpoint that spends money. Search stays unthrottled."""
+
+    scope = "compile"
+    rate = "30/min"
+
+
+# Public for the same reason as search. Each request is bounded (length cap, one retry, small output)
+# and the throttle bounds the total, so an anonymous caller cannot run up the model bill.
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([CompileThrottle])
 def compile_program(request):
     text = request.data.get("text") if isinstance(request.data, dict) else None
     if not isinstance(text, str) or len(text) > MAX_INPUT_CHARS:
@@ -55,7 +72,7 @@ def compile_program(request):
                         status=400)
     # The mock room stands in until the space lane ships a Room; only its ids reach the model.
     refs = room_refs(MOCK_ROOM)
-    result = compile_text(text, refs)
+    result = compile_text(text, refs, text_search_has_results)
     return Response({
         "program": to_wire(result.program),
         "chips": render(result.program, refs),

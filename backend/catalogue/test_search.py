@@ -1,5 +1,6 @@
 from unittest import mock
 
+from django.http import QueryDict
 from django.test import SimpleTestCase
 from rest_framework.test import APIClient
 
@@ -73,6 +74,17 @@ class ParamTests(SimpleTestCase):
             with self.assertRaises(ValueError, msg=str(params)):
                 parse_search_params(params)
 
+
+    def test_a_repeated_param_becomes_one_clause_each(self):
+        query = parse_search_params(QueryDict("material=oak&material=steel&category=desk"))
+        self.assertEqual([(c.k, getattr(c, "value", None)) for c in query.find],
+                         [("category", "desk"), ("material", "oak"), ("material", "steel")])
+
+    def test_repeated_materials_are_anded(self):
+        query = parse_search_params(QueryDict("material=oak&material=steel&limit=100"))
+        hits = memory.search(load_listings(), query.find, query.limit, query.offset).items
+        both = lambda l: any("oak" in m for m in l.materials) and any("steel" in m for m in l.materials)
+        self.assertEqual([l.id for l in hits], sorted(l.id for l in load_listings() if both(l)))
 
     def test_deepest_allowed_page(self):
         query = parse_search_params({"limit": "100", "offset": "9900"})
