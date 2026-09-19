@@ -13,6 +13,12 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## Done
 
+- **Solver follow-up: fixture room, "nothing fits" reasons, near semantics (2026-09-19).** Branch `codex/saketh-nothing-fits`, off fresh `main` after merging PR #15 (`main`: 123 backend tests, 51 frontend tests, build OK; `AGENTS.md` unchanged).
+  - Dev page and debug script now solve in Sin's 600 × 500 cm fixture room (`DEV_SCENE` in `frontend/src/region/devScene.ts`); the small mock room stays as `MOCK_SCENE` for tests.
+  - `frontend/src/region/explain.ts`: `whyNothingFits` on the solution, derived from the binding constraint (height, footprint vs room, no free floor, wall-clearance span shortfall, or the one clause whose removal makes room). Shown on the dev page.
+  - **Found:** "by the window, 5 feet from any wall" contradicted itself in every room, because the window is on a wall the item must stay 152 cm from and `near` reached only 75 cm. An unstated `near` now reaches `NEAR_DEFAULT_CM` beyond the clearance its target's wall demands; a stated distance stays literal. The hero sentence lights 705 centres in the fixture room and correctly reports `needs 373 cm of depth, this room has 360 cm` in the mock room.
+  - Verification: `npm test` — 54 tests, `npm run build` OK; rendered SVG inspected.
+
 - **Region solver (2026-09-19).** Branch `codex/saketh-region-solver`. Doc: [docs/frontend/region-solver.md](docs/frontend/region-solver.md), linked from `INDEX.md`. Handoff notes appended to `TODO_SIN.md`.
   - `frontend/src/region/`: `types.ts`, `boundary.ts` (only unit crossing, listing adapter, wall mapping), `grid.ts`, `occupancy.ts`, `invariants.ts` (calls Sin's `validatePlacement` per grid point), `geometry.ts`, `clauses.ts` (six clause rules, every/some split, tunables, `ALLOW_STACKING = false`), `solve.ts`, `svg.ts`, `debugScenes.ts`, `devScene.ts`, `rng.ts`, tests. `frontend/scripts/region-debug.mjs`.
   - Decisions by Saketh: edge-to-edge distances; `against` fixes yaw with 5 cm tolerance; `near` default 75 cm; door swing always kept free; 90 cm sill is a commented assumption; `on(item)` dropped behind a flag; dropped clauses shown on the dev page.

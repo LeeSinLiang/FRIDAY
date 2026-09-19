@@ -89,7 +89,9 @@ function Floor({ listing, program }: { listing: Listing; program: Program }) {
           ))}
         </ul>
       )}
-      {solution.bestYawIndex < 0 && <p style={{ color: 'crimson', fontWeight: 700 }}>nothing fits: no legal position at any rotation</p>}
+      {solution.bestYawIndex < 0 && (
+        <p style={{ color: 'crimson', fontWeight: 700, fontSize: 18 }}>nothing fits — {solution.whyNothingFits}</p>
+      )}
       {/* The SVG string is built by toSvg from numbers and an escaped title, never from user markup. */}
       <div style={{ maxWidth: 480 }} dangerouslySetInnerHTML={{ __html: svg }} />
     </section>

@@ -26,6 +26,17 @@ export const APPROACH_CM = 60;
  *  region on a table top would be refused on drop, which is worse than no region. */
 export const ALLOW_STACKING = false;
 
+/** The clearance each wall demands, from every distance_min and clear clause naming it or any_wall. */
+export function wallClearances(place: PlaceCm[]): Record<WallSide, number> {
+  const need: Record<WallSide, number> = { n: 0, e: 0, s: 0, w: 0 };
+  for (const clause of place) {
+    if ((clause.k !== "distance_min" && clause.k !== "clear") || clause.cm === undefined) continue;
+    const sides = clause.ref.kind === "any_wall" ? WALL_SIDES : clause.ref.kind === "wall" ? [WALL_SIDE_BY_ID[clause.ref.id]] : [];
+    for (const side of sides) if (side) need[side] = Math.max(need[side], clause.cm);
+  }
+  return need;
+}
+
 export type Dropped = { clause: PlaceCm; reason: string };
 
 type Target = { rect: Rect; wall?: WallSide; opening?: Opening; instanceId?: string };
@@ -57,12 +68,19 @@ function targets(scene: Scene, clause: PlaceCm): Target[] | string {
   return openings.map((opening) => ({ rect: openingZone(scene.room, opening, 0), wall: opening.wall, opening }));
 }
 
-function ruleFor(scene: Scene, product: Product, clause: PlaceCm, target: Target): Rule | string {
+function ruleFor(scene: Scene, product: Product, clause: PlaceCm, target: Target, clearances: Record<WallSide, number>): Rule | string {
   const { k, cm } = clause;
   const zone = (depthCm: number) => openingZone(scene.room, target.opening!, depthCm);
 
   if (k === "distance_min") return (_, footprint) => gap(footprint, target.rect) >= cm! - EPSILON_CM;
-  if (k === "near") return (_, footprint) => gap(footprint, target.rect) <= (cm ?? NEAR_DEFAULT_CM) + EPSILON_CM;
+  if (k === "near") {
+    // "By the window, 5 feet from any wall": the window is ON a wall, so a fixed reach shorter than
+    // that wall's clearance makes the sentence contradict itself in every room. When no distance is
+    // stated, "near" means as near as the other requests allow: the default reach starts where the
+    // target's own wall lets the item stand. A stated distance is taken literally.
+    const reach = cm ?? NEAR_DEFAULT_CM + (target.wall ? clearances[target.wall] : 0);
+    return (_, footprint) => gap(footprint, target.rect) <= reach + EPSILON_CM;
+  }
   if (k === "clear") return target.opening
     ? (_, footprint) => !overlapsArea(footprint, zone(cm!))
     : (_, footprint) => gap(footprint, target.rect) >= cm! - EPSILON_CM;
@@ -88,13 +106,14 @@ function ruleFor(scene: Scene, product: Product, clause: PlaceCm, target: Target
 }
 
 /** Turn one clause into a rule over poses, or say why it cannot be honoured. Never throws. */
-export function resolveClause(scene: Scene, product: Product, clause: PlaceCm): Resolved {
+export function resolveClause(scene: Scene, product: Product, clause: PlaceCm,
+                              clearances: Record<WallSide, number> = { n: 0, e: 0, s: 0, w: 0 }): Resolved {
   if ((clause.k === "distance_min" || clause.k === "clear") && clause.cm === undefined) return { dropped: "no distance was given" };
   const found = targets(scene, clause);
   if (typeof found === "string") return { dropped: found };
   const rules: Rule[] = [];
   for (const target of found) {
-    const rule = ruleFor(scene, product, clause, target);
+    const rule = ruleFor(scene, product, clause, target, clearances);
     if (typeof rule === "string") return { dropped: rule };
     rules.push(rule);
   }
