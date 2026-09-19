@@ -49,7 +49,7 @@ Use [PP Mori](https://pangrampangram.com/products/mori), as explicitly selected 
 
 Working size targets at laptop scale: 14–16 px interface text, 12–13 px only for secondary captions, and 24–28 px compact brand text. Keep numeric values crisp and steady during edits. Use the real font files in implementation; a generated image cannot establish exact Mori glyph fidelity.
 
-No Mori font files were found under frontend/ or docs/ during this pass. The user has been asked whether webfont files are available and where they are located. Do not substitute an arbitrary scraped font binary from the foundry site. If files are pending, a temporary system sans fallback can keep functional development moving, but it is not final Mori typography. Font files/usage scope must be supplied appropriately before shipping the intended font.
+Update: the user supplied PP Mori v2.6 on 2026-09-19. Regular, Semibold, Black and Italic OTF files are bundled in `frontend/public/fonts/pp-mori/` with the original personal-use license PDF. The frontend now loads these files directly through CSS font faces.
 
 ## Scope and open choices
 

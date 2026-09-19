@@ -40,7 +40,9 @@ Start with the route that produces one usable asset fastest. Do not spend the wh
 - Editable source, such as `source.blend`, and the original reference images when available. Keep large authoring files out of the frontend's public asset folder; agree storage with the team.
 - Source/creator/license details so the team knows where the asset came from and what reuse is permitted. Put any Markdown notes under an appropriate `docs/` folder and index them in the root `INDEX.md`.
 
-Suggested runtime location once agreed: `frontend/public/models/furniture/<product-id>/`. This directory has not been created by this handoff. Its files would be served under `/models/furniture/<product-id>/`.
+Canonical runtime location: `shared/models/furniture/<product-id>/`. Keep one copy here for frontend rendering and backend asset tooling. Browser URLs remain `/models/furniture/<product-id>/model.glb` (and corresponding thumbnail paths). Vite serves these assets during development and emits them into `frontend/dist/models/furniture/` during production builds. Do not duplicate furniture files under `frontend/public/`.
+
+Only GLB/glTF, BIN, PNG/JPEG/WebP and KTX2 runtime files are published. Metadata JSON and authoring files are not published by this bridge. Product dimensions still come from `shared/scene-fixtures.json`; automatic GLB dimension extraction is not implemented. Avoid symlinks. The separate couch worktree should adopt this path when integrating its assets.
 
 ```json
 {

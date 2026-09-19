@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
+import CapturePanel from "./CapturePanel";
 import { Icon } from "./Icons";
 import { PRODUCTS, ROOM } from "./scene/fixtures";
 import { SCENE_UNIT_CM } from "./scene/units";
@@ -17,6 +18,7 @@ import type { CameraMode, Pose, Product } from "./scene/types";
 import type { ModelStatus } from "./Scene";
 import type { PerformanceSample } from "./scene/PerformanceProbe";
 const Scene = lazy(() => import("./Scene"));
+const SceneCaptureWorker = lazy(() => import("./scene/SceneCapture"));
 const QA_PRODUCTS: Product[] =
   import.meta.env.DEV && new URLSearchParams(location.search).has("testAssets")
     ? [
@@ -269,6 +271,7 @@ export default function App() {
   };
   return (
     <main className="studio">
+      <Suspense fallback={null}><SceneCaptureWorker enabled={sync.ready && QA_PRODUCTS.length === 0} /></Suspense>
       <header className="app-header">
         <a className="wordmark" href="/" aria-label="FRIDAY room editor">
           FRIDAY<span className="wordmark-dot">.</span>
@@ -354,6 +357,7 @@ export default function App() {
             <Icon name="reset" />
             Reset view
           </button>
+          <CapturePanel mode={mode} revision={sync.revision} canCapture={sync.status === "saved" && !dragging} />
         </nav>
         <aside className="glass inspector" aria-label="Objects and properties">
           <div className="panel-heading">

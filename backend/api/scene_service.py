@@ -15,9 +15,10 @@ EPSILON = 1e-6
 
 
 class SceneError(Exception):
-    def __init__(self, code, message, status=400, revision=None):
+    def __init__(self, code, message, status=400, revision=None, details=None):
         super().__init__(message)
         self.code, self.message, self.status, self.revision = code, message, status, revision
+        self.details = details
 
 
 def fixtures():
@@ -75,14 +76,14 @@ def validate_instances(instances):
         if any(not number(product[key]) or product[key] <= 0 for key in ['widthCm', 'depthCm', 'heightCm']):
             raise SceneError('validation', 'Invalid furniture dimensions.')
         if product['heightCm'] > room['heightCm'] + EPSILON:
-            raise SceneError('placement', 'Too tall for this room.')
+            raise SceneError('placement', 'Too tall for this room.', details={'issues': [{'code': 'too_tall', 'instanceId': identifier, 'heightCm': product['heightCm'], 'roomHeightCm': room['heightCm']}]})
         box = footprint(product, pose)
         if any(box['center'][i] - box['extents'][i] < -EPSILON or box['center'][i] + box['extents'][i] > room[key] + EPSILON for i, key in enumerate(['widthCm', 'depthCm'])):
-            raise SceneError('placement', 'Outside room.')
-        for previous, previous_product in boxes:
+            raise SceneError('placement', 'Outside room.', details={'issues': [{'code': 'out_of_bounds', 'instanceId': identifier, 'bounds': {'minX': box['center'][0] - box['extents'][0], 'maxX': box['center'][0] + box['extents'][0], 'minZ': box['center'][1] - box['extents'][1], 'maxZ': box['center'][1] + box['extents'][1]}, 'roomBounds': {'minX': 0, 'maxX': room['widthCm'], 'minZ': 0, 'maxZ': room['depthCm']}}]})
+        for previous, previous_product, previous_id in boxes:
             if overlaps(box, previous):
-                raise SceneError('placement', f"Overlaps {previous_product['name']}.")
-        boxes.append((box, product))
+                raise SceneError('placement', f"Overlaps {previous_product['name']}.", details={'issues': [{'code': 'overlap', 'instanceId': identifier, 'conflictingInstanceIds': [previous_id]}]})
+        boxes.append((box, product, identifier))
     return copy.deepcopy(instances)
 
 
@@ -165,3 +166,53 @@ def apply_scene_commands(session_key, base_revision, command_id, commands):
     response = {**store(scene, base_revision, instances), 'commandId': command_id}
     SceneCommandReceipt.objects.create(scene=scene, command_id=command_id, payload_hash=digest, response=response)
     return response
+
+
+@transaction.atomic
+def attempt_placement(session_key, payload):
+    """Trusted agent entry point. Callers must supply the browser's scoped session."""
+    required = {'baseRevision', 'commandId', 'instance'}
+    if not isinstance(payload, dict) or not required <= set(payload) or set(payload) - required - {'dryRun'}:
+        raise SceneError('validation', 'Provide baseRevision, commandId, instance, and optional dryRun.')
+    if not isinstance(payload.get('dryRun', False), bool):
+        raise SceneError('validation', 'dryRun must be boolean.')
+    validate_revision(payload['baseRevision'])
+    command_id = payload['commandId']
+    if not isinstance(command_id, str) or not command_id.strip() or len(command_id) > 128:
+        raise SceneError('validation', 'commandId must be a nonempty string up to 128 characters.')
+    item = payload['instance']
+    # Validate the proposed object's structure before indexing its fields.
+    try:
+        validate_instances([item])
+    except SceneError as error:
+        if error.details is None:
+            error.details = {'issues': [{'code': 'invalid_instance', 'message': error.message}]}
+        raise
+    scene = scene_for_session(session_key)
+    scene = SceneLayout.objects.select_for_update().get(pk=scene.pk)
+    existing = next((i for i in scene.instances if i['instanceId'] == item['instanceId']), None)
+    # A stable upsert payload hash makes retries independent of whether the first
+    # attempt added or moved the object. Receipts share the existing command namespace.
+    digest = hashlib.sha256(json.dumps({'placement': payload['instance'], 'baseRevision': payload['baseRevision']}, sort_keys=True, allow_nan=False).encode()).hexdigest()
+    if not payload.get('dryRun', False):
+        receipt = SceneCommandReceipt.objects.filter(scene=scene, command_id=command_id).first()
+        if receipt:
+            if receipt.payload_hash != digest:
+                raise SceneError('command_conflict', 'commandId was already used for a different payload.', 409, scene.revision)
+            return receipt.response
+    if existing and existing['productId'] != item['productId']:
+        raise SceneError('product_mismatch', 'An existing instance cannot change product.', revision=scene.revision)
+    if scene.revision != payload['baseRevision']:
+        raise SceneError('revision_conflict', 'The scene changed. Reload before placing.', 409, scene.revision)
+    instances = [copy.deepcopy(item) if i['instanceId'] == item['instanceId'] else copy.deepcopy(i) for i in scene.instances]
+    if existing is None:
+        instances.append(copy.deepcopy(item))
+    # Validate target last so any collision identifies the attempted object and
+    # names the existing obstacle, without changing persisted object order.
+    validate_instances([i for i in instances if i['instanceId'] != item['instanceId']] + [item])
+    if payload.get('dryRun', False):
+        return {'ok': True, 'applied': False, 'validation': {'valid': True, 'issues': []}, **serialize(scene)}
+    changed = instances != scene.instances
+    result = {'ok': True, 'applied': changed, 'validation': {'valid': True, 'issues': []}, **store(scene, payload['baseRevision'], instances), 'commandId': command_id}
+    SceneCommandReceipt.objects.create(scene=scene, command_id=command_id, payload_hash=digest, response=result)
+    return result

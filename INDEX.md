@@ -30,6 +30,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Backend
 
+- [Spatial engine tools and screenshots](docs/backend/contracts/spatial-engine-tools.md) — explicit placement results, dry runs, selectable cameras, revision-specific PNGs, and Python agent adapters.
+
 - [Scene persistence and agent command API](docs/backend/contracts/scene-api.md) — session storage, validation, revisions, CSRF, and agent adapter handoff.
 
 ### Setup and tooling

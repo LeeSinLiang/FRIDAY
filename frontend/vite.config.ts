@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { devModelFixtures } from "./scripts/dev-model-fixtures";
+import { sharedFurnitureAssets } from "./scripts/shared-furniture-assets";
 
 export default defineConfig(({ mode }) => {
   const env = { ...loadEnv(mode, "..", ""), ...process.env };
@@ -12,7 +13,7 @@ export default defineConfig(({ mode }) => {
     define: {
       "import.meta.env.VITE_SCENE_UNIT_CM": JSON.stringify(sceneUnitCm),
     },
-    plugins: [react(), devModelFixtures()],
+    plugins: [react(), devModelFixtures(), sharedFurnitureAssets()],
     server: {
       host: "127.0.0.1",
       port: Number(env.FRONTEND_PORT || 5173),

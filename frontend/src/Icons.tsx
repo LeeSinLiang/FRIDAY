@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 export type IconName =
+  | "camera"
   | "plus"
   | "move"
   | "undo"
@@ -14,6 +15,7 @@ export type IconName =
   | "grid"
   | "chair";
 const paths: Record<IconName, React.ReactNode> = {
+  camera: <><path d="M8 5 9.5 3h5L16 5h4a1 1 0 0 1 1 1v13H3V6a1 1 0 0 1 1-1h4Z" /><circle cx="12" cy="12" r="4" /></>,
   plus: <path d="M12 5v14M5 12h14" />,
   move: (
     <>

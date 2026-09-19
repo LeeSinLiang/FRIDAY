@@ -1,0 +1,18 @@
+.capture-dialog { width: min(720px, calc(100vw - 48px)); max-height: calc(100dvh - 64px); overflow: auto; border: 0; border-radius: 24px; padding: 28px; color: var(--ink); }
+.capture-dialog::backdrop { background: #38251b40; backdrop-filter: blur(6px); }
+.capture-intro { color: #735a47; margin: 12px 0 20px; line-height: 1.5; }
+.capture-options { display: grid; gap: 18px; }
+.capture-options fieldset { margin: 0; padding: 0; border: 0; display: flex; gap: 24px; }
+.capture-options legend { margin-bottom: 12px; font-weight: 600; }
+.capture-options input[type="radio"] { accent-color: var(--accent); width: 16px; height: 16px; vertical-align: middle; }
+.capture-angles { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.capture-angles label { display: grid; gap: 8px; font-size: 12px; color: #735a47; }
+.capture-angles input { border: 1px solid var(--line); padding: 12px; border-radius: 12px; background: #fffaf2a6; color: var(--ink); width: 100%; }
+.capture-actions { display: flex; gap: 16px; align-items: center; margin: 24px 0 8px; }
+.capture-actions span { font-size: 12px; color: #735a47; }
+.capture-dialog .capture-primary { background: var(--accent); color: #fffaf3; padding: 12px 20px; }
+.capture-error { color: #a5372e; margin-top: 16px; }
+.capture-result { margin: 20px 0 0; }
+.capture-result img { display: block; width: 100%; height: auto; border-radius: 14px; background: #ece2d4; }
+.capture-result figcaption { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; margin-top: 12px; font-size: 12px; color: #735a47; }
+.capture-result a { color: var(--accent); text-underline-offset: 3px; }

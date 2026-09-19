@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { Component, useCallback, type ReactNode } from "react";
 import Room from "./scene/Room";
+import SceneLighting from "./scene/SceneLighting";
 import PerformanceProbe, {
   type PerformanceSample,
 } from "./scene/PerformanceProbe";
@@ -102,23 +103,7 @@ function Contents(props: Props) {
   });
   return (
     <>
-      <color attach="background" args={["#f0e7db"]} />
-      <hemisphereLight args={["#fff7e9", "#b59d82", 2.3]} />
-      <directionalLight
-        position={[cmToScene(150), cmToScene(850), cmToScene(400)]}
-        intensity={3.1}
-        color="#fff2db"
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={cmToScene(-700)}
-        shadow-camera-right={cmToScene(700)}
-        shadow-camera-top={cmToScene(700)}
-        shadow-camera-bottom={cmToScene(-700)}
-        shadow-camera-near={cmToScene(10)}
-        shadow-camera-far={cmToScene(1800)}
-        shadow-bias={-0.0003}
-        shadow-normalBias={cmToScene(0.3)}
-      />
+      <SceneLighting mode={props.mode} />
       <Room
         room={ROOM}
         mode={props.mode}

@@ -8,7 +8,7 @@ Run `./run-local.sh` from the repository root. The room starts empty. Choose **A
 
 Perspective supports orbit, right-drag pan, and wheel zoom. Top view supports pan/zoom and hides the walls. Reset view reframes the room. Keyboard history shortcuts are Cmd/Ctrl+Z and Cmd/Ctrl+Shift+Z; Delete/Backspace removes the selected object outside text fields. Rotated footprints check room bounds and furniture overlap. Selected footprints turn green for valid positions and red for invalid drag previews; invalid releases return to the previous position. New pieces choose a nearby free grid slot.
 
-The approved [design reference](design/selected-direction.md) informs the warm ivory, espresso, terracotta, glass panels, and reveal animation. The runtime uses simple dimensioned furniture proxies, procedural room grain, and local shadows. Actual collaborator models will supply the final furniture detail. PP Mori is requested through a local font lookup; no font binaries have been acquired or bundled, so machines without it use Helvetica Neue/Arial. This is not final font fidelity. Glass uses backdrop blur and masked reveal, not optical refraction; camera view switches are immediate.
+The approved [design reference](design/selected-direction.md) informs the warm ivory, espresso, terracotta, glass panels, and reveal animation. The runtime uses simple dimensioned furniture proxies, procedural room grain, and local shadows. Actual collaborator models will supply the final furniture detail. PP Mori Regular, Semibold, Black and Italic are bundled as OTF files under `frontend/public/fonts/pp-mori/`, from the user-supplied v2.6 personal-use archive. CSS declares their actual static weights and uses font-display swap with Helvetica Neue/Arial fallbacks. The supplied license PDF is retained alongside the fonts; this archive permits personal use and excludes public websites/apps, so public deployment requires appropriate licensing. Glass uses backdrop blur and masked reveal, not optical refraction; camera view switches are immediate.
 
 ## Files and integration boundaries
 
@@ -22,13 +22,16 @@ The approved [design reference](design/selected-direction.md) informs the warm i
 | `src/scene/commands.ts`, `useSceneEditor.ts`, `useFurnitureDrag.ts` | Validated edits, local undo/redo, imperative drag previews and cleanup |
 | `src/scene/placement.ts`, `useSceneSync.ts` | Rotated footprint checks, free-slot search, autosave, revision conflicts and external updates |
 | `src/scene/PerformanceProbe.tsx` | Opt-in development render-loop timing during drag |
+| `src/CapturePanel.tsx`, `capture.css` | Saved-revision screenshot controls, preview and download |
+| `src/scene/SceneCapture.tsx`, `useCaptureWorker.ts`, `captureCamera.ts`, `captureClient.ts` | Frozen snapshot renderer, leased jobs, camera fitting and capture API |
+| `src/scene/SceneLighting.tsx` | Studio environment, soft daylight and warm shader background |
 | `scripts/test-scene.mjs`, `src/scene/commands.test.ts` | Node tests bundled with esbuild |
 | `scripts/generate-test-glb.mjs`, `public/models/test-fixture/model.glb` | Reproducible, verified 2 × 1 × 1 meter GLB |
 | `scripts/dev-model-fixtures.ts` | Development-only delayed GLB response for load lifecycle checks |
 
 Root `.env` sets `SCENE_UNIT_CM=5`. Change it and restart Vite to test another scale. Only that validated number is injected into the browser; root secrets are not exposed. App poses and dimensions remain centimeters. GLB geometry remains meters and is scaled exactly once by `100 / SCENE_UNIT_CM`. Scene geometry uses `cm / SCENE_UNIT_CM`.
 
-To integrate a collaborator product, place its runtime files under `frontend/public/models/furniture/<product-id>/` and add its known dimensions, name, color, placeholder kind, and `modelUrl` to root `shared/scene-fixtures.json`. Follow the [asset contract](3d-object/collaborator-handoff.md). The current kind only selects a fallback proxy; loaded GLBs keep their own materials and geometry. The loader does not distort a GLB to force metadata dimensions. Missing assets show the proxy with a retry control. Safe geometry/material resources are shared while each instance owns a separate object hierarchy.
+To integrate a collaborator product, place its runtime files under `shared/models/furniture/<product-id>/` and add its known dimensions, name, color, placeholder kind, and `modelUrl` to root `shared/scene-fixtures.json`. The Vite plugin in `scripts/shared-furniture-assets.ts` serves these files at `/models/furniture/` and packages them into the production build. Follow the [asset contract](3d-object/collaborator-handoff.md). The current kind only selects a fallback proxy; loaded GLBs keep their own materials and geometry. The loader does not distort a GLB to force metadata dimensions. Missing assets show the proxy with a retry control. Safe geometry/material resources are shared while each instance owns a separate object hierarchy.
 
 `SceneEdit` supports `add`, `setPose`, and `remove`; poses use `xCm`, `zCm`, and `yawRad`. `applyEdit` rejects malformed edits, duplicate instance IDs, unknown products, invalid dimensions, and non-finite poses. History retains up to 100 committed edits. Selection, camera, and snapping stay outside undo history. `useSceneSync.ts` restores and saves layouts and polls clean scenes for external agent edits. Command IDs and revision handling are implemented in the [scene API](../backend/contracts/scene-api.md); room reconstruction and the agent tool caller remain teammate integrations.
 
@@ -65,8 +68,18 @@ A transient React dependency-array warning occurred during hot replacement of th
 
 Live browser checks through the Vite proxy: valid drag changes centimeter coordinates; outside-room and overlap drops restore the prior pose; invalid numeric entry restores its value without history; duplicate add chooses a nonoverlapping grid slot; saved arrangement survives reload; clean second-tab edits propagate and clear stale undo history. Green selected footprints were visually checked. Transient red rendering is implemented and code-reviewed; automated screenshot capture did not isolate a mid-drag frame. Physical trackpad feel remains a human device check.
 
+## Agent validation, captures and lighting
+
+The [spatial engine tools contract](../backend/contracts/spatial-engine-tools.md) documents exact-coordinate placement, dry runs, structured rejection reasons, and trusted Python adapters. Invalid attempts preserve the layout and revision. Successful edits propagate into the editor through existing scene synchronization.
+
+Capture supports top view and perspective with default or specified azimuth/elevation. An offscreen renderer uses a frozen saved revision without moving the user's camera. The open editor processes same-session jobs; there is no headless server renderer. PNGs report their revision and placeholder/model warnings. The Capture panel exposes the same flow for manual inspection and download.
+
+Verification: 27 frontend tests, 22 Django tests, TypeScript/Vite build, Django system check and migration consistency passed. Live default perspective, top and custom 225°/50° requests produced visually inspected 1024 × 768 PNGs. Browser testing caught and fixed a false canvas-fallback failure, stale hot-reload job state and incorrect drawing-buffer dimensions. Trusted Python adapters were exercised for rejection without mutation, dry run, actual placement, frozen-image retrieval after a later edit and restoration of the original pose.
+
+Room polish adds procedural plaster/limestone detail, studio reflections, a warm background shader and richer glass controls. The artificial window-pattern projection was removed after it produced an oversized X on the floor; the revised preview was visually checked with soft daylight and natural furniture shadows. The production build still warns about the large Three.js chunk. Furniture assets and the independent `codex/realistic-couch-model` worktree were left untouched.
+
 ## Remaining handoff
 
-- Supply the actual furniture GLBs, thumbnails, and Mori webfont files, then assess final rendering and sustained performance on the demo machine.
+- Supply the actual furniture GLBs and thumbnails, then assess final rendering and sustained performance on the demo machine.
 - Physical trackpad behavior, window-blur cancellation, and reduced-motion/unsupported-blur fallbacks need a human device pass; their cleanup/fallback paths are implemented.
 - Mesh collision, circulation clearance, valid-space overlays, room reconstruction adapters, the actual OpenAI/voice agent caller, and commerce remain outside this change.

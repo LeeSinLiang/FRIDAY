@@ -8,6 +8,8 @@ Implemented on `feat/3d-engine-frontend`, 2026-09-19. The browser and Django use
 
 `PUT /api/scene/` accepts `{baseRevision, instances}` and returns the complete saved snapshot. Changed snapshots increment revision once; identical snapshots do not. Stale revisions return 409. The browser restores before editing, debounces saves by 400 ms, and polls clean scenes every two seconds. Local dirty state is never silently replaced. Conflicts stop autosaving and expose **Reload saved room**, which explicitly discards local changes. Network failures retain local edits with retry. Initial load failure requires retry before editing. Changes not yet saved are not durable across browser closure.
 
+See [spatial engine tools](spatial-engine-tools.md) for explicit placement attempts, dry runs, and top/3D screenshots with agent-ready image data.
+
 ## Agent edits
 
 `POST /api/scene/commands/` accepts this shape:
