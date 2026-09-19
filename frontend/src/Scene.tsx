@@ -7,18 +7,21 @@ import PerformanceProbe, {
 import Grid from "./scene/Grid";
 import SceneControls from "./scene/SceneControls";
 import Furniture from "./scene/Furniture";
-import { useFurnitureDrag } from "./scene/useFurnitureDrag";
+import { validatePlacement } from "./scene/placement";
+import { useFurnitureDrag, type PlacementPreview } from "./scene/useFurnitureDrag";
 import { ROOM } from "./scene/fixtures";
 import { cmToScene } from "./scene/units";
 import type { CameraMode, Instance, Pose, Product } from "./scene/types";
 export type ModelStatus = "loading" | "ready" | "error" | "proxy";
 type Props = {
+  editingEnabled: boolean;
   instances: Instance[];
   products: Product[];
   selectedId: string | null;
   mode: CameraMode;
   resetKey: number;
   snap: boolean;
+  onPlacementPreview?: (preview: PlacementPreview | null) => void;
   onSelect: (id: string | null) => void;
   onCommit: (id: string, pose: Pose) => void;
   onActiveChange: (active: boolean) => void;
@@ -56,6 +59,8 @@ function Item({
   bind,
   status,
   retryKey,
+  placementValid,
+  placementReason,
 }: {
   instance: Instance;
   product: Product;
@@ -63,6 +68,8 @@ function Item({
   bind: ReturnType<typeof useFurnitureDrag>["bind"];
   status: Props["onModelStatus"];
   retryKey: number;
+  placementValid: boolean;
+  placementReason: string;
 }) {
   const report = useCallback(
     (value: ModelStatus) => status(instance.instanceId, value),
@@ -73,6 +80,8 @@ function Item({
       product={product}
       instance={instance}
       selected={selected}
+      placementValid={placementValid}
+      placementReason={placementReason}
       {...bind(instance)}
       onModelStatus={report}
       retryKey={retryKey}
@@ -81,6 +90,10 @@ function Item({
 }
 function Contents(props: Props) {
   const drag = useFurnitureDrag({
+    enabled: props.editingEnabled,
+    room: ROOM,
+    products: props.products,
+    onPreview: props.onPlacementPreview,
     instances: props.instances,
     snap: props.snap,
     onSelect: props.onSelect,
@@ -116,12 +129,15 @@ function Contents(props: Props) {
         const product = props.products.find(
           (p) => p.productId === instance.productId,
         );
+        const placement = validatePlacement(ROOM, props.products, props.instances, instance.instanceId, instance.pose);
         return product ? (
           <Item
             key={instance.instanceId}
             instance={instance}
             product={product}
             selected={props.selectedId === instance.instanceId}
+            placementValid={placement.valid}
+            placementReason={placement.reason}
             bind={drag.bind}
             status={props.onModelStatus}
             retryKey={props.retries[instance.instanceId] ?? 0}

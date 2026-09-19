@@ -28,6 +28,10 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 | [docs/frontend/design/visual-directions.md](docs/frontend/design/visual-directions.md) | Three futuristic furniture-editor concepts, saved images, and generation prompts |
 | [docs/frontend/design/selected-direction.md](docs/frontend/design/selected-direction.md) | Selected warm ivory/terracotta Atelier liquid glass, Noir room-box, Japandi/wabi-sabi materials, PP Mori, and motion guidance |
 
+### Backend
+
+- [Scene persistence and agent command API](docs/backend/contracts/scene-api.md) — session storage, validation, revisions, CSRF, and agent adapter handoff.
+
 ### Setup and tooling
 
 - [Local setup and full-stack launcher](README.md#local-setup)

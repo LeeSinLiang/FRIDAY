@@ -9,6 +9,9 @@ import {
 import { Icon } from "./Icons";
 import { PRODUCTS, ROOM } from "./scene/fixtures";
 import { SCENE_UNIT_CM } from "./scene/units";
+import { useSceneSync } from "./scene/useSceneSync";
+import { findOpenPose, validatePlacement } from "./scene/placement";
+import type { PlacementPreview } from "./scene/useFurnitureDrag";
 import { useSceneEditor } from "./scene/useSceneEditor";
 import type { CameraMode, Pose, Product } from "./scene/types";
 import type { ModelStatus } from "./Scene";
@@ -74,7 +77,7 @@ function Coordinate({
   label: string;
   value: number;
   disabled: boolean;
-  onCommit: (value: number) => void;
+  onCommit: (value: number) => boolean;
 }) {
   const [draft, setDraft] = useState(String(value));
   const [invalid, setInvalid] = useState(false);
@@ -94,7 +97,7 @@ function Coordinate({
       return;
     }
     setInvalid(false);
-    onCommit(n);
+    if (!onCommit(n)) setDraft(String(value));
   }
   return (
     <label className="coordinate">
@@ -114,6 +117,7 @@ function Coordinate({
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             commit();
+            skipBlur.current = true;
             e.currentTarget.blur();
           }
           if (e.key === "Escape") {
@@ -130,13 +134,15 @@ function Coordinate({
 }
 export default function App() {
   const editor = useSceneEditor(catalogue);
-  const { instances, selectedId, select, edit, undo, redo, canUndo, canRedo } =
+  const { instances, selectedId, select, edit, undo, redo, canUndo, canRedo, replace } =
     editor;
   const [mode, setMode] = useState<CameraMode>("perspective");
   const [resetKey, setResetKey] = useState(0);
   const [snap, setSnap] = useState(true);
   const [dragging, setDragging] = useState(false);
   const draggingRef = useRef(false);
+  const sync = useSceneSync({instances, replace, interactionActive: dragging});
+  const [placementPreview, setPlacementPreview] = useState<PlacementPreview | null>(null);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const selectedRowRef = useRef<HTMLButtonElement>(null);
@@ -145,6 +151,11 @@ export default function App() {
   const [statuses, setStatuses] = useState<Record<string, ModelStatus>>({});
   const [retries, setRetries] = useState<Record<string, number>>({});
   const [notice, setNotice] = useState("");
+  useEffect(() => {
+    if (!notice || dragging) return;
+    const timer = setTimeout(() => setNotice(""), 6000);
+    return () => clearTimeout(timer);
+  }, [notice, dragging]);
   const [performanceSample, setPerformanceSample] =
     useState<PerformanceSample | null>(null);
   const selected = instances.find((i) => i.instanceId === selectedId);
@@ -162,11 +173,17 @@ export default function App() {
       ?.dispatchEvent(new CustomEvent("friday-drag", { detail: active }));
     setDragging(active);
   }, []);
-  const commitPose = useCallback(
-    (instanceId: string, pose: Pose) =>
-      edit({ type: "setPose", instanceId, pose }),
-    [edit],
-  );
+  const commitPose = useCallback((instanceId: string, pose: Pose) => {
+    const result = validatePlacement(ROOM, catalogue, instances, instanceId, pose);
+    if (!result.valid) { setNotice(`${result.reason}. Position unchanged.`); return false; }
+    edit({ type: "setPose", instanceId, pose });
+    setNotice("Position updated");
+    return true;
+  }, [edit, instances]);
+  const placementChange = useCallback((preview: PlacementPreview | null) => {
+    setPlacementPreview(preview);
+    if (preview) setNotice(preview.valid ? "" : `${preview.reason}. Choose a clear position; invalid drops return to the previous position.`);
+  }, []);
   const modelStatus = useCallback(
     (id: string, status: ModelStatus) =>
       setStatuses((old) =>
@@ -200,7 +217,7 @@ export default function App() {
         )
       )
         return;
-      if (draggingRef.current) return;
+      if (draggingRef.current || !sync.ready) return;
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
         event.preventDefault();
         event.shiftKey ? redo() : undo();
@@ -222,9 +239,9 @@ export default function App() {
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [edit, redo, undo, select, selectedId]);
+  }, [edit, redo, undo, select, selectedId, sync.ready]);
   const add = (item: Product) => {
-    if (draggingRef.current) return;
+    if (draggingRef.current || !sync.ready) return;
     const instanceId = crypto.randomUUID();
     const positions: Record<string, [number, number]> = {
       sofa: [230, 175],
@@ -232,28 +249,17 @@ export default function App() {
       chair: [455, 285],
     };
     const base = positions[item.kind];
-    const duplicates = instances.filter(
-      (i) => i.productId === item.productId,
-    ).length;
-    edit({
-      type: "add",
-      instance: {
-        instanceId,
-        productId: item.productId,
-        pose: {
-          xCm: base[0] + duplicates * 25,
-          zCm: base[1] + duplicates * 25,
-          yawRad: 0,
-        },
-      },
-    });
+    const pose = findOpenPose(ROOM, catalogue, instances, item, {xCm: base[0], zCm: base[1], yawRad: 0}, SCENE_UNIT_CM);
+    if (!pose || instances.length >= 100) { setNotice("No free space for this piece. Move or remove an object first."); return; }
+    edit({type: "add", instance: {instanceId, productId: item.productId, pose}});
     select(instanceId);
     setCatalogOpen(false);
     setNotice(`${item.name} added`);
   };
   const updatePose = (patch: Partial<Pose>) => {
     if (selected && !draggingRef.current)
-      commitPose(selected.instanceId, { ...selected.pose, ...patch });
+      return commitPose(selected.instanceId, { ...selected.pose, ...patch });
+    return false;
   };
   const remove = () => {
     if (selected && !draggingRef.current) {
@@ -275,7 +281,9 @@ export default function App() {
           </span>
         </div>
         <div className="header-right">
-          <span className="local-label">Local workspace</span>
+          <span className={`local-label sync-${sync.status}`} title={sync.message} role="status">{sync.message}</span>
+          {sync.status === "offline" && <button className="button" onClick={sync.retry}>Retry connection</button>}
+          {sync.status === "conflict" && <button className="button" onClick={sync.reload}>Reload saved room</button>}
           <span
             className={`api-status ${api === "API connected" ? "connected" : ""}`}
             title={api}
@@ -296,6 +304,7 @@ export default function App() {
             }
           >
             <Scene
+              editingEnabled={sync.ready}
               instances={instances}
               products={catalogue}
               selectedId={selectedId}
@@ -304,6 +313,7 @@ export default function App() {
               snap={snap}
               onSelect={select}
               onCommit={commitPose}
+              onPlacementPreview={placementChange}
               onActiveChange={activeChange}
               onModelStatus={modelStatus}
               retries={retries}
@@ -320,7 +330,7 @@ export default function App() {
               className={`view-indicator ${mode === "top" ? "at-top" : ""}`}
             />
             <button
-              disabled={dragging}
+              disabled={dragging || !sync.ready}
               aria-pressed={mode === "perspective"}
               onClick={() => setMode("perspective")}
             >
@@ -328,7 +338,7 @@ export default function App() {
               3D
             </button>
             <button
-              disabled={dragging}
+              disabled={dragging || !sync.ready}
               aria-pressed={mode === "top"}
               onClick={() => setMode("top")}
             >
@@ -338,7 +348,7 @@ export default function App() {
           </div>
           <button
             className="glass reset-button"
-            disabled={dragging}
+            disabled={dragging || !sync.ready}
             onClick={() => setResetKey((k) => k + 1)}
           >
             <Icon name="reset" />
@@ -380,7 +390,7 @@ export default function App() {
                     }
                     key={instance.instanceId}
                     className={`object-row ${selectedId === instance.instanceId ? "selected" : ""}`}
-                    disabled={dragging}
+                    disabled={dragging || !sync.ready}
                     onClick={() => select(instance.instanceId)}
                     aria-pressed={selectedId === instance.instanceId}
                   >
@@ -404,7 +414,7 @@ export default function App() {
           <button
             ref={addButtonRef}
             className="button add-object"
-            disabled={dragging}
+            disabled={dragging || !sync.ready}
             onClick={() => setCatalogOpen(true)}
           >
             <Icon name="plus" />
@@ -420,7 +430,7 @@ export default function App() {
                   {product.widthCm} × {product.depthCm} × {product.heightCm} cm
                 </p>
               </div>
-              <fieldset disabled={dragging}>
+              <fieldset disabled={dragging || !sync.ready}>
                 <legend>
                   Position <span>(cm)</span>
                 </legend>
@@ -428,13 +438,13 @@ export default function App() {
                   <Coordinate
                     label="X"
                     value={selected.pose.xCm}
-                    disabled={dragging}
+                    disabled={dragging || !sync.ready}
                     onCommit={(xCm) => updatePose({ xCm })}
                   />
                   <Coordinate
                     label="Z"
                     value={selected.pose.zCm}
-                    disabled={dragging}
+                    disabled={dragging || !sync.ready}
                     onCommit={(zCm) => updatePose({ zCm })}
                   />
                 </div>
@@ -451,7 +461,7 @@ export default function App() {
                   </output>
                   <button
                     className="button"
-                    disabled={dragging}
+                    disabled={dragging || !sync.ready}
                     onClick={() =>
                       updatePose({ yawRad: selected.pose.yawRad + Math.PI / 2 })
                     }
@@ -509,7 +519,7 @@ export default function App() {
                 role="switch"
                 aria-checked={snap}
                 aria-label="Snap to grid"
-                disabled={dragging}
+                disabled={dragging || !sync.ready}
                 onClick={() => setSnap((v) => !v)}
               >
                 <span />
@@ -519,14 +529,14 @@ export default function App() {
             {selected ? (
               <button
                 className="remove-button"
-                disabled={dragging}
+                disabled={dragging || !sync.ready}
                 onClick={remove}
               >
                 <Icon name="trash" size={18} />
                 Remove object
               </button>
             ) : (
-              <p className="local-note">Changes stay in this session.</p>
+              <p className="local-note">Automatically saved to this browser’s room.</p>
             )}
           </div>
         </aside>
@@ -542,7 +552,7 @@ export default function App() {
           <span className="dock-divider" />
           <button
             onClick={undo}
-            disabled={!canUndo || dragging}
+            disabled={!canUndo || dragging || !sync.ready}
             title="Undo (⌘/Ctrl Z)"
           >
             <Icon name="undo" />
@@ -550,20 +560,20 @@ export default function App() {
           </button>
           <button
             onClick={redo}
-            disabled={!canRedo || dragging}
+            disabled={!canRedo || dragging || !sync.ready}
             title="Redo (⌘/Ctrl Shift Z)"
           >
             <Icon name="redo" />
             <span>Redo</span>
           </button>
         </div>
-        <div className="viewport-caption">
+        <div className={`viewport-caption ${placementPreview ? placementPreview.valid ? "placement-valid" : "placement-invalid" : ""}`} role="status">
           <span>
             {dragging
-              ? "Release to place · Esc to cancel"
+              ? placementPreview?.valid ? "Clear space · Release to place · Esc to cancel" : `${placementPreview?.reason ?? "Checking position"} · Release to return`
               : mode === "top"
-                ? "Drag to pan · Scroll to zoom"
-                : "Drag to orbit · Right-drag to pan · Scroll to zoom"}
+                ? "Drag furniture to move · Drag room to pan · Scroll to zoom"
+                : "Drag furniture to move · Drag room to orbit · Scroll to zoom"}
           </span>
         </div>
         {measurePerformance && performanceSample && (
@@ -607,6 +617,7 @@ export default function App() {
           Explore the layout with these test pieces. Finished furniture models
           will follow.
         </p>
+        {notice.startsWith("No free space") && <p role="alert">{notice}</p>}
         <div className="catalogue-grid">
           {catalogue.map((item) => (
             <button
@@ -629,7 +640,7 @@ export default function App() {
           ))}
         </div>
       </dialog>
-      <div className="sr-only" role="status" aria-live="polite">
+      <div className="placement-notice" role="status" aria-live="polite">
         {notice}
       </div>
     </main>

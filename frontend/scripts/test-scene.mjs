@@ -7,7 +7,7 @@ const directory = await mkdtemp(join(tmpdir(), "friday-tests-"));
 try {
   const output = join(directory, "scene.test.mjs");
   await build({
-    entryPoints: ["src/scene/commands.test.ts"],
+    entryPoints: ["src/scene/all-tests.ts"],
     bundle: true,
     platform: "node",
     format: "esm",

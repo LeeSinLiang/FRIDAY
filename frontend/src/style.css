@@ -1144,3 +1144,22 @@ input[aria-invalid="true"] {
   fieldset { margin-top: 15px; }
   .inspector-bottom { padding-top: 10px; }
 }
+
+.placement-notice {
+  position: fixed;
+  left: 28px;
+  bottom: 74px;
+  max-width: min(460px, calc(100vw - 420px));
+  color: #573e30;
+  background: #fffaf0eb;
+  border: 1px solid #d8c6b9;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 8;
+}
+.placement-notice:empty { display: none; }
+.viewport-caption.placement-valid { color: #236343; }
+.viewport-caption.placement-invalid, .sync-conflict, .sync-offline { color: #a5372e; }
+.sync-saved { color: #326247; }

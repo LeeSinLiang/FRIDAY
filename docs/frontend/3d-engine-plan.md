@@ -1,5 +1,7 @@
 # 3D frontend foundation: reviewed build plan
 
+> Scope update, 2026-09-19: the user authorized green/red footprint placement checks, easier dragging, Django persistence, and agent command transport after the original foundation. These are now implemented; the original phase boundaries below are historical. See [implementation](editor-implementation.md) and [scene API](../backend/contracts/scene-api.md).
+
 2026-09-19 · Sin · Foundation implemented with three subagents; see [implementation and verification](editor-implementation.md).
 
 Stay on `feat/3d-engine-frontend`. Build a laptop room editor with a configurable grid, an empty test room, camera controls, and independent furniture manipulation. Keep the first integrated version small and usable, then improve asset quality. Product context: [proposal](../../proposal.md). Research: [engine and asset comparison](rendering-and-furniture-workflow.md). Furniture collaborator: [asset handoff](3d-object/collaborator-handoff.md).

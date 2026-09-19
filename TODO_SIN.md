@@ -5,13 +5,17 @@ Record all agent work here when working for Sin. Include status, file paths, ver
 ## In progress
 
 
+
 - Foundation implemented on feat/3d-engine-frontend. Incoming production furniture models and Mori webfonts remain pending.
 
 ## Next
 
-- Integrate collaborator GLBs/metadata and agreed reconstructed room input. Run a final physical trackpad/reduced-motion/device rehearsal. Spatial validation and overlay follow separately.
+- Integrate collaborator GLBs/metadata and agreed reconstructed room input. Run a final physical trackpad/reduced-motion/device rehearsal. Full mesh/clearance validation and valid-space overlay follow separately.
 
 ## Done
+
+- 2026-09-19: Improved placement and implemented both backend paths with parallel subagents on feat/3d-engine-frontend. build_editor added frontend placement/SAT/free-slot tests and Django session layout/receipt models, migration, validated snapshot/atomic command services/views/tests; build_room added grabbed-surface drag and rollback plus race-tested autosave/polling; build_furniture added larger hit targets and green/red footprints. Coordinator integrated App/Scene/editor history, shared/scene-fixtures.json, visible feedback, initial-load edit gate, cursor cleanup, numeric rollback, and Vite Host preservation for CSRF. Added and indexed docs/backend/contracts/scene-api.md; updated frontend implementation/plan/design notes.
+- Verification: 22 frontend tests, 11 Django tests, Django system check, TypeScript/Vite build passed; migration applied. Browser through full-stack5174/8001 confirmed save/reload, valid drag, boundary/overlap rollback, numeric rejection, free duplicate slot, and clean cross-tab update/history reset. Green footprint visually checked; red mid-drag screenshot not isolated, code path reviewed. Existing ~947kB lazy scene chunk warning remains. Actual OpenAI/voice agent caller, reconstructed rooms, final GLBs/Mori, mesh/clearance validation and physical trackpad rehearsal remain handoffs. No commit, branch switch, fetch, or push.
 
 - 2026-09-19: Prepared user-requested commit of frontend foundation, fixtures/tests, design references and indexed implementation/plan notes, README, configuration and documentation rules. Fresh five-test suite, TypeScript/Vite production build, six-document index/link verification, and whitespace checks passed. Existing lazy scene chunk warning remains. Stayed on feat/3d-engine-frontend; no push.
 

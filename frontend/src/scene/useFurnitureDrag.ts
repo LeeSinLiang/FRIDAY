@@ -1,15 +1,27 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useThree, type ThreeEvent } from "@react-three/fiber";
 import { Group, Plane, Raycaster, Vector2, Vector3 } from "three";
-import type { Instance, Pose } from "./types";
+import type { Instance, Pose, Product, Room } from "./types";
 import { cmToScene, sceneToCm, SCENE_UNIT_CM } from "./units";
+import { validatePlacement } from "./placement";
+
+export type PlacementPreview = {
+  instanceId: string;
+  pose: Pose;
+  valid: boolean;
+  reason: string;
+};
 
 type Options = {
+  enabled?: boolean;
+  room: Room;
+  products: Product[];
   instances: Instance[];
   snap: boolean;
   onSelect: (id: string | null) => void;
   onCommit: (id: string, pose: Pose) => void;
   onActiveChange: (active: boolean) => void;
+  onPreview?: (preview: PlacementPreview | null) => void;
 };
 type Drag = {
   id: string;
@@ -21,8 +33,10 @@ type Drag = {
   startX: number;
   startY: number;
   moved: boolean;
+  plane: Plane;
+  valid: boolean;
+  reason: string;
 };
-const floor = new Plane(new Vector3(0, 1, 0), 0);
 
 export function useFurnitureDrag(options: Options) {
   const { gl, camera, invalidate } = useThree();
@@ -35,7 +49,7 @@ export function useFurnitureDrag(options: Options) {
   const pointer = useRef(new Vector2());
   const intersection = useRef(new Vector3());
   const project = useCallback(
-    (clientX: number, clientY: number) => {
+    (clientX: number, clientY: number, plane: Plane) => {
       const rect = gl.domElement.getBoundingClientRect();
       if (!rect.width || !rect.height) return null;
       pointer.current.set(
@@ -43,9 +57,10 @@ export function useFurnitureDrag(options: Options) {
         (-(clientY - rect.top) / rect.height) * 2 + 1,
       );
       raycaster.current.setFromCamera(pointer.current, camera);
-      // A near-parallel ray can yield enormous, unstable floor positions.
+      // Keep the grabbed surface under the pointer rather than projecting a
+      // sofa's top onto the floor, which makes it slide away from the cursor.
       if (Math.abs(raycaster.current.ray.direction.y) < 0.0001) return null;
-      return raycaster.current.ray.intersectPlane(floor, intersection.current);
+      return raycaster.current.ray.intersectPlane(plane, intersection.current);
     },
     [camera, gl],
   );
@@ -54,20 +69,29 @@ export function useFurnitureDrag(options: Options) {
       const drag = active.current;
       if (!drag) return;
       active.current = null;
-      if (!commit)
+      const current = latest.current;
+      const exists = current.instances.some((i) => i.instanceId === drag.id);
+      const result = validatePlacement(current.room, current.products, current.instances, drag.id, drag.preview);
+      const shouldCommit = commit && drag.moved && exists && result.valid;
+      if (!shouldCommit)
         drag.group.position.set(
           cmToScene(drag.initial.xCm),
           0,
           cmToScene(drag.initial.zCm),
         );
-      if (gl.domElement.hasPointerCapture(drag.pointerId))
-        gl.domElement.releasePointerCapture(drag.pointerId);
-      latest.current.onActiveChange(false);
-      if (
-        commit &&
-        latest.current.instances.some((i) => i.instanceId === drag.id)
-      )
-        latest.current.onCommit(drag.id, drag.preview);
+      delete drag.group.userData.placementValid;
+      delete drag.group.userData.placementReason;
+      delete drag.group.userData.placementDragging;
+      gl.domElement.style.cursor = "";
+      if (commit && drag.moved && !result.valid)
+        current.onPreview?.({ instanceId: drag.id, pose: drag.preview, valid: false, reason: result.reason });
+      if (gl.domElement.hasPointerCapture(drag.pointerId)) {
+        try { gl.domElement.releasePointerCapture(drag.pointerId); } catch { /* Pointer already ended outside the document. */ }
+      }
+      gl.domElement.dispatchEvent(new CustomEvent("friday-drag", { detail: false }));
+      current.onActiveChange(false);
+      if (shouldCommit) current.onCommit(drag.id, drag.preview);
+      current.onPreview?.(null);
       invalidate();
     },
     [gl, invalidate],
@@ -84,7 +108,7 @@ export function useFurnitureDrag(options: Options) {
       )
         return;
       drag.moved = true;
-      const point = project(event.clientX, event.clientY);
+      const point = project(event.clientX, event.clientY, drag.plane);
       if (!point) return;
       let xCm = sceneToCm(point.x - drag.offset.x);
       let zCm = sceneToCm(point.z - drag.offset.z);
@@ -94,6 +118,15 @@ export function useFurnitureDrag(options: Options) {
       }
       if (!Number.isFinite(xCm) || !Number.isFinite(zCm)) return;
       drag.preview = { xCm, zCm, yawRad: drag.initial.yawRad };
+      const current = latest.current;
+      const result = validatePlacement(current.room, current.products, current.instances, drag.id, drag.preview);
+      drag.group.userData.placementValid = result.valid;
+      drag.group.userData.placementReason = result.reason;
+      if (result.valid !== drag.valid || result.reason !== drag.reason) {
+        drag.valid = result.valid;
+        drag.reason = result.reason;
+        current.onPreview?.({ instanceId: drag.id, pose: drag.preview, valid: result.valid, reason: result.reason });
+      }
       drag.group.position.set(cmToScene(xCm), 0, cmToScene(zCm));
       invalidate();
     };
@@ -166,17 +199,21 @@ export function useFurnitureDrag(options: Options) {
       else groups.current.delete(instance.instanceId);
     },
     onPointerDown: (event: ThreeEvent<PointerEvent>) => {
-      if (event.button !== 0 || !event.isPrimary || active.current) return;
+      if (latest.current.enabled === false || event.button !== 0 || !event.isPrimary || active.current) return;
       event.stopPropagation();
       suppressClick.current = true;
       latest.current.onSelect(instance.instanceId);
       const group = groups.current.get(instance.instanceId);
-      const point = project(event.clientX, event.clientY);
-      if (!group || !point) return;
+      if (!group || !Number.isFinite(event.point.y)) return;
+      const point = event.point.clone();
+      const plane = new Plane(new Vector3(0, 1, 0), -point.y);
+      const current = latest.current;
+      const result = validatePlacement(current.room, current.products, current.instances, instance.instanceId, instance.pose);
       // Orbit may have observed native pointerdown before R3F dispatches it.
       // Cancel that native gesture before taking ownership; otherwise Escape
       // could resume an old orbit when controls become enabled again.
-      latest.current.onActiveChange(true);
+      gl.domElement.dispatchEvent(new CustomEvent("friday-drag", { detail: true }));
+      current.onActiveChange(true);
       gl.domElement.dispatchEvent(
         new PointerEvent("pointercancel", {
           pointerId: event.pointerId,
@@ -190,6 +227,9 @@ export function useFurnitureDrag(options: Options) {
         startX: event.clientX,
         startY: event.clientY,
         moved: false,
+        plane,
+        valid: result.valid,
+        reason: result.reason,
         initial: { ...instance.pose },
         preview: { ...instance.pose },
         offset: point
@@ -202,7 +242,13 @@ export function useFurnitureDrag(options: Options) {
             ),
           ),
       };
-      gl.domElement.setPointerCapture(event.pointerId);
+      group.userData.placementDragging = true;
+      group.userData.placementValid = result.valid;
+      group.userData.placementReason = result.reason;
+      gl.domElement.style.cursor = "grabbing";
+      current.onPreview?.({ instanceId: instance.instanceId, pose: instance.pose, valid: result.valid, reason: result.reason });
+      try { gl.domElement.setPointerCapture(event.pointerId); } catch { cancel(); }
+      invalidate();
     },
   });
   return { bind, cancel };

@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from "react";
-import type { ThreeEvent } from "@react-three/fiber";
-import { BufferGeometry, Group, Vector3 } from "three";
+import { useEffect, useMemo, useRef } from "react";
+import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { BufferGeometry, Group, LineBasicMaterial, MeshBasicMaterial, Vector3 } from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import type { Instance, Product } from "./types";
 import { cmToScene } from "./units";
@@ -141,7 +141,22 @@ function FurnitureProxy({ product }: { product: Product }) {
   );
 }
 
-function Footprint({ width, depth }: { width: number; depth: number }) {
+function Footprint({ width, depth, valid }: { width: number; depth: number; valid: boolean }) {
+  const footprintRef = useRef<Group>(null);
+  const fillMaterial = useRef<MeshBasicMaterial>(null);
+  const borderMaterial = useRef<LineBasicMaterial>(null);
+  const color = valid ? "#32805b" : "#c64436";
+  // Drag previews move the placement group imperatively; track their validity
+  // on the same render tick without rerendering the React editor on pointermove.
+  useFrame(() => {
+    const placement = footprintRef.current?.parent;
+    const preview = placement?.userData;
+    const currentValid = preview?.placementDragging === true && typeof preview.placementValid === "boolean"
+      ? preview.placementValid : valid;
+    const currentColor = currentValid ? "#32805b" : "#c64436";
+    fillMaterial.current?.color.set(currentColor);
+    borderMaterial.current?.color.set(currentColor);
+  });
   const geometry = useMemo(
     () =>
       new BufferGeometry().setFromPoints([
@@ -154,19 +169,27 @@ function Footprint({ width, depth }: { width: number; depth: number }) {
   );
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
-    <lineLoop
+    <group ref={footprintRef}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, cmToScene(0.5), 0]} renderOrder={2} raycast={() => {}}>
+        <planeGeometry args={[width, depth]} />
+        <meshBasicMaterial ref={fillMaterial} color={color} transparent opacity={0.22} depthWrite={false} toneMapped={false} />
+      </mesh>
+      <lineLoop
       geometry={geometry}
-      position={[0, cmToScene(0.6), 0]}
+      position={[0, cmToScene(0.7), 0]}
       renderOrder={3}
       raycast={() => {}}
     >
       <lineBasicMaterial
-        color="#c65a2e"
-        depthTest={false}
+        ref={borderMaterial}
+        color={color}
+        depthWrite={false}
+        toneMapped={false}
         transparent
         opacity={0.95}
       />
-    </lineLoop>
+      </lineLoop>
+    </group>
   );
 }
 
@@ -178,6 +201,8 @@ export default function Furniture({
   onPointerDown,
   onModelStatus,
   retryKey,
+  placementValid = true,
+  placementReason,
 }: {
   product: Product;
   instance: Instance;
@@ -186,7 +211,14 @@ export default function Furniture({
   onPointerDown: (event: ThreeEvent<PointerEvent>) => void;
   onModelStatus?: (status: ModelStatus) => void;
   retryKey?: number;
+  placementValid?: boolean;
+  placementReason?: string;
 }) {
+  const canvas = useThree((state) => state.gl.domElement);
+  const hovering = useRef(false);
+  useEffect(() => () => {
+    if (hovering.current && canvas.style.cursor === "grab") canvas.style.cursor = "";
+  }, [canvas]);
   return (
     <group
       ref={groupRef}
@@ -194,7 +226,20 @@ export default function Furniture({
       position={[cmToScene(instance.pose.xCm), 0, cmToScene(instance.pose.zCm)]}
       rotation={[0, instance.pose.yawRad, 0]}
       onPointerDown={onPointerDown}
+      onPointerOver={(event) => {
+        event.stopPropagation();
+        hovering.current = true;
+        if (!event.eventObject.userData.placementDragging && canvas.style.cursor !== "grabbing") canvas.style.cursor = "grab";
+      }}
+      onPointerOut={() => {
+        hovering.current = false;
+        if (canvas.style.cursor === "grab") canvas.style.cursor = "";
+      }}
     >
+      <mesh position={[0, cmToScene(product.heightCm / 2), 0]} userData={{ placementReason }}>
+        <boxGeometry args={[cmToScene(product.widthCm + 4), cmToScene(product.heightCm + 2), cmToScene(product.depthCm + 4)]} />
+        <meshBasicMaterial transparent opacity={0} colorWrite={false} depthWrite={false} />
+      </mesh>
       <FurnitureModel
         modelUrl={product.modelUrl}
         retryKey={retryKey}
@@ -203,8 +248,9 @@ export default function Furniture({
       />
       {selected && (
         <Footprint
-          width={cmToScene(product.widthCm)}
-          depth={cmToScene(product.depthCm)}
+          width={cmToScene(product.widthCm + 6)}
+          depth={cmToScene(product.depthCm + 6)}
+          valid={placementValid}
         />
       )}
     </group>

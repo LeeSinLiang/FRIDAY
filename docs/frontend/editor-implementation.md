@@ -1,12 +1,12 @@
 # Room editor implementation and handoff
 
-2026-09-19 · Sin · Implemented on `feat/3d-engine-frontend` with three software subagents. No backend schema or persistence is deployed by this work.
+2026-09-19 · Sin · Implemented on `feat/3d-engine-frontend` with three software subagents. Now includes database-backed demo sessions and validated agent commands; see the [scene API](../backend/contracts/scene-api.md).
 
 ## Run and use
 
-Run `./run-local.sh` from the repository root. The room starts empty. Choose **Add object** to place a clearly labeled test sofa, table, or chair. Use the object list or click a piece to select it. Drag to move, use centimeter position fields, rotate in 90° steps, remove, and undo/redo. Snap uses the configured render-unit spacing. Escape cancels an active drag or numeric draft. Geometry edits and history controls disable while dragging. Refresh clears this session's arrangement.
+Run `./run-local.sh` from the repository root. The room starts empty. Choose **Add object** to place a clearly labeled test sofa, table, or chair. Use the object list or click a piece to select it. Drag to move, use centimeter position fields, rotate in 90° steps, remove, and undo/redo. Snap uses the configured render-unit spacing. Escape cancels an active drag or numeric draft. Geometry edits and history controls disable while dragging. Refresh restores the last saved arrangement from Django.
 
-Perspective supports orbit, right-drag pan, and wheel zoom. Top view supports pan/zoom and hides the walls. Reset view reframes the room. Keyboard history shortcuts are Cmd/Ctrl+Z and Cmd/Ctrl+Shift+Z; Delete/Backspace removes the selected object outside text fields. Placement validation is intentionally absent: furniture may overlap or extend outside the room.
+Perspective supports orbit, right-drag pan, and wheel zoom. Top view supports pan/zoom and hides the walls. Reset view reframes the room. Keyboard history shortcuts are Cmd/Ctrl+Z and Cmd/Ctrl+Shift+Z; Delete/Backspace removes the selected object outside text fields. Rotated footprints check room bounds and furniture overlap. Selected footprints turn green for valid positions and red for invalid drag previews; invalid releases return to the previous position. New pieces choose a nearby free grid slot.
 
 The approved [design reference](design/selected-direction.md) informs the warm ivory, espresso, terracotta, glass panels, and reveal animation. The runtime uses simple dimensioned furniture proxies, procedural room grain, and local shadows. Actual collaborator models will supply the final furniture detail. PP Mori is requested through a local font lookup; no font binaries have been acquired or bundled, so machines without it use Helvetica Neue/Arial. This is not final font fidelity. Glass uses backdrop blur and masked reveal, not optical refraction; camera view switches are immediate.
 
@@ -20,6 +20,7 @@ The approved [design reference](design/selected-direction.md) informs the warm i
 | `src/scene/Room.tsx`, `RoomMaterials.ts`, `Grid.tsx`, `SceneControls.tsx` | Cutaway room, procedural materials, batched grid, responsive cameras |
 | `src/scene/Furniture.tsx`, `FurnitureModel.tsx` | Test proxies, independent model clones, loading/error fallback and retry |
 | `src/scene/commands.ts`, `useSceneEditor.ts`, `useFurnitureDrag.ts` | Validated edits, local undo/redo, imperative drag previews and cleanup |
+| `src/scene/placement.ts`, `useSceneSync.ts` | Rotated footprint checks, free-slot search, autosave, revision conflicts and external updates |
 | `src/scene/PerformanceProbe.tsx` | Opt-in development render-loop timing during drag |
 | `scripts/test-scene.mjs`, `src/scene/commands.test.ts` | Node tests bundled with esbuild |
 | `scripts/generate-test-glb.mjs`, `public/models/test-fixture/model.glb` | Reproducible, verified 2 × 1 × 1 meter GLB |
@@ -27,9 +28,9 @@ The approved [design reference](design/selected-direction.md) informs the warm i
 
 Root `.env` sets `SCENE_UNIT_CM=5`. Change it and restart Vite to test another scale. Only that validated number is injected into the browser; root secrets are not exposed. App poses and dimensions remain centimeters. GLB geometry remains meters and is scaled exactly once by `100 / SCENE_UNIT_CM`. Scene geometry uses `cm / SCENE_UNIT_CM`.
 
-To integrate a collaborator product, place its runtime files under `frontend/public/models/furniture/<product-id>/` and add its known dimensions, name, color, placeholder kind, and `modelUrl` to `PRODUCTS` in `fixtures.ts`. Follow the [asset contract](3d-object/collaborator-handoff.md). The current kind only selects a fallback proxy; loaded GLBs keep their own materials and geometry. The loader does not distort a GLB to force metadata dimensions. Missing assets show the proxy with a retry control. Safe geometry/material resources are shared while each instance owns a separate object hierarchy.
+To integrate a collaborator product, place its runtime files under `frontend/public/models/furniture/<product-id>/` and add its known dimensions, name, color, placeholder kind, and `modelUrl` to root `shared/scene-fixtures.json`. Follow the [asset contract](3d-object/collaborator-handoff.md). The current kind only selects a fallback proxy; loaded GLBs keep their own materials and geometry. The loader does not distort a GLB to force metadata dimensions. Missing assets show the proxy with a retry control. Safe geometry/material resources are shared while each instance owns a separate object hierarchy.
 
-`SceneEdit` supports `add`, `setPose`, and `remove`; poses use `xCm`, `zCm`, and `yawRad`. `applyEdit` rejects malformed edits, duplicate instance IDs, unknown products, invalid dimensions, and non-finite poses. History retains up to 100 committed edits. Selection, camera, and snapping stay outside undo history. A future backend adapter can consume the same centimeter contract, but command IDs, revision conflict handling, room reconstruction, and transport remain separate work.
+`SceneEdit` supports `add`, `setPose`, and `remove`; poses use `xCm`, `zCm`, and `yawRad`. `applyEdit` rejects malformed edits, duplicate instance IDs, unknown products, invalid dimensions, and non-finite poses. History retains up to 100 committed edits. Selection, camera, and snapping stay outside undo history. `useSceneSync.ts` restores and saves layouts and polls clean scenes for external agent edits. Command IDs and revision handling are implemented in the [scene API](../backend/contracts/scene-api.md); room reconstruction and the agent tool caller remain teammate integrations.
 
 ## Verification
 
@@ -58,8 +59,14 @@ Use `?testAssets=1` on the development URL to expose the real, delayed, and brok
 
 A transient React dependency-array warning occurred during hot replacement of the camera implementation; a fresh browser page had no runtime errors. The production build still reports a large lazy-loaded Three.js scene chunk (about 944 kB before gzip); no runtime dependency was added. esbuild is declared explicitly as a development dependency for the test runner.
 
+## Placement and persistence follow-up verification
+
+22 frontend tests and 11 Django tests pass, including rotated footprint geometry, bounded free-slot search, save serialization, pending-poll races, initial-load gating, offline retry, conflicts, CSRF, session isolation, and atomic/idempotent commands. TypeScript/Vite build and Django system checks pass; the existing large scene-chunk warning remains.
+
+Live browser checks through the Vite proxy: valid drag changes centimeter coordinates; outside-room and overlap drops restore the prior pose; invalid numeric entry restores its value without history; duplicate add chooses a nonoverlapping grid slot; saved arrangement survives reload; clean second-tab edits propagate and clear stale undo history. Green selected footprints were visually checked. Transient red rendering is implemented and code-reviewed; automated screenshot capture did not isolate a mid-drag frame. Physical trackpad feel remains a human device check.
+
 ## Remaining handoff
 
 - Supply the actual furniture GLBs, thumbnails, and Mori webfont files, then assess final rendering and sustained performance on the demo machine.
 - Physical trackpad behavior, window-blur cancellation, and reduced-motion/unsupported-blur fallbacks need a human device pass; their cleanup/fallback paths are implemented.
-- Spatial validation, valid-space overlays, room reconstruction adapters, backend persistence/agent transport, and commerce are outside this foundation.
+- Mesh collision, circulation clearance, valid-space overlays, room reconstruction adapters, the actual OpenAI/voice agent caller, and commerce remain outside this change.

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { historyReducer, initialHistory } from "./commands";
-import type { Product, SceneEdit } from "./types";
+import type { Instance, Product, SceneEdit } from "./types";
 
 export function useSceneEditor(products: Product[]) {
   const [history, setHistory] = useState(initialHistory);
@@ -10,6 +10,10 @@ export function useSceneEditor(products: Product[]) {
       setHistory((state) => historyReducer(state, command, products)),
     [products],
   );
+  const replace = useCallback((instances: Instance[]) => {
+    setHistory({past: [], present: instances.map(item => ({...item,pose:{...item.pose}})),future:[]});
+    select(null);
+  }, []);
   const undo = useCallback(
     () =>
       setHistory((state) => historyReducer(state, { type: "undo" }, products)),
@@ -28,6 +32,7 @@ export function useSceneEditor(products: Product[]) {
     ? selection
     : null;
   return {
+    replace,
     instances: history.present,
     selectedId,
     select,
