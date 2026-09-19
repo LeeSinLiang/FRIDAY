@@ -47,8 +47,8 @@ export function toSvg(scene: Scene, mask: Mask, options: SvgOptions = {}): strin
   const candidate = options.candidate
     ? `<polygon points="${corners(options.candidate.product, options.candidate.pose)}" fill="none" stroke="${COLOURS.candidate}" stroke-width="3" stroke-dasharray="8 5"/>`
     : "";
-  const title = options.title ? `<text x="0" y="-10" font-family="monospace" font-size="14">${options.title.replace(/[<&]/g, "")}</text>` : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-MARGIN_CM} ${-MARGIN_CM} ${w + 2 * MARGIN_CM} ${d + 2 * MARGIN_CM}" width="${w + 2 * MARGIN_CM}">`
+  const title = options.title ? `<text x="0" y="-10" font-family="monospace" font-size="14">${options.title.replace(/[<>&"]/g, "")}</text>` : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-MARGIN_CM} ${-MARGIN_CM} ${w + 2 * MARGIN_CM} ${d + 2 * MARGIN_CM}" style="max-width:100%;height:auto">`
     + `<rect x="${-MARGIN_CM}" y="${-MARGIN_CM}" width="${w + 2 * MARGIN_CM}" height="${d + 2 * MARGIN_CM}" fill="#fff"/>${title}`
     + `<g fill-opacity="0.55" shape-rendering="crispEdges">${runs(mask, FREE, COLOURS.lit)}${runs(mask, UNKNOWN, COLOURS.unknown)}</g>`
     + `<rect x="0" y="0" width="${w}" height="${d}" fill="none" stroke="${COLOURS.wall}" stroke-width="6"/>`
