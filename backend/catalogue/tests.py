@@ -2,7 +2,7 @@ from django.test import SimpleTestCase
 from pydantic import ValidationError
 
 from catalogue.dsl.schema import Program
-from catalogue.types import Listing
+from catalogue.types import Facets, Listing, SearchResponse, to_wire
 
 LISTING = {
     "id": "ikea-291.292.29",
@@ -56,3 +56,50 @@ class ProgramTests(SimpleTestCase):
     def test_wall_ref_requires_id(self):
         with self.assertRaises(ValidationError):
             Program.model_validate({"find": [], "place": [{"k": "against", "ref": {"kind": "wall"}}]})
+
+
+def null_paths(value, path: str = "$") -> list[str]:
+    if value is None:
+        return [path]
+    if isinstance(value, dict):
+        return [p for key, child in value.items() for p in null_paths(child, f"{path}.{key}")]
+    if isinstance(value, list):
+        return [p for index, child in enumerate(value) for p in null_paths(child, f"{path}[{index}]")]
+    return []
+
+
+class WireFormatTests(SimpleTestCase):
+    """The TypeScript contract says optional means absent. Nothing optional may serialize as null."""
+
+    def test_search_response_omits_unset_optionals(self):
+        bare = to_wire(SearchResponse(items=[Listing.model_validate(LISTING)], total=1))
+        self.assertNotIn("facets", bare)
+        with_facets = to_wire(SearchResponse(items=[], total=0, facets=Facets(category=[], price_band=[])))
+        self.assertNotIn("fits_room", with_facets["facets"])
+        self.assertEqual(null_paths(with_facets), [])
+
+    def test_model_url_is_the_only_null_and_is_always_present(self):
+        wire = to_wire(SearchResponse(items=[Listing.model_validate(LISTING)], total=1))
+        self.assertEqual(null_paths(wire), ["$.items[0].model_url"])
+        with_model = Listing.model_validate({**LISTING, "model_url": "https://cdn.example/ektorp.glb"})
+        self.assertEqual(to_wire(with_model)["model_url"], "https://cdn.example/ektorp.glb")
+
+    def test_program_omits_ref_ids_near_mm_and_qty(self):
+        wire = to_wire(Program.model_validate({
+            "find": [],
+            "place": [
+                {"k": "near", "ref": {"kind": "window"}},
+                {"k": "clear", "ref": {"kind": "door"}, "mm": 750},
+            ],
+        }))
+        self.assertEqual(null_paths(wire), [])
+        self.assertEqual(wire["place"][0], {"k": "near", "ref": {"kind": "window"}})
+        self.assertNotIn("qty", wire)
+
+    def test_set_optionals_survive(self):
+        wire = to_wire(Program.model_validate({
+            "find": [], "qty": 2,
+            "place": [{"k": "near", "ref": {"kind": "window", "id": "w1"}, "mm": 600}],
+        }))
+        self.assertEqual(wire["qty"], 2)
+        self.assertEqual(wire["place"][0], {"k": "near", "ref": {"kind": "window", "id": "w1"}, "mm": 600})
