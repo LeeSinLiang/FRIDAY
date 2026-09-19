@@ -1,0 +1,49 @@
+{
+  "title": "Hackathon Project Plan",
+  "components": [
+    {
+      "id": "f26ae912-417c-46f3-aa6d-175f257df604",
+      "name": "Problem & Idea",
+      "tasks": []
+    },
+    {
+      "id": "47af6e47-cdf4-4392-b04d-c834f4d9bb36",
+      "name": "Frontend",
+      "tasks": [
+        {
+          "id": "d4f175a8-a117-4461-aa7b-6a38c8be3c4b",
+          "title": "Sketch wireframes",
+          "done": false,
+          "phase": "ideation"
+        }
+      ]
+    },
+    {
+      "id": "929309ba-0bff-4c57-8de4-5d9085adaef7",
+      "name": "Backend / API",
+      "tasks": [
+        {
+          "id": "82fbd617-6833-43ca-b029-e057d9e937f6",
+          "title": "Build task list UI",
+          "done": false,
+          "phase": "mvp"
+        }
+      ]
+    },
+    {
+      "id": "8f3cc2bd-c786-4d34-b0a7-d18ed9e6b86a",
+      "name": "Data / AI-ML",
+      "tasks": []
+    },
+    {
+      "id": "fd20145e-b779-4eea-ac26-cf3f8183e769",
+      "name": "Design / UX",
+      "tasks": []
+    },
+    {
+      "id": "dcc1942f-5849-4db3-9f09-81fe4051e30c",
+      "name": "Pitch & Demo",
+      "tasks": []
+    }
+  ]
+}
