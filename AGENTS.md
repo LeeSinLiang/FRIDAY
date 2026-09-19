@@ -27,10 +27,23 @@
 - If the project has not been set up locally, run `./setup.sh` from the repository root first.
 - Use `./run-local.sh` from the repository root to run the full stack for development and manual/integration testing. Ctrl-C stops both servers. Run automated checks separately as documented in README.md.
 - This is a rapid, multi-person hackathon: expect frequent pushes and concurrent edits. Always check the latest state before acting; code read even five messages ago may already have changed.
-- The user handles `git fetch` and will tell agents when updates are available. Do not fetch unless explicitly asked. At task start and before committing, inspect local branch status and diffs. Before each edit, re-read the relevant files; refresh again after interruptions, changes in scope, or user-reported updates. Preserve teammates' work and reconcile changes before proceeding.
+- The user handles `git fetch` and will tell agents when updates are available. Do not fetch or pull mid-task unless explicitly asked: the ground must not shift under work in progress. The sync below happens only at task boundaries. At task start and before committing, inspect local branch status and diffs. Before each edit, re-read the relevant files; refresh again after interruptions, changes in scope, or user-reported updates. Preserve teammates' work and reconcile changes before proceeding.
 - Prefer the simplest working solution. Check existing code before adding dependencies or patterns.
 - Run checks appropriate to the change and record what passed, failed, or could not run in the owner's TODO file.
 - Keep secrets out of the repo. Checkout is sandbox-only and requires explicit user approval in the application.
+
+## Sync before starting work
+
+Pull at task boundaries — at task start and after a merge to `main` — never mid-task:
+
+1. `git checkout main && git pull`
+2. `./setup.sh` — other lanes add Python and frontend dependencies
+3. Run the full test suite and the frontend build on that fresh `main`
+4. Branch new work off `main`, never off a previous feature branch
+5. Re-read `AGENTS.md` and `INDEX.md` — teammates change them
+
+- If clean `main` is red, **stop and tell your owner.** That is a whole-team problem, not something to work around.
+- When merging a stacked PR, retarget the dependent PR to `main` **before** deleting the base branch. Deleting it first closes the dependent PR instead of retargeting it.
 
 ## Git
 
