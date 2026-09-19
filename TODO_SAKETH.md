@@ -14,6 +14,11 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## Done
 
+- **`facets.fits_room_of` (2026-09-19).** Branch `codex/saketh-fits-room-of`. PR #8 (Phase E) merged to `main` first, including a review fix: ingest now removes stale seed documents when the seed count shrinks.
+  - Contract change, approved by Saketh, additive and optional, in its own commit touching only `backend/catalogue/types.py` and `frontend/src/lib/types.ts`: `fits_room_of` is the count matching every clause except the width gap. Absent without `fits_w_mm`.
+  - Implementation: `facets.py`, `memory.py`, `to_es_query.py` (width clause moves to `post_filter`; `fits_room_of` is a `match_all` filter aggregation; category and price facets nest under `fits_room`). Dev page shows "N of M fit".
+  - Verification: `manage.py test api catalogue` — 64 tests OK; `npm run build` passes. Live: `category=armchair&fits_w_mm=900` gives 523 of 1,005 in one request from Elasticsearch; 270-query sweep across both backends, 268 identical, 2 free-text queries with identical totals and facets in relevance order.
+
 - **Phase E — scale and aggregations (2026-09-19), done before Phase D because D is blocked on the OpenAI key.** Branch `codex/saketh-scale`.
   - PRs #2, #3, #5 merged to `main` in order (merge commits). Deleting #2's branch closed #3 instead of retargeting it; recovered by restoring the branch, reopening, retargeting to `main`, then deleting again. For #5 the retarget was done before the delete. `main` after all three: 45 tests OK, `npm run build` passes.
   - Built: `backend/catalogue/seed.py` (12,000 deterministic seed listings, 30-colour hero palette only), `facets.py` (memory counting + matching Elasticsearch aggregations: `terms` category, `range` price bands, `filter` fits_room), `load_catalogue()` in `feed.py`, aggregations in `to_es_query.py` / `es.py`, facets on the memory backend, ingest of the full catalogue with a single refresh, facets on the dev page. Tests in `test_scale.py`.
@@ -47,6 +52,8 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
   - Verification: `manage.py test api catalogue` — 12 tests OK on the Phase A branch.
 
 ## Blockers / handoff
+
+- **Cross-lane, not built (no assets yet):** units stay millimetres in the catalogue and centimetres in the 3D pipeline, converted as `mm / 10` at Sin's boundary. Wanted later: a check that a listing's GLB bounding box agrees with `dims_mm / 10`, failing loudly instead of rendering at the wrong scale. Needs Sin's loader and real `model_url` assets.
 
 - Phase E note: seeded listings must draw colours from a bounded palette (under 2,000 distinct), or the colour filter's palette aggregation truncates and the backends drift.
 
