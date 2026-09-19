@@ -55,3 +55,7 @@ Thumbs.db
 
 # Keep dependency lockfiles, Dockerfiles, shared Compose configs,
 # Django migrations, and Three.js source assets (GLB/GLTF/textures) tracked.
+
+# Project-manager transient persistence files (keep board.json tracked)
+.github/extensions/project-manager/data/board.json.lock
+.github/extensions/project-manager/data/board.json.*.tmp

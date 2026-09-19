@@ -6,20 +6,21 @@
 // (ideation / mvp / development) so phase is visible without constraining
 // where the card lives.
 //
-// The board is stored as a single committed JSON file so the whole team
-// (and any agent/session) sees the same state. It is keyed by nothing but
-// its own file path — never by instanceId — so multiple open canvas panels
-// always reflect the same underlying project plan.
+// Sessions sharing this local file coordinate through its write lock;
+// open panels poll it for changes. Separate checkouts share changes via Git.
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { EventEmitter } from "node:events";
+import { setTimeout as delay } from "node:timers/promises";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, "data");
-const BOARD_PATH = path.join(DATA_DIR, "board.json");
+// Override only when intentionally using an isolated board (e.g. tests).
+const BOARD_PATH = path.resolve(process.env.PROJECT_MANAGER_BOARD_PATH || path.join(__dirname, "data/board.json"));
+const DATA_DIR = path.dirname(BOARD_PATH);
+const LOCK_PATH = `${BOARD_PATH}.lock`;
 
 export const PHASES = ["ideation", "mvp", "development"];
 export const PHASE_LABELS = {
@@ -72,25 +73,84 @@ function migrateIfNeeded(board) {
     return migrated;
 }
 
-let boardCache = null;
-
-async function ensureLoaded() {
-    if (boardCache) return boardCache;
-    try {
-        const raw = await fs.readFile(BOARD_PATH, "utf8");
-        boardCache = JSON.parse(raw);
-        if (migrateIfNeeded(boardCache)) await persist();
-    } catch (err) {
-        if (err.code !== "ENOENT") throw err;
-        boardCache = defaultBoard();
-        await persist();
+// All participants lock the same path before reading, including initialization
+// and legacy migration. Never steal an old lock: a slow writer may still own it.
+async function withLock(fn) {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    const deadline = Date.now() + 5000;
+    let lock;
+    while (!lock) {
+        try {
+            lock = await fs.open(LOCK_PATH, "wx");
+        } catch (err) {
+            if (err.code !== "EEXIST") throw err;
+            if (Date.now() >= deadline) {
+                throw new Error(`Board is locked: ${LOCK_PATH}. Stop all board processes before removing an abandoned lock.`);
+            }
+            await delay(20);
+        }
     }
-    return boardCache;
+    try {
+        return await fn();
+    } finally {
+        await lock.close();
+        await fs.unlink(LOCK_PATH);
+    }
 }
 
-async function persist() {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.writeFile(BOARD_PATH, JSON.stringify(boardCache, null, 2) + "\n", "utf8");
+async function persist(board) {
+    const temporaryPath = `${BOARD_PATH}.${randomUUID()}.tmp`;
+    try {
+        await fs.writeFile(temporaryPath, JSON.stringify(board, null, 2) + "\n", { flag: "wx" });
+        await fs.rename(temporaryPath, BOARD_PATH);
+    } finally {
+        await fs.rm(temporaryPath, { force: true });
+    }
+}
+
+let lastSnapshot;
+
+async function transaction(fn) {
+    return withLock(async () => {
+        let board;
+        let needsWrite = false;
+        try {
+            board = JSON.parse(await fs.readFile(BOARD_PATH, "utf8"));
+            needsWrite = migrateIfNeeded(board);
+        } catch (err) {
+            if (err.code !== "ENOENT") throw err;
+            board = defaultBoard();
+            needsWrite = true;
+        }
+        // A failed mutation discards this private copy without touching disk.
+        const result = fn?.(board);
+        if (fn || needsWrite) await persist(board);
+        const snapshot = JSON.stringify(board);
+        if (snapshot !== lastSnapshot) {
+            lastSnapshot = snapshot;
+            events.emit("changed", board);
+        }
+        return result ?? board;
+    });
+}
+
+// Each server owns a polling subscription and cancels it on close. Polling the
+// path also detects atomic replacement (Git/editor saves), unlike inode watches.
+export function watchBoard() {
+    let pending = null;
+    let previousError;
+    const timer = setInterval(() => {
+        if (pending) return;
+        pending = getBoard().then(() => { previousError = undefined; }).catch((err) => {
+            if (err.message !== previousError) console.error("Project Manager refresh failed:", err.message);
+            previousError = err.message;
+        }).finally(() => { pending = null; });
+    }, 500);
+    timer.unref();
+    return async () => {
+        clearInterval(timer);
+        await pending;
+    };
 }
 
 function findComponent(board, componentId) {
@@ -117,15 +177,11 @@ function clampIndex(index, length) {
 }
 
 async function mutate(fn) {
-    const board = await ensureLoaded();
-    const result = fn(board);
-    await persist();
-    events.emit("changed", board);
-    return result ?? board;
+    return transaction(fn);
 }
 
 export async function getBoard() {
-    return ensureLoaded();
+    return transaction();
 }
 
 export async function addComponent(name) {

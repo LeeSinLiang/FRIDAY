@@ -6,6 +6,7 @@
 import { createServer } from "node:http";
 import {
     getBoard,
+    watchBoard,
     addComponent,
     removeComponent,
     addTask,
@@ -41,6 +42,7 @@ async function readJsonBody(req) {
 }
 
 export async function startServer() {
+    await getBoard();
     const sseClients = new Set();
 
     const onChanged = (board) => {
@@ -153,12 +155,22 @@ export async function startServer() {
         }
     });
 
-    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    try {
+        await new Promise((resolve, reject) => {
+            server.once("error", reject);
+            server.listen(0, "127.0.0.1", resolve);
+        });
+    } catch (err) {
+        events.off("changed", onChanged);
+        throw err;
+    }
+    const stopWatching = watchBoard();
     const address = server.address();
     const port = typeof address === "object" && address ? address.port : 0;
 
     const close = async () => {
         events.off("changed", onChanged);
+        await stopWatching();
         for (const res of sseClients) res.end();
         await new Promise((resolve) => server.close(() => resolve()));
     };

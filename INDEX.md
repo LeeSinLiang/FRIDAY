@@ -18,5 +18,6 @@ Start here to find project docs and team work logs. Add links as docs are create
 - [Local setup and full-stack launcher](README.md#local-setup)
 - [Backend API, frontend/3D entry points, and configuration paths](README.md#layout)
 - [Verification and dependency commands](README.md#checks-and-common-commands)
+- [Project-manager board, local synchronization, Git sharing, and regression tests](.github/extensions/project-manager/README.md)
 
 Add dedicated feature docs here as they are created.
