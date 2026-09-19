@@ -2,6 +2,8 @@
 
 Start here to find project docs and team work logs. Add links as docs are created; keep paths current.
 
+Put new Markdown notes and documentation in an appropriate topic folder under `docs/`. Reuse or create folders as needed, including nested folders, and index each file here.
+
 | File | Purpose |
 | --- | --- |
 | [AGENTS.md](AGENTS.md) | Shared instructions for coding agents, work tracking, and Git |
@@ -15,8 +17,18 @@ Start here to find project docs and team work logs. Add links as docs are create
 
 ## Feature documentation
 
-- [Furniture collaborator handoff and approved design image](docs/frontend/3d-object/collaborator-handoff.md)
-- [Rendering engine and furniture creation workflow](docs/frontend/rendering-and-furniture-workflow.md)
+### Frontend
+
+| Document | Purpose |
+| --- | --- |
+| [docs/frontend/editor-implementation.md](docs/frontend/editor-implementation.md) | Implemented editor, integration contracts, commands, verification, and remaining handoff |
+| [docs/frontend/3d-engine-plan.md](docs/frontend/3d-engine-plan.md) | Current 3D foundation scope, contracts, multi-agent build plan, and quality gates |
+| [docs/frontend/rendering-and-furniture-workflow.md](docs/frontend/rendering-and-furniture-workflow.md) | Rendering-engine comparison and furniture asset workflow research |
+| [docs/frontend/3d-object/collaborator-handoff.md](docs/frontend/3d-object/collaborator-handoff.md) | Furniture collaborator instructions, GLB deliverables, dimensions, and acceptance checks |
+| [docs/frontend/design/visual-directions.md](docs/frontend/design/visual-directions.md) | Three futuristic furniture-editor concepts, saved images, and generation prompts |
+| [docs/frontend/design/selected-direction.md](docs/frontend/design/selected-direction.md) | Selected warm ivory/terracotta Atelier liquid glass, Noir room-box, Japandi/wabi-sabi materials, PP Mori, and motion guidance |
+
+### Setup and tooling
 
 - [Local setup and full-stack launcher](README.md#local-setup)
 - [Backend API, frontend/3D entry points, and configuration paths](README.md#layout)
