@@ -1,6 +1,6 @@
 # Catalogue, search and language layer
 
-Owner: Saketh. Status: `GET /api/search` live on the in-memory backend. Elasticsearch and `compile()` land next.
+Owner: Saketh. Status: `GET /api/search` live on the in-memory backend; Elasticsearch backend live and verified against the cluster (40 listings indexed). `compile()` lands next.
 
 ## What this is
 
@@ -22,10 +22,13 @@ This layer never does geometry.
 | `backend/catalogue/params.py` | Query params → find clauses. Pure |
 | `backend/catalogue/memory.py` | In-memory search backend. Pure. Default and demo fallback |
 | `backend/catalogue/colour.py` | "About this colour" matching by RGB distance |
+| `backend/catalogue/to_es_query.py` | Find clauses → Elasticsearch body. Pure; the model never sees this |
+| `backend/catalogue/es.py` | Elasticsearch client and search backend. The only search code that does cluster I/O |
+| `backend/catalogue/ingest.py` | Bulk-indexes the feed: `uv run python -m catalogue.ingest` from `backend/` |
 | `backend/catalogue/views.py`, `urls.py` | `GET /api/search`, included from `backend/api/urls.py` |
 | `backend/catalogue/mock/room.py` | DEV STUB room and `room_refs()`; deleted when the real `Room` ships |
 | `frontend/dev-search.html`, `frontend/src/dev/search.tsx` | DEV SCAFFOLD page, dev server only, not in the production build |
-| `backend/catalogue/tests.py`, `test_search.py` | Contract, search, endpoint and mock-room tests, no network |
+| `backend/catalogue/tests.py`, `test_search.py`, `test_elastic.py` | Contract, search, endpoint, query-building and backend-switch tests, no network |
 
 The Python and TypeScript files are a pair: change both in the same commit.
 
@@ -35,7 +38,7 @@ Public (`AllowAny`). Trailing slash optional. All params optional and ANDed toge
 
 | Param | Meaning |
 | --- | --- |
-| `q` | Free text; every token must appear in title, category or materials |
+| `q` | Free text; every word must be a title word, the category, or part of a material |
 | `category` | One of the 12 `Category` values |
 | `price_min`, `price_max` | Integer **cents**, inclusive |
 | `colour` | `#rrggbb`; matches listings with a nearby shade, not an exact hex |
@@ -51,6 +54,38 @@ curl 'localhost:8000/api/search?category=armchair&fits_w_mm=900'
 ```
 
 Working reference client: run `./run-local.sh`, open http://127.0.0.1:5173/dev-search.html.
+
+## Search backends
+
+`SEARCH_BACKEND=memory` (default) or `elastic`, read per request from `.env`. Both return the same
+`SearchResponse`. If Elasticsearch errors, is unreachable or is unconfigured, the request is served
+from memory instead of failing. The `X-Search-Backend` response header says which one answered:
+`memory`, `elastic` or `memory-fallback`.
+
+| Clause | Elasticsearch |
+| --- | --- |
+| `text` | `must`: per token, `match` on `title`, `term` on `category`, or `wildcard` on `materials` |
+| `category` | `filter`: `term` |
+| `price_min`, `price_max` | `filter`: `range` on `price_cents` |
+| `fits_w_max` | `filter`: `range` on `dims_mm.w` |
+| `material` | `filter`: case-insensitive `wildcard` on `materials` |
+| `colour` | `filter`: `terms` over the indexed hexes near the requested colour |
+
+Both backends return the same listings in the same order (by `id`) for every structured query, and
+`backend/catalogue/text.py` gives them one definition of a token. The one deliberate difference:
+with a `q`, Elasticsearch orders by relevance first, so the same listings can come back in a
+different order than from memory.
+
+Colour is where the backends could drift: memory tests RGB distance per listing, Elasticsearch
+filters on the indexed hexes near the requested colour. They agree exactly while the palette holds
+every indexed colour. The palette is read from the index with a terms aggregation (up to 2,000
+distinct colours) and cached per process, so restart the API after re-ingesting new colours.
+
+Only free text scores. No embeddings, vector search or `semantic_text`, by design.
+
+The index is created by hand with the agreed mapping. `ingest` refuses to run if the index is
+missing (exit 2), because a bulk write would auto-create it with a guessed mapping. Index name
+defaults to `listings`; override with `ELASTIC_INDEX`. Re-ingesting overwrites by listing id.
 
 ## Rules
 

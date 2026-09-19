@@ -3,16 +3,21 @@
 from collections.abc import Callable, Sequence
 
 from catalogue.colour import is_near
+from catalogue.text import tokenize
 from catalogue.types import Listing, SearchResponse
 
 
-def _haystack(listing: Listing) -> str:
-    return " ".join([listing.title, listing.category, *listing.materials]).lower()
+def _token_hits(listing: Listing, token: str) -> bool:
+    # Same three ways a token can hit as to_es_query: a title word, the category, or part of a material.
+    return (
+        token in tokenize(listing.title)
+        or token == listing.category
+        or any(token in material.lower() for material in listing.materials)
+    )
 
 
 def _matches_text(listing: Listing, clause) -> bool:
-    haystack = _haystack(listing)
-    return all(token in haystack for token in clause.q.lower().split())
+    return all(_token_hits(listing, token) for token in tokenize(clause.q))
 
 
 MATCHERS: dict[str, Callable[[Listing, object], bool]] = {
@@ -33,6 +38,9 @@ def matches(listing: Listing, find: Sequence) -> bool:
 
 
 def search(listings: Sequence[Listing], find: Sequence, limit: int, offset: int) -> SearchResponse:
-    """Filter listings by every find clause (AND), then page. Order is feed order."""
-    hits = [listing for listing in listings if matches(listing, find)]
+    """Filter listings by every find clause (AND), order by id, then page.
+
+    Id order matches the Elasticsearch backend's tiebreak, so both backends page identically.
+    """
+    hits = sorted((listing for listing in listings if matches(listing, find)), key=lambda l: l.id)
     return SearchResponse(items=hits[offset:offset + limit], total=len(hits))

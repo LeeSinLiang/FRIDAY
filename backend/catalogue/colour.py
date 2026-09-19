@@ -1,8 +1,9 @@
 """Colour matching. A colour clause means "about this colour", never an exact hex. Pure."""
 
 # Max squared RGB distance for two colours to count as the same family.
-# 90 per-axis-ish: wide enough that "grey" finds charcoal and light grey, tight enough to exclude beige.
-NEAR_DISTANCE_SQ = 90 * 90
+# 60 keeps shades of one hue together (forest green ~ leaf green) without letting a dark
+# colour match near-black, which 90 did.
+NEAR_DISTANCE_SQ = 60 * 60
 
 
 def _rgb(hex_colour: str) -> tuple[int, int, int]:

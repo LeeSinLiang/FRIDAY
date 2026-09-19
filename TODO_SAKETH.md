@@ -6,15 +6,19 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## In progress
 
-- None. Waiting on go-ahead for Phase C.
+- None. Waiting on go-ahead for Phase D.
 
 ## Next
 
-- **Phase C — Elastic:** client, bulk ingest command, pure `to_es_query(find) -> body` with unit tests, `SEARCH_BACKEND` switch (memory stays default).
 - **Phase D — language:** `compile(text) -> Program` via OpenAI Agents SDK with structured output, `render(program) -> list[str]`, `POST /api/compile`, fallback to a plain text clause on validation failure. Schema locks here.
 - **Phase E — scale:** ~12,000 seeded listings, facets including `fits_room`.
 
 ## Done
+
+- **Phase C — Elastic (2026-09-19).** Branch `codex/saketh-elastic`, stacked on Phase B. PR #5.
+  - Built: `backend/catalogue/to_es_query.py` (pure), `es.py` (client + backend), `ingest.py` (bulk, refuses a missing index), `text.py` (shared tokenizer), backend switch with memory fallback and `X-Search-Backend` header in `views.py`, tests in `test_elastic.py`.
+  - Backend alignment: memory now orders by id (the Elasticsearch tiebreak) and matches text by whole title word, exact category or material substring, the same three ways as the Elasticsearch query. Colour threshold tightened from 90 to 60 after a test showed dark green matching near-black.
+  - Verification: `manage.py test api catalogue` — 45 tests OK, no network, all 7 find clauses covered; colour agreement proven offline over 246 probe colours. Live on Elasticsearch 9.5.4: ingest indexed 40, 0 failed, count 40, no dynamic fields added to the mapping. `curl '/api/search?category=armchair&fits_w_mm=900'` under `memory` and `elastic` is byte-identical (2,648 bytes), headers `memory` and `elastic`, no fallback logged. Sweep of 261 queries across both live backends: 260 identical, 0 with different results, 1 order-only (`q=lamp steel`, relevance order — deliberate, documented).
 
 - **Phase B — search stubs (2026-09-19).** Branch `codex/saketh-search-stubs`, stacked on the Phase A branch.
   - `GET /api/search` on the in-memory backend: `backend/catalogue/{views,urls,params,memory,colour,feed,thumbs}.py`, feed in `backend/catalogue/data/listings.json` (40 items, all 12 categories), tests in `backend/catalogue/test_search.py`.
@@ -38,6 +42,8 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
   - Verification: `manage.py test api catalogue` — 12 tests OK on the Phase A branch.
 
 ## Blockers / handoff
+
+- Phase E note: seeded listings must draw colours from a bounded palette (under 2,000 distinct), or the colour filter's palette aggregation truncates and the backends drift.
 
 - Shared files touched, additive only: `.env.example`, `INDEX.md`, `backend/pyproject.toml`, `backend/uv.lock`. Teammates need to rerun `./setup.sh` after pulling.
 - Tell William: search and compile are `AllowAny` (see Phase B). His lanes are unaffected.
