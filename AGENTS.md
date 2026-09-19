@@ -15,6 +15,12 @@
 - Keep INDEX.md current whenever documentation is added, moved, or removed. Include docs for specific frontend/backend features as they are created.
 - Respect teammates' changes. Agree on shared contracts and ownership before overlapping work; do not infer owners from the proposal's P1–P4 labels.
 
+## Documentation organization
+
+- Put every new Markdown note or documentation file under `docs/<appropriate-folder>/`. Reuse an existing topic folder when it fits; otherwise create one. Nested folders are welcome when they make the subject easier to find (for example, `docs/frontend/` or `docs/backend/contracts/`).
+- Add every such file to the root [INDEX.md](INDEX.md). When moving or renaming documentation, update its index entry and affected relative links in the same change.
+- This is a repository-wide convention, including work intended for `main`.
+
 ## Implement and verify
 
 - If the project has not been set up locally, run `./setup.sh` from the repository root first.
