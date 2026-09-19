@@ -13,6 +13,13 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## Done
 
+- **compile(): wall exceptions (2026-09-19).** Branch `codex/saketh-wall-exceptions`, off fresh `main` (97 tests green before branching). No schema change.
+  - Bug: "3 feet from all walls except left wall, 2 feet there" compiled to `distance_min(any_wall, 914)` AND `distance_min(w-w, 610)`; `any_wall` covers `w-w`, so the exception was silently erased.
+  - Prompt (`backend/catalogue/dsl/prompt.py`): `any_wall` only for uniform rules; one clause per wall when there is an exception or differing values; left/right mapped to west/east; separate rule for one-wall kinds. Strengthened `fits_w_max` after the longer prompt made the bookcase case drop it.
+  - Code (`backend/catalogue/dsl/compile.py`): `repair_walls()` in `normalise()` makes it deterministic — expands `any_wall` beside a looser per-wall clause, collapses identical per-wall clauses to `any_wall`, turns several walls on `near`/`against`/`on` into `any_wall`; place clauses ordered by room wall order.
+  - Found while checking `clear` and `near`: `clear` had the same bug and the same fix works. `near`/`against` are different: enumerating walls ANDs them into an impossible placement, and an exception there cannot be expressed in the DSL, so it is dropped.
+  - Ninth fixture case added; all nine re-recorded. Verification: `manage.py test api catalogue` — 103 tests OK, 1 skipped, API key blanked. Live: 11 wall phrasings × 8 rounds all correct after the final change; nine-case live fixture passed 4 of 4.
+
 - **Phase D follow-up: fallback, timeout, retry, review fixes (2026-09-19).** Same branch and PR (#11); `main` merged in after #9 landed, one conflict in this file resolved by keeping both entries.
   - Latency DoD revised by Saketh to p50 under 1,500 ms (compile is a submit action). Measured after these changes: p50 1,182 ms, p90 1,667 ms, max 2,392 ms over 24 live calls, 24 of 24 exact. `gpt-4.1-mini` stays.
   - Fallback fixed: `backend/catalogue/text.py` gains `STOP_WORDS`, `content_words()` and `keep_matching()`; `fallback_program()` searches content words and keeps a word only if results remain (`text_search_has_results` in `views.py`, against the memory catalogue so it works with the model and Elasticsearch both down). The hero sentence now degrades to "reading chair" (235 results) instead of the whole sentence (0 results). Costs 0–45 ms; title tokens are cached in `title_words()`.

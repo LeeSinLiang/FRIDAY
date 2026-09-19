@@ -169,12 +169,12 @@
             "value": "oak"
           },
           {
-            "k": "price_min",
-            "cents": 10000
-          },
-          {
             "k": "fits_w_max",
             "mm": 1200
+          },
+          {
+            "k": "price_min",
+            "cents": 10000
           }
         ],
         "place": [],
@@ -395,6 +395,126 @@
           }
         ],
         "place": [],
+        "qty": null
+      }
+    },
+    {
+      "text": "a reading chair by the window, under $900, 3 feet from all walls except left wall, which should only be 2 feet away minimum",
+      "expected": {
+        "find": [
+          {
+            "k": "category",
+            "value": "armchair"
+          },
+          {
+            "k": "price_max",
+            "cents": 90000
+          }
+        ],
+        "place": [
+          {
+            "k": "near",
+            "ref": {
+              "kind": "window",
+              "id": "w1"
+            }
+          },
+          {
+            "k": "distance_min",
+            "ref": {
+              "kind": "wall",
+              "id": "w-n"
+            },
+            "mm": 914
+          },
+          {
+            "k": "distance_min",
+            "ref": {
+              "kind": "wall",
+              "id": "w-e"
+            },
+            "mm": 914
+          },
+          {
+            "k": "distance_min",
+            "ref": {
+              "kind": "wall",
+              "id": "w-s"
+            },
+            "mm": 914
+          },
+          {
+            "k": "distance_min",
+            "ref": {
+              "kind": "wall",
+              "id": "w-w"
+            },
+            "mm": 610
+          }
+        ]
+      },
+      "chips": [
+        "armchair",
+        "under $900",
+        "near the window",
+        "3 ft from the north wall",
+        "3 ft from the east wall",
+        "3 ft from the south wall",
+        "2 ft from the west wall"
+      ],
+      "recorded": {
+        "find": [
+          {
+            "k": "category",
+            "value": "armchair"
+          },
+          {
+            "k": "price_max",
+            "cents": 90000
+          }
+        ],
+        "place": [
+          {
+            "k": "near",
+            "ref": {
+              "kind": "window",
+              "id": "w1"
+            },
+            "mm": null
+          },
+          {
+            "k": "distance_min",
+            "ref": {
+              "kind": "wall",
+              "id": "w-n"
+            },
+            "mm": 914
+          },
+          {
+            "k": "distance_min",
+            "ref": {
+              "kind": "wall",
+              "id": "w-e"
+            },
+            "mm": 914
+          },
+          {
+            "k": "distance_min",
+            "ref": {
+              "kind": "wall",
+              "id": "w-s"
+            },
+            "mm": 914
+          },
+          {
+            "k": "distance_min",
+            "ref": {
+              "kind": "wall",
+              "id": "w-w"
+            },
+            "mm": 610
+          }
+        ],
         "qty": null
       }
     }

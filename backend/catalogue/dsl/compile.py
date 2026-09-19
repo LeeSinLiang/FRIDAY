@@ -113,10 +113,78 @@ def call_model(text: str, instructions: str) -> Program:
         raise
 
 
-def normalise(program: Program) -> Program:
-    """Canonical form: find clauses in a fixed order, lowercase hexes and materials, qty only above one."""
+# any_wall means EVERY wall for these kinds and ANY ONE wall for the others. The schema has no OR,
+# so the two groups need opposite repairs.
+EVERY_WALL_KINDS = ("distance_min", "clear")
+ONE_WALL_KINDS = ("near", "against", "on")
+ANY_WALL = {"kind": "any_wall"}
+
+
+def _is_wall(clause: dict, kind: str) -> bool:
+    return clause["k"] == kind and clause["ref"]["kind"] == "wall"
+
+
+def _repair_every_wall(place: list[dict], kind: str, wall_ids: list[str]) -> list[dict]:
+    """Make per-wall and any_wall clauses of one kind say what the shopper meant.
+
+    - any_wall(M) next to wall X(m < M) is an exception that AND would silently erase, since any_wall
+      already covers X. Rewrite any_wall as one clause per remaining wall.
+    - A clause for every wall, all with the same value, is just any_wall spelled out. Collapse it.
+    """
+    general = [c for c in place if c["k"] == kind and c["ref"]["kind"] == "any_wall"]
+    specific = {c["ref"]["id"]: c for c in place if _is_wall(c, kind)}
+    if general and any(c["mm"] < general[0]["mm"] for c in specific.values()):
+        expanded = [specific.get(wall_id) or {"k": kind, "ref": {"kind": "wall", "id": wall_id}, "mm": general[0]["mm"]}
+                    for wall_id in wall_ids]
+        return [c for c in place if c["k"] != kind or c["ref"]["kind"] not in ("any_wall", "wall")] + expanded
+    if not general and wall_ids and set(specific) == set(wall_ids) and len({c["mm"] for c in specific.values()}) == 1:
+        collapsed = {"k": kind, "ref": dict(ANY_WALL), "mm": specific[wall_ids[0]]["mm"]}
+        first = next(index for index, c in enumerate(place) if _is_wall(c, kind))
+        kept = [c for c in place if not _is_wall(c, kind)]
+        return kept[:first] + [collapsed] + kept[first:]
+    return place
+
+
+def _repair_one_wall(place: list[dict], kind: str) -> list[dict]:
+    """Several walls for a one-wall kind are ANDed into something impossible (near north AND south).
+    It was an "any wall except..." the schema cannot express: keep any_wall, drop the exception."""
+    walls = [c for c in place if _is_wall(c, kind)]
+    if len(walls) < 2:
+        return place
+    first = place.index(walls[0])
+    collapsed = {**walls[0], "ref": dict(ANY_WALL)}
+    kept = [c for c in place if not _is_wall(c, kind)]
+    already = any(c["k"] == kind and c["ref"]["kind"] == "any_wall" for c in kept)
+    return kept if already else kept[:first] + [collapsed] + kept[first:]
+
+
+def repair_walls(place: list[dict], refs: dict) -> list[dict]:
+    wall_ids = [wall["id"] for wall in refs.get("walls", [])]
+    for kind in EVERY_WALL_KINDS:
+        place = _repair_every_wall(place, kind, wall_ids)
+    for kind in ONE_WALL_KINDS:
+        place = _repair_one_wall(place, kind)
+    return place
+
+
+def _place_order(place: list[dict], refs: dict) -> list[dict]:
+    # Kinds stay in the order first spoken; within a kind, walls follow the room's wall order.
+    # The model lists per-wall clauses in a different order from run to run, and the order means nothing.
+    kinds = list(dict.fromkeys(clause["k"] for clause in place))
+    wall_ids = [wall["id"] for wall in refs.get("walls", [])]
+
+    def wall_rank(clause: dict) -> int:
+        ref = clause["ref"]
+        return wall_ids.index(ref["id"]) if ref["kind"] == "wall" and ref["id"] in wall_ids else -1
+
+    return sorted(place, key=lambda clause: (kinds.index(clause["k"]), wall_rank(clause)))
+
+
+def normalise(program: Program, refs: dict) -> Program:
+    """Canonical form: clauses in a fixed order, lowercase hexes and materials, qty only above one."""
     data = program.model_dump()
     data["find"] = sorted(data["find"], key=lambda clause: FIND_ORDER.index(clause["k"]))
+    data["place"] = _place_order(repair_walls(data["place"], refs), refs)
     for clause in data["find"]:
         for field in ("hex", "value"):
             if field in clause:
@@ -143,7 +211,7 @@ def check_refs(program: Program, refs: dict) -> None:
 def _attempt(text: str, refs: dict, instructions: str, call: ModelCall) -> Program | None:
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
-            program = normalise(call(text, instructions))
+            program = normalise(call(text, instructions), refs)
             check_refs(program, refs)
             return program
         except InvalidProgram as exc:
