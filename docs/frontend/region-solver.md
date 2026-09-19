@@ -45,7 +45,20 @@ Distances are measured from the item's **edge**, not its centre.
 
 The every/some split is the same one `compile()` follows; see [the catalogue doc](../backend/catalogue.md).
 
-**"By the window, 5 feet from any wall."** A window is on a wall, so a fixed 75 cm reach would contradict a 152 cm clearance from that same wall in every room. With no distance stated, `near` means as near as the other requests allow: its reach starts where the target's own wall lets the item stand. A stated distance ("within 2 feet of the window") is taken literally and can therefore genuinely conflict.
+### `near` has two readings, on purpose
+
+This looks like a bug when you first read `clauses.ts`. It is not.
+
+| The shopper said | Reading | Reach |
+| --- | --- | --- |
+| "by the window" (no distance) | **As near as the other requests allow** | `NEAR_DEFAULT_CM` measured from where the target's own wall lets the item stand: `NEAR_DEFAULT_CM + that wall's required clearance` |
+| "within 2 feet of the window" (a distance) | **Literal** | exactly that distance |
+
+Why: a window or door is *on* a wall. "A reading chair by the window, 5 feet from any wall" asks for within 75 cm of something mounted on a wall the chair must stay 152 cm from. With one fixed reach that sentence is unsatisfiable in every room ever built, though any person would place the chair happily: 5 feet out, in front of the window. So an unstated `near` starts counting from the clearance its own wall demands (`wallClearances()` collects those from `distance_min` and `clear` clauses naming that wall or `any_wall`).
+
+A stated distance is a number the shopper chose, so it is honoured exactly. "Within 75 cm of the window, 5 feet from any wall" is a genuine contradiction and is reported as one: `these can't all hold here; without “152 cm away from any wall” it fits`.
+
+Targets that are not on a wall (a placed item) have no wall clearance to add, so both readings coincide for them.
 
 Tunables in `clauses.ts`, all judgement calls to adjust at rehearsal: `NEAR_DEFAULT_CM = 75`, `AGAINST_TOLERANCE_CM = 5`, `WINDOW_ZONE_CM = 50`, `APPROACH_CM = 60`, and `WINDOW_SILL_CM = 90`, which is an **assumption**: the room carries no sill height.
 
