@@ -57,7 +57,9 @@ class FacetBucket(BaseModel):
 class Facets(BaseModel):
     category: list[FacetBucket]
     price_band: list[FacetBucket]
-    fits_room: int | None = None  # count of items that fit the caller's constraint
+    # "fits_room of fits_room_of fit your room". Both present only when the caller gives a gap.
+    fits_room: int | None = None  # matching listings narrow enough for the gap
+    fits_room_of: int | None = None  # listings matching every other clause, ignoring the gap
 
 
 class SearchResponse(BaseModel):
