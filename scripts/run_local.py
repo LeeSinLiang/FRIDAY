@@ -23,6 +23,9 @@ def main():
         raise ValueError("BACKEND_PORT and FRONTEND_PORT must be distinct ports from 1 to 65535.")
     for port in ports:
         with socket.socket() as sock:
+            # Closed connections can remain in TIME_WAIT after a normal restart.
+            # This still rejects a live listener on the same address and port.
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
                 sock.bind(("127.0.0.1", port))
             except OSError as exc:

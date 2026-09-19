@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>Visa IDX · Sandbox test</title>
+  <style>
+    :root{font:16px/1.5 system-ui,sans-serif;color:#17233b;background:#f3f5f8;color-scheme:light}
+    *{box-sizing:border-box}body{margin:0}main{max-width:1150px;margin:40px auto;padding:0 24px}
+    header{margin-bottom:26px}h1{font-size:30px;line-height:1.2;margin:10px 0}h2{font-size:19px;margin:0 0 12px}
+    p{margin:8px 0}.eyebrow{font-size:12px;font-weight:750;letter-spacing:.12em;color:#435574;text-transform:uppercase}
+    .note{color:#536079;max-width:85ch;font-size:14px}.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px}
+    section{background:white;border:1px solid #d7dfeb;border-radius:12px;padding:22px;min-width:0}
+    .wide{grid-column:1/-1}.status{padding:10px 14px;background:#e9eef6;border-radius:6px;margin:14px 0}
+    .pass{background:#e7f5eb;color:#215939}.error{background:#fff0ee;color:#8b271f}.pending{background:#fff6df;color:#71530e}
+    textarea,pre{font:13px/1.5 ui-monospace,SFMono-Regular,monospace;width:100%;border:1px solid #ccd6e4;border-radius:6px;padding:14px;background:#f8fafc;color:#17233b}
+    textarea{min-height:405px;resize:vertical;tab-size:2}pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:480px;overflow:auto}
+    button{border:1px solid #bccadd;border-radius:6px;background:white;color:#20344d;font:inherit;font-size:14px;font-weight:600;padding:10px 14px;cursor:pointer}
+    button.primary{background:#183873;color:white;border-color:#183873}button:disabled{opacity:.45;cursor:not-allowed}
+    button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #809fe4;outline-offset:3px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.approval{display:flex;gap:10px;align-items:flex-start;margin:18px 0;font-size:14px}
+    .approval input{margin-top:5px}dl{margin:0}dt{font-size:13px;color:#536079}dd{margin:2px 0 14px;font-weight:600;overflow-wrap:anywhere}
+    a{color:#254d93}footer{margin:24px 0;color:#536079;font-size:12px;overflow-wrap:anywhere}
+    [hidden]{display:none!important}@media(max-width:760px){main{margin-top:22px;padding:0 14px}.grid{grid-template-columns:1fr}section{padding:16px}h1{font-size:26px}}
+  </style>
+</head>
+<body><main>
+  <header><div class="eyebrow">FRIDAY · Developer verification</div><h1>Visa IDX sandbox test</h1>
+    <p>Validate a sample, approve its data, and inspect Visa’s actual response.</p>
+    <p class="note">This local tester submits synthetic IDX data only. It does not authorize a payment or create an order. App email verification and authenticator MFA are documented next steps, not features of this tester.</p>
+    <div id="configuration" class="status" role="status">Checking server configuration…</div>
+  </header>
+  <div class="grid">
+    <section><h2>1. Prepare sample data</h2>
+      <p class="note">Amounts use minor units. Currency 840 with exponent 2 means USD. Only the supplied test accounts, email, and documentation IP are accepted.</p>
+      <div class="actions"><button id="new-sample">New sample</button><button id="validate">Validate locally</button></div>
+      <label for="payload">IDX request JSON</label><textarea id="payload" spellcheck="false" aria-describedby="fixture-source"></textarea>
+      <p class="note" id="fixture-source">Based on Visa’s reference examples; the live result determines acceptance. Field validation here covers the supported subset, not every IDX field.</p>
+    </section>
+    <section><h2>2. Review and approve</h2>
+      <div id="validation-status" class="status" role="status">No sample validated.</div>
+      <dl><dt>Merchant</dt><dd id="merchant">—</dd><dt>Sample amount</dt><dd id="amount">—</dd><dt>Transaction ID</dt><dd id="transaction">—</dd><dt>Validated payload SHA-256</dt><dd id="hash">—</dd></dl>
+      <label class="approval"><input id="approve" type="checkbox" disabled><span>I approve sending this synthetic sample to the Visa sandbox. No payment or order will be performed.</span></label>
+      <button id="send" class="primary" disabled>Send to Visa sandbox</button>
+      <p class="note">Approval applies to this validated snapshot for five minutes. Editing the JSON requires validation again. Each attempt can be submitted once.</p>
+      <pre id="validation-details" hidden></pre>
+    </section>
+    <section class="wide"><h2>3. Inspect the evidence</h2>
+      <div id="result-status" class="status" role="status">No request sent to Visa.</div>
+      <p class="note">A verified result requires HTTP 200, a decrypted response, a Match Key, and a matching transaction ID. DCAP eligibility is a separate result. This does not expose Visa’s internal stored record.</p>
+      <pre id="result">The server will retain sanitized evidence here after submission.</pre>
+      <a id="receipt" hidden>Open saved evidence JSON</a>
+    </section>
+  </div>
+  <footer><div id="runtime"></div><p><a href="https://developer.visa.com/capabilities/visa-intelligent-data-exchange-api/reference" target="_blank" rel="noreferrer">IDX reference</a> · <a href="https://developer.visa.com/pages/working-with-visa-apis/x-pay-token" target="_blank" rel="noreferrer">X-Pay</a> · <a href="https://developer.visa.com/pages/encryption_guide" target="_blank" rel="noreferrer">MLE</a></p></footer>
+</main>
+<script>
+  const base='/api/visa/sandbox-test/';
+  const $=id=>document.getElementById(id);
+  let validated=null,ready=false,busy=false;
+  const message=(id,text,kind='')=>{const el=$(id);el.textContent=text;el.className='status '+kind;};
+  function invalidate(){validated=null;$('approve').checked=false;$('approve').disabled=true;$('send').disabled=true;message('validation-status','Validate this sample before sending.');}
+  function controls(){ $('send').disabled=busy||!ready||!validated||!$('approve').checked; $('validate').disabled=busy;$('new-sample').disabled=busy;$('payload').disabled=busy;$('approve').disabled=busy||!validated; }
+  async function api(path,body){
+    const options=body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':document.querySelector('meta[name="csrf-token"]').content},body:JSON.stringify(body)};
+    const response=await fetch(base+path,{...options,credentials:'same-origin',cache:'no-store'});
+    const data=await response.json().catch(()=>({error:'The server returned an unexpected response.'}));
+    if(!response.ok){const error=new Error(data.error||'Validation failed.');error.details=data;throw error;}
+    return data;
+  }
+  async function loadSample(resetEvidence=true){
+    invalidate();
+    if(resetEvidence){message('result-status','No request sent for this new sample.');$('result').textContent='The server will retain sanitized evidence here after submission.';$('receipt').hidden=true;history.replaceState(null,'',location.pathname);}
+    const data=await api('bootstrap/');ready=data.configuration.ready;
+    $('payload').value=JSON.stringify(data.sample,null,2);
+    message('configuration',data.configuration.message,ready?'pass':'error');
+    $('runtime').textContent='Runtime: '+data.source_path+' · source SHA-256: '+data.source_sha256;
+    controls();
+  }
+  function showResult(data,saved=false){
+    const state=data.state;const evidence=data.evidence||{};
+    const dcap=evidence.response?.dcapIndicator;
+    const eligibility=dcap===1?' DCAP: not eligible (1).':dcap===2?' DCAP: eligible (2).':'';
+    const acceptedLabel=saved?'Saved result: Visa accepted transaction '+data.payload.transID+'.':'Verified: Visa accepted the IDX sample.';
+    message('result-status',state==='accepted'?acceptedLabel+eligibility:'State: '+state+(evidence.message?' — '+evidence.message:''),state==='accepted'?'pass':'pending');
+    $('result').textContent=JSON.stringify(data,null,2);
+    $('receipt').href=base+'attempts/'+data.attempt_id+'/';$('receipt').hidden=false;
+  }
+  $('new-sample').addEventListener('click',()=>loadSample().catch(e=>message('configuration',e.message,'error')));
+  $('payload').addEventListener('input',invalidate);$('approve').addEventListener('change',controls);
+  $('validate').addEventListener('click',async()=>{
+    invalidate();$('validation-details').hidden=true;
+    try{
+      const payload=JSON.parse($('payload').value);validated=await api('validate/',{payload});
+      message('validation-status','Validated locally. Review and approve the exact sample.','pass');
+      $('merchant').textContent=validated.payload.merchantName||'Not supplied';
+      $('amount').textContent=(Number(validated.payload.purchaseAmount)/100).toFixed(2)+' USD (test only)';
+      $('transaction').textContent=validated.payload.transID;$('hash').textContent=validated.payload_hash;
+    }catch(e){message('validation-status',e.message,'error');$('validation-details').textContent=JSON.stringify(e.details||{error:e.message},null,2);$('validation-details').hidden=false;}
+    controls();
+  });
+  $('send').addEventListener('click',async()=>{
+    if(!validated||!$('approve').checked||busy)return;
+    const approved=validated;busy=true;controls();message('result-status','Sending the encrypted sample to Visa. Waiting for response…','pending');
+    try{
+      const data=await api('submit/',{attempt_id:approved.attempt_id,payload_hash:approved.payload_hash,approved:true});
+      showResult(data);history.replaceState(null,'','?attempt='+data.attempt_id);
+    }catch(e){message('result-status',e.message+' No automatic retry.','error');$('result').textContent=JSON.stringify(e.details||{},null,2);}
+    finally{busy=false;invalidate();controls();}
+  });
+  (async()=>{try{const id=new URLSearchParams(location.search).get('attempt');await loadSample(false);if(id&&/^[0-9a-f-]{36}$/i.test(id))showResult(await api('attempts/'+id+'/'),true);}catch(e){message('configuration',e.message,'error');}})();
+</script></body></html>

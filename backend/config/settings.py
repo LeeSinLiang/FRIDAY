@@ -28,6 +28,13 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "api",
+    "visa",
+    "allauth",
+    "allauth.account",
+    "allauth.headless",
+    "allauth.mfa",
+    "accounts",
+    "checkout",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -35,6 +42,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
+    "accounts.middleware.AccountSecurityMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -69,3 +78,51 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
 }
+
+# The developer harness is opt-in, loopback-only, and unavailable outside DEBUG.
+VISA_SANDBOX_TESTER_ENABLED = os.getenv("VISA_SANDBOX_TESTER_ENABLED", "false").lower() == "true"
+VISA_SANDBOX_CREDENTIALS_FILE = os.getenv("VISA_SANDBOX_CREDENTIALS_FILE", "")
+if DEBUG:
+    _frontend_port = int(os.getenv("FRONTEND_PORT", "5173"))
+    CSRF_TRUSTED_ORIGINS = [f"http://127.0.0.1:{_frontend_port}", f"http://localhost:{_frontend_port}"]
+
+AUTHENTICATION_BACKENDS = ["allauth.account.auth_backends.AuthenticationBackend"]
+HEADLESS_ONLY = True
+HEADLESS_CLIENTS = ("browser",)
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED = True
+ACCOUNT_EMAIL_VERIFICATION_SUPPORTS_RESEND = True
+ACCOUNT_EMAIL_VERIFICATION_BY_CODE_TIMEOUT = 600
+ACCOUNT_REAUTHENTICATION_REQUIRED = True
+ACCOUNT_SESSION_REMEMBER = False
+MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
+MFA_RECOVERY_CODES_SHOW_ONCE = True
+MFA_TOTP_ISSUER = "FRIDAY"
+MFA_ADAPTER = "accounts.adapters.EncryptedMFAAdapter"
+MFA_ENCRYPTION_KEY_FILE = Path(os.getenv("MFA_ENCRYPTION_KEY_FILE", str(BASE_DIR / ".runtime/mfa.key")))
+_frontend_origin = os.getenv("FRONTEND_ORIGIN", f"http://127.0.0.1:{os.getenv('FRONTEND_PORT', '5173')}").rstrip("/")
+HEADLESS_FRONTEND_URLS = {
+    "account_confirm_email": _frontend_origin + "/account?verify={key}",
+    "account_reset_password": _frontend_origin + "/account?mode=reset",
+    "account_reset_password_from_key": _frontend_origin + "/account?reset={key}",
+    "account_signup": _frontend_origin + "/account",
+}
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "FRIDAY <noreply@friday.local>")
+AUTH_LOCAL_INBOX_ENABLED = DEBUG and os.getenv("AUTH_LOCAL_INBOX_ENABLED", "true").lower() == "true"
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "accounts.email_backend.LocalInboxBackend" if DEBUG else "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
+EMAIL_TIMEOUT = 15
+# Shared by local reload workers/processes; createcachetable is part of setup.
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "friday_cache"}}
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+if not DEBUG and (not EMAIL_HOST or not os.getenv("MFA_ENCRYPTION_KEY_FILE")):
+    raise ImproperlyConfigured("Configure EMAIL_HOST and MFA_ENCRYPTION_KEY_FILE for deployment.")

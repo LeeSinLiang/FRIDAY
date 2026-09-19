@@ -1,0 +1,140 @@
+{
+  "environment": "Visa IDX sandbox",
+  "payment_authorization": "not_attempted",
+  "vendor_order": "not_attempted",
+  "attempts": [
+    {
+      "attempt_id": "f8fc6a39-6812-44e6-bf72-791516b86287",
+      "state": "accepted",
+      "payload_hash": "2a29cc6667abc114c674f3801c8dc853800e458b7026e47054d147b44bc7eb7a",
+      "payload": {
+        "acctNumber": "••••0123",
+        "acquirerBIN": "438309",
+        "purchaseAmount": "12550",
+        "purchaseCurrency": "840",
+        "purchaseExponent": "2",
+        "purchaseDate": "20260919203937",
+        "transID": "c7e923be-691c-4c5d-ba57-42fe5a962569",
+        "merchantID": "00002000000",
+        "merchantName": "HackMIT Sandbox Store",
+        "mcc": "5411",
+        "deviceChannel": "02",
+        "productType": "02",
+        "transType": "01",
+        "messageCategory": "01",
+        "browserIP": "192.0.2.1",
+        "email": "sandbox@example.com",
+        "requestDCAPStatus": false
+      },
+      "created_at": "2026-09-19T20:39:40.780370+00:00",
+      "evidence": {
+        "endpoint": "https://sandbox.api.visa.com/vidx/v1/requests",
+        "signing_resource_path": "v1/requests",
+        "request_fields": [
+          "acctNumber",
+          "acquirerBIN",
+          "browserIP",
+          "deviceChannel",
+          "email",
+          "mcc",
+          "merchantID",
+          "merchantName",
+          "messageCategory",
+          "productType",
+          "purchaseAmount",
+          "purchaseCurrency",
+          "purchaseDate",
+          "purchaseExponent",
+          "requestDCAPStatus",
+          "transID",
+          "transType"
+        ],
+        "encrypted_request_sha256": "8ec8f49248f7a21e85eb6be859700028c7eed4d8ffdc1824741ec1597dc59587",
+        "payment_authorization": "not_attempted",
+        "vendor_order": "not_attempted",
+        "http_status": 200,
+        "elapsed_ms": 2214,
+        "response_headers": {
+          "x-correlation-id": "1789850386_333_929602659_b89c786_VDP_WS",
+          "x-app-status": "200"
+        },
+        "response_encrypted": true,
+        "response": {
+          "transID": "c7e923be-691c-4c5d-ba57-42fe5a962569",
+          "idxMatchKey": "IQYJEvfiPiRSAAB9hAJioQAAAAA=",
+          "warningMessages": []
+        },
+        "transaction_id_matches": true,
+        "message": "Visa IDX accepted the sample and returned a matching transaction ID and Match Key."
+      }
+    },
+    {
+      "attempt_id": "c0966254-8682-4e66-bcb1-4a10eafee964",
+      "state": "accepted",
+      "payload_hash": "47c4eeb606ef015a8cb01fede31f0e9b6b869fa046e10176e274c80a6c4413e9",
+      "payload": {
+        "acctNumber": "••••0123",
+        "acquirerBIN": "438309",
+        "purchaseAmount": "12550",
+        "purchaseCurrency": "840",
+        "purchaseExponent": "2",
+        "purchaseDate": "20260919203956",
+        "transID": "06deafab-8563-41e9-bddb-d378f813d152",
+        "merchantID": "00002000000",
+        "merchantName": "HackMIT Sandbox Store",
+        "mcc": "5411",
+        "deviceChannel": "02",
+        "productType": "02",
+        "transType": "01",
+        "messageCategory": "01",
+        "browserIP": "192.0.2.1",
+        "email": "sandbox@example.com",
+        "requestDCAPStatus": true
+      },
+      "created_at": "2026-09-19T20:40:00.934808+00:00",
+      "evidence": {
+        "endpoint": "https://sandbox.api.visa.com/vidx/v1/requests",
+        "signing_resource_path": "v1/requests",
+        "request_fields": [
+          "acctNumber",
+          "acquirerBIN",
+          "browserIP",
+          "deviceChannel",
+          "email",
+          "mcc",
+          "merchantID",
+          "merchantName",
+          "messageCategory",
+          "productType",
+          "purchaseAmount",
+          "purchaseCurrency",
+          "purchaseDate",
+          "purchaseExponent",
+          "requestDCAPStatus",
+          "transID",
+          "transType"
+        ],
+        "encrypted_request_sha256": "921aa1d1cb27bbecd6e622b5f9df17c40b80dc9e20b7debdfec28493ec4c179e",
+        "payment_authorization": "not_attempted",
+        "vendor_order": "not_attempted",
+        "http_status": 200,
+        "elapsed_ms": 905,
+        "response_headers": {
+          "x-correlation-id": "1789850410_366_663452345_b89c786_VDP_WS",
+          "x-app-status": "200"
+        },
+        "response_encrypted": true,
+        "response": {
+          "transID": "06deafab-8563-41e9-bddb-d378f813d152",
+          "idxMatchKey": "IQYJA3jeklZJAAB9hAJioQAAAAA=",
+          "warningMessages": [
+            "DCAP Acquirer check failed for acquirer region VE."
+          ],
+          "dcapIndicator": 1
+        },
+        "transaction_id_matches": true,
+        "message": "Visa IDX accepted the sample and returned a matching transaction ID and Match Key."
+      }
+    }
+  ]
+}

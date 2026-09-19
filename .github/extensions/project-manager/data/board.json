@@ -1,49 +1,281 @@
 {
-  "title": "Hackathon Project Plan",
+  "title": "FRIDAY · Project Plan",
   "components": [
     {
-      "id": "f26ae912-417c-46f3-aa6d-175f257df604",
-      "name": "Problem & Idea",
-      "tasks": []
-    },
-    {
-      "id": "47af6e47-cdf4-4392-b04d-c834f4d9bb36",
-      "name": "Frontend",
+      "id": "50b44d3e-94c7-4fed-8d83-969c925957d9",
+      "name": "3D Platform",
+      "description": "Floor plans, room editor, GLB assets, and Three.js scene controls.",
       "tasks": [
         {
-          "id": "d4f175a8-a117-4461-aa7b-6a38c8be3c4b",
-          "title": "Sketch wireframes",
+          "id": "e1fc3ea1-62af-4e7d-9b73-4ce3677b307d",
+          "title": "Generate a 3D room model from video",
           "done": false,
-          "phase": "ideation"
-        }
-      ]
-    },
-    {
-      "id": "929309ba-0bff-4c57-8de4-5d9085adaef7",
-      "name": "Backend / API",
-      "tasks": [
+          "owner": "unassigned"
+        },
         {
-          "id": "82fbd617-6833-43ca-b029-e057d9e937f6",
-          "title": "Build task list UI",
+          "id": "68a22eb5-dc7f-4cc5-8ee2-d248bd8369ee",
+          "title": "Evaluate Gaussian splats and surface reconstruction",
           "done": false,
-          "phase": "mvp"
+          "owner": "unassigned"
+        },
+        {
+          "id": "7312ee22-fa5f-4878-8461-7ab9c27bb8df",
+          "title": "Convert floor plans to 3D polygons",
+          "done": false,
+          "owner": "unassigned"
+        },
+        {
+          "id": "b760b32f-e9fc-425d-9e87-b525b279fc77",
+          "title": "Prepare 3D furniture models for placement",
+          "done": false,
+          "owner": "adelle"
+        },
+        {
+          "id": "e9228486-80ac-48ca-b701-2aac74143d73",
+          "title": "Initialize the scene and expose shared scene state",
+          "done": true,
+          "owner": "sin"
+        },
+        {
+          "id": "5823c711-ca64-4fe4-8428-b7e9c2aa4c03",
+          "title": "Implement spatial constraints and valid placement regions",
+          "done": false,
+          "owner": "saketh"
+        },
+        {
+          "id": "c3df61b5-b2a2-4d07-86eb-4f254157170b",
+          "title": "Research and stage photographic sofa Gaussian splats",
+          "done": false,
+          "owner": "william"
+        },
+        {
+          "id": "394a665b-52a9-4bbf-8e34-1c0c3d5a4f6e",
+          "title": "Build mixed splat and mesh asset browser",
+          "done": true,
+          "owner": "william"
         }
       ]
     },
     {
       "id": "8f3cc2bd-c786-4d34-b0a7-d18ed9e6b86a",
-      "name": "Data / AI-ML",
-      "tasks": []
+      "name": "Elastic Database",
+      "tasks": [
+        {
+          "id": "a191fae5-3e03-490c-bb39-ec578a777f8b",
+          "title": "Seed placeholder vendor catalogue data",
+          "done": true,
+          "owner": "unassigned"
+        },
+        {
+          "id": "28aa41c6-d050-40a7-a58a-6ff103d3d28f",
+          "title": "Index vendor products in Elasticsearch",
+          "done": true,
+          "owner": "unassigned"
+        },
+        {
+          "id": "0d2af687-8745-4aca-8217-4967dacc14e1",
+          "title": "Add catalogue aggregations and semantic search",
+          "done": false,
+          "owner": "unassigned"
+        },
+        {
+          "id": "41b8ced7-5a80-4dca-b956-6a8b61a4440f",
+          "title": "Search the catalogue using spatial constraints",
+          "done": false,
+          "owner": "saketh"
+        },
+        {
+          "id": "744c5514-6d8a-41f1-b3b5-1e865c6fdf72",
+          "title": "Compile shopper requests into validated constraints with fallback and throttling",
+          "done": true,
+          "owner": "saketh"
+        },
+        {
+          "id": "542cf13d-96f3-4c23-9207-4127b0eefb3b",
+          "title": "Return catalogue facets and room-fit counts from one search request",
+          "done": true,
+          "owner": "saketh"
+        },
+        {
+          "id": "e5258f21-f195-46ce-b869-1df5f4989564",
+          "title": "Resolve catalogue test compatibility with the persistent auth cache",
+          "done": false,
+          "owner": "unassigned"
+        }
+      ],
+      "description": "Product records, dimensions, prices, assets, and filtered search."
     },
     {
-      "id": "fd20145e-b779-4eea-ac26-cf3f8183e769",
-      "name": "Design / UX",
-      "tasks": []
+      "id": "47af6e47-cdf4-4392-b04d-c834f4d9bb36",
+      "name": "Frontend & UX",
+      "tasks": [
+        {
+          "id": "d4f175a8-a117-4461-aa7b-6a38c8be3c4b",
+          "title": "Sketch wireframes",
+          "done": false,
+          "owner": "sin"
+        },
+        {
+          "id": "4664675d-d4c0-428e-a90b-82ef856f568c",
+          "title": "test",
+          "done": false,
+          "owner": "unassigned"
+        },
+        {
+          "id": "82fbd617-6833-43ca-b029-e057d9e937f6",
+          "title": "Build task list UI",
+          "done": false,
+          "owner": "unassigned"
+        },
+        {
+          "id": "a249bfb6-02e4-45a3-a393-e01945363c2a",
+          "title": "Build the 3D platform interface",
+          "done": true,
+          "owner": "sin"
+        },
+        {
+          "id": "20cc68ff-a157-4ad2-bc8c-87d1a0a56dae",
+          "title": "Connect constraint input to the 3D view",
+          "done": false,
+          "owner": "sin"
+        },
+        {
+          "id": "3dc03f7b-dd35-44b5-b428-16594a36f1aa",
+          "title": "Add speech and typed user input",
+          "done": false,
+          "owner": "unassigned"
+        },
+        {
+          "id": "52890a38-b58e-41bd-902f-8f9649c69b83",
+          "title": "Fix duplicate signup and misleading authentication errors",
+          "done": true,
+          "owner": "william"
+        },
+        {
+          "id": "cff2cce7-a23d-449e-865c-2963ddf25d9c",
+          "title": "Deliver and verify account emails through Resend SMTP",
+          "done": true,
+          "owner": "william"
+        },
+        {
+          "id": "c136f9c5-d1ab-4624-bf00-7ba91fb5041f",
+          "title": "Set up Gmail SMTP for demo verification emails",
+          "done": true,
+          "owner": "william"
+        },
+        {
+          "id": "1cd469d5-b69a-4391-958c-470426341fd2",
+          "title": "Refactor sign in, signup, and authenticator onboarding",
+          "done": true,
+          "owner": "william"
+        },
+        {
+          "id": "8c99e38b-d82d-4077-8337-d4a3055cfc61",
+          "title": "Fix trapped email verification and password-reset navigation",
+          "done": true,
+          "owner": "william"
+        },
+        {
+          "id": "ba819881-005c-47dc-8aaf-c65c7509b6c9",
+          "title": "Clarify authenticator setup and verify the phone MFA workflow",
+          "done": true,
+          "owner": "william"
+        },
+        {
+          "id": "03bc6470-6a84-48d8-ba48-1df4ed0f3277",
+          "title": "Merge account and checkout routes with the pushed 3D editor",
+          "done": false,
+          "owner": "unassigned"
+        },
+        {
+          "id": "4147c58c-2029-40ef-93ee-537ddad4a25e",
+          "title": "Define guest-room transfer and account scene ownership",
+          "done": false,
+          "owner": "unassigned"
+        }
+      ],
+      "description": "React app shell, product browsing, constraint chips, and conversation."
     },
     {
-      "id": "dcc1942f-5849-4db3-9f09-81fe4051e30c",
-      "name": "Pitch & Demo",
-      "tasks": []
+      "id": "725e2532-99b1-4d39-96a3-b88b39851eb2",
+      "name": "Cart & Visa IDX",
+      "description": "Cart review, explicit approval, and the IDX sandbox Match Key.",
+      "tasks": [
+        {
+          "id": "aafdd84e-3784-4219-8723-8fa3b176049e",
+          "title": "Connect the cart to the Visa IDX sandbox",
+          "done": false,
+          "owner": "saketh"
+        },
+        {
+          "id": "02af2857-129b-47aa-bf42-cf1f8cfae182",
+          "title": "Add authenticator-code / 2FA confirmation at checkout",
+          "done": true,
+          "owner": "saketh"
+        },
+        {
+          "id": "836acd1c-7b85-46c7-bc0c-22d80438eb34",
+          "title": "Pull latest main and prepare the Visa/auth handoff",
+          "done": true,
+          "owner": "william"
+        },
+        {
+          "id": "620bb68d-9b83-4ece-a269-6b088884f43a",
+          "title": "Verify X-Pay signing, MLE and real IDX fixture checkout",
+          "done": true,
+          "owner": "william"
+        }
+      ]
+    },
+    {
+      "id": "f26ae912-417c-46f3-aa6d-175f257df604",
+      "name": "Agent Harness",
+      "tasks": [
+        {
+          "id": "aa3279ee-e155-4920-a5e4-f51eba493418",
+          "title": "Connect room, catalogue, and user input to the agent",
+          "done": false,
+          "owner": "unassigned"
+        },
+        {
+          "id": "888bfaaa-18bb-4706-a25d-737fb284313b",
+          "title": "Add a database query tool",
+          "done": false,
+          "owner": "unassigned"
+        },
+        {
+          "id": "401991e0-7f1f-48e6-b9af-f0333814fb30",
+          "title": "Add sandboxed code execution for calculations",
+          "done": false,
+          "owner": "unassigned"
+        },
+        {
+          "id": "c4cbf893-27a0-4699-8e18-54942c104b40",
+          "title": "Add tools to create, read, update, and delete scene objects",
+          "done": false,
+          "owner": "unassigned"
+        },
+        {
+          "id": "bea94a23-b641-482d-86f4-6bbfc8303ae3",
+          "title": "Add a scene screenshot tool",
+          "done": false,
+          "owner": "unassigned"
+        }
+      ],
+      "description": "End-to-end checks, deployment, documentation, and the demo journey."
+    },
+    {
+      "id": "50f20b5f-745e-4a44-b262-fdad56a9303d",
+      "name": "Demo Video + Presentation",
+      "tasks": [
+        {
+          "id": "a53ce985-8022-4ad3-80ab-f11c0981f39e",
+          "title": "Evaluate ElevenLabs narration for the demo video",
+          "done": false,
+          "owner": "unassigned"
+        }
+      ]
     }
-  ]
+  ],
+  "schemaVersion": 2
 }

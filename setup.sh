@@ -22,6 +22,8 @@ if [[ ! -f .env ]]; then cp .env.example .env; fi
   cd backend
   if [[ -f uv.lock ]]; then uv sync --locked; else uv sync; fi
   uv run --no-sync python manage.py migrate --noinput
+  uv run --no-sync python manage.py createcachetable
+  uv run --no-sync python manage.py initialize_local_auth
   uv run --no-sync python manage.py check
 )
 (

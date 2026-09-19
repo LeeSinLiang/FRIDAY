@@ -2,18 +2,29 @@
 
 ## Start here
 
-- Read [INDEX.md](INDEX.md) first, then the relevant docs and owner's TODO file.
+- Read [INDEX.md](INDEX.md) first, then the relevant docs, owner's TODO file, and current [Kanban board](.github/extensions/project-manager/data/board.json). See the [board guide](.github/extensions/project-manager/README.md) for launch and editing instructions.
 - Read [proposal.md](proposal.md) for product scope. Keep the 19-hour MVP small; avoid speculative abstractions and unrelated changes.
 - The stack is Python, Django API, Docker, TypeScript, React, and Three.js, with OpenAI Agents SDK, Elasticsearch, Deepgram, and Visa sandbox integrations.
 
 ## Track all work
 
 - Every agent must record its work in the current owner's TODO file: plan/status, changes and file paths, verification results, and blockers or handoff notes.
-- Update the TODO when starting work and before handing it back. Do not mark unfinished or unverified work complete.
+- Keep the Kanban and owner's TODO synchronized when starting work, after every meaningful code or documentation edit, after verification, and before handoff. Update the existing task for the work; do not create a card for every file or keystroke. Re-read both records before changing them so concurrent updates survive.
+- Perform these updates as part of the work without waiting for a separate reminder. These instructions require the agent to maintain the board; the extension does not infer tasks from file changes.
 - Available work logs: [TODO_SIN.md](TODO_SIN.md), [TODO_SAKETH.md](TODO_SAKETH.md), [TODO_WILLIAM.md](TODO_WILLIAM.md), and [TODO_ADELLE.md](TODO_ADELLE.md).
 - If the user has not specified their TODO file or identity in the conversation, list all four options first and ask which file to update. Wait for their answer before writing a work log; never assume a default owner.
 - Keep INDEX.md current whenever documentation is added, moved, or removed. Include docs for specific frontend/backend features as they are created.
 - Respect teammates' changes. Agree on shared contracts and ownership before overlapping work; do not infer owners from the proposal's P1–P4 labels.
+
+### Maintain the Kanban and active TODOs
+
+- The board at `.github/extensions/project-manager/data/board.json` is the shared task list. Owner TODO files hold the current plan, detailed progress, verification, and completed-work history. Use the same task wording in both so the records can be matched.
+- Preserve the user's current component names, IDs, and order. Add or update tasks under those existing components. Do not rename, add, remove, or regenerate components from an older proposal or seed unless the user requests it.
+- Before implementation, find or add the relevant card and record the plan under **In progress** in the confirmed owner's TODO. Assign the agreed owner; leave unconfirmed ownership **Unassigned**. Keep existing task IDs, ownership, completion, and priority unless the work calls for changing them.
+- As scope changes, add newly discovered actionable tasks, revise affected task titles or priority, and remove duplicates, cancelled work, or obsolete tasks only with a recorded reason. Keep blocked and unverified work active and explain the blocker in the TODO. Do not delete a task merely because its title is vague or it looks like a placeholder.
+- After verification, mark the card done and move the matching TODO item out of **In progress** or **Next** into **Done**, recording changed paths and the actual checks/results. Completed cards may then be removed to keep the active board concise, but retain their completion evidence in the owner's TODO. Never claim implementation, payment approval, or a vendor order from a plan or an unverified integration.
+- Prefer the running board's HTTP API or canvas actions for edits; they use its write lock and notify open tabs. Read the current board first and make targeted task changes. If direct JSON edits are necessary, stop this checkout's board server first, re-read and preserve the latest data, then restart and verify it. Git and manual file edits do not participate in the board write lock.
+- A handoff is incomplete until the affected Kanban cards, active TODO items, completed-work record, and relevant documentation agree. For runnable changes, verify the refreshed artifact through the user's actual launch path before marking the work done.
 
 ## Documentation organization
 

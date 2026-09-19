@@ -1,0 +1,82 @@
+{
+  "scope": "Real IDX sandbox request after local email verification, TOTP enrollment/login, and checkout-specific MFA approval",
+  "checkout_id": "84428212-2ba2-4c62-aec6-0cb79f1fb8f3",
+  "snapshot": {
+    "vendor": {
+      "id": "friday-sandbox",
+      "name": "FRIDAY Sandbox Furniture"
+    },
+    "items": [
+      {
+        "product_id": "sample-sofa",
+        "name": "Sample two-seat sofa",
+        "unit_amount": 42500,
+        "quantity": 1,
+        "line_amount": 42500
+      },
+      {
+        "product_id": "sample-lamp",
+        "name": "Sample reading lamp",
+        "unit_amount": 7900,
+        "quantity": 1,
+        "line_amount": 7900
+      }
+    ],
+    "amount": 50400,
+    "currency": "USD",
+    "exponent": 2,
+    "sandbox": true
+  },
+  "snapshot_hash": "64ff6c32447a08e60806c0926a04935bb1ab8a467a8776fb2f2d3ca6a0f2a5e4",
+  "trans_id": "67a9848a-79e1-4ff6-a9af-e7b99013f244",
+  "state": "accepted",
+  "approval": {
+    "same_user": true,
+    "created_at": "2026-09-19T21:07:53.219349+00:00",
+    "expires_at": "2026-09-19T21:12:53.219224+00:00",
+    "consumed_at": "2026-09-19T21:07:58.448491+00:00"
+  },
+  "finished_at": "2026-09-19T21:07:58.995455+00:00",
+  "evidence": {
+    "endpoint": "https://sandbox.api.visa.com/vidx/v1/requests",
+    "signing_resource_path": "v1/requests",
+    "request_fields": [
+      "acctNumber",
+      "acquirerBIN",
+      "browserIP",
+      "deviceChannel",
+      "email",
+      "mcc",
+      "merchantID",
+      "merchantName",
+      "messageCategory",
+      "productType",
+      "purchaseAmount",
+      "purchaseCurrency",
+      "purchaseDate",
+      "purchaseExponent",
+      "requestDCAPStatus",
+      "transID",
+      "transType"
+    ],
+    "encrypted_request_sha256": "1825ca214006b6e5133fa346e6bdd0a12d43e887216488a35704a0be92253a56",
+    "payment_authorization": "not_attempted",
+    "vendor_order": "not_attempted",
+    "http_status": 200,
+    "elapsed_ms": 476,
+    "response_headers": {
+      "x-correlation-id": "1789852078_725_682469294_b89c786-5_VDP_WS",
+      "x-app-status": "200"
+    },
+    "response_encrypted": true,
+    "response": {
+      "transID": "67a9848a-79e1-4ff6-a9af-e7b99013f244",
+      "idxMatchKey": "IQYJlYhzBwiVAAH4hAJioQAAAAA=",
+      "warningMessages": []
+    },
+    "transaction_id_matches": true,
+    "message": "Visa IDX accepted the sample and returned a matching transaction ID and Match Key."
+  },
+  "email_delivery": "private_local_inbox",
+  "authenticator_verification": "independent RFC6238 code generator; phone scan not tested"
+}
