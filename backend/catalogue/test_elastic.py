@@ -10,6 +10,7 @@ from rest_framework.test import APIClient
 
 from catalogue import es, memory
 from catalogue.dsl.schema import FindClause
+from catalogue.facets import PRICE_BANDS, memory_facets
 from catalogue.feed import load_listings
 from catalogue.ingest import to_actions
 from catalogue.to_es_query import to_es_bool, to_es_query
@@ -110,7 +111,7 @@ class ColourBackendAgreementTests(SimpleTestCase):
         client = mock.Mock()
         client.search.side_effect = [
             {"aggregations": {"colours": {"buckets": [{"key": "#2f5d50"}, {"key": "#ffffff"}]}}},
-            {"hits": {"total": {"value": 0}, "hits": []}},
+            fake_response([], []),
         ]
         with mock.patch.object(es, "get_client", return_value=client):
             es.search(_FIND.validate_python([{"k": "colour", "hex": "#2a5a4c"}]), limit=24, offset=0)
@@ -126,6 +127,20 @@ class QueryBodyTests(SimpleTestCase):
         self.assertEqual(body["sort"], [{"_score": "desc"}, {"id": "asc"}])
         self.assertEqual(body["query"], {"bool": {"must": [], "filter": []}})
 
+    def test_aggregations_ride_along_with_the_search(self):
+        aggs = to_es_query([], PALETTE, limit=24, offset=0)["aggs"]
+        self.assertEqual(aggs["category"], {"terms": {"field": "category", "size": 12}})
+        ranges = aggs["price_band"]["range"]["ranges"]
+        self.assertEqual([r["key"] for r in ranges], [key for key, _, _ in PRICE_BANDS])
+        self.assertEqual(ranges[0], {"key": "0-10000", "from": 0, "to": 10000})
+        self.assertEqual(ranges[-1], {"key": "100000+", "from": 100000})
+        self.assertNotIn("fits_room", aggs)
+
+    def test_fits_room_is_a_filter_aggregation_on_width(self):
+        find = _FIND.validate_python([{"k": "fits_w_max", "mm": 900}])
+        aggs = to_es_query(find, PALETTE, limit=24, offset=0)["aggs"]
+        self.assertEqual(aggs["fits_room"], {"filter": {"range": {"dims_mm.w": {"lte": 900}}}})
+
 
 class IngestTests(SimpleTestCase):
     def test_actions_use_listing_id_and_only_mapped_fields(self):
@@ -138,8 +153,17 @@ class IngestTests(SimpleTestCase):
             self.assertEqual(set(action["_source"]), mapped)
 
 
-def fake_hits(listings) -> dict:
-    return {"hits": {"total": {"value": len(listings)}, "hits": [{"_source": to_wire(l)} for l in listings]}}
+def fake_response(listings, find) -> dict:
+    """What Elasticsearch would return for these hits, aggregations included."""
+    facets = memory_facets(listings, find)
+    aggregations = {
+        "category": {"buckets": [{"key": b.key, "doc_count": b.count} for b in facets.category]},
+        "price_band": {"buckets": [{"key": b.key, "doc_count": b.count} for b in facets.price_band]},
+    }
+    if facets.fits_room is not None:
+        aggregations["fits_room"] = {"doc_count": facets.fits_room}
+    return {"hits": {"total": {"value": len(listings)}, "hits": [{"_source": to_wire(l)} for l in listings]},
+            "aggregations": aggregations}
 
 
 class BackendSwitchTests(SimpleTestCase):
@@ -148,6 +172,9 @@ class BackendSwitchTests(SimpleTestCase):
     def setUp(self):
         es.get_client.cache_clear()
         self.addCleanup(es.get_client.cache_clear)
+        patcher = mock.patch("catalogue.views.load_catalogue", return_value=load_listings())
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def test_memory_is_the_default(self):
         with mock.patch.dict(os.environ, {}, clear=False):
@@ -160,7 +187,8 @@ class BackendSwitchTests(SimpleTestCase):
         armchairs = sorted((l for l in load_listings() if l.category == "armchair" and l.dims_mm.w <= 900),
                            key=lambda l: l.id)
         client = mock.Mock()
-        client.search.return_value = fake_hits(armchairs)
+        find = _FIND.validate_python([{"k": "category", "value": "armchair"}, {"k": "fits_w_max", "mm": 900}])
+        client.search.return_value = fake_response(armchairs, find)
         with mock.patch.dict(os.environ, {"SEARCH_BACKEND": "elastic"}), \
                 mock.patch.object(es, "get_client", return_value=client):
             response = APIClient().get(self.URL)

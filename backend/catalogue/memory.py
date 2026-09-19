@@ -3,6 +3,7 @@
 from collections.abc import Callable, Sequence
 
 from catalogue.colour import is_near
+from catalogue.facets import memory_facets
 from catalogue.text import tokenize
 from catalogue.types import Listing, SearchResponse
 
@@ -38,9 +39,9 @@ def matches(listing: Listing, find: Sequence) -> bool:
 
 
 def search(listings: Sequence[Listing], find: Sequence, limit: int, offset: int) -> SearchResponse:
-    """Filter listings by every find clause (AND), order by id, then page.
+    """Filter listings by every find clause (AND), order by id, page, and facet the full hit set.
 
     Id order matches the Elasticsearch backend's tiebreak, so both backends page identically.
     """
     hits = sorted((listing for listing in listings if matches(listing, find)), key=lambda l: l.id)
-    return SearchResponse(items=hits[offset:offset + limit], total=len(hits))
+    return SearchResponse(items=hits[offset:offset + limit], total=len(hits), facets=memory_facets(hits, find))
