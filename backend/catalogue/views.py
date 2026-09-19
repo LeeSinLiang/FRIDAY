@@ -5,13 +5,7 @@ from rest_framework.response import Response
 from catalogue import memory
 from catalogue.feed import load_listings
 from catalogue.params import parse_search_params
-
-
-def _to_payload(result) -> dict:
-    payload = result.model_dump()
-    if payload["facets"] is None:
-        del payload["facets"]
-    return payload
+from catalogue.types import to_wire
 
 
 # Browsing the catalogue is public, like any storefront. Cart and checkout auth are decided elsewhere.
@@ -23,4 +17,4 @@ def search(request):
     except ValueError as exc:
         return Response({"error": "invalid_search_params", "detail": str(exc)}, status=400)
     result = memory.search(load_listings(), query.find, query.limit, query.offset)
-    return Response(_to_payload(result))
+    return Response(to_wire(result))
