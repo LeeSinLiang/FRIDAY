@@ -12,7 +12,8 @@ from catalogue import es, memory
 from catalogue.dsl.schema import FindClause
 from catalogue.facets import PRICE_BANDS, memory_facets
 from catalogue.feed import load_listings
-from catalogue.ingest import to_actions
+from catalogue.ingest import stale_seed_query, to_actions
+from catalogue.seed import generate
 from catalogue.to_es_query import to_es_bool, to_es_query
 from catalogue.types import to_wire
 
@@ -151,6 +152,20 @@ class IngestTests(SimpleTestCase):
         for action in actions:
             self.assertEqual(action["_id"], action["_source"]["id"])
             self.assertEqual(set(action["_source"]), mapped)
+
+
+class StaleSeedTests(SimpleTestCase):
+    def test_only_seeds_beyond_the_current_count_are_targeted(self):
+        query = stale_seed_query(load_listings() + tuple(generate(250)))
+        self.assertEqual(query["bool"]["filter"], [
+            {"term": {"source": "seed"}},
+            {"range": {"id": {"gt": "seed-000250"}}},
+        ])
+
+    def test_with_no_seeds_every_seed_document_is_stale_and_hero_items_are_safe(self):
+        query = stale_seed_query(load_listings())
+        self.assertEqual(query["bool"]["filter"][1], {"range": {"id": {"gt": "seed-000000"}}})
+        self.assertEqual(query["bool"]["filter"][0], {"term": {"source": "seed"}})
 
 
 def fake_response(listings, find) -> dict:
