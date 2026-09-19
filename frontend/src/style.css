@@ -1,0 +1,5 @@
+:root { font-family: system-ui, sans-serif; color: #20342d; background: #f5f5f0; }
+body { margin: 0; }
+main { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+h1 { margin-bottom: 8px; }
+.scene { height: min(60vh, 520px); min-height: 280px; background: #e7ece6; border-radius: 12px; }

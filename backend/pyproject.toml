@@ -1,0 +1,13 @@
+[project]
+name = "friday-backend"
+version = "0.1.0"
+description = "FRIDAY Django REST API"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "django>=5.2,<5.3",
+    "djangorestframework>=3.16,<4",
+    "python-dotenv>=1.1,<2",
+]
+
+[tool.uv]
+package = false

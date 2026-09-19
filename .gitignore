@@ -1,0 +1,57 @@
+# Local environment and secrets (keep shareable templates)
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Django runtime data (keep migrations tracked)
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
+media/
+staticfiles/
+
+# TypeScript / React tooling and build output
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+.next/
+*.tsbuildinfo
+*.log
+
+# Local Docker overrides and volumes
+docker-compose.override.yml
+docker-compose.override.yaml
+compose.override.yml
+compose.override.yaml
+.docker-data/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+*.swo
+*~
+
+# Keep dependency lockfiles, Dockerfiles, shared Compose configs,
+# Django migrations, and Three.js source assets (GLB/GLTF/textures) tracked.
