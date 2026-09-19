@@ -2,14 +2,12 @@
 // board. Columns = components (horizontal axis). Each column holds an
 // ordered stack of task cards (vertical axis = stack order / priority).
 // Cards can move within a column (reorder up/down) or across columns
-// (reassign to a different component). Each card carries a `phase` tag
-// (ideation / mvp / development) so phase is visible without constraining
-// where the card lives.
+// (reassign to a different component). Each card carries a named owner;
+// completion is tracked separately. Unassigned is an explicit default.
 //
 // The board is stored as a single committed JSON file so the whole team
-// (and any agent/session) sees the same state. It is keyed by nothing but
-// its own file path — never by instanceId — so multiple open canvas panels
-// always reflect the same underlying project plan.
+// (and any agent/session) can share the plan through Git. Panels within
+// one process share live state; restart after external board-file edits.
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
@@ -21,55 +19,86 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "data");
 const BOARD_PATH = path.join(DATA_DIR, "board.json");
 
-export const PHASES = ["ideation", "mvp", "development"];
-export const PHASE_LABELS = {
-    ideation: "Ideation",
-    mvp: "MVP",
-    development: "Development",
-};
+export const OWNERS = [
+    { id: "unassigned", label: "Unassigned", color: "#59636e", tint: "#f5f6f8" },
+    { id: "william", label: "William", color: "#2458c6", tint: "#eef3ff" },
+    { id: "sin", label: "Sin", color: "#915500", tint: "#fff5df" },
+    { id: "saketh", label: "Saketh", color: "#086a5e", tint: "#e8f7f1" },
+    { id: "adelle", label: "Adelle", color: "#793fa4", tint: "#f7eefb" },
+];
+
+// Grounded in proposal.md and README.md; these describe scope, not progress
+// or ownership. Named owners must be agreed with the team.
+export const PROJECT_COMPONENTS = [
+    { name: "Room & 3D Models", description: "Floor plans, room editor, GLB assets, and Three.js scene controls." },
+    { name: "Spatial Solver", description: "Fit, collisions, clearance zones, and the valid-space overlay." },
+    { name: "Catalogue & Elasticsearch", description: "Product records, dimensions, prices, assets, and filtered search." },
+    { name: "AI Agent & Voice", description: "OpenAI agent tools, scene commands, and Deepgram voice input." },
+    { name: "Frontend & UX", description: "React app shell, product browsing, constraint chips, and conversation." },
+    { name: "Backend & API", description: "Django routes, shared data contracts, configuration, and persistence." },
+    { name: "Cart & Visa IDX", description: "Cart review, explicit approval, and the IDX sandbox Match Key." },
+    { name: "Integration & Demo", description: "End-to-end checks, deployment, documentation, and the demo journey." },
+];
 
 export const events = new EventEmitter();
 
 function defaultBoard() {
-    const seedComponents = [
-        "Problem & Idea",
-        "Frontend",
-        "Backend / API",
-        "Data / AI-ML",
-        "Design / UX",
-        "Pitch & Demo",
-    ];
     return {
-        title: "Hackathon Project Plan",
-        components: seedComponents.map((name) => ({
+        schemaVersion: 2,
+        title: "FRIDAY · Project Plan",
+        components: PROJECT_COMPONENTS.map((component) => ({
             id: randomUUID(),
-            name,
+            ...component,
             tasks: [],
         })),
     };
 }
 
-// Migrate the earlier phase-grid schema (component.phases.{phase}.tasks) to
-// the flat, ordered task-stack schema (component.tasks[], each tagged with
-// a `phase`). Runs once on load if the old shape is detected.
+// Migrate both earlier board formats once. A phase never implies a person.
+// Keep custom columns and all task data except the intentionally retired
+// phase field. Subsequent user renames/removals are not reset on startup.
 function migrateIfNeeded(board) {
-    let migrated = false;
+    if (board.schemaVersion >= 2) return false;
     for (const component of board.components) {
         if (!Array.isArray(component.tasks) && component.phases) {
             const tasks = [];
-            for (const phase of PHASES) {
-                const phaseData = component.phases[phase];
-                if (!phaseData) continue;
+            for (const phaseData of Object.values(component.phases)) {
                 for (const task of phaseData.tasks || []) {
-                    tasks.push({ id: task.id, title: task.title, done: !!task.done, phase });
+                    tasks.push({ ...task, done: !!task.done });
                 }
             }
             component.tasks = tasks;
             delete component.phases;
-            migrated = true;
+        }
+        for (const task of component.tasks) {
+            if (!OWNERS.some(owner => owner.id === task.owner)) task.owner = "unassigned";
+            delete task.phase;
         }
     }
-    return migrated;
+    const legacyNames = {
+        "Problem & Idea": "Integration & Demo",
+        "Frontend": "Frontend & UX",
+        "Design / UX": "Frontend & UX",
+        "Backend / API": "Backend & API",
+        "Data / AI-ML": "Catalogue & Elasticsearch",
+        "Pitch & Demo": "Integration & Demo",
+    };
+    const original = board.components;
+    const used = new Set();
+    board.components = PROJECT_COMPONENTS.map(definition => {
+        const matches = original.filter(component =>
+            (legacyNames[component.name] || component.name) === definition.name);
+        for (const component of matches) used.add(component);
+        return {
+            ...(matches[0] || { id: randomUUID() }),
+            ...definition,
+            tasks: matches.flatMap(component => component.tasks),
+        };
+    });
+    board.components.push(...original.filter(component => !used.has(component)));
+    if (board.title === "Hackathon Project Plan") board.title = "FRIDAY · Project Plan";
+    board.schemaVersion = 2;
+    return true;
 }
 
 let boardCache = null;
@@ -107,8 +136,8 @@ function findTask(board, taskId) {
     throw new Error(`Unknown task: ${taskId}`);
 }
 
-function assertPhase(phase) {
-    if (!PHASES.includes(phase)) throw new Error(`Unknown phase: ${phase}`);
+function assertOwner(owner) {
+    if (!OWNERS.some(person => person.id === owner)) throw new Error(`Unknown owner: ${owner}`);
 }
 
 function clampIndex(index, length) {
@@ -154,12 +183,12 @@ export async function renameComponent(componentId, name) {
 }
 
 // Adds a task to the bottom of a column's stack.
-export async function addTask(componentId, phase, title) {
-    assertPhase(phase);
+export async function addTask(componentId, title, owner = "unassigned") {
+    assertOwner(owner);
     if (!title || !title.trim()) throw new Error("Task title is required");
     return mutate((board) => {
         const component = findComponent(board, componentId);
-        const task = { id: randomUUID(), title: title.trim(), done: false, phase };
+        const task = { id: randomUUID(), title: title.trim(), done: false, owner };
         component.tasks.push(task);
         return task;
     });
@@ -173,11 +202,11 @@ export async function toggleTask(taskId, done) {
     });
 }
 
-export async function setTaskPhase(taskId, phase) {
-    assertPhase(phase);
+export async function setTaskOwner(taskId, owner) {
+    assertOwner(owner);
     return mutate((board) => {
         const { task } = findTask(board, taskId);
-        task.phase = phase;
+        task.owner = owner;
         return task;
     });
 }
@@ -196,9 +225,10 @@ export async function moveTask(taskId, targetComponentId, targetIndex) {
     return mutate((board) => {
         const { component: sourceComponent, index: sourceIndex, task } = findTask(board, taskId);
         const targetComponent = findComponent(board, targetComponentId);
-        sourceComponent.tasks.splice(sourceIndex, 1);
         const sameColumn = sourceComponent.id === targetComponent.id;
+        // Drop slots refer to the original stack, including its final slot.
         let insertAt = clampIndex(targetIndex, targetComponent.tasks.length);
+        sourceComponent.tasks.splice(sourceIndex, 1);
         // If we just removed the card from earlier in the same column, later
         // target indexes shift left by one to land in the intended slot.
         if (sameColumn && sourceIndex < insertAt) insertAt = Math.max(0, insertAt - 1);

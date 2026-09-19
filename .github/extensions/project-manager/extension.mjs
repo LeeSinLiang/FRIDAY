@@ -1,10 +1,10 @@
 // Extension: project-manager
-// A hackathon project-manager Kanban board: components (Frontend, Backend,
-// AI/ML, Design, Pitch, etc.) form the horizontal axis (columns). Each
+// FRIDAY project-manager Kanban: documented project areas form the
+// horizontal axis (columns). Each
 // column holds an ordered stack of task cards — the vertical axis manages
 // stack order / priority within a component. Cards can be dragged between
 // columns (reassign to a different component) or reordered up/down within
-// a column. Each card carries a phase tag (ideation / mvp / development).
+// a column. Each card has a named owner or is explicitly unassigned.
 // Backed by a single committed JSON file (data/board.json) so the whole
 // team and every agent session see the same plan.
 
@@ -18,10 +18,10 @@ import {
     addTask,
     toggleTask,
     removeTask,
-    setTaskPhase,
+    setTaskOwner,
     moveTask,
     moveTaskStep,
-    PHASES,
+    OWNERS,
 } from "./board.mjs";
 
 // One local HTTP server per open canvas instance; all instances read/write
@@ -44,7 +44,7 @@ const session = await joinSession({
             id: "project-manager",
             displayName: "Project Manager",
             description:
-                "Hackathon project-manager Kanban board. Columns are components (Frontend, Backend, AI/ML, Design, Pitch, etc.); each column holds an ordered stack of task cards tagged with a phase (ideation/mvp/development). Move cards up/down within a column to reorder priority, or between columns to reassign work.",
+                "FRIDAY project Kanban. Columns cover rooms and 3D models, spatial checks, Elasticsearch, agent and voice, frontend, Django API, Visa IDX, and integration. Cards have owners (William, Sin, Saketh, Adelle, or Unassigned) and a completion checkbox. Reorder cards for priority or move them between components. Do not infer owners from component names.",
             inputSchema: { type: "object", properties: {} },
             actions: [
                 {
@@ -54,7 +54,7 @@ const session = await joinSession({
                 },
                 {
                     name: "add_component",
-                    description: "Add a new component/column to the board (e.g. 'Frontend', 'Backend', 'ML Model').",
+                    description: "Add a project component/column to the board.",
                     inputSchema: {
                         type: "object",
                         properties: { name: { type: "string" } },
@@ -91,17 +91,17 @@ const session = await joinSession({
                 {
                     name: "add_task",
                     description:
-                        "Add a task card to the bottom of a component's stack, tagged with a phase ('ideation', 'mvp', or 'development').",
+                        "Add a task card to the bottom of a component's stack. Omit owner to leave it unassigned; assign a person only when ownership is agreed.",
                     inputSchema: {
                         type: "object",
                         properties: {
                             componentId: { type: "string" },
-                            phase: { type: "string", enum: PHASES },
+                            owner: { type: "string", enum: OWNERS.map(person => person.id) },
                             title: { type: "string" },
                         },
-                        required: ["componentId", "phase", "title"],
+                        required: ["componentId", "title"],
                     },
-                    handler: wrap(async ({ componentId, phase, title }) => addTask(componentId, phase, title)),
+                    handler: wrap(async ({ componentId, title, owner }) => addTask(componentId, title, owner)),
                 },
                 {
                     name: "toggle_task",
@@ -114,17 +114,17 @@ const session = await joinSession({
                     handler: wrap(async ({ taskId, done }) => toggleTask(taskId, done)),
                 },
                 {
-                    name: "set_task_phase",
-                    description: "Change a task card's phase tag ('ideation', 'mvp', or 'development').",
+                    name: "set_task_owner",
+                    description: "Assign a task to william, sin, saketh, or adelle, or clear its owner with unassigned. Does not change completion.",
                     inputSchema: {
                         type: "object",
                         properties: {
                             taskId: { type: "string" },
-                            phase: { type: "string", enum: PHASES },
+                            owner: { type: "string", enum: OWNERS.map(person => person.id) },
                         },
-                        required: ["taskId", "phase"],
+                        required: ["taskId", "owner"],
                     },
-                    handler: wrap(async ({ taskId, phase }) => setTaskPhase(taskId, phase)),
+                    handler: wrap(async ({ taskId, owner }) => setTaskOwner(taskId, owner)),
                 },
                 {
                     name: "move_task",

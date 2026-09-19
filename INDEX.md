@@ -15,6 +15,7 @@ Start here to find project docs and team work logs. Add links as docs are create
 
 ## Feature documentation
 
+- [Interactive Kanban board: owner colours, project areas, launch, and verification](.github/extensions/project-manager/README.md)
 - [Local setup and full-stack launcher](README.md#local-setup)
 - [Backend API, frontend/3D entry points, and configuration paths](README.md#layout)
 - [Verification and dependency commands](README.md#checks-and-common-commands)
