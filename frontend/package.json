@@ -11,7 +11,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "node scripts/test-scene.mjs",
-    "fixture:glb": "node scripts/generate-test-glb.mjs"
+    "fixture:glb": "node scripts/generate-test-glb.mjs",
+    "region:debug": "node scripts/region-debug.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.0.0",
