@@ -6,16 +6,24 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## In progress
 
-- None. Waiting on go-ahead for Phase B.
+- None. Waiting on go-ahead for Phase C.
 
 ## Next
 
-- **Phase B — stubs:** `backend/catalogue/data/listings.json` (40 hand-written items, feed-shaped), `GET /api/search` on the memory backend returning `SearchResponse`, a mock `Room` so `place[]` refs resolve, a throwaway dev search page in the frontend.
 - **Phase C — Elastic:** client, bulk ingest command, pure `to_es_query(find) -> body` with unit tests, `SEARCH_BACKEND` switch (memory stays default).
 - **Phase D — language:** `compile(text) -> Program` via OpenAI Agents SDK with structured output, `render(program) -> list[str]`, `POST /api/compile`, fallback to a plain text clause on validation failure. Schema locks here.
 - **Phase E — scale:** ~12,000 seeded listings, facets including `fits_room`.
 
 ## Done
+
+- **Phase B — search stubs (2026-09-19).** Branch `codex/saketh-search-stubs`, stacked on the Phase A branch.
+  - `GET /api/search` on the in-memory backend: `backend/catalogue/{views,urls,params,memory,colour,feed,thumbs}.py`, feed in `backend/catalogue/data/listings.json` (40 items, all 12 categories), tests in `backend/catalogue/test_search.py`.
+  - `backend/catalogue/mock/room.py` — dev stub room (walls `w-n/w-e/w-s/w-w`, door `d1`, window `w1`, instances `sofa-1`, `lamp-1`) and `room_refs()` for compile().
+  - Dev page `frontend/dev-search.html` + `frontend/src/dev/search.tsx` — standalone Vite entry, so `App.tsx` is untouched and it is not in the production build.
+  - Shared file touched: one `include("catalogue.urls")` line in `backend/api/urls.py` (agreed with Saketh).
+  - **Auth decision:** search is `AllowAny`, and compile will be too. Reason: catalogue browsing must work logged-out like any storefront, and the UI lane is blocked without it. Scoped to these two views only; the project default stays `IsAuthenticated`. Cart and checkout auth are William's call — tell him when he is next around.
+  - Env: catalogue keys now live in the repo's single `.env`; `.env.local` removed. Key name is `OPENAI_API_KEY` (empty until Phase D).
+  - Verification: `manage.py check` clean; `manage.py test api catalogue` — 21 tests OK; `npm run build` passes; `curl '/api/search?category=armchair&fits_w_mm=900'` returns 4 armchairs with integer mm dims; dev page rendered in headless Chrome: 24 rows on load, 4 after applying the same filters, all thumbnails decoded.
 
 - **Phase A — scaffold and shared types (2026-09-19).**
   - Adapted the lane to the existing Django + Vite stack instead of Next.js: API in Django, validating schemas in Pydantic, TypeScript mirrors for the frontend.
@@ -32,6 +40,6 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 ## Blockers / handoff
 
 - Shared files touched, additive only: `.env.example`, `INDEX.md`, `backend/pyproject.toml`, `backend/uv.lock`. Teammates need to rerun `./setup.sh` after pulling.
-- Phase B will need a one-line `include("catalogue.urls")` in `backend/api/urls.py` or `backend/config/urls.py` (shared) — needs owner agreement.
-- DRF defaults to `IsAuthenticated`; search and compile will be `AllowAny` like health unless the auth owner says otherwise.
+- Tell William: search and compile are `AllowAny` (see Phase B). His lanes are unaffected.
+- `OPENAI_API_KEY` is empty in `.env`; needed before Phase D.
 - The Elastic onboarding skill is installed locally only (`.agents/`, `.claude/`, `skills-lock.json` are excluded via `.git/info/exclude`, not committed).
