@@ -13,7 +13,7 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## Done
 
-- **Shared convention: sync before work (2026-09-19).** Branch `codex/saketh-sync-convention`. Added a "Sync before starting work" section to `AGENTS.md` (pull, `./setup.sh`, tests and build on fresh `main`, branch off `main`, re-read `AGENTS.md` and `INDEX.md`; stop if clean `main` is red; retarget a stacked PR before deleting its base). Reworded the existing "do not fetch unless asked" sentence so the two do not contradict. `CLAUDE.md` is a symlink, so it follows. Documentation only; links checked.
+- **Shared convention: sync before work (2026-09-19).** Branch `codex/saketh-sync-convention`. Added a "Sync before starting work" section to `AGENTS.md` (pull, `./setup.sh`, tests and build on fresh `main`, branch off `main`, re-read `AGENTS.md` and `INDEX.md`; stop if clean `main` is red; retarget a stacked PR before deleting its base). Scoped per Saketh: pull at task boundaries (task start, after a merge), never mid-task, so Sin's no-mid-task-fetch rule and the sync both stand. Appended a note about the change to `TODO_SIN.md` and `TODO_WILLIAM.md`. `CLAUDE.md` is a symlink, so it follows. Documentation only; links checked.
 
 - **Solver follow-up: fixture room, "nothing fits" reasons, near semantics (2026-09-19).** Branch `codex/saketh-nothing-fits`, off fresh `main` after merging PR #15 (`main`: 123 backend tests, 51 frontend tests, build OK; `AGENTS.md` unchanged).
   - Dev page and debug script now solve in Sin's 600 × 500 cm fixture room (`DEV_SCENE` in `frontend/src/region/devScene.ts`); the small mock room stays as `MOCK_SCENE` for tests.

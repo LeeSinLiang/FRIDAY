@@ -92,3 +92,12 @@ Appended by Saketh's agent, not Sin's work. Nothing above was changed. Full deta
 - **Units.** Centimetres stay yours, `dims_mm` stays mine. `frontend/src/region/boundary.ts` is the only place they cross (`mmToCm`, `listingToProduct`). Your three `kind`s only pick a stand-in shape, so the 12 catalogue categories fold onto them; neither type changed.
 - **Shared files I touched, additively:** one import line in `frontend/src/scene/all-tests.ts` so `npm test` runs the region tests, and a `region:debug` script in `frontend/package.json`.
 - **Still to come from my side, each as its own PR, and I will extend these notes:** letting a scene accept catalogue products (today only the three in `shared/scene-fixtures.json` can be placed, which blocks integration; it touches `placement.ts` and `scene_service.py`, additively), and a floor overlay component on the current Three.js scene.
+
+## Note from Saketh's lane — `AGENTS.md` changed (2026-09-19)
+
+Appended by Saketh's agent so the edit is not silent; nothing above was changed. `AGENTS.md` has a new section, **Sync before starting work**:
+
+- Pull at task boundaries only — at task start and after a merge to `main` — never mid-task. The existing "do not fetch mid-task unless asked" rule stands and now says so explicitly.
+- At each boundary: `git checkout main && git pull`, `./setup.sh` (other lanes add Python and frontend dependencies), full test suite and frontend build on that fresh `main`, branch off `main` never off a previous feature branch, re-read `AGENTS.md` and `INDEX.md`.
+- If clean `main` is red, stop and tell your owner; it is a whole-team problem.
+- When merging a stacked PR, retarget the dependent PR to `main` before deleting the base branch. Deleting it first closes the dependent PR (it happened to #3).
