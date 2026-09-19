@@ -41,6 +41,15 @@ class MemorySearchTests(SimpleTestCase):
         self.assertTrue(result.items)
         self.assertTrue(all(10000 <= i.price_cents <= 30000 for i in result.items))
 
+    def test_results_are_ordered_by_id(self):
+        ids = [i.id for i in run(limit="100").items]
+        self.assertEqual(ids, sorted(ids))
+
+    def test_text_matches_whole_title_words_and_material_substrings(self):
+        self.assertEqual(run(q="win").total, 0)  # not a substring of "wing"
+        self.assertIn("LISTERBY side table", {i.title for i in run(q="oak", limit="100").items})  # "oak veneer"
+        self.assertEqual({i.category for i in run(q="sit stand").items}, {"desk"})  # "sit/stand"
+
     def test_text_matches_title_tokens(self):
         self.assertEqual([i.title for i in run(q="wing chair").items], ["STRANDMON wing chair"])
 

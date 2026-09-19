@@ -6,21 +6,28 @@ Structured constraints go in filter context (cached, unscored). Only free text g
 from collections.abc import Callable, Sequence
 
 from catalogue.colour import is_near
+from catalogue.text import tokenize
 
 _WILDCARD_SPECIALS = str.maketrans({"*": r"\*", "?": r"\?", "\\": "\\\\"})
 
 
+def _contains(field: str, value: str) -> dict:
+    escaped = value.translate(_WILDCARD_SPECIALS)
+    return {"wildcard": {field: {"value": f"*{escaped}*", "case_insensitive": True}}}
+
+
 def _token_query(token: str) -> dict:
-    # title is analysed text; category and materials are keywords, so they need exact terms.
+    # title is analysed text. category and materials are keywords: category needs the exact term,
+    # and a material like "oak veneer" should still be found by "oak".
     return {"bool": {"minimum_should_match": 1, "should": [
         {"match": {"title": token}},
         {"term": {"category": token}},
-        {"term": {"materials": token}},
+        _contains("materials", token),
     ]}}
 
 
 def _text_must(clause) -> list[dict]:
-    return [_token_query(token) for token in clause.q.lower().split()]
+    return [_token_query(token) for token in tokenize(clause.q)]
 
 
 def _colour_filter(clause, palette: Sequence[str]) -> dict:
@@ -28,16 +35,11 @@ def _colour_filter(clause, palette: Sequence[str]) -> dict:
     return {"terms": {"colour_hex": sorted(h for h in set(palette) if is_near(clause.hex, h))}}
 
 
-def _material_filter(clause) -> dict:
-    escaped = clause.value.translate(_WILDCARD_SPECIALS)
-    return {"wildcard": {"materials": {"value": f"*{escaped}*", "case_insensitive": True}}}
-
-
 FILTERS: dict[str, Callable[[object], dict]] = {
     "category": lambda clause: {"term": {"category": clause.value}},
     "price_max": lambda clause: {"range": {"price_cents": {"lte": clause.cents}}},
     "price_min": lambda clause: {"range": {"price_cents": {"gte": clause.cents}}},
-    "material": _material_filter,
+    "material": lambda clause: _contains("materials", clause.value),
     "fits_w_max": lambda clause: {"range": {"dims_mm.w": {"lte": clause.mm}}},
 }
 

@@ -8,7 +8,7 @@ from elastic_transport import ConnectionError as EsConnectionError
 from pydantic import TypeAdapter
 from rest_framework.test import APIClient
 
-from catalogue import es
+from catalogue import es, memory
 from catalogue.dsl.schema import FindClause
 from catalogue.feed import load_listings
 from catalogue.ingest import to_actions
@@ -31,7 +31,7 @@ class FindClauseQueryTests(SimpleTestCase):
         self.assertEqual(query["must"][0]["bool"]["should"], [
             {"match": {"title": "wing"}},
             {"term": {"category": "wing"}},
-            {"term": {"materials": "wing"}},
+            {"wildcard": {"materials": {"value": "*wing*", "case_insensitive": True}}},
         ])
 
     def test_category(self):
@@ -65,6 +65,58 @@ class FindClauseQueryTests(SimpleTestCase):
     def test_structured_clauses_never_score(self):
         query = bool_for({"k": "category", "value": "sofa"}, {"k": "price_max", "cents": 1}, {"k": "text", "q": "x"})
         self.assertEqual((len(query["must"]), len(query["filter"])), (1, 2))
+
+
+def colour_probes() -> list[str]:
+    """Every colour in the catalogue, plus a 6x6x6 sweep of the RGB cube."""
+    steps = (0, 51, 102, 153, 204, 255)
+    cube = [f"#{r:02x}{g:02x}{b:02x}" for r in steps for g in steps for b in steps]
+    return sorted({hex_ for listing in load_listings() for hex_ in listing.colour_hex}) + cube
+
+
+class ColourBackendAgreementTests(SimpleTestCase):
+    """Memory matches colours by RGB distance per listing; Elasticsearch by a terms filter over the
+    palette. They agree exactly as long as the palette holds every indexed colour. Proven here by
+    evaluating the generated terms filter against the same listings, for 250+ probe colours."""
+
+    def setUp(self):
+        self.listings = load_listings()
+        self.palette = sorted({hex_ for listing in self.listings for hex_ in listing.colour_hex})
+
+    def ids_by_terms_filter(self, probe: str) -> list[str]:
+        clause = _FIND.validate_python([{"k": "colour", "hex": probe}])
+        (terms_filter,) = to_es_bool(clause, self.palette)["bool"]["filter"]
+        wanted = set(terms_filter["terms"]["colour_hex"])
+        return sorted(l.id for l in self.listings if wanted & set(l.colour_hex))
+
+    def test_every_probe_colour_selects_the_same_listings(self):
+        matched_something = 0
+        for probe in colour_probes():
+            clause = _FIND.validate_python([{"k": "colour", "hex": probe}])
+            from_memory = [l.id for l in memory.search(self.listings, clause, limit=100, offset=0).items]
+            self.assertEqual(from_memory, self.ids_by_terms_filter(probe), msg=probe)
+            matched_something += bool(from_memory)
+        self.assertGreater(matched_something, 40)
+
+    def test_an_incomplete_palette_would_disagree(self):
+        # Guards the assumption above: the palette must come from the whole index.
+        clause = _FIND.validate_python([{"k": "colour", "hex": "#2f5d50"}])
+        self.assertEqual(to_es_bool(clause, ["#ffffff"])["bool"]["filter"], [{"terms": {"colour_hex": []}}])
+        self.assertTrue(memory.search(self.listings, clause, limit=100, offset=0).items)
+
+    def test_colour_search_reads_the_palette_from_the_index(self):
+        es._palette.cache_clear()
+        self.addCleanup(es._palette.cache_clear)
+        client = mock.Mock()
+        client.search.side_effect = [
+            {"aggregations": {"colours": {"buckets": [{"key": "#2f5d50"}, {"key": "#ffffff"}]}}},
+            {"hits": {"total": {"value": 0}, "hits": []}},
+        ]
+        with mock.patch.object(es, "get_client", return_value=client):
+            es.search(_FIND.validate_python([{"k": "colour", "hex": "#2a5a4c"}]), limit=24, offset=0)
+        palette_call, search_call = client.search.call_args_list
+        self.assertEqual(palette_call.kwargs["aggs"]["colours"]["terms"]["field"], "colour_hex")
+        self.assertEqual(search_call.kwargs["query"]["bool"]["filter"], [{"terms": {"colour_hex": ["#2f5d50"]}}])
 
 
 class QueryBodyTests(SimpleTestCase):
@@ -105,7 +157,8 @@ class BackendSwitchTests(SimpleTestCase):
 
     def test_elastic_returns_the_same_shape_as_memory(self):
         memory_body = APIClient().get(self.URL).json()
-        armchairs = [l for l in load_listings() if l.category == "armchair" and l.dims_mm.w <= 900]
+        armchairs = sorted((l for l in load_listings() if l.category == "armchair" and l.dims_mm.w <= 900),
+                           key=lambda l: l.id)
         client = mock.Mock()
         client.search.return_value = fake_hits(armchairs)
         with mock.patch.dict(os.environ, {"SEARCH_BACKEND": "elastic"}), \
