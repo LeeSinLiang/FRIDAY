@@ -32,6 +32,11 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
   - Appended catalogue keys (empty values) to the shared `.env.example`; added the doc to `INDEX.md`.
   - Verification: `manage.py check` clean; `manage.py test api catalogue` — 8 tests OK; `npm run build` passes; `./run-local.sh` serves the frontend (200) and `/api/health/` directly and through the Vite proxy.
 
+- **PR #2 review fixes (2026-09-19).**
+  - Contract wire format: added `to_wire()` in `backend/catalogue/types.py` (`exclude_none`), so `facets`, `fits_room`, optional `Ref` ids, `near.mm` and `qty` are omitted instead of serialized as `null`, matching the TypeScript types. `Listing.model_url` stays present-and-nullable via a serializer. TypeScript unchanged. Tests: `WireFormatTests` in `backend/catalogue/tests.py`.
+  - Removed the stale `.env.local` guidance from `.env.example`; only `.env` is loaded.
+  - Verification: `manage.py test api catalogue` — 12 tests OK on the Phase A branch.
+
 ## Blockers / handoff
 
 - Shared files touched, additive only: `.env.example`, `INDEX.md`, `backend/pyproject.toml`, `backend/uv.lock`. Teammates need to rerun `./setup.sh` after pulling.

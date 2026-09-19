@@ -1,11 +1,14 @@
 """Shared catalogue contract. Mirrored by frontend/src/lib/types.ts — change both together.
 
 Units rule: integer millimetres and integer cents everywhere. Conversion happens only in the UI.
+
+Wire rule: optional fields are omitted, never null. Serialize with to_wire(), not model_dump().
+The one nullable field is Listing.model_url, which is always present.
 """
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, model_serializer
 
 Category = Literal[
     "sofa", "armchair", "chair", "table", "desk", "bed",
@@ -38,6 +41,13 @@ class Listing(BaseModel):
     colour_hex: list[str]
     materials: list[str]
 
+    @model_serializer(mode="wrap")
+    def _keep_null_model_url(self, handler) -> dict:
+        # The contract is `model_url: string | null`, so it survives to_wire()'s exclude_none.
+        data = handler(self)
+        data.setdefault("model_url", None)
+        return data
+
 
 class FacetBucket(BaseModel):
     key: str
@@ -54,3 +64,8 @@ class SearchResponse(BaseModel):
     items: list[Listing]
     total: int
     facets: Facets | None = None
+
+
+def to_wire(model: BaseModel) -> dict:
+    """Serialize a contract model for JSON: optional fields that are unset are omitted, not nulled."""
+    return model.model_dump(mode="json", exclude_none=True)

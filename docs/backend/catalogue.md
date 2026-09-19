@@ -56,6 +56,7 @@ Working reference client: run `./run-local.sh`, open http://127.0.0.1:5173/dev-s
 
 - **Units:** integer millimetres and integer cents everywhere. Convert only in the UI.
 - **`dims_mm` is required** on every listing.
+- **Optional means absent, never `null`.** Serialize contract models with `to_wire()` from `catalogue/types.py`, not `model_dump()`. The one nullable field is `Listing.model_url`, which is always present.
 - **The DSL is closed at 13 clauses.** An unmappable phrase is dropped, never invented as a new clause.
 - Solver invariants (inside the floor, no overlap, supported, door swing) are never clauses.
 - Raw clause syntax is never shown to a user outside a dev page.
