@@ -1,0 +1,8 @@
+{
+  "room": {"roomId":"demo-room","revision":1,"widthCm":600,"depthCm":500,"heightCm":280},
+  "products": [
+    {"productId":"test-sofa","name":"Curve sofa","widthCm":220,"depthCm":95,"heightCm":74,"color":"#b9542c","kind":"sofa"},
+    {"productId":"test-table","name":"Stone coffee table","widthCm":120,"depthCm":60,"heightCm":35,"color":"#d9c8ad","kind":"table"},
+    {"productId":"test-chair","name":"Oak lounge chair","widthCm":70,"depthCm":75,"heightCm":75,"color":"#a98458","kind":"chair"}
+  ]
+}

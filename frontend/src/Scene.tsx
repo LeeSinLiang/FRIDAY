@@ -1,16 +1,175 @@
-import { Canvas } from '@react-three/fiber'
-
-export default function Scene() {
+import { Canvas } from "@react-three/fiber";
+import { Component, useCallback, type ReactNode } from "react";
+import Room from "./scene/Room";
+import SceneLighting from "./scene/SceneLighting";
+import PerformanceProbe, {
+  type PerformanceSample,
+} from "./scene/PerformanceProbe";
+import Grid from "./scene/Grid";
+import SceneControls from "./scene/SceneControls";
+import Furniture from "./scene/Furniture";
+import { validatePlacement } from "./scene/placement";
+import { useFurnitureDrag, type PlacementPreview } from "./scene/useFurnitureDrag";
+import { ROOM } from "./scene/fixtures";
+import { cmToScene } from "./scene/units";
+import type { CameraMode, Instance, Pose, Product } from "./scene/types";
+export type ModelStatus = "loading" | "ready" | "error" | "proxy";
+type Props = {
+  editingEnabled: boolean;
+  instances: Instance[];
+  products: Product[];
+  selectedId: string | null;
+  mode: CameraMode;
+  resetKey: number;
+  snap: boolean;
+  onPlacementPreview?: (preview: PlacementPreview | null) => void;
+  onSelect: (id: string | null) => void;
+  onCommit: (id: string, pose: Pose) => void;
+  onActiveChange: (active: boolean) => void;
+  onModelStatus: (id: string, status: ModelStatus) => void;
+  retries: Record<string, number>;
+  interactionActive: boolean;
+  onPerformanceSample?: (sample: PerformanceSample) => void;
+};
+class SceneBoundary extends Component<
+  { children: ReactNode },
+  { error: boolean }
+> {
+  state = { error: false };
+  static getDerivedStateFromError() {
+    return { error: true };
+  }
+  render() {
+    return this.state.error ? (
+      <div className="canvas-error">
+        <h2>The room could not render</h2>
+        <p>Check that WebGL is enabled, then reload to try again.</p>
+        <button className="button" onClick={() => location.reload()}>
+          Reload room
+        </button>
+      </div>
+    ) : (
+      this.props.children
+    );
+  }
+}
+function Item({
+  instance,
+  product,
+  selected,
+  bind,
+  status,
+  retryKey,
+  placementValid,
+  placementReason,
+}: {
+  instance: Instance;
+  product: Product;
+  selected: boolean;
+  bind: ReturnType<typeof useFurnitureDrag>["bind"];
+  status: Props["onModelStatus"];
+  retryKey: number;
+  placementValid: boolean;
+  placementReason: string;
+}) {
+  const report = useCallback(
+    (value: ModelStatus) => status(instance.instanceId, value),
+    [instance.instanceId, status],
+  );
   return (
-    <Canvas frameloop="demand" camera={{ position: [4, 3, 5], fov: 45 }}
-      fallback={<p>WebGL is required to display the 3D scene.</p>}>
-      <ambientLight intensity={1.5} />
-      <directionalLight position={[3, 5, 2]} intensity={2} />
-      <mesh rotation={[0.2, 0.5, 0]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#4b8475" />
-      </mesh>
-      <gridHelper args={[10, 10]} position={[0, -0.5, 0]} />
-    </Canvas>
-  )
+    <Furniture
+      product={product}
+      instance={instance}
+      selected={selected}
+      placementValid={placementValid}
+      placementReason={placementReason}
+      {...bind(instance)}
+      onModelStatus={report}
+      retryKey={retryKey}
+    />
+  );
+}
+function Contents(props: Props) {
+  const drag = useFurnitureDrag({
+    enabled: props.editingEnabled,
+    room: ROOM,
+    products: props.products,
+    onPreview: props.onPlacementPreview,
+    instances: props.instances,
+    snap: props.snap,
+    onSelect: props.onSelect,
+    onCommit: props.onCommit,
+    onActiveChange: props.onActiveChange,
+  });
+  return (
+    <>
+      <SceneLighting mode={props.mode} />
+      <Room
+        room={ROOM}
+        mode={props.mode}
+        onFloorClick={() => props.onSelect(null)}
+      />
+      <Grid room={ROOM} />
+      {props.instances.map((instance) => {
+        const product = props.products.find(
+          (p) => p.productId === instance.productId,
+        );
+        const placement = validatePlacement(ROOM, props.products, props.instances, instance.instanceId, instance.pose);
+        return product ? (
+          <Item
+            key={instance.instanceId}
+            instance={instance}
+            product={product}
+            selected={props.selectedId === instance.instanceId}
+            placementValid={placement.valid}
+            placementReason={placement.reason}
+            bind={drag.bind}
+            status={props.onModelStatus}
+            retryKey={props.retries[instance.instanceId] ?? 0}
+          />
+        ) : null;
+      })}
+      {props.onPerformanceSample && (
+        <PerformanceProbe
+          active={props.interactionActive}
+          onSample={props.onPerformanceSample}
+        />
+      )}
+      <SceneControls
+        room={ROOM}
+        mode={props.mode}
+        interactionActive={props.interactionActive}
+        resetKey={props.resetKey}
+      />
+    </>
+  );
+}
+export default function Scene(props: Props) {
+  return (
+    <SceneBoundary>
+      <Canvas
+        shadows
+        frameloop="demand"
+        dpr={[1, 1.7]}
+        camera={{
+          position: [cmToScene(950), cmToScene(780), cmToScene(1100)],
+          near: cmToScene(1),
+          far: cmToScene(6000),
+          fov: 42,
+        }}
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: "high-performance",
+        }}
+        fallback={
+          <div className="canvas-error">
+            WebGL is required to display your room.
+          </div>
+        }
+      >
+        <Contents {...props} />
+      </Canvas>
+    </SceneBoundary>
+  );
 }

@@ -1,20 +1,30 @@
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig, loadEnv } from "vite";
+import react from "@vitejs/plugin-react";
+import { devModelFixtures } from "./scripts/dev-model-fixtures";
+import { sharedFurnitureAssets } from "./scripts/shared-furniture-assets";
 
 export default defineConfig(({ mode }) => {
-  const env = { ...loadEnv(mode, '..', ''), ...process.env }
+  const env = { ...loadEnv(mode, "..", ""), ...process.env };
+  const sceneUnitCm = Number(env.SCENE_UNIT_CM ?? 5);
+  if (!Number.isFinite(sceneUnitCm) || sceneUnitCm <= 0) {
+    throw new Error("SCENE_UNIT_CM must be a finite positive number");
+  }
   return {
-    plugins: [react()],
+    define: {
+      "import.meta.env.VITE_SCENE_UNIT_CM": JSON.stringify(sceneUnitCm),
+    },
+    plugins: [react(), devModelFixtures(), sharedFurnitureAssets()],
     server: {
-      host: '127.0.0.1',
+      host: "127.0.0.1",
       port: Number(env.FRONTEND_PORT || 5173),
       strictPort: true,
       proxy: {
-        '/api': {
+        "/api": {
           target: `http://127.0.0.1:${env.BACKEND_PORT || 8000}`,
-          changeOrigin: true,
+          // Preserve the browser Host so Django can verify same-origin CSRF.
+          changeOrigin: false,
         },
       },
     },
-  }
-})
+  };
+});

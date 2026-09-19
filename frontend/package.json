@@ -3,11 +3,15 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "engines": { "node": ">=22.12.0" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node scripts/test-scene.mjs",
+    "fixture:glb": "node scripts/generate-test-glb.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.0.0",
@@ -21,6 +25,7 @@
     "@types/react-dom": "^19.0.0",
     "@types/three": "^0.180.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "esbuild": "0.28.2",
     "typescript": "~5.9.0",
     "vite": "^7.0.0"
   }

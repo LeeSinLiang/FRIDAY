@@ -19,6 +19,7 @@
 
 - Put every new Markdown note or documentation file under `docs/<appropriate-folder>/`. Reuse an existing topic folder when it fits; otherwise create one. Nested folders are welcome when they make the subject easier to find (for example, `docs/frontend/` or `docs/backend/contracts/`).
 - Add every such file to the root [INDEX.md](INDEX.md). When moving or renaming documentation, update its index entry and affected relative links in the same change.
+- Before handing work back, verify every Markdown file created under `docs/` has a working link in INDEX.md. Documentation work is not complete until its index entry is present; do not defer indexing to a later commit or another agent.
 - This is a repository-wide convention, including work intended for `main`.
 
 ## Implement and verify
