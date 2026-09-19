@@ -1,0 +1,403 @@
+{
+  "room": "catalogue.mock.room.MOCK_ROOM",
+  "note": "Expected Programs for the compile step. `recorded` is filled from a live run and replayed offline.",
+  "cases": [
+    {
+      "text": "a reading chair by the window, under $400, 5 feet from any wall",
+      "expected": {
+        "find": [
+          {
+            "k": "category",
+            "value": "armchair"
+          },
+          {
+            "k": "price_max",
+            "cents": 40000
+          }
+        ],
+        "place": [
+          {
+            "k": "near",
+            "ref": {
+              "kind": "window",
+              "id": "w1"
+            }
+          },
+          {
+            "k": "distance_min",
+            "ref": {
+              "kind": "any_wall"
+            },
+            "mm": 1524
+          }
+        ]
+      },
+      "chips": [
+        "armchair",
+        "under $400",
+        "near the window",
+        "5 ft from any wall"
+      ],
+      "recorded": {
+        "find": [
+          {
+            "k": "category",
+            "value": "armchair"
+          },
+          {
+            "k": "price_max",
+            "cents": 40000
+          }
+        ],
+        "place": [
+          {
+            "k": "near",
+            "ref": {
+              "kind": "window",
+              "id": "w1"
+            },
+            "mm": null
+          },
+          {
+            "k": "distance_min",
+            "ref": {
+              "kind": "any_wall"
+            },
+            "mm": 1524
+          }
+        ],
+        "qty": null
+      }
+    },
+    {
+      "text": "green velvet sofa against the north wall",
+      "expected": {
+        "find": [
+          {
+            "k": "category",
+            "value": "sofa"
+          },
+          {
+            "k": "colour",
+            "hex": "#3f7d4e"
+          },
+          {
+            "k": "material",
+            "value": "velvet"
+          }
+        ],
+        "place": [
+          {
+            "k": "against",
+            "ref": {
+              "kind": "wall",
+              "id": "w-n"
+            }
+          }
+        ]
+      },
+      "chips": [
+        "sofa",
+        "green",
+        "velvet",
+        "against the north wall"
+      ],
+      "recorded": {
+        "find": [
+          {
+            "k": "colour",
+            "hex": "#3f7d4e"
+          },
+          {
+            "k": "material",
+            "value": "velvet"
+          },
+          {
+            "k": "category",
+            "value": "sofa"
+          }
+        ],
+        "place": [
+          {
+            "k": "against",
+            "ref": {
+              "kind": "wall",
+              "id": "w-n"
+            }
+          }
+        ],
+        "qty": null
+      }
+    },
+    {
+      "text": "oak desk no wider than 1200mm, at least $100",
+      "expected": {
+        "find": [
+          {
+            "k": "category",
+            "value": "desk"
+          },
+          {
+            "k": "price_min",
+            "cents": 10000
+          },
+          {
+            "k": "material",
+            "value": "oak"
+          },
+          {
+            "k": "fits_w_max",
+            "mm": 1200
+          }
+        ],
+        "place": []
+      },
+      "chips": [
+        "desk",
+        "over $100",
+        "oak",
+        "fits a 120 cm gap"
+      ],
+      "recorded": {
+        "find": [
+          {
+            "k": "category",
+            "value": "desk"
+          },
+          {
+            "k": "material",
+            "value": "oak"
+          },
+          {
+            "k": "price_min",
+            "cents": 10000
+          },
+          {
+            "k": "fits_w_max",
+            "mm": 1200
+          }
+        ],
+        "place": [],
+        "qty": null
+      }
+    },
+    {
+      "text": "two black chairs under $50 each",
+      "expected": {
+        "find": [
+          {
+            "k": "category",
+            "value": "chair"
+          },
+          {
+            "k": "price_max",
+            "cents": 5000
+          },
+          {
+            "k": "colour",
+            "hex": "#1c1c1c"
+          }
+        ],
+        "place": [],
+        "qty": 2
+      },
+      "chips": [
+        "chair",
+        "under $50",
+        "black",
+        "×2"
+      ],
+      "recorded": {
+        "find": [
+          {
+            "k": "category",
+            "value": "chair"
+          },
+          {
+            "k": "price_max",
+            "cents": 5000
+          },
+          {
+            "k": "colour",
+            "hex": "#1c1c1c"
+          }
+        ],
+        "place": [],
+        "qty": 2
+      }
+    },
+    {
+      "text": "a floor lamp next to the sofa",
+      "expected": {
+        "find": [
+          {
+            "k": "text",
+            "q": "floor"
+          },
+          {
+            "k": "category",
+            "value": "lamp"
+          }
+        ],
+        "place": [
+          {
+            "k": "near",
+            "ref": {
+              "kind": "instance",
+              "id": "sofa-1"
+            }
+          }
+        ]
+      },
+      "chips": [
+        "“floor”",
+        "lamp",
+        "near the EKTORP 3-seat sofa"
+      ],
+      "recorded": {
+        "find": [
+          {
+            "k": "category",
+            "value": "lamp"
+          },
+          {
+            "k": "text",
+            "q": "floor"
+          }
+        ],
+        "place": [
+          {
+            "k": "near",
+            "ref": {
+              "kind": "instance",
+              "id": "sofa-1"
+            },
+            "mm": null
+          }
+        ],
+        "qty": null
+      }
+    },
+    {
+      "text": "a rug, keep 30 inches clear of the door",
+      "expected": {
+        "find": [
+          {
+            "k": "category",
+            "value": "rug"
+          }
+        ],
+        "place": [
+          {
+            "k": "clear",
+            "ref": {
+              "kind": "door",
+              "id": "d1"
+            },
+            "mm": 762
+          }
+        ]
+      },
+      "chips": [
+        "rug",
+        "30 in clear of the door"
+      ],
+      "recorded": {
+        "find": [
+          {
+            "k": "category",
+            "value": "rug"
+          }
+        ],
+        "place": [
+          {
+            "k": "clear",
+            "ref": {
+              "kind": "door",
+              "id": "d1"
+            },
+            "mm": 762
+          }
+        ],
+        "qty": null
+      }
+    },
+    {
+      "text": "a bookcase that fits a 90cm gap, don't block the window",
+      "expected": {
+        "find": [
+          {
+            "k": "category",
+            "value": "shelf"
+          },
+          {
+            "k": "fits_w_max",
+            "mm": 900
+          }
+        ],
+        "place": [
+          {
+            "k": "not_blocking",
+            "ref": {
+              "kind": "window",
+              "id": "w1"
+            }
+          }
+        ]
+      },
+      "chips": [
+        "shelf",
+        "fits a 90 cm gap",
+        "not blocking the window"
+      ],
+      "recorded": {
+        "find": [
+          {
+            "k": "category",
+            "value": "shelf"
+          },
+          {
+            "k": "fits_w_max",
+            "mm": 900
+          }
+        ],
+        "place": [
+          {
+            "k": "not_blocking",
+            "ref": {
+              "kind": "window",
+              "id": "w1"
+            }
+          }
+        ],
+        "qty": null
+      }
+    },
+    {
+      "text": "something cosy for the balcony",
+      "expected": {
+        "find": [
+          {
+            "k": "text",
+            "q": "cosy"
+          }
+        ],
+        "place": []
+      },
+      "chips": [
+        "“cosy”"
+      ],
+      "recorded": {
+        "find": [
+          {
+            "k": "text",
+            "q": "cosy"
+          }
+        ],
+        "place": [],
+        "qty": null
+      }
+    }
+  ],
+  "recorded_with": "gpt-4.1-mini"
+}

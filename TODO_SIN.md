@@ -4,9 +4,7 @@ Record all agent work here when working for Sin. Include status, file paths, ver
 
 ## In progress
 
-- Preparing the user-requested merge of the Three.js build into local main, followed by a new codex/gaussian-splatting branch. Reviewed pending research documentation. Fresh checks passed: 27 frontend tests, 22 backend tests, TypeScript/Vite build, Django check, migration consistency, all nine docs indexed with valid local links, and diff whitespace. Existing large Three.js chunk warning remains; no fetch or push requested.
-
-- Foundation implemented on feat/3d-engine-frontend. Incoming production furniture models remain pending; user-supplied Mori OTF fonts are now integrated.
+- Working branch is codex/gaussian-splatting, created from the merged Three.js baseline on main. The PlayCanvas migration has not started. Incoming production furniture models remain pending; user-supplied Mori OTF fonts are integrated.
 
 ## Next
 
@@ -15,6 +13,10 @@ Record all agent work here when working for Sin. Include status, file paths, ver
 - Integrate collaborator GLBs/metadata and agreed reconstructed room input. Run a final physical trackpad/reduced-motion/device rehearsal. Full mesh/clearance validation and valid-space overlay follow separately.
 
 ## Done
+
+- 2026-09-19: Resolved the user's pull of origin/main (44daea7) into codex/gaussian-splatting. Combined both sides of .env.example (SCENE_UNIT_CM=5 plus catalogue/model-service keys) and backend/api/urls.py (one health route, all scene/capture routes, and catalogue search/compile). Preserved incoming catalogue implementation, fixtures, dependencies, frontend dev search/types, Saketh's log and indexed catalogue docs. Synced the pulled uv.lock after the initial backend run found missing Elasticsearch dependencies; no lockfile changes. Verification: 117 backend tests OK with one opt-in live model test skipped, 27 frontend tests passed, TypeScript/Vite build, Django check and migration consistency passed; all 10 docs indexed with valid local links and no conflict markers. Resolved-file whitespace passes; incoming backend/catalogue/feed.py retains its existing extra blank line at EOF, and the existing Three.js bundle warning remains. No live model/Elasticsearch calls, branch switch, fetch or push; collaborator worktree untouched. Included the previously pending branch-handoff work-log update in this merge.
+
+- 2026-09-19: Committed indexed pivot/reconstruction research as 6fdf9f0 on feat/3d-engine-frontend, merged the Three.js build into local main as 3cf1463, and created/switched to codex/gaussian-splatting. Resolved the sole AGENTS.md conflict by retaining mandatory documentation-index verification; the merge tree exactly matches the tested feature tip. Fresh verification passed: 27 frontend tests, 22 backend tests, TypeScript/Vite build, Django check, migration consistency, all nine docs indexed with working local links, and whitespace. Existing large Three.js chunk warning remains. Main is five commits ahead of the locally recorded origin/main; the user handles remote updates and pushing. No fetch or push. The codex/realistic-couch-model worktree remains untouched. This branch handoff changes only the work log; runtime migration is pending.
 
 - 2026-09-19: Found existing room splat candidates and recorded them in the already-indexed docs/frontend/room-capture/research-and-integration-plan.md. Inspected Studio 11's live preview and verified its download requires login; verified the creator-linked Modlinek Villa room 03 public export folder contains an 831.2 MB ZIP with a download control. Recorded Mirror Room v3 as a smaller synthetic fallback, page-listed licenses/sizes, provenance and unverified scale/format/collision/performance. Documentation indexing and whitespace checks passed. No asset downloads, runtime changes or application tests; no commit, branch switch, fetch or push.
 

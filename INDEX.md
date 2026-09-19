@@ -41,5 +41,6 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 - [Backend API, frontend/3D entry points, and configuration paths](README.md#layout)
 - [Verification and dependency commands](README.md#checks-and-common-commands)
 - [Project-manager board, local synchronization, Git sharing, and regression tests](.github/extensions/project-manager/README.md)
+- [Catalogue, search and language layer: shared types, constraint DSL, configuration](docs/backend/catalogue.md)
 
 Add dedicated feature docs here as they are created.
