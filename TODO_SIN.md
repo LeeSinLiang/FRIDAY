@@ -12,6 +12,7 @@ Record all agent work here when working for Sin. Include status, file paths, ver
 
 ## Done
 
+- 2026-09-19: Added AGENTS.md instructions to run ./setup.sh when local setup is missing and ./run-local.sh for development and manual/integration testing. Automated checks remain separate. Documentation-only change; verified diff formatting and CLAUDE.md symlink consistency.
 - 2026-09-19: Prepared the full setup for a local commit on main with the user's explicit one-time authorization. Includes proposal.md, shared agent instructions/index/work logs, ignore rules, backend/frontend source and lockfiles, environment template, setup/run scripts, and README. Prior setup verification is recorded below; no fetch or push requested.
 - 2026-09-19: Updated AGENTS.md so the user handles git fetch and notifies agents of updates. Agents still check local status/diffs and re-read files before editing. Reviewed the wording; no fetch performed.
 - 2026-09-19: Scaffolded backend/config and backend/api with Django 5.2, REST Framework, SQLite, public GET /api/health/, authenticated-by-default REST settings, and uv dependencies/lockfile. Added frontend with React 19.2, TypeScript, Vite, lazy-loaded Three.js/React Three Fiber scene, API health status, and /api dev proxy. React 19.2 matches Fiber's current peer requirement.
