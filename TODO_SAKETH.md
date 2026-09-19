@@ -6,11 +6,14 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## In progress
 
-- None. Waiting on go-ahead for Phase C.
+- **Phase C — Elastic (2026-09-19). Code complete, live check NOT done.** Branch `codex/saketh-elastic`, stacked on Phase B.
+  - Built: `backend/catalogue/to_es_query.py` (pure), `es.py` (client + backend), `ingest.py` (bulk, guarded), backend switch with memory fallback and `X-Search-Backend` header in `views.py`, tests in `test_elastic.py`.
+  - Colour threshold tightened from 90 to 60 in `colour.py`: a query-building test showed dark green matching near-black.
+  - Verified: `manage.py test api catalogue` — 40 tests OK, covering all 7 find clauses with no network; cluster auth works (Elasticsearch 9.5.4); against the live cluster `ingest` exits 2 because the index is missing, and `SEARCH_BACKEND=elastic` falls back to memory (HTTP 404 logged, 200 served).
+  - **Not verified:** identical-shape check against real Elasticsearch data. Blocked on the index.
 
 ## Next
 
-- **Phase C — Elastic:** client, bulk ingest command, pure `to_es_query(find) -> body` with unit tests, `SEARCH_BACKEND` switch (memory stays default).
 - **Phase D — language:** `compile(text) -> Program` via OpenAI Agents SDK with structured output, `render(program) -> list[str]`, `POST /api/compile`, fallback to a plain text clause on validation failure. Schema locks here.
 - **Phase E — scale:** ~12,000 seeded listings, facets including `fits_room`.
 
@@ -38,6 +41,8 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
   - Verification: `manage.py test api catalogue` — 12 tests OK on the Phase A branch.
 
 ## Blockers / handoff
+
+- **Blocker:** the `listings` index does not exist on the cluster (404). Saketh creates it by hand with the agreed mapping; then run `uv run python -m catalogue.ingest` and the Phase C live check.
 
 - Shared files touched, additive only: `.env.example`, `INDEX.md`, `backend/pyproject.toml`, `backend/uv.lock`. Teammates need to rerun `./setup.sh` after pulling.
 - Tell William: search and compile are `AllowAny` (see Phase B). His lanes are unaffected.

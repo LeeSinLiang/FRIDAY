@@ -1,6 +1,6 @@
 # Catalogue, search and language layer
 
-Owner: Saketh. Status: `GET /api/search` live on the in-memory backend. Elasticsearch and `compile()` land next.
+Owner: Saketh. Status: `GET /api/search` live on the in-memory backend; Elasticsearch backend built and unit-tested, live verification pending the `listings` index. `compile()` lands next.
 
 ## What this is
 
@@ -22,10 +22,13 @@ This layer never does geometry.
 | `backend/catalogue/params.py` | Query params → find clauses. Pure |
 | `backend/catalogue/memory.py` | In-memory search backend. Pure. Default and demo fallback |
 | `backend/catalogue/colour.py` | "About this colour" matching by RGB distance |
+| `backend/catalogue/to_es_query.py` | Find clauses → Elasticsearch body. Pure; the model never sees this |
+| `backend/catalogue/es.py` | Elasticsearch client and search backend. The only search code that does cluster I/O |
+| `backend/catalogue/ingest.py` | Bulk-indexes the feed: `uv run python -m catalogue.ingest` from `backend/` |
 | `backend/catalogue/views.py`, `urls.py` | `GET /api/search`, included from `backend/api/urls.py` |
 | `backend/catalogue/mock/room.py` | DEV STUB room and `room_refs()`; deleted when the real `Room` ships |
 | `frontend/dev-search.html`, `frontend/src/dev/search.tsx` | DEV SCAFFOLD page, dev server only, not in the production build |
-| `backend/catalogue/tests.py`, `test_search.py` | Contract, search, endpoint and mock-room tests, no network |
+| `backend/catalogue/tests.py`, `test_search.py`, `test_elastic.py` | Contract, search, endpoint, query-building and backend-switch tests, no network |
 
 The Python and TypeScript files are a pair: change both in the same commit.
 
@@ -51,6 +54,28 @@ curl 'localhost:8000/api/search?category=armchair&fits_w_mm=900'
 ```
 
 Working reference client: run `./run-local.sh`, open http://127.0.0.1:5173/dev-search.html.
+
+## Search backends
+
+`SEARCH_BACKEND=memory` (default) or `elastic`, read per request from `.env`. Both return the same
+`SearchResponse`. If Elasticsearch errors, is unreachable or is unconfigured, the request is served
+from memory instead of failing. The `X-Search-Backend` response header says which one answered:
+`memory`, `elastic` or `memory-fallback`.
+
+| Clause | Elasticsearch |
+| --- | --- |
+| `text` | `must`: per token, `match` on `title` or `term` on `category` / `materials` |
+| `category` | `filter`: `term` |
+| `price_min`, `price_max` | `filter`: `range` on `price_cents` |
+| `fits_w_max` | `filter`: `range` on `dims_mm.w` |
+| `material` | `filter`: case-insensitive `wildcard` on `materials` |
+| `colour` | `filter`: `terms` over the indexed hexes near the requested colour |
+
+Only free text scores. No embeddings, vector search or `semantic_text`, by design.
+
+The index is created by hand with the agreed mapping. `ingest` refuses to run if the index is
+missing (exit 2), because a bulk write would auto-create it with a guessed mapping. Index name
+defaults to `listings`; override with `ELASTIC_INDEX`. Re-ingesting overwrites by listing id.
 
 ## Rules
 
