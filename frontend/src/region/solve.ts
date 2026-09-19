@@ -3,7 +3,8 @@
 
 import type { PlaceClause } from "../lib/dsl/schema";
 import { placeToCm } from "./boundary";
-import { doorSwingRule, resolveClause, type Dropped, type Rule } from "./clauses";
+import { doorSwingRule, resolveClause, wallClearances, type Dropped, type Rule } from "./clauses";
+import { explainNothingFits } from "./explain";
 import { countFree, fillMask, footprintRect, intersect, newMask } from "./grid";
 import { invariantMask, type Candidate } from "./invariants";
 import { BLOCKED, FREE, YAW_BINS, type Mask, type Scene } from "./types";
@@ -16,6 +17,8 @@ export type Solution = {
   /** Legal centres per rotation, and the rotation with the most. -1 when nothing fits anywhere. */
   legalCounts: number[];
   bestYawIndex: number;
+  /** Only when nothing fits: the binding constraint in plain words, e.g. "needs 386 cm of depth, this room has 360 cm". */
+  whyNothingFits?: string;
 };
 
 function ruleMask(scene: Scene, candidate: Candidate, yawRad: number, rules: Rule[]): Mask {
@@ -28,16 +31,23 @@ function ruleMask(scene: Scene, candidate: Candidate, yawRad: number, rules: Rul
 
 /** Where may this item go? Invariants always apply; clauses narrow; unknown floor never lights. */
 export function solve(scene: Scene, candidate: Candidate, place: PlaceClause[]): Solution {
+  const { masks, dropped, legalCounts } = solveOnce(scene, candidate, place);
+  const most = Math.max(...legalCounts);
+  if (most > 0) return { masks, dropped, legalCounts, bestYawIndex: legalCounts.indexOf(most) };
+  const whyNothingFits = explainNothingFits(scene.room, candidate.product, place, (fewer) => solveOnce(scene, candidate, fewer));
+  return { masks, dropped, legalCounts, bestYawIndex: -1, whyNothingFits };
+}
+
+function solveOnce(scene: Scene, candidate: Candidate, place: PlaceClause[]): Pick<Solution, "masks" | "dropped" | "legalCounts"> {
   const rules: Rule[] = [doorSwingRule(scene)], dropped: Dropped[] = [], ignore = [...(candidate.ignoreInstanceIds ?? [])];
-  for (const clause of placeToCm(place)) {
-    const resolved = resolveClause(scene, candidate.product, clause);
+  const clauses = placeToCm(place), clearances = wallClearances(clauses);
+  for (const clause of clauses) {
+    const resolved = resolveClause(scene, candidate.product, clause, clearances);
     if ("dropped" in resolved) { dropped.push({ clause, reason: resolved.dropped }); continue; }
     rules.push(resolved.rule);
     if (resolved.ignoreInstanceId) ignore.push(resolved.ignoreInstanceId);
   }
   const withIgnores = { ...candidate, ignoreInstanceIds: ignore };
   const masks = YAW_BINS.map((yawRad) => intersect(invariantMask(scene, withIgnores, yawRad), ruleMask(scene, candidate, yawRad, rules)));
-  const legalCounts = masks.map(countFree);
-  const most = Math.max(...legalCounts);
-  return { masks, dropped, legalCounts, bestYawIndex: most > 0 ? legalCounts.indexOf(most) : -1 };
+  return { masks, dropped, legalCounts: masks.map(countFree) };
 }
