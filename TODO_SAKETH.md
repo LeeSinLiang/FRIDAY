@@ -6,13 +6,20 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## In progress
 
-- None. Phase D next, once `OPENAI_API_KEY` is set in `.env`.
+- None. All lane phases A–E are done; Phase F (voice) only if asked.
 
 ## Next
 
-- **Phase D — language:** `compile(text) -> Program` via OpenAI Agents SDK with structured output, `render(program) -> list[str]`, `POST /api/compile`, fallback to a plain text clause on validation failure. Schema locks here.
 
 ## Done
+
+- **Phase D — language (2026-09-19).** Branch `codex/saketh-compile`, off `main` (not stacked).
+  - Built: `backend/catalogue/dsl/compile.py` (`compile_text`: one structured-output call through the OpenAI Agents SDK with `Program` as output type, one turn, no tools; at most one retry on an invalid Program; never raises; falls back to `{find:[{k:"text",q}],place:[]}`), `prompt.py`, `render.py` + `units.py` + `colours.py` (Program → chips, pure), `POST /api/compile` in `views.py` / `urls.py` (`AllowAny`, 300-character cap), fixture `dsl/fixtures/compile_cases.json` (8 sentences, expected Programs, chips, recorded model outputs), tests in `test_compile.py`, dev page text box wired to the endpoint. Wall labels added to the mock room for chips.
+  - Model: `OPENAI_MODEL`, default `gpt-4.1-mini`. Started at the bottom: `gpt-4.1-nano` scored 4/8, then 6–7/8 after prompt work, and kept inventing placement clauses or expanding `any_wall` into four walls; `gpt-4o-mini` 6–7/8 (drops materials); `gpt-5.4-nano` 6/8; `gpt-4.1-mini` 8/8 on every run. Latency is the same across tiers.
+  - Shared file touched: `.env.example` gains an optional `OPENAI_MODEL` line.
+  - Verification: `manage.py test api catalogue` — 79 tests OK, 1 skipped (the live test), run with `OPENAI_API_KEY` blanked to prove no network. `npm run build` passes. Live through `POST /api/compile`: 40 compiles, 40 of 40 exact-match Programs, median 1,056 ms, p90 1,336 ms, min 709, max 2,620. Dev page driven in headless Chrome end to end.
+  - **Latency DoD not met: median 1,056 ms against a 400 ms budget.** A one-word reply from the same API takes about 560 ms from this network (time to first token 360–490 ms on every model tried, including priority tier), so no model choice reaches 400 ms here.
+  - About 1 call in 20–50 hangs past the 3 s timeout and degrades to a text search. Every live failure observed was a timeout; none was a wrong Program. Timeouts are not retried, as specified.
 
 - **Phase E — scale and aggregations (2026-09-19), done before Phase D because D is blocked on the OpenAI key.** Branch `codex/saketh-scale`.
   - PRs #2, #3, #5 merged to `main` in order (merge commits). Deleting #2's branch closed #3 instead of retargeting it; recovered by restoring the branch, reopening, retargeting to `main`, then deleting again. For #5 the retarget was done before the delete. `main` after all three: 45 tests OK, `npm run build` passes.

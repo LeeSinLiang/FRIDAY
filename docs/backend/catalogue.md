@@ -1,6 +1,6 @@
 # Catalogue, search and language layer
 
-Owner: Saketh. Status: `GET /api/search` live on the in-memory backend; Elasticsearch backend live and verified against the cluster (12,040 listings indexed), with facets. `compile()` lands next.
+Owner: Saketh. Status: `GET /api/search` live on the in-memory backend; Elasticsearch backend live and verified against the cluster (12,040 listings indexed), with facets.
 
 ## What this is
 
@@ -64,6 +64,41 @@ curl 'localhost:8000/api/search?category=armchair&fits_w_mm=900'
 ```
 
 Working reference client: run `./run-local.sh`, open http://127.0.0.1:5173/dev-search.html.
+
+## `POST /api/compile`
+
+Public (`AllowAny`). Body `{ "text": string }`, at most 300 characters. Turns a shopper's sentence into a `Program`.
+
+```bash
+curl -X POST localhost:8000/api/compile -H 'Content-Type: application/json' \
+  -d '{"text":"a reading chair by the window, under $400, 5 feet from any wall"}'
+```
+
+```json
+{
+  "program": { "find": [{"k":"category","value":"armchair"}, {"k":"price_max","cents":40000}],
+               "place": [{"k":"near","ref":{"kind":"window","id":"w1"}},
+                         {"k":"distance_min","ref":{"kind":"any_wall"},"mm":1524}] },
+  "chips": ["armchair", "under $400", "near the window", "5 ft from any wall"],
+  "source": "model",
+  "ms": 1056
+}
+```
+
+- **Show `chips`, never `program`.** Chips come from `render()` and are the only form of a Program a shopper sees. `program.find` maps one-to-one onto the `GET /api/search` params (see `toFilters` in `frontend/src/dev/search.tsx`); `program.place` goes to the solver untouched.
+- **It never errors on a bad sentence or a model problem.** `source` is `model`, `model-retry` (one retry after an invalid Program), `fallback` (a plain text search of the sentence: `{find:[{k:"text",q}],place:[]}`) or `empty`. Only a malformed body returns 400.
+- **Latency is about 1 s, not 400 ms.** Measured median 1,056 ms, p90 1,336 ms over 40 live calls. A one-word reply from the same API takes about 560 ms from the hackathon network, so the floor is the network and the API, not the model tier. Debounce, call on submit rather than per keystroke, and keep browsing usable without it.
+- One structured-output call through the OpenAI Agents SDK with `Program` as the output type, one turn, no tools. `OPENAI_MODEL` selects the model (default `gpt-4.1-mini`: the cheapest that scores 8 of 8 on the fixture; `gpt-4.1-nano` scored 6–7 and invented placement clauses). Timeout 3 s, no transport retries.
+- The model sees the Program schema and the room's ids. It never sees the search backend.
+- Room ids currently come from the dev stub `backend/catalogue/mock/room.py`.
+
+| Path | Purpose |
+| --- | --- |
+| `backend/catalogue/dsl/compile.py` | `compile_text()`: the call, one retry, normalising, fallback |
+| `backend/catalogue/dsl/prompt.py` | Instructions for the model. Pure |
+| `backend/catalogue/dsl/render.py`, `units.py`, `colours.py` | Program → chips. Pure |
+| `backend/catalogue/dsl/fixtures/compile_cases.json` | 8 sentences, expected Programs and chips, recorded model outputs |
+| `backend/catalogue/test_compile.py` | Offline tests. `COMPILE_LIVE_TEST=1` adds a run against the real model |
 
 ## Search backends
 
