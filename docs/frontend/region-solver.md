@@ -11,7 +11,8 @@ const { masks, dropped, legalCounts, bestYawIndex } = solve(scene, { product }, 
 
 - `masks[i]` is for `YAW_BINS[i]`: 0, 90, 180, 270 degrees.
 - `dropped[]` lists clauses that could not be honoured, each with a reason. **Show them.** Discarding a shopper's words silently is a bug.
-- `bestYawIndex` is the rotation with the most legal centres, `-1` when nothing fits at any rotation. "Nothing fits" is a valid answer.
+- `bestYawIndex` is the rotation with the most legal centres, `-1` when nothing fits at any rotation.
+- **"Nothing fits" is an answer, not an error**, and the one a store that has to sell you something cannot give. When it happens, `whyNothingFits` names the binding constraint in plain words: `needs 373 cm of depth, this room has 360 cm`; `it is 300 cm tall and the ceiling is 280 cm`; `there is no free floor big enough for its 70 × 80 cm footprint`; or, when requests contradict each other, `these can't all hold here; without “152 cm away from any wall” it fits`. The last form costs one extra solve per clause, and only on failure.
 - `nearestLegal(mask, pose)` gives the closest legal centre, for snapping a drop.
 - A mask takes 4–12 ms for a 600 × 500 cm room.
 
@@ -38,11 +39,13 @@ Distances are measured from the item's **edge**, not its centre.
 | `distance_min(ref, mm)` | gap to ref ≥ distance | EVERY target |
 | `clear(ref, mm)` | walls and items: as `distance_min`. Door or window: keep that depth in front of it free | EVERY |
 | `not_blocking(ref)` | door: stay out of its swing. Window: items taller than the assumed sill stay out of the zone in front. Item: leave room to walk up | EVERY |
-| `near(ref, mm?)` | gap to ref ≤ distance, default `NEAR_DEFAULT_CM` | SOME one |
+| `near(ref, mm?)` | gap to ref ≤ distance. Unstated: `NEAR_DEFAULT_CM` **beyond whatever clearance the target's own wall demands** (see below) | SOME one |
 | `against(ref)` | gap ≤ `AGAINST_TOLERANCE_CM` **and the item's back faces the wall**, so it fixes the rotation | SOME one |
 | `on(ref)` | wall: same as `against`. Item: **dropped**, see below | SOME one |
 
 The every/some split is the same one `compile()` follows; see [the catalogue doc](../backend/catalogue.md).
+
+**"By the window, 5 feet from any wall."** A window is on a wall, so a fixed 75 cm reach would contradict a 152 cm clearance from that same wall in every room. With no distance stated, `near` means as near as the other requests allow: its reach starts where the target's own wall lets the item stand. A stated distance ("within 2 feet of the window") is taken literally and can therefore genuinely conflict.
 
 Tunables in `clauses.ts`, all judgement calls to adjust at rehearsal: `NEAR_DEFAULT_CM = 75`, `AGAINST_TOLERANCE_CM = 5`, `WINDOW_ZONE_CM = 50`, `APPROACH_CM = 60`, and `WINDOW_SILL_CM = 90`, which is an **assumption**: the room carries no sill height.
 
@@ -79,7 +82,7 @@ Without it those clauses are dropped with a reason and everything else still sol
 
 ## Debug view
 
-`toSvg(scene, mask)` returns an SVG string: room, openings, placed items, lit region (green), unobserved floor (amber). `npm --prefix frontend run region:debug [outDir]` writes examples. The dev page at `/dev-search.html` solves the compiled sentence against a stub room and shows the floor, the legal count per rotation, and dropped clauses in red.
+`toSvg(scene, mask)` returns an SVG string: room, openings, placed items, lit region (green), unobserved floor (amber). `npm --prefix frontend run region:debug [outDir]` writes examples. The dev page at `/dev-search.html` solves the compiled sentence in the editor's 600 × 500 cm fixture room (with stub openings and two placed items, so the ids `compile()` emits resolve) and shows the floor, the legal count per rotation, and dropped clauses in red.
 
 ## Files
 
@@ -91,6 +94,6 @@ Without it those clauses are dropped with a reason and everything else still sol
 | `invariants.ts` | Invariant mask via `validatePlacement`, plus occupancy |
 | `occupancy.ts` | `floor-grid-v1` input, summed-area footprint tests |
 | `geometry.ts`, `clauses.ts` | Rect helpers; one rule per clause; tunables; `dropped` reasons |
-| `solve.ts` | Entry point |
+| `solve.ts`, `explain.ts` | Entry point; why nothing fits |
 | `svg.ts`, `debugScenes.ts`, `devScene.ts` | Debug view, debug script scenes, dev-page stub room |
 | `rng.ts`, `region.test.ts`, `clauses.test.ts` | Seeded generator and tests; run by `npm test` through `scene/all-tests.ts` |
