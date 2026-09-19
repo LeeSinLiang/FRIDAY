@@ -139,7 +139,9 @@ function DevSearch() {
       {error && <p style={{ color: 'crimson' }}>error: {error}</p>}
       {result && <p>{result.total} total, showing {result.items.length}</p>}
       {result?.facets?.fits_room !== undefined && (
-        <p style={{ fontSize: 20 }}><strong>{result.facets.fits_room}</strong> fit a {filters.fits_w_mm} mm gap</p>
+        <p style={{ fontSize: 20 }}>
+          <strong>{result.facets.fits_room}</strong> of {result.facets.fits_room_of} fit a {filters.fits_w_mm} mm gap
+        </p>
       )}
       {result?.facets && (
         <p>

@@ -24,6 +24,8 @@ export type SearchResponse = {
   facets?: {
     category: { key: string; count: number }[];
     price_band: { key: string; count: number }[];
-    fits_room?: number;          // count of items that fit the caller's constraint
+    // "fits_room of fits_room_of fit your room". Both present only when fits_w_mm is given.
+    fits_room?: number;          // matching listings narrow enough for the gap
+    fits_room_of?: number;       // listings matching every other clause, ignoring the gap
   };
 };

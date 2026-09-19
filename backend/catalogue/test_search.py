@@ -91,7 +91,7 @@ class SearchEndpointTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         body = response.json()
         self.assertEqual(set(body), {"items", "total", "facets"})
-        self.assertEqual(body["facets"]["fits_room"], 4)
+        self.assertEqual((body["facets"]["fits_room"], body["facets"]["fits_room_of"]), (4, 5))
         self.assertEqual(body["total"], 4)
         SearchResponse.model_validate(body)
 

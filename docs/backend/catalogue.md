@@ -55,6 +55,11 @@ Returns `SearchResponse`: `{ items, total, facets }`. Facets describe the whole 
 | `category` | `{ key, count }[]`, count descending then key; empty categories omitted | `terms` |
 | `price_band` | `{ key, count }[]` in band order, empty bands kept. Keys are cent ranges, upper bound exclusive: `0-10000`, `10000-25000`, `25000-50000`, `50000-100000`, `100000+` | `range` |
 | `fits_room` | How many matching listings are at most `fits_w_mm` wide. Present only when `fits_w_mm` is given | `filter` |
+| `fits_room_of` | How many listings match every other clause, ignoring `fits_w_mm`. Present only with `fits_room` | `filter` (`match_all`) |
+
+Render the pair as "`fits_room` of `fits_room_of` fit your room" from one request. In Elasticsearch the
+width clause runs as a `post_filter`, so the aggregation scope is every candidate; `category` and
+`price_band` are nested under `fits_room`, so they still describe the final result set.
 
 Band keys are identifiers; the UI owns the display text.
 A malformed param returns `400 { error: "invalid_search_params", detail }`.
