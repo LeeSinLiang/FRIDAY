@@ -1,0 +1,809 @@
+{
+  "source": "ikea",
+  "feed_version": "stub-1",
+  "fetched_at": "2026-09-19T14:00:00Z",
+  "currency": "USD",
+  "units": {
+    "length": "mm",
+    "price": "cents"
+  },
+  "items": [
+    {
+      "id": "ikea-291.292.29",
+      "source": "ikea",
+      "title": "EKTORP 3-seat sofa",
+      "category": "sofa",
+      "price_cents": 59900,
+      "dims_mm": {
+        "w": 2180,
+        "d": 880,
+        "h": 880
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#d8d2c4"
+      ],
+      "materials": [
+        "cotton",
+        "polyester",
+        "wood"
+      ]
+    },
+    {
+      "id": "ikea-494.258.51",
+      "source": "ikea",
+      "title": "KIVIK 3-seat sofa",
+      "category": "sofa",
+      "price_cents": 79900,
+      "dims_mm": {
+        "w": 2280,
+        "d": 950,
+        "h": 830
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#5b6770"
+      ],
+      "materials": [
+        "polyester",
+        "wood"
+      ]
+    },
+    {
+      "id": "ikea-893.209.62",
+      "source": "ikea",
+      "title": "FRIHETEN corner sofa-bed",
+      "category": "sofa",
+      "price_cents": 89900,
+      "dims_mm": {
+        "w": 2300,
+        "d": 1510,
+        "h": 660
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "polyester",
+        "particleboard"
+      ]
+    },
+    {
+      "id": "ikea-705.150.64",
+      "source": "ikea",
+      "title": "GLOSTAD 2-seat sofa",
+      "category": "sofa",
+      "price_cents": 19900,
+      "dims_mm": {
+        "w": 1320,
+        "d": 780,
+        "h": 660
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#4a4f57"
+      ],
+      "materials": [
+        "polyester",
+        "steel"
+      ]
+    },
+    {
+      "id": "ikea-193.025.39",
+      "source": "ikea",
+      "title": "POÄNG armchair",
+      "category": "armchair",
+      "price_cents": 12900,
+      "dims_mm": {
+        "w": 680,
+        "d": 820,
+        "h": 1000
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#c9a77c",
+        "#e6e0d4"
+      ],
+      "materials": [
+        "birch",
+        "cotton"
+      ]
+    },
+    {
+      "id": "ikea-903.598.40",
+      "source": "ikea",
+      "title": "STRANDMON wing chair",
+      "category": "armchair",
+      "price_cents": 36900,
+      "dims_mm": {
+        "w": 820,
+        "d": 960,
+        "h": 1010
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#2f5d50"
+      ],
+      "materials": [
+        "polyester",
+        "wood"
+      ]
+    },
+    {
+      "id": "ikea-004.885.65",
+      "source": "ikea",
+      "title": "EKENÄSET armchair",
+      "category": "armchair",
+      "price_cents": 27900,
+      "dims_mm": {
+        "w": 640,
+        "d": 780,
+        "h": 760
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#8a8d8f",
+        "#b98b5e"
+      ],
+      "materials": [
+        "oak",
+        "polyester"
+      ]
+    },
+    {
+      "id": "ikea-805.522.23",
+      "source": "ikea",
+      "title": "VEDBO armchair",
+      "category": "armchair",
+      "price_cents": 34900,
+      "dims_mm": {
+        "w": 730,
+        "d": 650,
+        "h": 750
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#30475e"
+      ],
+      "materials": [
+        "polyester",
+        "birch"
+      ]
+    },
+    {
+      "id": "ikea-392.560.91",
+      "source": "ikea",
+      "title": "GRÖNLID armchair",
+      "category": "armchair",
+      "price_cents": 54900,
+      "dims_mm": {
+        "w": 1170,
+        "d": 980,
+        "h": 1040
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#e9e4d8"
+      ],
+      "materials": [
+        "cotton",
+        "polyester",
+        "wood"
+      ]
+    },
+    {
+      "id": "ikea-002.191.78",
+      "source": "ikea",
+      "title": "ÄDDE chair",
+      "category": "chair",
+      "price_cents": 2500,
+      "dims_mm": {
+        "w": 390,
+        "d": 470,
+        "h": 770
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#ffffff"
+      ],
+      "materials": [
+        "steel",
+        "polypropylene"
+      ]
+    },
+    {
+      "id": "ikea-403.608.74",
+      "source": "ikea",
+      "title": "LISABO chair",
+      "category": "chair",
+      "price_cents": 9900,
+      "dims_mm": {
+        "w": 440,
+        "d": 500,
+        "h": 790
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#d9b88a"
+      ],
+      "materials": [
+        "ash"
+      ]
+    },
+    {
+      "id": "ikea-092.272.80",
+      "source": "ikea",
+      "title": "ODGER chair",
+      "category": "chair",
+      "price_cents": 12000,
+      "dims_mm": {
+        "w": 450,
+        "d": 510,
+        "h": 810
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#2e5c8a"
+      ],
+      "materials": [
+        "polypropylene",
+        "wood composite"
+      ]
+    },
+    {
+      "id": "ikea-702.211.42",
+      "source": "ikea",
+      "title": "LISABO dining table",
+      "category": "table",
+      "price_cents": 29900,
+      "dims_mm": {
+        "w": 1400,
+        "d": 780,
+        "h": 740
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#d9b88a"
+      ],
+      "materials": [
+        "ash",
+        "birch"
+      ]
+    },
+    {
+      "id": "ikea-403.574.78",
+      "source": "ikea",
+      "title": "EKEDALEN extendable table",
+      "category": "table",
+      "price_cents": 54900,
+      "dims_mm": {
+        "w": 1800,
+        "d": 900,
+        "h": 750
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#4a3626"
+      ],
+      "materials": [
+        "oak veneer",
+        "particleboard"
+      ]
+    },
+    {
+      "id": "ikea-304.499.06",
+      "source": "ikea",
+      "title": "LACK coffee table",
+      "category": "table",
+      "price_cents": 3999,
+      "dims_mm": {
+        "w": 900,
+        "d": 550,
+        "h": 450
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#1c1c1c"
+      ],
+      "materials": [
+        "particleboard",
+        "fibreboard"
+      ]
+    },
+    {
+      "id": "ikea-203.347.34",
+      "source": "ikea",
+      "title": "LISTERBY side table",
+      "category": "table",
+      "price_cents": 9900,
+      "dims_mm": {
+        "w": 500,
+        "d": 500,
+        "h": 560
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#b78c5a"
+      ],
+      "materials": [
+        "oak veneer"
+      ]
+    },
+    {
+      "id": "ikea-302.141.59",
+      "source": "ikea",
+      "title": "MICKE desk",
+      "category": "desk",
+      "price_cents": 9999,
+      "dims_mm": {
+        "w": 1050,
+        "d": 500,
+        "h": 750
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#ffffff"
+      ],
+      "materials": [
+        "particleboard",
+        "steel"
+      ]
+    },
+    {
+      "id": "ikea-094.295.25",
+      "source": "ikea",
+      "title": "ALEX desk",
+      "category": "desk",
+      "price_cents": 22900,
+      "dims_mm": {
+        "w": 1320,
+        "d": 580,
+        "h": 760
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#ffffff"
+      ],
+      "materials": [
+        "particleboard",
+        "fibreboard"
+      ]
+    },
+    {
+      "id": "ikea-193.207.13",
+      "source": "ikea",
+      "title": "BEKANT sit/stand desk",
+      "category": "desk",
+      "price_cents": 54900,
+      "dims_mm": {
+        "w": 1600,
+        "d": 800,
+        "h": 1220
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#f1ece2",
+        "#1c1c1c"
+      ],
+      "materials": [
+        "particleboard",
+        "steel"
+      ]
+    },
+    {
+      "id": "ikea-099.293.37",
+      "source": "ikea",
+      "title": "MALM queen bed frame",
+      "category": "bed",
+      "price_cents": 34900,
+      "dims_mm": {
+        "w": 1680,
+        "d": 2110,
+        "h": 1000
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#ffffff"
+      ],
+      "materials": [
+        "particleboard",
+        "fibreboard"
+      ]
+    },
+    {
+      "id": "ikea-790.200.47",
+      "source": "ikea",
+      "title": "HEMNES queen bed frame",
+      "category": "bed",
+      "price_cents": 44900,
+      "dims_mm": {
+        "w": 1740,
+        "d": 2110,
+        "h": 1200
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#3a2c22"
+      ],
+      "materials": [
+        "pine"
+      ]
+    },
+    {
+      "id": "ikea-092.110.04",
+      "source": "ikea",
+      "title": "NEIDEN twin bed frame",
+      "category": "bed",
+      "price_cents": 8900,
+      "dims_mm": {
+        "w": 1040,
+        "d": 1960,
+        "h": 650
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#d6b98c"
+      ],
+      "materials": [
+        "pine"
+      ]
+    },
+    {
+      "id": "ikea-002.638.50",
+      "source": "ikea",
+      "title": "BILLY bookcase",
+      "category": "shelf",
+      "price_cents": 8999,
+      "dims_mm": {
+        "w": 800,
+        "d": 280,
+        "h": 2020
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#ffffff"
+      ],
+      "materials": [
+        "particleboard",
+        "paper foil"
+      ]
+    },
+    {
+      "id": "ikea-302.758.85",
+      "source": "ikea",
+      "title": "KALLAX shelf unit 2x4",
+      "category": "shelf",
+      "price_cents": 11999,
+      "dims_mm": {
+        "w": 770,
+        "d": 390,
+        "h": 1470
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#d8c3a0"
+      ],
+      "materials": [
+        "particleboard",
+        "fibreboard"
+      ]
+    },
+    {
+      "id": "ikea-403.763.34",
+      "source": "ikea",
+      "title": "HEMNES bookcase",
+      "category": "shelf",
+      "price_cents": 26900,
+      "dims_mm": {
+        "w": 900,
+        "d": 370,
+        "h": 1970
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#3a2c22"
+      ],
+      "materials": [
+        "pine"
+      ]
+    },
+    {
+      "id": "ikea-004.116.65",
+      "source": "ikea",
+      "title": "LACK wall shelf",
+      "category": "shelf",
+      "price_cents": 2499,
+      "dims_mm": {
+        "w": 1100,
+        "d": 260,
+        "h": 50
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#1c1c1c"
+      ],
+      "materials": [
+        "particleboard",
+        "fibreboard"
+      ]
+    },
+    {
+      "id": "ikea-603.604.63",
+      "source": "ikea",
+      "title": "MALM 6-drawer dresser",
+      "category": "storage",
+      "price_cents": 29900,
+      "dims_mm": {
+        "w": 1600,
+        "d": 480,
+        "h": 780
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#ffffff"
+      ],
+      "materials": [
+        "particleboard",
+        "fibreboard"
+      ]
+    },
+    {
+      "id": "ikea-490.462.37",
+      "source": "ikea",
+      "title": "PAX wardrobe",
+      "category": "storage",
+      "price_cents": 49900,
+      "dims_mm": {
+        "w": 1500,
+        "d": 600,
+        "h": 2360
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#ffffff"
+      ],
+      "materials": [
+        "particleboard",
+        "steel"
+      ]
+    },
+    {
+      "id": "ikea-093.245.20",
+      "source": "ikea",
+      "title": "BESTÅ TV unit",
+      "category": "storage",
+      "price_cents": 24900,
+      "dims_mm": {
+        "w": 1800,
+        "d": 420,
+        "h": 380
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#2b2b2b"
+      ],
+      "materials": [
+        "particleboard",
+        "glass"
+      ]
+    },
+    {
+      "id": "ikea-202.916.87",
+      "source": "ikea",
+      "title": "IVAR cabinet",
+      "category": "storage",
+      "price_cents": 12900,
+      "dims_mm": {
+        "w": 800,
+        "d": 300,
+        "h": 830
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#d6b98c"
+      ],
+      "materials": [
+        "pine"
+      ]
+    },
+    {
+      "id": "ikea-604.502.38",
+      "source": "ikea",
+      "title": "STOENSE rug, low pile",
+      "category": "rug",
+      "price_cents": 14900,
+      "dims_mm": {
+        "w": 1700,
+        "d": 2400,
+        "h": 18
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#8a8d8f"
+      ],
+      "materials": [
+        "polypropylene"
+      ]
+    },
+    {
+      "id": "ikea-304.080.21",
+      "source": "ikea",
+      "title": "LOHALS rug, flatwoven",
+      "category": "rug",
+      "price_cents": 19900,
+      "dims_mm": {
+        "w": 2000,
+        "d": 3000,
+        "h": 10
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#c2a878"
+      ],
+      "materials": [
+        "jute"
+      ]
+    },
+    {
+      "id": "ikea-903.908.93",
+      "source": "ikea",
+      "title": "VINDUM rug, high pile",
+      "category": "rug",
+      "price_cents": 29900,
+      "dims_mm": {
+        "w": 1330,
+        "d": 1800,
+        "h": 30
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#e9e4d8"
+      ],
+      "materials": [
+        "polypropylene"
+      ]
+    },
+    {
+      "id": "ikea-805.109.92",
+      "source": "ikea",
+      "title": "HEKTAR floor lamp",
+      "category": "lamp",
+      "price_cents": 8999,
+      "dims_mm": {
+        "w": 310,
+        "d": 310,
+        "h": 1810
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#3d3f41"
+      ],
+      "materials": [
+        "steel",
+        "aluminium"
+      ]
+    },
+    {
+      "id": "ikea-904.303.95",
+      "source": "ikea",
+      "title": "RANARP work lamp",
+      "category": "lamp",
+      "price_cents": 4999,
+      "dims_mm": {
+        "w": 140,
+        "d": 140,
+        "h": 420
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#f4f1e8",
+        "#b08d57"
+      ],
+      "materials": [
+        "steel"
+      ]
+    },
+    {
+      "id": "ikea-704.713.98",
+      "source": "ikea",
+      "title": "NYMÅNE floor/reading lamp",
+      "category": "lamp",
+      "price_cents": 7999,
+      "dims_mm": {
+        "w": 320,
+        "d": 320,
+        "h": 1700
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#ffffff"
+      ],
+      "materials": [
+        "steel",
+        "aluminium"
+      ]
+    },
+    {
+      "id": "ikea-305.074.42",
+      "source": "ikea",
+      "title": "FEJKA artificial monstera",
+      "category": "plant",
+      "price_cents": 4999,
+      "dims_mm": {
+        "w": 600,
+        "d": 600,
+        "h": 900
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#3f7d4e"
+      ],
+      "materials": [
+        "polyethylene",
+        "polypropylene"
+      ]
+    },
+    {
+      "id": "ikea-104.933.89",
+      "source": "ikea",
+      "title": "FICUS LYRATA potted plant",
+      "category": "plant",
+      "price_cents": 3999,
+      "dims_mm": {
+        "w": 450,
+        "d": 450,
+        "h": 1100
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#2f6b3c"
+      ],
+      "materials": [
+        "live plant",
+        "plastic"
+      ]
+    },
+    {
+      "id": "ikea-403.284.34",
+      "source": "ikea",
+      "title": "STOCKHOLM mirror",
+      "category": "decor",
+      "price_cents": 12900,
+      "dims_mm": {
+        "w": 800,
+        "d": 40,
+        "h": 800
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "walnut veneer",
+        "glass"
+      ]
+    },
+    {
+      "id": "ikea-205.220.27",
+      "source": "ikea",
+      "title": "BJÖRKSTA picture with frame",
+      "category": "decor",
+      "price_cents": 7900,
+      "dims_mm": {
+        "w": 1400,
+        "d": 20,
+        "h": 1000
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#30475e",
+        "#c0c0c0"
+      ],
+      "materials": [
+        "canvas",
+        "aluminium"
+      ]
+    }
+  ]
+}
