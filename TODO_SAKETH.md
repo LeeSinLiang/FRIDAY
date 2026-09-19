@@ -6,14 +6,19 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## In progress
 
-- None. Waiting on go-ahead for Phase D.
+- None. Phase D next, once `OPENAI_API_KEY` is set in `.env`.
 
 ## Next
 
 - **Phase D — language:** `compile(text) -> Program` via OpenAI Agents SDK with structured output, `render(program) -> list[str]`, `POST /api/compile`, fallback to a plain text clause on validation failure. Schema locks here.
-- **Phase E — scale:** ~12,000 seeded listings, facets including `fits_room`.
 
 ## Done
+
+- **Phase E — scale and aggregations (2026-09-19), done before Phase D because D is blocked on the OpenAI key.** Branch `codex/saketh-scale`.
+  - PRs #2, #3, #5 merged to `main` in order (merge commits). Deleting #2's branch closed #3 instead of retargeting it; recovered by restoring the branch, reopening, retargeting to `main`, then deleting again. For #5 the retarget was done before the delete. `main` after all three: 45 tests OK, `npm run build` passes.
+  - Built: `backend/catalogue/seed.py` (12,000 deterministic seed listings, 30-colour hero palette only), `facets.py` (memory counting + matching Elasticsearch aggregations: `terms` category, `range` price bands, `filter` fits_room), `load_catalogue()` in `feed.py`, aggregations in `to_es_query.py` / `es.py`, facets on the memory backend, ingest of the full catalogue with a single refresh, facets on the dev page. Tests in `test_scale.py`.
+  - Fixed: `offset + limit` beyond 10,000 made Elasticsearch reject the request and silently fall back to memory. Both backends now return 400 past that window.
+  - Verification: `manage.py test api catalogue` — 57 tests OK; `npm run build` passes. Live: ingest indexed 12,040, 0 failed, in 2.8 s; count 12,040 (12,000 seed + 40 ikea); mapping still exactly the agreed one, no dynamic fields; 30 distinct colours. `/api/search?fits_w_mm=` 600 / 900 / 1200 gives `fits_room` 3,383 / 5,142 / 6,924 with `X-Search-Backend: elastic`; absent without the param. Fresh API processes after ingest. 266-query sweep across both live backends comparing items and facets: 265 identical, no fallbacks; `q=lamp steel` has the same total (388) and facets but a different first page, the documented relevance-order difference. Latency on localhost: memory 5–15 ms, Elasticsearch 40–50 ms from this laptop.
 
 - **Phase C — Elastic (2026-09-19).** Branch `codex/saketh-elastic`, stacked on Phase B. PR #5.
   - Built: `backend/catalogue/to_es_query.py` (pure), `es.py` (client + backend), `ingest.py` (bulk, refuses a missing index), `text.py` (shared tokenizer), backend switch with memory fallback and `X-Search-Backend` header in `views.py`, tests in `test_elastic.py`.
