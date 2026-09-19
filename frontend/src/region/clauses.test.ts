@@ -5,6 +5,7 @@ import { findOpenPose, validatePlacement } from "../scene/placement";
 import type { Instance, Pose, Product, Room } from "../scene/types";
 import { ALLOW_STACKING, NEAR_DEFAULT_CM, WINDOW_SILL_CM } from "./clauses";
 import { countFree, footprintRect, intersect, pointCm, union } from "./grid";
+import { DEV_SCENE, MOCK_SCENE } from "./devScene";
 import { invariantMask } from "./invariants";
 import { seeded, type Rng } from "./rng";
 import { solve } from "./solve";
@@ -187,4 +188,41 @@ test("PROPERTY: every point the solver lights passes the editor's placement chec
     assert.equal(solution.dropped.length + 0 <= place.length, true);
   }
   assert.ok(litPoints > 100000, `only ${litPoints} lit points were checked`);
+});
+
+const armchair: Product = { productId: "ikea-193.025.39", name: "POÄNG armchair", widthCm: 68, depthCm: 82, heightCm: 100, color: "#c9a77c", kind: "chair" };
+const HERO: PlaceClause[] = [{ k: "near", ref: { kind: "window", id: "w1" } }, { k: "distance_min", ref: ANY, mm: 1524 }];
+
+test("'by the window, 5 feet from any wall' does not contradict itself: near reaches past its own wall's clearance", () => {
+  const fits = solve(DEV_SCENE, { product: armchair }, HERO);
+  assert.ok(fits.bestYawIndex >= 0 && fits.whyNothingFits === undefined);
+  const points = lit(fits.masks[fits.bestYawIndex]);
+  // 152.4 cm off the north wall as asked, and within the default reach beyond that, under the window.
+  assert.ok(points.every((p) => p.pose.zCm >= 152.4 + 34 && p.pose.zCm <= 152.4 + NEAR_DEFAULT_CM + 41 + 1e-6));
+  assert.ok(points.every((p) => p.pose.xCm >= 152.4 + 34 && p.pose.xCm <= 600 - 152.4 - 34));
+  // A stated distance is taken literally, so this one really is impossible, and says why.
+  const literal = solve(DEV_SCENE, { product: armchair }, [{ ...HERO[0], mm: 750 } as PlaceClause, HERO[1]]);
+  assert.equal(literal.whyNothingFits, "these can't all hold here; without “152 cm away from any wall” it fits");
+});
+
+test("the small mock room cannot take the hero sentence, and says so in centimetres", () => {
+  const tooSmall = solve(MOCK_SCENE, { product: armchair }, HERO);
+  assert.equal(tooSmall.bestYawIndex, -1);
+  // 68 cm (its narrower side) + 2 x 152.4 cm of wall clearance = 373 cm, against 360 cm of depth.
+  assert.equal(tooSmall.whyNothingFits, "needs 373 cm of depth, this room has 360 cm");
+});
+
+test("nothing fits: the reason names the binding constraint", () => {
+  const why = (scene: Scene, product: Product, place: PlaceClause[]) => solve(scene, { product }, place).whyNothingFits;
+  const giant: Product = { ...sofa, productId: "giant", widthCm: 700, depthCm: 95 };
+  assert.equal(why(bare, giant, []), "it is 700 × 95 cm and the room is 600 × 500 cm");
+  assert.equal(why(bare, { ...chair, productId: "tall", heightCm: 300 }, []), "it is 300 cm tall and the ceiling is 280 cm");
+  const packed: Scene = { room: { ...room, widthCm: 230, depthCm: 100 }, products: [sofa, chair], instances: [{ ...sofaAt, pose: { xCm: 115, zCm: 50, yawRad: 0 } }] };
+  assert.equal(why(packed, chair, []), "there is no free floor big enough for its 70 × 80 cm footprint");
+  assert.equal(why(bare, chair, [{ k: "distance_min", ref: wall("w-w"), mm: 3000 }, { k: "distance_min", ref: wall("w-e"), mm: 2500 }]),
+    "needs 620 cm of width, this room has 600 cm");
+  // Not a simple span problem: two one-wall requests that contradict. Giving up either one makes room.
+  assert.equal(why(bare, chair, [{ k: "near", ref: wall("w-n"), mm: 300 }, { k: "near", ref: wall("w-s"), mm: 300 }]),
+    "these can't all hold here; without “30 cm near w-n” it fits");
+  assert.equal(solve(bare, { product: chair }, []).whyNothingFits, undefined);
 });
