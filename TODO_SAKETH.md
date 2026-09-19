@@ -6,12 +6,14 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## In progress
 
-- None. All lane phases A–E are done; Phase F (voice) only if asked.
+- **Region solver** on `codex/saketh-region-solver` (pure TypeScript in `frontend/src/region/`, binds to Sin's scene types). Halfway check-in after floor mask, erosion and SVG debug view; then the six place clauses. Deepgram transcription follows as its own phase.
 
 ## Next
 
 
 ## Done
+
+- **Merge and sync before the solver (2026-09-19).** Merged PR #13 (wall exceptions) to `main`; `any_wall` dual meaning approved by Saketh. Synced `main` after Sin's Three.js editor merge: `./setup.sh` OK, 123 backend tests OK (1 skipped), `npm run build` OK, 27 frontend tests OK. Re-read `AGENTS.md` (one new rule: every doc under `docs/` needs a working `INDEX.md` link before handing back) and `INDEX.md`. Read `docs/frontend/3d-engine-plan.md`, the splatting pivot doc, `docs/backend/contracts/scene-api.md`, and `frontend/src/scene/{types,units,placement,useFurnitureDrag}.ts`. Findings reported to Saketh and decided: sample the mask at grid points so it coincides with drag snap; fixed `CELL_CM = 5`, never derived from `SCENE_UNIT_CM`; emit and accept Sin's `floor-grid-v1`; unknown is never lit; walls west=x0, east=x=width, north=z0, south=z=depth (Sin to confirm); no new test dependency; tests join `all-tests.ts`. Integration blocker raised by Saketh with Sin: the scene accepts only the 3 fixture products, so a catalogue `Listing` cannot be placed yet.
 
 - **compile(): wall exceptions (2026-09-19).** Branch `codex/saketh-wall-exceptions`, off fresh `main` (97 tests green before branching). No schema change.
   - Bug: "3 feet from all walls except left wall, 2 feet there" compiled to `distance_min(any_wall, 914)` AND `distance_min(w-w, 610)`; `any_wall` covers `w-w`, so the exception was silently erased.
