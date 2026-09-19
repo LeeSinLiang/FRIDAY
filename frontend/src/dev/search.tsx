@@ -3,6 +3,7 @@
 
 import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import type { FindClause, Program } from '../lib/dsl/schema'
 import type { Category, Listing, SearchResponse } from '../lib/types'
 
 const CATEGORIES: Category[] = [
@@ -26,6 +27,23 @@ const EMPTY: Filters = { q: '', category: '', price_max: '', price_min: '', colo
 const dollars = (cents: number) => `$${(cents / 100).toFixed(2)}`
 const dims = ({ w, d, h }: Listing['dims_mm']) => `${w} × ${d} × ${h} mm`
 
+type CompileResponse = { program: Program; chips: string[]; source: string; ms: number }
+
+// How a find clause maps onto a GET /api/search param.
+function toFilters(find: FindClause[]): Filters {
+  const filters = { ...EMPTY }
+  for (const clause of find) {
+    if (clause.k === 'text') filters.q = clause.q
+    if (clause.k === 'category') filters.category = clause.value
+    if (clause.k === 'price_max') filters.price_max = String(clause.cents)
+    if (clause.k === 'price_min') filters.price_min = String(clause.cents)
+    if (clause.k === 'colour') filters.colour = clause.hex
+    if (clause.k === 'material') filters.material = clause.value
+    if (clause.k === 'fits_w_max') filters.fits_w_mm = String(clause.mm)
+  }
+  return filters
+}
+
 function toQueryString(filters: Filters): string {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(filters)) if (value.trim()) params.set(key, value.trim())
@@ -36,7 +54,28 @@ function DevSearch() {
   const [filters, setFilters] = useState<Filters>(EMPTY)
   const [result, setResult] = useState<SearchResponse | null>(null)
   const [error, setError] = useState('')
+  const [sentence, setSentence] = useState('a reading chair by the window, under $400, 5 feet from any wall')
+  const [compiled, setCompiled] = useState<CompileResponse | null>(null)
+  const [compiling, setCompiling] = useState(false)
   const query = toQueryString(filters)
+
+  const compile = () => {
+    setCompiling(true)
+    fetch('/api/compile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: sentence }),
+    })
+      .then(async (response) => {
+        const body = await response.json()
+        if (!response.ok) throw new Error(body.detail ?? `HTTP ${response.status}`)
+        setCompiled(body as CompileResponse)
+        setFilters(toFilters((body as CompileResponse).program.find))
+        setError('')
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setCompiling(false))
+  }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -64,6 +103,25 @@ function DevSearch() {
   return (
     <main style={{ fontFamily: 'monospace', padding: 16, maxWidth: 900 }}>
       <h1>dev · search</h1>
+      <form onSubmit={(event) => { event.preventDefault(); compile() }} style={{ display: 'flex', gap: 8 }}>
+        <input style={{ flex: 1 }} value={sentence} onChange={(event) => setSentence(event.target.value)} />
+        <button disabled={compiling}>{compiling ? 'compiling…' : 'compile'}</button>
+      </form>
+      {compiled && (
+        <>
+          <p>
+            {compiled.chips.map((chip) => (
+              <span key={chip} style={{ border: '1px solid', borderRadius: 12, padding: '2px 8px', marginRight: 6 }}>
+                {chip}
+              </span>
+            ))}
+            <br />
+            {compiled.source} · {compiled.ms} ms · find[] applied to the filters below; place[] goes to the solver
+          </p>
+          {/* Dev mode: the only place raw Program syntax is ever shown. */}
+          <pre style={{ background: '#eee', padding: 8 }}>{JSON.stringify(compiled.program, null, 2)}</pre>
+        </>
+      )}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {field('q', 'q (text)')}
         <select value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value })}>
