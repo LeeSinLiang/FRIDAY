@@ -13,6 +13,8 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## Done
 
+- **Shared convention: sync before work (2026-09-19).** Branch `codex/saketh-sync-convention`. Added a "Sync before starting work" section to `AGENTS.md` (pull, `./setup.sh`, tests and build on fresh `main`, branch off `main`, re-read `AGENTS.md` and `INDEX.md`; stop if clean `main` is red; retarget a stacked PR before deleting its base). Reworded the existing "do not fetch unless asked" sentence so the two do not contradict. `CLAUDE.md` is a symlink, so it follows. Documentation only; links checked.
+
 - **Region solver (2026-09-19).** Branch `codex/saketh-region-solver`. Doc: [docs/frontend/region-solver.md](docs/frontend/region-solver.md), linked from `INDEX.md`. Handoff notes appended to `TODO_SIN.md`.
   - `frontend/src/region/`: `types.ts`, `boundary.ts` (only unit crossing, listing adapter, wall mapping), `grid.ts`, `occupancy.ts`, `invariants.ts` (calls Sin's `validatePlacement` per grid point), `geometry.ts`, `clauses.ts` (six clause rules, every/some split, tunables, `ALLOW_STACKING = false`), `solve.ts`, `svg.ts`, `debugScenes.ts`, `devScene.ts`, `rng.ts`, tests. `frontend/scripts/region-debug.mjs`.
   - Decisions by Saketh: edge-to-edge distances; `against` fixes yaw with 5 cm tolerance; `near` default 75 cm; door swing always kept free; 90 cm sill is a commented assumption; `on(item)` dropped behind a flag; dropped clauses shown on the dev page.
