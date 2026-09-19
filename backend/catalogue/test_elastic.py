@@ -137,10 +137,23 @@ class QueryBodyTests(SimpleTestCase):
         self.assertEqual(ranges[-1], {"key": "100000+", "from": 100000})
         self.assertNotIn("fits_room", aggs)
 
-    def test_fits_room_is_a_filter_aggregation_on_width(self):
-        find = _FIND.validate_python([{"k": "fits_w_max", "mm": 900}])
-        aggs = to_es_query(find, PALETTE, limit=24, offset=0)["aggs"]
-        self.assertEqual(aggs["fits_room"], {"filter": {"range": {"dims_mm.w": {"lte": 900}}}})
+    def test_a_gap_moves_to_post_filter_so_one_request_counts_both(self):
+        find = _FIND.validate_python([{"k": "category", "value": "armchair"}, {"k": "fits_w_max", "mm": 900}])
+        body = to_es_query(find, PALETTE, limit=24, offset=0)
+        width = {"range": {"dims_mm.w": {"lte": 900}}}
+        self.assertEqual(body["query"]["bool"]["filter"], [{"term": {"category": "armchair"}}])
+        self.assertEqual(body["post_filter"], width)
+        self.assertEqual(body["aggs"]["fits_room_of"], {"filter": {"match_all": {}}})
+        self.assertEqual(body["aggs"]["fits_room"]["filter"], width)
+        self.assertEqual(set(body["aggs"]["fits_room"]["aggs"]), {"category", "price_band"})
+
+    def test_no_gap_means_no_post_filter(self):
+        self.assertNotIn("post_filter", to_es_query([], PALETTE, limit=24, offset=0))
+
+    def test_the_tightest_gap_wins(self):
+        find = _FIND.validate_python([{"k": "fits_w_max", "mm": 900}, {"k": "fits_w_max", "mm": 700}])
+        self.assertEqual(to_es_query(find, PALETTE, limit=24, offset=0)["post_filter"],
+                         {"range": {"dims_mm.w": {"lte": 700}}})
 
 
 class IngestTests(SimpleTestCase):
@@ -168,15 +181,16 @@ class StaleSeedTests(SimpleTestCase):
         self.assertEqual(query["bool"]["filter"][0], {"term": {"source": "seed"}})
 
 
-def fake_response(listings, find) -> dict:
+def fake_response(listings, find, candidates: int = 0) -> dict:
     """What Elasticsearch would return for these hits, aggregations included."""
-    facets = memory_facets(listings, find)
+    facets = memory_facets(listings, find, candidates)
     aggregations = {
         "category": {"buckets": [{"key": b.key, "doc_count": b.count} for b in facets.category]},
         "price_band": {"buckets": [{"key": b.key, "doc_count": b.count} for b in facets.price_band]},
     }
     if facets.fits_room is not None:
-        aggregations["fits_room"] = {"doc_count": facets.fits_room}
+        aggregations = {"fits_room_of": {"doc_count": candidates},
+                        "fits_room": {"doc_count": facets.fits_room, **aggregations}}
     return {"hits": {"total": {"value": len(listings)}, "hits": [{"_source": to_wire(l)} for l in listings]},
             "aggregations": aggregations}
 
@@ -203,7 +217,7 @@ class BackendSwitchTests(SimpleTestCase):
                            key=lambda l: l.id)
         client = mock.Mock()
         find = _FIND.validate_python([{"k": "category", "value": "armchair"}, {"k": "fits_w_max", "mm": 900}])
-        client.search.return_value = fake_response(armchairs, find)
+        client.search.return_value = fake_response(armchairs, find, candidates=5)
         with mock.patch.dict(os.environ, {"SEARCH_BACKEND": "elastic"}), \
                 mock.patch.object(es, "get_client", return_value=client):
             response = APIClient().get(self.URL)

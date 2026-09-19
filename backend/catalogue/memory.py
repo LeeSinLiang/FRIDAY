@@ -3,7 +3,7 @@
 from collections.abc import Callable, Sequence
 
 from catalogue.colour import is_near
-from catalogue.facets import memory_facets
+from catalogue.facets import memory_facets, without_fit
 from catalogue.text import tokenize
 from catalogue.types import Listing, SearchResponse
 
@@ -43,5 +43,7 @@ def search(listings: Sequence[Listing], find: Sequence, limit: int, offset: int)
 
     Id order matches the Elasticsearch backend's tiebreak, so both backends page identically.
     """
-    hits = sorted((listing for listing in listings if matches(listing, find)), key=lambda l: l.id)
-    return SearchResponse(items=hits[offset:offset + limit], total=len(hits), facets=memory_facets(hits, find))
+    candidates = [listing for listing in listings if matches(listing, without_fit(find))]
+    hits = sorted((listing for listing in candidates if matches(listing, find)), key=lambda l: l.id)
+    return SearchResponse(items=hits[offset:offset + limit], total=len(hits),
+                          facets=memory_facets(hits, find, len(candidates)))

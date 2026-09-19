@@ -51,7 +51,7 @@ class FacetTests(SimpleTestCase):
 
     def test_fits_room_is_absent_without_a_gap_and_changes_with_it(self):
         self.assertIsNone(run().facets.fits_room)
-        self.assertNotIn("fits_room", to_wire(run())["facets"])
+        self.assertEqual(set(to_wire(run())["facets"]), {"category", "price_band"})
         narrow, wide = run(fits_w_mm="600").facets.fits_room, run(fits_w_mm="900").facets.fits_room
         self.assertGreater(narrow, 0)
         self.assertGreater(wide, narrow)
@@ -62,14 +62,42 @@ class FacetTests(SimpleTestCase):
         self.assertLess(armchairs.facets.fits_room, run(fits_w_mm="900").facets.fits_room)
         self.assertEqual([b.key for b in armchairs.facets.category], ["armchair"])
 
-    def test_facets_from_aggregations(self):
+    def test_fits_room_of_is_the_count_before_the_gap_applies(self):
+        all_armchairs = run(category="armchair").total
+        fitted = run(category="armchair", fits_w_mm="900")
+        self.assertEqual(fitted.facets.fits_room_of, all_armchairs)
+        self.assertEqual(fitted.facets.fits_room, fitted.total)
+        self.assertLess(fitted.facets.fits_room, fitted.facets.fits_room_of)
+        # The denominator ignores the gap, so it does not move when the gap does.
+        self.assertEqual(run(category="armchair", fits_w_mm="600").facets.fits_room_of, all_armchairs)
+
+    def test_category_and_price_facets_describe_what_fits_not_the_candidates(self):
+        fitted = run(fits_w_mm="600")
+        self.assertEqual(sum(b.count for b in fitted.facets.category), fitted.facets.fits_room)
+        self.assertEqual(sum(b.count for b in fitted.facets.price_band), fitted.facets.fits_room)
+
+    def test_facets_from_aggregations_without_a_gap(self):
         facets = facets_from_aggs({
             "category": {"buckets": [{"key": "sofa", "doc_count": 7}]},
             "price_band": {"buckets": [{"key": "0-10000", "from": 0.0, "to": 10000.0, "doc_count": 3}]},
-            "fits_room": {"doc_count": 5},
         })
         self.assertEqual(to_wire(facets), {
             "category": [{"key": "sofa", "count": 7}],
             "price_band": [{"key": "0-10000", "count": 3}],
+        })
+
+    def test_facets_from_aggregations_with_a_gap_reads_the_nested_scope(self):
+        facets = facets_from_aggs({
+            "fits_room_of": {"doc_count": 12},
+            "fits_room": {
+                "doc_count": 5,
+                "category": {"buckets": [{"key": "sofa", "doc_count": 5}]},
+                "price_band": {"buckets": [{"key": "0-10000", "doc_count": 5}]},
+            },
+        })
+        self.assertEqual(to_wire(facets), {
+            "category": [{"key": "sofa", "count": 5}],
+            "price_band": [{"key": "0-10000", "count": 5}],
             "fits_room": 5,
+            "fits_room_of": 12,
         })

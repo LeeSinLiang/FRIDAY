@@ -6,7 +6,7 @@ Structured constraints go in filter context (cached, unscored). Only free text g
 from collections.abc import Callable, Sequence
 
 from catalogue.colour import is_near
-from catalogue.facets import es_aggs
+from catalogue.facets import es_aggs, fit_filter, fit_width_mm, without_fit
 from catalogue.text import tokenize
 
 _WILDCARD_SPECIALS = str.maketrans({"*": r"\*", "?": r"\?", "\\": "\\\\"})
@@ -41,7 +41,7 @@ FILTERS: dict[str, Callable[[object], dict]] = {
     "price_max": lambda clause: {"range": {"price_cents": {"lte": clause.cents}}},
     "price_min": lambda clause: {"range": {"price_cents": {"gte": clause.cents}}},
     "material": lambda clause: _contains("materials", clause.value),
-    "fits_w_max": lambda clause: {"range": {"dims_mm.w": {"lte": clause.mm}}},
+    "fits_w_max": lambda clause: fit_filter(clause.mm),
 }
 
 
@@ -68,8 +68,12 @@ def to_es_query(find: Sequence, palette: Sequence[str], limit: int, offset: int)
         limit: page size.
         offset: page start.
     """
+    fit_mm = fit_width_mm(find)
     return {
-        "query": to_es_bool(find, palette),
+        # The width gap filters hits after aggregation, so one request counts both what fits
+        # and what it was chosen from. post_filter does not affect scoring.
+        "query": to_es_bool(without_fit(find), palette),
+        **({} if fit_mm is None else {"post_filter": fit_filter(fit_mm)}),
         "from": offset,
         "size": limit,
         "track_total_hits": True,
