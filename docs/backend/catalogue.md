@@ -1,6 +1,6 @@
 # Catalogue, search and language layer
 
-Owner: Saketh. Status: `GET /api/search` live on the in-memory backend; Elasticsearch backend built and unit-tested, live verification pending the `listings` index. `compile()` lands next.
+Owner: Saketh. Status: `GET /api/search` live on the in-memory backend; Elasticsearch backend live and verified against the cluster (40 listings indexed). `compile()` lands next.
 
 ## What this is
 
@@ -38,7 +38,7 @@ Public (`AllowAny`). Trailing slash optional. All params optional and ANDed toge
 
 | Param | Meaning |
 | --- | --- |
-| `q` | Free text; every token must appear in title, category or materials |
+| `q` | Free text; every word must be a title word, the category, or part of a material |
 | `category` | One of the 12 `Category` values |
 | `price_min`, `price_max` | Integer **cents**, inclusive |
 | `colour` | `#rrggbb`; matches listings with a nearby shade, not an exact hex |
@@ -64,12 +64,22 @@ from memory instead of failing. The `X-Search-Backend` response header says whic
 
 | Clause | Elasticsearch |
 | --- | --- |
-| `text` | `must`: per token, `match` on `title` or `term` on `category` / `materials` |
+| `text` | `must`: per token, `match` on `title`, `term` on `category`, or `wildcard` on `materials` |
 | `category` | `filter`: `term` |
 | `price_min`, `price_max` | `filter`: `range` on `price_cents` |
 | `fits_w_max` | `filter`: `range` on `dims_mm.w` |
 | `material` | `filter`: case-insensitive `wildcard` on `materials` |
 | `colour` | `filter`: `terms` over the indexed hexes near the requested colour |
+
+Both backends return the same listings in the same order (by `id`) for every structured query, and
+`backend/catalogue/text.py` gives them one definition of a token. The one deliberate difference:
+with a `q`, Elasticsearch orders by relevance first, so the same listings can come back in a
+different order than from memory.
+
+Colour is where the backends could drift: memory tests RGB distance per listing, Elasticsearch
+filters on the indexed hexes near the requested colour. They agree exactly while the palette holds
+every indexed colour. The palette is read from the index with a terms aggregation (up to 2,000
+distinct colours) and cached per process, so restart the API after re-ingesting new colours.
 
 Only free text scores. No embeddings, vector search or `semantic_text`, by design.
 
