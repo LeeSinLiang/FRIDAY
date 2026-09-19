@@ -13,6 +13,13 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## Done
 
+- **Phase D follow-up: fallback, timeout, retry, review fixes (2026-09-19).** Same branch and PR (#11); `main` merged in after #9 landed, one conflict in this file resolved by keeping both entries.
+  - Latency DoD revised by Saketh to p50 under 1,500 ms (compile is a submit action). Measured after these changes: p50 1,182 ms, p90 1,667 ms, max 2,392 ms over 24 live calls, 24 of 24 exact. `gpt-4.1-mini` stays.
+  - Fallback fixed: `backend/catalogue/text.py` gains `STOP_WORDS`, `content_words()` and `keep_matching()`; `fallback_program()` searches content words and keeps a word only if results remain (`text_search_has_results` in `views.py`, against the memory catalogue so it works with the model and Elasticsearch both down). The hero sentence now degrades to "reading chair" (235 results) instead of the whole sentence (0 results). Costs 0–45 ms; title tokens are cached in `title_words()`.
+  - Timeout 3 s → 6 s; the single retry now also covers timeouts; auth and quota errors are not retried; an abandoned call is cancelled.
+  - Review fixes: `POST /api/compile` throttled to 30/min per client (`CompileThrottle`), search untouched; `GET /api/search` accepts repeated `material` / `colour` params so "oak and steel" keeps both clauses, and the dev page sends them.
+  - Verification: `manage.py test api catalogue` — 97 tests OK, 1 skipped, API key blanked; `npm run build` passes; live fixture test passed 3 of 3 runs; forced-failure run (nonexistent model) returned useful results for every sentence tried.
+
 - **Phase D — language (2026-09-19).** Branch `codex/saketh-compile`, off `main` (not stacked).
   - Built: `backend/catalogue/dsl/compile.py` (`compile_text`: one structured-output call through the OpenAI Agents SDK with `Program` as output type, one turn, no tools; at most one retry on an invalid Program; never raises; falls back to `{find:[{k:"text",q}],place:[]}`), `prompt.py`, `render.py` + `units.py` + `colours.py` (Program → chips, pure), `POST /api/compile` in `views.py` / `urls.py` (`AllowAny`, 300-character cap), fixture `dsl/fixtures/compile_cases.json` (8 sentences, expected Programs, chips, recorded model outputs), tests in `test_compile.py`, dev page text box wired to the endpoint. Wall labels added to the mock room for chips.
   - Model: `OPENAI_MODEL`, default `gpt-4.1-mini`. Started at the bottom: `gpt-4.1-nano` scored 4/8, then 6–7/8 after prompt work, and kept inventing placement clauses or expanding `any_wall` into four walls; `gpt-4o-mini` 6–7/8 (drops materials); `gpt-5.4-nano` 6/8; `gpt-4.1-mini` 8/8 on every run. Latency is the same across tiers.

@@ -43,8 +43,8 @@ Public (`AllowAny`). Trailing slash optional. All params optional and ANDed toge
 | `q` | Free text; every word must be a title word, the category, or part of a material |
 | `category` | One of the 12 `Category` values |
 | `price_min`, `price_max` | Integer **cents**, inclusive |
-| `colour` | `#rrggbb`; matches listings with a nearby shade, not an exact hex |
-| `material` | Case-insensitive substring of a material |
+| `colour` | `#rrggbb`; matches listings with a nearby shade, not an exact hex. May repeat |
+| `material` | Case-insensitive substring of a material. May repeat: `material=oak&material=steel` means both |
 | `fits_w_mm` | Integer **mm**; keeps listings whose width is at most this |
 | `limit`, `offset` | Paging. `limit` 1–100, default 24. `offset + limit` at most 10,000 (the Elasticsearch result window) |
 
@@ -91,9 +91,10 @@ curl -X POST localhost:8000/api/compile -H 'Content-Type: application/json' \
 ```
 
 - **Show `chips`, never `program`.** Chips come from `render()` and are the only form of a Program a shopper sees. `program.find` maps one-to-one onto the `GET /api/search` params (see `toFilters` in `frontend/src/dev/search.tsx`); `program.place` goes to the solver untouched.
-- **It never errors on a bad sentence or a model problem.** `source` is `model`, `model-retry` (one retry after an invalid Program), `fallback` (a plain text search of the sentence: `{find:[{k:"text",q}],place:[]}`) or `empty`. Only a malformed body returns 400.
-- **Latency is about 1 s, not 400 ms.** Measured median 1,056 ms, p90 1,336 ms over 40 live calls. A one-word reply from the same API takes about 560 ms from the hackathon network, so the floor is the network and the API, not the model tier. Debounce, call on submit rather than per keystroke, and keep browsing usable without it.
-- One structured-output call through the OpenAI Agents SDK with `Program` as the output type, one turn, no tools. `OPENAI_MODEL` selects the model (default `gpt-4.1-mini`: the cheapest that scores 8 of 8 on the fixture; `gpt-4.1-nano` scored 6–7 and invented placement clauses). Timeout 3 s, no transport retries.
+- **It never errors on a bad sentence or a model problem.** `source` is `model`, `model-retry`, `fallback` or `empty`. There is at most one retry, shared between an invalid Program and a timeout; errors that would repeat (auth, quota) are not retried. A malformed body returns 400; more than 30 requests a minute from one client returns 429 (search is not throttled).
+- **The fallback still finds things.** It searches the sentence's content words: stop-words, numbers, and placement, price and size vocabulary are dropped, then each remaining word is kept only if results remain with it. "a reading chair by the window, under $400, 5 feet from any wall" degrades to `{find:[{k:"text",q:"reading chair"}],place:[]}` and returns reading chairs; the whole sentence would return nothing. If no word is searchable, `find` is empty and the shopper browses everything.
+- **Compile is a submit action, not a keystroke one.** Target p50 under 1,500 ms; measured p50 1,056–1,182 ms, p90 1,336–1,667 ms. A one-word reply from the same API takes about 560 ms from the hackathon network, so the floor is the network and the API, not the model tier. Call it on submit and keep browsing usable without it.
+- One structured-output call through the OpenAI Agents SDK with `Program` as the output type, one turn, no tools. `OPENAI_MODEL` selects the model (default `gpt-4.1-mini`: the cheapest that scores 8 of 8 on the fixture; `gpt-4.1-nano` scored 6–7 and invented placement clauses). Timeout 6 s (normal calls take 0.7–2.6 s), no transport retries.
 - The model sees the Program schema and the room's ids. It never sees the search backend.
 - Room ids currently come from the dev stub `backend/catalogue/mock/room.py`.
 
