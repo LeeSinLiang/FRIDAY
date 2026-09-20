@@ -1,0 +1,26 @@
+{
+  "productId": "ektorp-2-seat-sofa-hillared-dark-blue",
+  "modelUrl": "/models/furniture/ektorp-2-seat-sofa-hillared-dark-blue/model.glb",
+  "thumbnailUrl": "/models/furniture/ektorp-2-seat-sofa-hillared-dark-blue/thumbnail.png",
+  "widthCm": 179,
+  "depthCm": 88,
+  "heightCm": 88,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "ikea-001.850.32",
+  "source": {
+    "product": "IKEA EKTORP 2-seat sofa frame (001.850.32) with Hillared dark blue cover (305.170.87)",
+    "dimensionsVerifiedAt": "https://www.ikea.com/es/en/p/ektorp-2-seat-sofa-hillared-dark-blue-s69430521/ (EU listing; not currently sold on ikea.com/us)",
+    "priceNote": "price_cents in the catalogue listing is an UNVERIFIED PLACEHOLDER, not sourced from IKEA — this cover/frame combo has no official US price and price ownership belongs to the catalogue/commerce contract, not this asset per collaborator-handoff.md",
+    "generation": "Higgsfield image_to_3d (Meshy), single reference image, should_texture=true, enable_pbr=true, then gltf-transform optimize (--compress false, --texture-compress auto --texture-size 1024, --simplify --simplify-ratio 0.4) to bring an oversized PBR export under the 5MB budget"
+  },
+  "knownLimitations": [
+    "FAILS the automated check in backend/api/test_furniture_assets.py as pushed. After fitting to the correct 88cm height, measured box is 165.0 x 88.0 x 99.4 cm against the real EKTORP's 179 x 88 x 88 cm: width is off by 14cm and depth by 11.4cm, both well outside the test's tolerance (~5.4cm / ~2.6cm). This is a single-photo reconstruction proportion error, not a units/scale bug — pushed anyway at the requester's explicit direction after being flagged.",
+    "Generated from a single product photo, no additional angles — depth/perspective is the least reliable axis from one image, consistent with the miss above",
+    "No manual Blender inspection/correction pass has been done",
+    "Out of the agreed build order is NOT the issue here — this is one of the two priority items (sofa) — but it still isn't catalogue-ready",
+    "Exact cover fabric name (Hillared vs. a similar dark-blue cover) is a visual match, not confirmed against a swatch"
+  ]
+}
