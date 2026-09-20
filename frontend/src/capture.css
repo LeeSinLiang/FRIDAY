@@ -16,3 +16,5 @@
 .capture-result img { display: block; width: 100%; height: auto; border-radius: 14px; background: #ece2d4; }
 .capture-result figcaption { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; margin-top: 12px; font-size: 12px; color: #735a47; }
 .capture-result a { color: var(--accent); text-underline-offset: 3px; }
+
+.capture-notes {margin:12px 0 0;padding-left:18px;font-size:12px;line-height:1.5;color:#735a47;}

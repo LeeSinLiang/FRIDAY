@@ -1,4 +1,6 @@
-# Room editor implementation and handoff
+# Historical Three.js editor implementation and handoff
+
+The default viewport is now the [prepared-room PlayCanvas editor](room-capture/playcanvas-implementation.md). This document describes the preserved Three.js editor at `?legacy`.
 
 2026-09-19 · Sin · Implemented on `feat/3d-engine-frontend` with three software subagents. Now includes database-backed demo sessions and validated agent commands; see the [scene API](../backend/contracts/scene-api.md).
 

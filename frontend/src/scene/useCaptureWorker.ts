@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CameraMode, Instance, Product, Room } from "./types";
+import type { CameraMode, FirstPersonCamera, Instance, Product, Room } from "./types";
 import type { CaptureAngle } from "./captureCamera";
 
 export type CaptureJob = {
   captureId: string; leaseToken: string; revision: number; view: CameraMode;
-  camera: CaptureAngle | null; width: number; height: number;
+  camera: CaptureAngle | FirstPersonCamera | null; width: number; height: number;
+  representation?: "photographic" | "spatial_plan";
   snapshot: { room: Room; products: Product[]; instances: Instance[]; revision: number };
 };
 export type CaptureResult = { imageDataUrl: string; modelWarnings: string[] } | { error: { code: string; message: string } };
@@ -40,8 +41,13 @@ export function parseCaptureJob(value: unknown): CaptureJob {
     throw Error("Invalid capture job");
   const room = job.snapshot.room;
   if (!room || ![room.widthCm, room.depthCm, room.heightCm].every(n => Number.isFinite(n) && n > 0)) throw Error("Invalid capture room");
-  if (job.view === "perspective" && job.camera && (!Number.isFinite(job.camera.azimuthDeg) ||
-    !Number.isFinite(job.camera.elevationDeg) || job.camera.elevationDeg <= 0 || job.camera.elevationDeg >= 90)) throw Error("Invalid capture angle");
+  if (job.view === "perspective" && job.camera) {
+    if ("kind" in job.camera) {
+      const c = job.camera;
+      if (c.kind !== "firstPerson" || ![c.xCm,c.yCm,c.zCm,c.yawRad,c.pitchRad,c.fovDeg].every(Number.isFinite) || c.fovDeg < 20 || c.fovDeg > 100)
+        throw Error("Invalid first-person capture camera");
+    } else if (!Number.isFinite(job.camera.azimuthDeg) || !Number.isFinite(job.camera.elevationDeg) || job.camera.elevationDeg <= 0 || job.camera.elevationDeg >= 90) throw Error("Invalid capture angle");
+  }
   const products = new Map(job.snapshot.products.map(product => [product.productId, product]));
   const ids = new Set<string>();
   for (const instance of job.snapshot.instances) {
@@ -54,7 +60,7 @@ export function parseCaptureJob(value: unknown): CaptureJob {
   return structuredClone(job);
 }
 
-export function useCaptureWorker(enabled: boolean) {
+export function useCaptureWorker(enabled: boolean, roomId = "demo-room") {
   const [job, setJob] = useState<CaptureJob | null>(null);
   const completeRef = useRef<(captureId: string, leaseToken: string, result: CaptureResult) => void>(() => {});
   useEffect(() => {
@@ -73,7 +79,7 @@ export function useCaptureWorker(enabled: boolean) {
       if (!token) throw Error("Missing CSRF token");
       const timeout = setTimeout(() => requestController?.abort(), 5000);
       try {
-        const response = await fetch(path, { method: "POST", credentials: "same-origin", signal: requestController.signal,
+        const response = await fetch(`${path}?roomId=${encodeURIComponent(roomId)}`, { method: "POST", credentials: "same-origin", signal: requestController.signal,
           headers: { "Content-Type": "application/json", "X-CSRFToken": decodeURIComponent(token) }, body: JSON.stringify(body) });
         const data = await response.json().catch(() => null);
         if (!response.ok) throw Error(`Capture request failed (${response.status}): ${data?.error?.message ?? response.statusText}`);
@@ -121,7 +127,7 @@ export function useCaptureWorker(enabled: boolean) {
       completeRef.current = () => {};
       // An interrupted claim is deliberately left for the backend's lease recovery.
     };
-  }, [enabled]);
+  }, [enabled, roomId]);
   const complete = useCallback((captureId: string, leaseToken: string, result: CaptureResult) => completeRef.current(captureId, leaseToken, result), []);
   return { job: enabled ? job : null, complete };
 }

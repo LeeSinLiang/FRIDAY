@@ -1,10 +1,33 @@
 export type Pose = { xCm: number; zCm: number; yawRad: number };
+export type FirstPersonCamera = {
+  kind: "firstPerson";
+  xCm: number; yCm: number; zCm: number;
+  yawRad: number; pitchRad: number; fovDeg: number;
+};
+export type RoomSpatial = {
+  freeAreas: { minXcm: number; maxXcm: number; minZcm: number; maxZcm: number }[];
+  obstacles: { obstacleId: string; label: string; xCm: number; zCm: number; widthCm: number; depthCm: number; yawRad: number }[];
+};
+export type RoomScan = {
+  geometryRevision: string;
+  calibration: { status: "synthetic_demo" | "confirmed" | "unconfirmed"; note: string };
+  visualUrl: string;
+  visualFormat?: "splat" | "glb";
+  surfaceUrl?: string;
+  positionCm: [number, number, number];
+  rotationDeg: [number, number, number];
+  scale: number;
+  defaultCamera: FirstPersonCamera;
+  attribution: { title: string; author: string; url: string; license: string; licenseUrl: string };
+};
 export type Room = {
   roomId: string;
   revision: number;
   widthCm: number;
   depthCm: number;
   heightCm: number;
+  scan?: RoomScan;
+  spatial?: RoomSpatial;
 };
 export type Product = {
   productId: string;
@@ -13,6 +36,8 @@ export type Product = {
   depthCm: number;
   heightCm: number;
   modelUrl?: string;
+  thumbnailUrl?: string;
+  catalogueVisible?: boolean;
   color: string;
   kind: "sofa" | "table" | "chair";
 };

@@ -1,0 +1,15 @@
+{
+  "freeAreas": [
+    {"minXcm": 25, "maxXcm": 390, "minZcm": 30, "maxZcm": 575},
+    {"minXcm": 390, "maxXcm": 440, "minZcm": 150, "maxZcm": 300},
+    {"minXcm": 440, "maxXcm": 710, "minZcm": 30, "maxZcm": 300}
+  ],
+  "obstacles": [
+    {"obstacleId": "fixed-sofa", "label": "Scanned sofa", "xCm": 250, "zCm": 80, "widthCm": 270, "depthCm": 110, "yawRad": 0},
+    {"obstacleId": "fixed-lounge", "label": "Scanned lounge chair", "xCm": 65, "zCm": 180, "widthCm": 95, "depthCm": 110, "yawRad": -0.3},
+    {"obstacleId": "fixed-coffee-table", "label": "Scanned coffee table", "xCm": 220, "zCm": 230, "widthCm": 135, "depthCm": 100, "yawRad": -0.2},
+    {"obstacleId": "fixed-armchair", "label": "Scanned armchair", "xCm": 85, "zCm": 410, "widthCm": 100, "depthCm": 115, "yawRad": -0.35},
+    {"obstacleId": "fixed-dining", "label": "Scanned dining furniture", "xCm": 565, "zCm": 175, "widthCm": 220, "depthCm": 150, "yawRad": 0},
+    {"obstacleId": "fixed-kitchen", "label": "Scanned kitchen cabinets", "xCm": 575, "zCm": 45, "widthCm": 280, "depthCm": 55, "yawRad": 0}
+  ]
+}

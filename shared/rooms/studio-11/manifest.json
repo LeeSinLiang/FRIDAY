@@ -1,0 +1,30 @@
+{
+  "room": {
+    "roomId": "studio-11",
+    "revision": 1,
+    "widthCm": 1100,
+    "depthCm": 630,
+    "heightCm": 270,
+    "scan": {
+      "geometryRevision": "studio11-demo-v1",
+      "calibration": {
+        "status": "synthetic_demo",
+        "note": "Synthetic test scene. Source units are treated as meters; geometry is an approximate reviewed demo fixture, not a measured real room."
+      },
+      "visualUrl": "/rooms/studio-11/assets/room.sog",
+      "surfaceUrl": "/rooms/studio-11/assets/surface.collision.glb",
+      "positionCm": [660, 0, 300],
+      "rotationDeg": [0, 0, 180],
+      "scale": 1,
+      "defaultCamera": {"kind": "firstPerson", "xCm": 330, "yCm": 160, "zCm": 510, "yawRad": 0.42, "pitchRad": -0.13, "fovDeg": 60},
+      "attribution": {
+        "title": "Studio 11",
+        "author": "Goce Milanoski",
+        "url": "https://superspl.at/scene/c37cb759",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/"
+      }
+    }
+  },
+  "spatialFile": "spatial.json"
+}

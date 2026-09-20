@@ -2,6 +2,8 @@
 
 2026-09-19 · Sin · Research and proposed implementation, not implemented or benchmarked.
 
+The [first-person PlayCanvas implementation plan](first-person-playcanvas-plan.md) is now the active migration sequence. It preserves Atelier glass/Mori, the user's 5 cm render scale, and explicit validation/capture contracts; the historical research below supplies background rather than competing implementation instructions.
+
 ## Selected direction: first-person PlayCanvas + SuperSplat
 
 User decision, 2026-09-19: pivot the primary experience to first-person navigation and use PlayCanvas with SuperSplat. This supersedes the recommendation below to preserve Three.js/R3F as the rendering engine. The existing implementation is still Three.js; migration has not started.

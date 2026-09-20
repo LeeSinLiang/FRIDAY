@@ -4,7 +4,7 @@ from django.test import Client, TestCase
 from catalogue.feed import load_listings
 
 from .catalogue_products import catalogue_product
-from .scene_service import SceneError, validate_instances
+from .scene_service import SceneError, fixtures, validate_instances
 
 POANG_ID = 'ikea-193.025.39'
 POANG = {'productId': POANG_ID, 'name': 'POÄNG armchair', 'widthCm': 68, 'depthCm': 82, 'heightCm': 100,
@@ -101,7 +101,7 @@ class CataloguePlacementTests(TestCase):
     def test_fixture_products_are_untouched(self):
         chair = {'instanceId': 'chair-1', 'productId': 'test-chair', 'pose': {'xCm': 100, 'zCm': 100, 'yawRad': 0}}
         self.assertEqual(self.commands([{'type': 'add', 'instance': chair}]).json()['instances'], [chair])
-        self.assertEqual(len(self.client.get('/api/scene/').json()['products']), 3)
+        self.assertEqual(self.client.get('/api/scene/').json()['products'], fixtures()['products'])
 
     def test_too_big_for_the_room_is_a_placement_error_like_any_other(self):
         wardrobe = catalogue_product('ikea-490.462.37')  # PAX, 236 cm tall, fits under 280

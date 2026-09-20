@@ -1,8 +1,10 @@
 """Small browser-rendered capture queue, scoped to the same scene session."""
 import base64
 import binascii
+import copy
 import hashlib
 import json
+import math
 import struct
 import uuid
 import zlib
@@ -13,7 +15,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .models import SceneCapture, SceneLayout
-from .scene_service import SceneError, number, scene_for_session, serialize, validate_revision
+from .scene_service import SceneError, covered_by_free_areas, footprint, number, overlaps, room_context, scene_for_session, serialize, validate_revision
 
 # Base64 + JSON stays below Django's default 2.5 MiB request-body limit.
 MAX_PNG_BYTES = 1536 * 1024
@@ -24,16 +26,19 @@ def expire(scene):
 
 
 def metadata(job):
-    result = {'captureId': str(job.pk), 'status': job.status, 'revision': job.revision, 'view': job.view, 'camera': job.camera, 'width': job.width, 'height': job.height}
+    room = job.snapshot.get('room', {})
+    result = {'captureId': str(job.pk), 'status': job.status, 'revision': job.revision, 'view': job.view, 'representation': job.representation,
+              'roomId': room.get('roomId', job.scene.room_id), 'geometryRevision': job.snapshot.get('geometryRevision', str(room.get('revision', ''))),
+              'camera': job.camera, 'width': job.width, 'height': job.height}
     if job.status == 'ready':
-        result.update(imageUrl=f'/api/scene/captures/{job.pk}/image/', modelWarnings=job.model_warnings)
+        result.update(imageUrl=f'/api/scene/captures/{job.pk}/image/?roomId={job.scene.room_id}', modelWarnings=job.model_warnings)
     if job.status == 'failed':
         result['error'] = job.error
     return result
 
 
-def get_capture(session_key, capture_id):
-    scene = scene_for_session(session_key)
+def get_capture(session_key, capture_id, room_id='demo-room'):
+    scene = scene_for_session(session_key, room_id)
     expire(scene)
     job = SceneCapture.objects.filter(scene=scene, pk=capture_id).first()
     if job is None:
@@ -41,11 +46,47 @@ def get_capture(session_key, capture_id):
     return job
 
 
+def capture_options(payload, room):
+    """Resolve a camera only when creating a new job, never on a receipt retry."""
+    view = payload['view']
+    scanned = bool(room.get('scan'))
+    representation = payload.get('representation', 'photographic')
+    if scanned and view == 'top' and representation != 'spatial_plan':
+        raise SceneError('capture_representation_required', 'Scanned-room top views require representation: spatial_plan. Photographic cutaways are not supported.')
+    if representation not in ('photographic', 'spatial_plan') or (representation == 'spatial_plan' and view != 'top'):
+        raise SceneError('validation', 'Use photographic perspective or spatial_plan top view.')
+    if not scanned and representation == 'spatial_plan':
+        raise SceneError('unsupported_representation', 'The legacy room supports photographic captures.')
+    if view == 'top':
+        if 'camera' in payload:
+            raise SceneError('validation', 'Top captures do not accept camera options.')
+        return representation, None
+    if not scanned:
+        camera = payload.get('camera', {'azimuthDeg': 37, 'elevationDeg': 35})
+        if not isinstance(camera, dict) or set(camera) != {'azimuthDeg', 'elevationDeg'} or not all(number(n) for n in camera.values()) or not -360 <= camera['azimuthDeg'] <= 360 or not 10 <= camera['elevationDeg'] <= 85:
+            raise SceneError('validation', 'Camera needs azimuthDeg between -360 and 360 and elevationDeg between 10 and 85.')
+        return representation, copy.deepcopy(camera)
+    camera = payload.get('camera', room['scan']['defaultCamera'])
+    if isinstance(camera, dict) and ('azimuthDeg' in camera or 'elevationDeg' in camera):
+        raise SceneError('unsupported_camera', 'Scanned rooms require an interior firstPerson camera, not orbit angles.')
+    fields = {'kind', 'xCm', 'yCm', 'zCm', 'yawRad', 'pitchRad', 'fovDeg'}
+    if not isinstance(camera, dict) or set(camera) != fields or camera['kind'] != 'firstPerson' or not all(number(camera[key]) for key in fields - {'kind'}):
+        raise SceneError('validation', 'Provide a firstPerson camera with finite centimeter position, yawRad, pitchRad, and fovDeg.')
+    if not (0 <= camera['xCm'] <= room['widthCm'] and 0 < camera['yCm'] < room['heightCm'] and 0 <= camera['zCm'] <= room['depthCm'] and abs(camera['pitchRad']) < math.pi / 2 and 30 <= camera['fovDeg'] <= 100):
+        raise SceneError('unsupported_camera', 'Camera must be inside the room with pitch between -pi/2 and pi/2 and FOV between 30 and 100 degrees.')
+    # A 20 cm radius avoids accepting camera centers through thin fixed obstacles.
+    box = footprint({'widthCm': 40, 'depthCm': 40}, {'xCm': camera['xCm'], 'zCm': camera['zCm'], 'yawRad': 0})
+    spatial = room.get('spatial', {})
+    if not covered_by_free_areas(box, spatial.get('freeAreas', [])) or any(overlaps(box, footprint(obstacle, obstacle)) for obstacle in spatial.get('obstacles', [])):
+        raise SceneError('unsupported_camera', 'Camera must be on reviewed floor and outside fixed obstacles.')
+    return representation, copy.deepcopy(camera)
+
+
 @transaction.atomic
-def enqueue_capture(session_key, payload):
+def enqueue_capture(session_key, payload, room_id='demo-room'):
     required = {'requestId', 'baseRevision', 'view'}
-    if not isinstance(payload, dict) or not required <= set(payload) or set(payload) - required - {'camera', 'width', 'height'}:
-        raise SceneError('validation', 'Provide requestId, baseRevision, view, and optional camera/width/height.')
+    if not isinstance(payload, dict) or not required <= set(payload) or set(payload) - required - {'camera', 'width', 'height', 'representation'}:
+        raise SceneError('validation', 'Provide requestId, baseRevision, view, and optional camera/width/height/representation.')
     request_id = payload['requestId']
     if not isinstance(request_id, str) or not request_id.strip() or len(request_id) > 128:
         raise SceneError('validation', 'requestId must be a nonempty string up to 128 characters.')
@@ -53,16 +94,16 @@ def enqueue_capture(session_key, payload):
     view = payload['view']
     if view not in ('top', 'perspective'):
         raise SceneError('validation', 'view must be top or perspective.')
-    camera = payload.get('camera', {'azimuthDeg': 37, 'elevationDeg': 35}) if view == 'perspective' else None
-    if view == 'top' and 'camera' in payload:
-        raise SceneError('validation', 'Top captures do not accept camera angles.')
-    if view == 'perspective' and (not isinstance(camera, dict) or set(camera) != {'azimuthDeg', 'elevationDeg'} or not all(number(n) for n in camera.values()) or not -360 <= camera['azimuthDeg'] <= 360 or not 10 <= camera['elevationDeg'] <= 85):
-        raise SceneError('validation', 'Camera needs azimuthDeg between -360 and 360 and elevationDeg between 10 and 85.')
     width, height = payload.get('width', 1024), payload.get('height', 768)
     if any(not isinstance(n, int) or isinstance(n, bool) or not 256 <= n <= 1536 for n in [width, height]) or width * height > 1_800_000:
         raise SceneError('validation', 'Capture dimensions must be 256–1536 pixels and at most 1.8 million pixels.')
-    digest = hashlib.sha256(json.dumps({'revision': payload['baseRevision'], 'view': view, 'camera': camera, 'width': width, 'height': height}, sort_keys=True).encode()).hexdigest()
-    scene = scene_for_session(session_key)
+    # Bind the requested intent, not the mutable default camera. The resolved
+    # camera and complete geometry snapshot are frozen below exactly once.
+    try:
+        digest = hashlib.sha256(json.dumps({'revision': payload['baseRevision'], 'view': view, 'options': {key: payload[key] for key in ['camera', 'representation'] if key in payload}, 'width': width, 'height': height}, sort_keys=True, allow_nan=False).encode()).hexdigest()
+    except (ValueError, TypeError):
+        raise SceneError('validation', 'Capture options must contain finite JSON values.')
+    scene = scene_for_session(session_key, room_id)
     scene = SceneLayout.objects.select_for_update().get(pk=scene.pk)
     expire(scene)
     previous = SceneCapture.objects.filter(scene=scene, request_id=request_id).first()
@@ -70,11 +111,12 @@ def enqueue_capture(session_key, payload):
         if previous.payload_hash != digest:
             raise SceneError('request_conflict', 'requestId was used for different capture options.', 409)
         return metadata(previous)
+    representation, camera = capture_options(payload, room_context(room_id)['room'])
     if scene.revision != payload['baseRevision']:
         raise SceneError('revision_conflict', 'Reload the scene before requesting a capture.', 409, scene.revision)
     if SceneCapture.objects.filter(scene=scene, status__in=['pending', 'rendering']).count() >= 4:
         raise SceneError('capture_queue_full', 'At most four captures can wait at once.', 429)
-    job = SceneCapture.objects.create(scene=scene, request_id=request_id, payload_hash=digest, snapshot=serialize(scene), revision=scene.revision, view=view, camera=camera, width=width, height=height, expires_at=timezone.now() + timedelta(seconds=120))
+    job = SceneCapture.objects.create(scene=scene, request_id=request_id, payload_hash=digest, snapshot=serialize(scene), revision=scene.revision, view=view, representation=representation, camera=camera, width=width, height=height, expires_at=timezone.now() + timedelta(seconds=120))
     prune(scene)
     return metadata(job)
 
@@ -85,8 +127,8 @@ def prune(scene):
 
 
 @transaction.atomic
-def claim_capture(session_key):
-    scene = scene_for_session(session_key)
+def claim_capture(session_key, room_id='demo-room'):
+    scene = scene_for_session(session_key, room_id)
     expire(scene)
     now = timezone.now()
     available = Q(status='pending') | Q(status='rendering', lease_until__lte=now)
@@ -96,7 +138,8 @@ def claim_capture(session_key):
     token = uuid.uuid4()
     if not SceneCapture.objects.filter(available, pk=job.pk).update(status='rendering', lease_token=token, lease_until=now + timedelta(seconds=30)):
         return {'job': None}
-    return {'job': {'captureId': str(job.pk), 'leaseToken': str(token), 'snapshot': job.snapshot, 'revision': job.revision, 'view': job.view, 'camera': job.camera, 'width': job.width, 'height': job.height}}
+    return {'job': {'captureId': str(job.pk), 'leaseToken': str(token), 'snapshot': job.snapshot, 'revision': job.revision, 'view': job.view, 'representation': job.representation,
+                    'roomId': room_id, 'geometryRevision': job.snapshot.get('geometryRevision', ''), 'camera': job.camera, 'width': job.width, 'height': job.height}}
 
 
 def decode_png(data_url, width, height):
@@ -140,8 +183,8 @@ def decode_png(data_url, width, height):
 
 
 @transaction.atomic
-def complete_capture(session_key, capture_id, payload):
-    scene = scene_for_session(session_key)
+def complete_capture(session_key, capture_id, payload, room_id='demo-room'):
+    scene = scene_for_session(session_key, room_id)
     expire(scene)
     job = SceneCapture.objects.select_for_update().filter(scene=scene, pk=capture_id).first()
     if job is None:

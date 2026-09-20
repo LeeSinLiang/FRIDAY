@@ -10,17 +10,19 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "node scripts/test-scene.mjs",
+    "test": "node scripts/test-scene.mjs && node --experimental-strip-types --test scripts/shared-room-assets.test.ts",
     "fixture:glb": "node scripts/generate-test-glb.mjs",
     "region:debug": "node scripts/region-debug.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.0.0",
+    "playcanvas": "2.22.2",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
     "three": "^0.180.0"
   },
   "devDependencies": {
+    "@playcanvas/splat-transform": "3.4.2",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

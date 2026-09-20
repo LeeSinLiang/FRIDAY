@@ -1,0 +1,59 @@
+import { useEffect, useRef, useState } from "react";
+import type { InteractionCallbacks, InteractionState } from "./scene/playcanvas/contracts";
+import { createPlayCanvasRuntime, type PlayCanvasRuntime, type RuntimeStatus } from "./scene/playcanvas/runtime";
+import { createSceneInteraction } from "./scene/playcanvas/interaction";
+import PlayCanvasCapture from "./scene/PlayCanvasCapture";
+import PerformancePanel from "./scene/playcanvas/PerformancePanel";
+
+type Props = {state:InteractionState;callbacks:InteractionCallbacks;resetKey:number;onStatus:(status:RuntimeStatus)=>void;onRuntime:(runtime:PlayCanvasRuntime|null)=>void};
+export default function PlayCanvasScene(props:Props) {
+  const canvas=useRef<HTMLCanvasElement>(null);
+  const startedAt=useRef(0);
+  const perfEnabled=import.meta.env.DEV && new URLSearchParams(window.location.search).get("perf")==="1";
+  const latest=useRef(props);latest.current=props;
+  const controller=useRef<ReturnType<typeof createSceneInteraction>|null>(null);
+  const [runtime,setRuntime]=useState<PlayCanvasRuntime|null>(null);
+  const [ready,setReady]=useState(false);
+  const roomKey=`${props.state.room.roomId}:${props.state.room.revision}:${props.state.room.scan?.geometryRevision}:${props.state.room.scan?.visualUrl}`;
+  useEffect(()=>{
+    if (!canvas.current) return;
+    let cancelled=false;
+    let handle:PlayCanvasRuntime|undefined;
+    setReady(false);
+    // StrictMode cancels its probe effect before this microtask: never start its asset/GPU work.
+    queueMicrotask(()=>{
+    if(cancelled || !canvas.current)return;
+    try {
+      startedAt.current=performance.now();
+      handle=createPlayCanvasRuntime(canvas.current,{room:latest.current.state.room,onStatus:status=>{
+      if(!cancelled){latest.current.onStatus(status);setReady(status.phase==="ready");}
+      }});
+      const instance=handle;
+      setRuntime(instance);latest.current.onRuntime(instance);
+      void instance.ready.then(()=>{
+      if(cancelled)return;
+      const forward:InteractionCallbacks={
+        onSelect:id=>latest.current.callbacks.onSelect(id),
+        onCommit:(id,pose)=>latest.current.callbacks.onCommit(id,pose),
+        onPlace:(id,pose)=>latest.current.callbacks.onPlace(id,pose),
+        onCancelPlacement:()=>latest.current.callbacks.onCancelPlacement(),
+        onPreview:preview=>latest.current.callbacks.onPreview(preview),
+        onActiveChange:active=>latest.current.callbacks.onActiveChange(active),
+        onModelStatus:(id,status)=>latest.current.callbacks.onModelStatus(id,status),
+        onSurfaceStatus:(status,message)=>latest.current.callbacks.onSurfaceStatus?.(status,message),
+      };
+      controller.current=createSceneInteraction(instance,latest.current.state,forward);
+      }).catch(error=>{if(!cancelled)latest.current.onStatus({phase:"error",message:error instanceof Error ? error.message : "The room could not render."});});
+    } catch(error) {
+      latest.current.onStatus({phase:"error",message:error instanceof Error ? error.message : "The room could not render."});
+    }
+    });
+    return()=>{
+      cancelled=true;controller.current?.dispose();controller.current=null;
+      handle?.dispose();latest.current.onRuntime(null);
+    };
+  },[roomKey]);
+  useEffect(()=>{controller.current?.update(props.state);},[props.state]);
+  useEffect(()=>{controller.current?.resetView();},[props.resetKey]);
+  return <><canvas ref={canvas} className="splat-canvas" aria-label="Interactive room. Drag to look; choose Walk for WASD movement." tabIndex={0}/><PlayCanvasCapture runtime={runtime} enabled={ready}/>{perfEnabled && runtime && <PerformancePanel runtime={runtime} startedAt={startedAt.current}/>}</>;
+}
