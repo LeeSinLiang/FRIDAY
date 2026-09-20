@@ -6,7 +6,9 @@ import { searchParams } from "../catalogue/api";
 import type { Listing } from "../lib/types";
 import { validatePlacement } from "../scene/placement";
 import type { Instance, Product, Room } from "../scene/types";
-import { listingToProduct } from "./boundary";
+import cgArch from "../../../shared/rooms/cg-arch-interior/manifest.json";
+import cgArchSpatial from "../../../shared/rooms/cg-arch-interior/spatial.json";
+import { listingToProduct, wallBounds, wallRect } from "./boundary";
 import { solve } from "./solve";
 import type { Scene } from "./types";
 
@@ -77,4 +79,29 @@ test("the PlayCanvas overlay stays outside the region module, and is the only ot
   for (const setting of ["minFilter: pc.FILTER_NEAREST", "magFilter: pc.FILTER_NEAREST", "mipmaps: false", "addressU: pc.ADDRESS_CLAMP_TO_EDGE", "addressV: pc.ADDRESS_CLAMP_TO_EDGE"])
     assert.ok(source.includes(setting), `texture ${setting} must be explicit`);
   assert.match(source, /!== FREE\) continue/, "only free samples are lit; unknown and blocked stay transparent");
+});
+
+const cgRoom = { ...(cgArch.room as unknown as Room), spatial: cgArchSpatial as Room["spatial"] };
+const cgScene: Scene = { room: cgRoom, products: [], instances: [] };
+
+test("a prepared room's walls are the edges of its free floor, not its modelled shell", () => {
+  assert.deepEqual([cgRoom.widthCm, cgRoom.depthCm], [1158.01, 844.01]);
+  assert.deepEqual(wallBounds(cgRoom), { minX: 787, maxX: 1121, minZ: 180, maxZ: 760 });
+  assert.deepEqual(wallRect(cgRoom, "w"), { minX: 787, maxX: 787, minZ: 180, maxZ: 760 });
+  assert.deepEqual(wallBounds(scene.room), { minX: 0, maxX: 260, minZ: 0, maxZ: 200 }); // a fixture room is itself
+});
+
+test("HERO: '5 feet from any wall' does not fit the Cg Arch living room, and says why; 3 feet does", () => {
+  const poang = listingToProduct(listing("ikea-193.025.39"));
+  const five = solve(cgScene, { product: poang }, [{ k: "distance_min", ref: { kind: "any_wall" }, mm: 1524 }]);
+  assert.deepEqual(five.legalCounts, [0, 0, 0, 0]);
+  // Measured to the 1158 x 844 shell this used to PASS, for the wrong reason.
+  assert.equal(five.whyNothingFits, "needs 373 cm of width, this room has 334 cm");
+  const three = solve(cgScene, { product: poang }, [{ k: "distance_min", ref: { kind: "any_wall" }, mm: 914 }]);
+  assert.ok(three.bestYawIndex >= 0);
+  for (const mask of three.masks) for (let iz = 0; iz < mask.shape[1]; iz++) for (let ix = 0; ix < mask.shape[0]; ix++) {
+    if (mask.data[iz * mask.shape[0] + ix] !== 1) continue;
+    const x = ix * 5, z = iz * 5, turned = Math.abs(Math.sin(mask.yawRad)) > 0.5, [ex, ez] = turned ? [41, 34] : [34, 41];
+    assert.ok(x - ex >= 787 + 91.4 - 1e-6 && x + ex <= 1121 - 91.4 + 1e-6 && z - ez >= 180 + 91.4 - 1e-6 && z + ez <= 760 - 91.4 + 1e-6, `${x},${z}`);
+  }
 });

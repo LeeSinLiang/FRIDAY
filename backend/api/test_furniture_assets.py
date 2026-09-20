@@ -60,6 +60,11 @@ class FurnitureAssetTests(SimpleTestCase):
                 else:
                     product = catalogue_product(metadata['catalogueListingId'])
                 self.assertIsNotNone(product, 'asset must name its authoritative product')
+                if metadata.get('unbound'):
+                    # A model that misses its listing's size is kept in the repo but must not render:
+                    # a true-size box is honest, a sofa 14 cm too narrow in a fit check is not.
+                    self.assertNotIn('modelUrl', product, 'an unbound asset must not be linked from its listing')
+                    continue
                 self.assertEqual(product['modelUrl'], metadata['modelUrl'], 'the listing must point at this model')
                 for name, measured, listed, declared in (('width', width, product['widthCm'], metadata['widthCm']),
                                                          ('height', height, product['heightCm'], metadata['heightCm']),

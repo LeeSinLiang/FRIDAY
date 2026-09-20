@@ -1,0 +1,26 @@
+{
+  "productId": "ramnefjall-bed-frame-kilanda-dark-blue-queen",
+  "modelUrl": "/models/furniture/ramnefjall-bed-frame-kilanda-dark-blue-queen/model.glb",
+  "thumbnailUrl": "/models/furniture/ramnefjall-bed-frame-kilanda-dark-blue-queen/thumbnail.png",
+  "widthCm": 162,
+  "depthCm": 212,
+  "heightCm": 100,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "unbound": "Proportions miss the listing by more than the asset check allows, so no listing points at this model. The listing renders as a true-size stand-in until the model is refitted.",
+  "catalogueListingId": "ikea-805.589.66",
+  "source": {
+    "product": "IKEA RAMNEFJÄLL upholstered bed frame, Kilanda dark blue, Queen (805.589.66)",
+    "dimensionsVerifiedAt": "https://www.ikea.com/us/en/p/ramnefjaell-upholstered-bed-frame-kilanda-dark-blue-s69607505/ (converted from inches: 63 3/4in x 39 3/8in headboard height x 83 1/2in)",
+    "priceVerifiedAt": "https://www.ikea.com/us/en/p/ramnefjaell-upholstered-bed-frame-kilanda-dark-blue-s69607505/ ($249.00 Queen)",
+    "generation": "Higgsfield image_to_3d (Meshy), single reference image, should_texture=true, enable_pbr=true, then gltf-transform optimize (--compress false, --texture-compress auto --texture-size 1024, --simplify --simplify-ratio 0.5) to bring an oversized PBR export under the 5MB budget"
+  },
+  "knownLimitations": [
+    "FAILS the automated check in backend/api/test_furniture_assets.py as pushed. After fitting to the correct 100cm headboard height, measured box is 180.1 x 100.0 x 219.0 cm against the real RAMNEFJÄLL Queen's 162 x 100 x 212 cm: width off by 18.1cm and depth off by 7cm, both outside the test's tolerance (~4.9cm / ~6.4cm). Single-photo reconstruction proportion error, not a units/scale bug — pushed anyway at the requester's explicit direction after being flagged.",
+    "Generated from a single product photo, no additional angles",
+    "No manual Blender inspection/correction pass has been done",
+    "Not a priority item per collaborator-handoff.md (sofa + table are); included as an additional catalogue item at the requester's direction"
+  ]
+}

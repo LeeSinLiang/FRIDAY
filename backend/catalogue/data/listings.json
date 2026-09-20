@@ -213,6 +213,47 @@
       ]
     },
     {
+      "id": "ikea-001.850.32",
+      "source": "ikea",
+      "title": "EKTORP 2-seat sofa, Hillared dark blue",
+      "category": "sofa",
+      "price_cents": 59900,
+      "dims_mm": {
+        "w": 1790,
+        "d": 880,
+        "h": 880
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#30475e"
+      ],
+      "materials": [
+        "cotton",
+        "polyester",
+        "wood"
+      ]
+    },
+    {
+      "id": "ikea-805.589.66",
+      "source": "ikea",
+      "title": "RAMNEFJÄLL upholstered bed frame, Kilanda dark blue, Queen",
+      "category": "bed",
+      "price_cents": 24900,
+      "dims_mm": {
+        "w": 1620,
+        "d": 2120,
+        "h": 1000
+      },
+      "model_url": null,
+      "colour_hex": [
+        "#30475e"
+      ],
+      "materials": [
+        "polyester",
+        "particleboard"
+      ]
+    },
+    {
       "id": "ikea-002.191.78",
       "source": "ikea",
       "title": "ÄDDE chair",
