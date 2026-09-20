@@ -56,12 +56,31 @@ Pull at task boundaries — at task start and after a merge to `main` — never 
 - If clean `main` is red, **stop and tell your owner.** That is a whole-team problem, not something to work around.
 - When merging a stacked PR, retarget the dependent PR to `main` **before** deleting the base branch. Deleting it first closes the dependent PR instead of retargeting it.
 
+## Trust the remote, not your terminal
+
+Pushing and merging both change the remote. Neither tells you the truth about it through your local state, and both failures below are the same failure.
+
+**After every push:**
+
+- Never pipe a git command whose exit code matters. Read `push`, `merge`, `pull` and `fetch` output directly; a pipe reports the last command's status and hides a rejection.
+- Verify the remote, not the terminal: `git rev-parse HEAD` must equal `git rev-parse origin/<branch>`.
+- A behavioural claim in a PR description needs a test behind it. A PR once merged describing behaviour its branch did not contain, because the push carrying it had been rejected, and nothing went red.
+
+**After every merge, no exceptions.** Merging happens on GitHub. It updates `main` on the remote. It does not update your clone, your branch or your working tree, and you are now behind by everything the other lanes merged while you worked.
+
+1. `git checkout main`
+2. `git pull`
+3. Delete the merged branch locally
+4. **Run the full suite and the frontend build on that fresh `main`**
+5. Branch fresh for the next task
+
+Step 4 is the one that is not optional and the one that gets skipped. A PR is tested against the `main` it was cut from, never the `main` it lands in: two green PRs can merge with no textual conflict and take `main` down together. That has already happened here, when a database-backed cache met another lane's database-free tests. **Whoever merges runs the suite on fresh `main` at once, and if it is red tells the team before doing anything else.** A red `main` is a whole-team stop, not something to fix quietly on your next branch.
+
 ## Clean up after yourself
 
 - **Every process you start, you stop.** Before reporting, verify nothing you started is still listening (`lsof -nP -iTCP:<port> -sTCP:LISTEN`) and say in the report that you checked. No orphaned dev servers, headless browsers or background `npm run dev`.
 - **Use your own ports, never 8000 or 5173.** Those belong to the owner's running stack. Set `BACKEND_PORT` and `FRONTEND_PORT` for anything you launch, e.g. `BACKEND_PORT=8211 FRONTEND_PORT=5211 ./run-local.sh`.
 - **Leave no litter.** Screenshots and scratch files go under `.scratch/` at the repository root, which is gitignored. Never write into the folder that contains the clone.
-- Check that a push succeeded before acting on it. A piped `git push` hides a rejection; use `set -o pipefail`.
 
 ## Git
 
