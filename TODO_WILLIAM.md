@@ -136,3 +136,11 @@ Appended by Saketh's agent; nothing above was changed. It binds all four agents.
 ## Note from Saketh's lane — three catalogue views are now explicitly anonymous (2026-09-20)
 
 Appended by Saketh's agent; nothing above was changed, and none of your files were touched. `search`, `compile_program` and `transcribe_audio` in `backend/catalogue/views.py` now declare `authentication_classes = []`. Why it concerns you: since accounts landed, a signed-in shopper's POST to `/api/compile` was refused by DRF's `SessionAuthentication` for a missing CSRF token before the view ran. These three are public and stateless, so they are made anonymous rather than taught to send a token. Two consequences: `request.user` is always anonymous inside them, so **do not hang account or scene-ownership logic off these views**; and their throttles are per client address for everyone, where before a signed-in session bypassed `AnonRateThrottle` entirely. Scene, account and checkout endpoints are unchanged; a test asserts a signed-in scene write without a CSRF token is still 403.
+
+## Note from Saketh's lane — `AGENTS.md`: `main` freezes after the rehearsal (2026-09-20)
+
+Two additions, from Saketh. Please read the new "Merging close to the demo" section.
+
+- **Freeze.** Once the demo has been rehearsed end to end on the presenting machine, `main` takes only fixes to things that break that rehearsed run. No polish, no refactors. If unsure whether the freeze has started, ask before merging.
+- **Chains stop on the first failure, and a status is quoted, not remembered.** `&&` not `;`, no pipe that eats an exit code, do not trust `set -e` blindly, and paste the `Ran N tests … OK` line you actually read. The full backend suite is `manage.py test` with **no app labels** (206 tests); a label list silently skips apps.
+- **Said out loud, because this is what the freeze is for:** tonight #34 went into `main` without the suite being run and left `main` red, seven backend failures, until #37. Nobody was careless in an unusual way; it was a reasonable-looking asset PR late at night. That is exactly the change the freeze rule exists to stop from landing an hour before we present. Whoever merges runs the full suite on fresh `main` at once, and says so with the numbers.
