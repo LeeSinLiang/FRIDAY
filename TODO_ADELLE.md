@@ -26,6 +26,7 @@ Tracking update (2026-09-20): standardized this MUST DO checklist across `TODO_S
 
 ## In progress
 
+- Pushed `shared/models/furniture/fiddle-leaf-fig-plant/` on branch `codex/adelle-plant-asset` — 3 generated angles → multi_image_to_3d, filled `model_url` on the existing FICUS LYRATA stub (`ikea-104.933.89`). Fails width/depth check (60.1x58.7cm vs 45x45cm listed) — not investigated further, low-token pass.
 - Dresser (HEMNES-style black-brown) still blocked on getting a usable source image file. Bar stool, sideboard, nightstand not started (no matching stub catalogue entry, would need new listings.json rows like the bookshelf).
 - Nightstand/side table, rug, and dresser (HEMNES-style) still not started — image file paths were unreliable this session (didn't save to disk more than once); dresser is on hold pending a usable path.
 

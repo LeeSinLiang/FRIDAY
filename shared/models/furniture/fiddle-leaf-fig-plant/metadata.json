@@ -1,0 +1,18 @@
+{
+  "productId": "fiddle-leaf-fig-plant",
+  "modelUrl": "/models/furniture/fiddle-leaf-fig-plant/model.glb",
+  "widthCm": 45,
+  "depthCm": 45,
+  "heightCm": 110,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "ikea-104.933.89",
+  "source": {
+    "generation": "Higgsfield multi_image_to_3d (Meshy) from 3 generated angles (front, 3/4, side) of the same plant, should_texture=true, no PBR, then gltf-transform optimize+simplify"
+  },
+  "knownLimitations": [
+    "FAILS the width/depth check: measured 60.1 x 58.7cm vs the FICUS LYRATA listing's 45 x 45cm (tolerance ~2cm). Height matches by construction. Not investigated further per explicit low-token-budget instruction."
+  ]
+}
