@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { inspectRoomPackages } from "./shared-room-assets.ts";
+import { galleryRooms, inspectRoomPackages } from "./shared-room-assets.ts";
 
 async function fixture(run: (root: string) => Promise<void>) {
   const scratch = fileURLToPath(new URL("../../.scratch/", import.meta.url));
@@ -109,3 +109,10 @@ test("shared visual aliases cannot chain or bypass symlink checks", async () => 
   await writeFile(join(root, "tower/manifest.json"), JSON.stringify({room: {roomId: "tower", scan: {visualUrl: "/rooms/tower/assets/room.glb"}}, spatialFile: "spatial.json", sharedVisualRoomId: "floor"}));
   await assert.rejects(inspectRoomPackages(root), /Invalid shared visual reference/);
 }));
+
+test("the gallery lists every public room and marks the ones this machine cannot open", () => {
+  const room = (id: string) => ({ id, title: id, description: "", thumbnail: "" });
+  const listed = galleryRooms([room("empty-room"), room("cg-arch-interior")], new Set(["empty-room"]));
+  assert.deepEqual(listed.map(entry => [entry.id, entry.packaged]), [["empty-room", true], ["cg-arch-interior", false]],
+    "an unprovisioned room stays in the list, so its card can say so instead of the room vanishing or opening into nothing");
+});

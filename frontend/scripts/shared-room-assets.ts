@@ -91,6 +91,14 @@ export async function inspectRoomPackages(assetRoot = root) {
   return { packages, warnings, defaultRoomId: "haussmann-apartment" };
 }
 
+export type PublicRoom = { id: string; title: string; description: string; thumbnail: string };
+
+/** The gallery lists every public room. One whose licensed assets are not on this machine is marked, so its card can
+ *  say so instead of opening a room that cannot load its geometry. */
+export function galleryRooms(publicRooms: PublicRoom[], packaged: ReadonlySet<string> | ReadonlyMap<string, unknown>) {
+  return publicRooms.map(room => ({ ...room, packaged: packaged.has(room.id) }));
+}
+
 /** Stream prepared room assets; large source captures never enter a Vite bundle. */
 export function sharedRoomAssets(): Plugin {
   let prepared: Awaited<ReturnType<typeof inspectRoomPackages>>;
@@ -98,9 +106,9 @@ export function sharedRoomAssets(): Plugin {
     name: "friday-shared-room-assets",
     async config() {
       prepared = await inspectRoomPackages();
-      const publicRooms = JSON.parse(await readFile(new URL('../../shared/public-rooms.json', import.meta.url), 'utf8')) as {id:string; title:string; description:string; thumbnail:string}[];
-      const gallery = publicRooms.filter(room => prepared.packages.has(room.id));
-      if (process.env.VERCEL) prepared.packages = new Map([...prepared.packages].filter(([id]) => gallery.some(room => room.id === id)));
+      const publicRooms = JSON.parse(await readFile(new URL('../../shared/public-rooms.json', import.meta.url), 'utf8')) as PublicRoom[];
+      const gallery = galleryRooms(publicRooms, prepared.packages);
+      if (process.env.VERCEL) prepared.packages = new Map([...prepared.packages].filter(([id]) => gallery.some(room => room.packaged && room.id === id)));
       return { define: { "import.meta.env.VITE_DEFAULT_ROOM_ID": JSON.stringify(prepared.defaultRoomId), "import.meta.env.VITE_PUBLIC_ROOMS": JSON.stringify(gallery) } };
     },
     configResolved(config) {

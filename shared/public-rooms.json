@@ -10,5 +10,11 @@
     "title": "The London skyscraper",
     "description": "An unfurnished tower. Move between 32 floors and make each space your own.",
     "thumbnail": "/room-previews/london-skyscraper.svg"
+  },
+  {
+    "id": "cg-arch-interior",
+    "title": "The Cg Arch living room",
+    "description": "A finished interior with a wide north window. Furnish it piece by piece.",
+    "thumbnail": "/room-previews/cg-arch-interior.svg"
   }
 ]
