@@ -30,9 +30,8 @@ ROOM_COOKIE = 'friday_room'
 
 
 def session_key(request):
-    if not request.session.session_key:
-        request.session.create()
-    return request.session.session_key
+    from shopping.identity import current
+    return current(request).scene_key
 
 
 def room_id(request):

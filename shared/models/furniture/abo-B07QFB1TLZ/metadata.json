@@ -1,0 +1,63 @@
+{
+  "productId": "abo-B07QFB1TLZ",
+  "modelUrl": "/models/furniture/abo-B07QFB1TLZ/model.glb",
+  "widthCm": 110.0,
+  "depthCm": 110.0,
+  "heightCm": 42.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "abo-B07QFB1TLZ",
+  "matchType": "verified",
+  "priceProvenance": "placeholder",
+  "license": {
+    "name": "CC BY 4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "3D model and product data from Amazon Berkeley Objects (c) Amazon.com, licensed CC BY 4.0. Dataset built by Matthieu Guillaumin, Thomas Dideriksen, Kenan Deng, Himanshu Arora (Amazon.com), Jasmine Collins and Jitendra Malik (UC Berkeley).",
+    "changes": "Textures resized to 512 px, mesh simplified and re-saved with gltf-transform; uniform scale to the listed height. Proportions untouched."
+  },
+  "source": {
+    "dataset": "Amazon Berkeley Objects",
+    "datasetUrl": "https://amazon-berkeley-objects.s3.amazonaws.com/index.html",
+    "itemId": "B07QFB1TLZ",
+    "domain": "amazon.com",
+    "productName": "Amazon Brand – Stone & Beam Ryder Industrial Round Coffee Table, 43.3\" Diameter, Brushed Natural Antique Copper",
+    "modelFile": "3dmodels/original/Z/B07QFB1TLZ.glb",
+    "rawDimensions": {
+      "width": {
+        "value": 43.3,
+        "unit": "inches"
+      },
+      "length": {
+        "value": 43.3,
+        "unit": "inches"
+      },
+      "height": {
+        "value": 16.54,
+        "unit": "inches"
+      }
+    },
+    "axisAssignment": {
+      "w": "width",
+      "d": "length",
+      "h": "height"
+    },
+    "titleConfirms": [
+      "1100 mm"
+    ],
+    "colour": "#8f622d",
+    "colourSource": "color_code",
+    "processing": "scripts/abo_import.py: strip cameras/lights/animations, @gltf-transform/cli@4 optimize --compress false --texture-compress auto --texture-size 512 --simplify, fit_to_height"
+  },
+  "residualCm": {
+    "width": -0.05,
+    "height": 0.0,
+    "depth": -0.05
+  },
+  "knownLimitations": [
+    "ABO scaled this model to the record's item_dimensions, so the size check cannot catch a wrong record. The product title, which states a size, is the independent witness: see source.titleConfirms.",
+    "The catalogue colour is the nearest of the 30 seed-palette colours to source.colour, not that colour itself.",
+    "price_cents is 0 because ABO has no price. 0 means unknown, not free."
+  ]
+}

@@ -517,6 +517,73 @@
         ],
         "qty": null
       }
+    },
+    {
+      "text": "a yellow reading chair by the window, four feet from any wall",
+      "expected": {
+        "find": [
+          {
+            "k": "category",
+            "value": "armchair"
+          },
+          {
+            "k": "colour",
+            "hex": "#b08d57"
+          }
+        ],
+        "place": [
+          {
+            "k": "near",
+            "ref": {
+              "kind": "window",
+              "id": "w1"
+            }
+          },
+          {
+            "k": "distance_min",
+            "ref": {
+              "kind": "any_wall"
+            },
+            "mm": 1219
+          }
+        ]
+      },
+      "chips": [
+        "armchair",
+        "yellow",
+        "near the window",
+        "4 ft from any wall"
+      ],
+      "recorded": {
+        "find": [
+          {
+            "k": "category",
+            "value": "armchair"
+          },
+          {
+            "k": "colour",
+            "hex": "#b08d57"
+          }
+        ],
+        "place": [
+          {
+            "k": "near",
+            "ref": {
+              "kind": "window",
+              "id": "w1"
+            },
+            "mm": null
+          },
+          {
+            "k": "distance_min",
+            "ref": {
+              "kind": "any_wall"
+            },
+            "mm": 1219
+          }
+        ],
+        "qty": null
+      }
     }
   ],
   "recorded_with": "gpt-4.1-mini"

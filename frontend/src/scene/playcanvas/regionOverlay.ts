@@ -16,12 +16,15 @@ import { stateAtPoint } from "../../region/grid";
 import { maskToPixels } from "../../region/maskPixels";
 import { FREE, type Mask } from "../../region/types";
 import type { Pose } from "../types";
+import { FLAT_MAX_CM } from "../placement";
 import { cmToScene, sceneToCm } from "../units";
 import { intersectFloor } from "./interaction";
 
 type Runtime = { app: pc.Application; canvas: HTMLCanvasElement; camera: pc.Entity; contentRoot: pc.Entity; disposed: boolean };
 
-const LIFT_CM = 1.2; // above the floor and the engine's own footprint overlay
+// Above the floor, the engine's own footprint overlay, and any flat item: a rug does not block placement
+// (FLAT_MAX_CM in scene/placement.ts), so floor on a rug is lit and must not be hidden under the rug's own mesh.
+const LIFT_CM = FLAT_MAX_CM + 0.4;
 const LIT = [99, 186, 140, 150] as const; // the engine's "valid" green (#63ba8c), so the two overlays read as one system
 
 export type RegionOverlay = {
@@ -91,7 +94,10 @@ export function createRegionOverlay(runtime: Runtime): RegionOverlay {
       const x = clientX - rect.left, y = clientY - rect.top;
       const near = camera.screenToWorld(x, y, camera.nearClip), far = camera.screenToWorld(x, y, camera.farClip);
       const direction = far.clone().sub(near).normalize();
-      const hit = intersectFloor({ origin: { x: sceneToCm(near.x), y: sceneToCm(near.y), z: sceneToCm(near.z) }, direction });
+      // Intersect the plane the green is DRAWN on, not the floor under it. The overlay floats LIFT_CM up, and at eye level
+      // a few centimetres of height is ten or more along the view: tested against the floor, the far edge of a drawn
+      // patch did not accept clicks. What is clickable must be exactly what is lit, at any lift and any camera angle.
+      const hit = intersectFloor({ origin: { x: sceneToCm(near.x), y: sceneToCm(near.y), z: sceneToCm(near.z) }, direction }, LIFT_CM);
       if (!hit) return null;
       const size = current.cellSizeCm, xCm = Math.round(hit.x / size) * size, zCm = Math.round(hit.z / size) * size;
       return stateAtPoint(current, xCm, zCm) === FREE ? { xCm, zCm, yawRad: current.yawRad } : null;

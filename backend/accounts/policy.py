@@ -15,9 +15,11 @@ def local_inbox_allowed(request):
 
 
 def account_status(user):
+    from .models import RecoveryAcknowledgement
     authenticated = user.is_authenticated
     verified = authenticated and EmailAddress.objects.filter(user=user, primary=True, verified=True).exists()
     mfa = authenticated and Authenticator.objects.filter(user=user, type=Authenticator.Type.TOTP).exists()
+    recovery = authenticated and RecoveryAcknowledgement.objects.filter(user=user, authenticator__type=Authenticator.Type.TOTP).exists()
     return {"authenticated": authenticated, "email": user.email if authenticated else None,
             "email_verified": bool(verified), "mfa_enabled": bool(mfa),
-            "checkout_ready": bool(verified and mfa)}
+            "checkout_ready": bool(verified and mfa), "recovery_acknowledged": bool(recovery)}

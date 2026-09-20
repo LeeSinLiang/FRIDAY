@@ -15,8 +15,11 @@ export type NavigationRuntime = {
 export const isTextEntry = (target: EventTarget | null) => target instanceof HTMLElement &&
   (!!target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false']), [role='textbox']"));
 
+const WALK_SPEED_CM_PER_SECOND = 240;
+const FAST_WALK_SPEED_CM_PER_SECOND = 360;
+
 /** A short frame cap prevents a background-tab resume from jumping across the room. */
-export function movementDelta(dt: number, speedCm = 150): number {
+export function movementDelta(dt: number, speedCm = WALK_SPEED_CM_PER_SECOND): number {
   return Math.max(0, Math.min(Number.isFinite(dt) ? dt : 0, 0.05)) * speedCm;
 }
 
@@ -63,6 +66,11 @@ export function createNavigation(runtime: NavigationRuntime, initial: Navigation
   const blocked = () => disposed || runtime.disposed || runtime.capturing || suspended() ||
     state.view === "top" || state.mode === "place" || isTextEntry(document.activeElement);
   const stop = () => { keys.clear(); look = null; };
+  const turn = (dx: number, dy: number) => {
+    const { yaw, pitch } = yawPitch();
+    const nextPitch = Math.max(-Math.PI * 0.44, Math.min(Math.PI * 0.44, pitch - dy * 0.003));
+    camera.setEulerAngles(nextPitch * pc.math.RAD_TO_DEG, (yaw - dx * 0.003) * pc.math.RAD_TO_DEG, 0);
+  };
   const setView = () => {
     const component = camera.camera!;
     if (state.view === "top") {
@@ -112,7 +120,7 @@ export function createNavigation(runtime: NavigationRuntime, initial: Navigation
     const right = Number(keys.has("KeyD") || keys.has("ArrowRight")) - Number(keys.has("KeyA") || keys.has("ArrowLeft"));
     if (!forward && !right) return;
     const { yaw } = yawPitch();
-    const step = movementDelta(dt, keys.has("ShiftLeft") || keys.has("ShiftRight") ? 240 : 150) / Math.hypot(forward, right);
+    const step = movementDelta(dt, keys.has("ShiftLeft") || keys.has("ShiftRight") ? FAST_WALK_SPEED_CM_PER_SECOND : WALK_SPEED_CM_PER_SECOND) / Math.hypot(forward, right);
     const current = camera.getPosition();
     const placedObstacles = (state.instances ?? []).flatMap(instance => {
       const product = state.products?.find(item => item.productId === instance.productId);
@@ -135,11 +143,10 @@ export function createNavigation(runtime: NavigationRuntime, initial: Navigation
     beginLook(x: number, y: number) { if (!blocked()) look = { x, y }; },
     moveLook(x: number, y: number) {
       if (!look || blocked()) return;
-      const { yaw, pitch } = yawPitch();
-      const nextPitch = Math.max(-Math.PI * 0.44, Math.min(Math.PI * 0.44, pitch - (y - look.y) * 0.003));
-      camera.setEulerAngles(nextPitch * pc.math.RAD_TO_DEG, (yaw - (x - look.x) * 0.003) * pc.math.RAD_TO_DEG, 0);
+      turn(x - look.x, y - look.y);
       look = { x, y };
     },
+    moveLookDelta(dx: number, dy: number) { if (!blocked() && state.mode === "walk") turn(dx, dy); },
     stop,
     update,
     reset() {

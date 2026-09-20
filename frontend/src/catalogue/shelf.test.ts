@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const source = (name: string) => readFile(new URL(name, `file://${process.cwd()}/src/catalogue/`), "utf8");
+const initialWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
 
 test("what changes on hover sits in a fixed-height slot, so the card under a still pointer never becomes another card", async () => {
   const css = await source("shelf.css");
@@ -19,8 +20,13 @@ test("what changes on hover sits in a fixed-height slot, so the card under a sti
   assert.deepEqual(order, [...order].sort((a, b) => a - b), "the status and the set-aside clauses are inside the slot, and the list comes after it");
 });
 
-test("the count line keeps the catalogue-wide number on screen when only listings with models are returned", async () => {
+test("the count line keeps the catalogue-wide number on screen when only listings with models are returned", async t => {
   // Imported lazily: CatalogueShelf reads window.location at module load, which node does not have.
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  t.after(() => {
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
+    else Reflect.deleteProperty(globalThis, "window");
+  });
   (globalThis as { window?: unknown }).window ??= { location: { search: "" } };
   const { countLine } = await import("./CatalogueShelf");
   assert.equal(countLine(392, 392, 12), "392 matches, showing 12"); // filter off: as before
@@ -28,4 +34,26 @@ test("the count line keeps the catalogue-wide number on screen when only listing
   assert.equal(countLine(40, 1006, 12), "1,006 matches in the catalogue · 40 ready in 3D, showing 12");
   assert.equal(countLine(0, 25, 0), "25 matches in the catalogue · none has a 3D model yet");
   assert.equal(countLine(1, null, 1), "1 match");
+  // Models-first mode: nothing is excluded, so total equals matches; the 3D ones are on top.
+  assert.equal(countLine(1006, 1006, 12, 1), "1,006 matches · 1 ready in 3D, shown first");
+  assert.equal(countLine(1006, 1006, 12, 12), "1,006 matches, showing 12", "a page that is ALL models cannot know how many more there are");
+  assert.equal(countLine(1006, 1006, 12, 0), "1,006 matches, showing 12");
+});
+
+test("catalogue import restores the window global before room-session tests run", () => {
+  assert.deepEqual(Object.getOwnPropertyDescriptor(globalThis, "window"), initialWindow);
+});
+
+test("a listing with no known price says so, and never reads $0", async () => {
+  const { hasPrice, priceLabel } = await import("./price");
+  const dollars = (cents: number) => `$${cents / 100}`;
+  assert.deepEqual([hasPrice(0), hasPrice(1), hasPrice(14900)], [false, true, true]);
+  assert.equal(priceLabel(14900, dollars), "$149");
+  assert.equal(priceLabel(0, dollars), "price unavailable");
+  // Both places that print a price go through it.
+  for (const file of ["CatalogueShelf.tsx", "../dev/search.tsx"]) {
+    const text = await source(file);
+    assert.match(text, /priceLabel\((listing|item)\.price_cents, dollars\)/, `${file} prints prices through priceLabel`);
+    assert.doesNotMatch(text, /\{dollars\((listing|item)\.price_cents\)\}/, `${file} must not print a raw price`);
+  }
 });

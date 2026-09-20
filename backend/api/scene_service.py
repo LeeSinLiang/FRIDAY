@@ -11,8 +11,13 @@ from django.utils import timezone
 
 from .catalogue_products import agrees_with_catalogue, catalogue_product, well_formed
 from .models import SceneCommandReceipt, SceneLayout
+from .shared_data import shared_root
 
 EPSILON = 1e-6
+# A rug does not stop a chair: an item this low neither blocks other items nor is blocked by them. It must still lie
+# inside the room and clear of fixed obstacles. KEEP IN STEP with FLAT_MAX_CM in frontend/src/scene/placement.ts: the
+# editor's check and this one must agree, or the editor accepts a placement the save then refuses.
+FLAT_MAX_CM = 3
 
 
 class SceneError(Exception):
@@ -26,7 +31,7 @@ ROOM_SEPARATOR = ':'
 
 
 def room_presets():
-    return json.loads((Path(settings.BASE_DIR).parent / 'shared' / 'scene-fixtures.json').read_text()).get('rooms', {})
+    return json.loads((shared_root() / 'scene-fixtures.json').read_text()).get('rooms', {})
 
 
 def layout_key(session_key, room_id=None):
@@ -45,7 +50,7 @@ def room_id_of(key):
 
 
 def fixtures(room_id=None):
-    data = json.loads((Path(settings.BASE_DIR).parent / 'shared' / 'scene-fixtures.json').read_text())
+    data = json.loads((shared_root() / 'scene-fixtures.json').read_text())
     presets = data.pop('rooms', {})
     if room_id:
         data['room'] = presets[room_id]['room']
@@ -90,6 +95,10 @@ def footprint(product, pose):
     half = [product['widthCm'] / 2, product['depthCm'] / 2]
     return {'center': [pose['xCm'], pose['zCm']], 'axes': [[c, -s], [s, c]], 'half': half,
             'extents': [abs(c) * half[0] + abs(s) * half[1], abs(s) * half[0] + abs(c) * half[1]]}
+
+
+def is_flat(product):
+    return product['heightCm'] <= FLAT_MAX_CM + EPSILON
 
 
 def overlaps(a, b):
@@ -218,6 +227,8 @@ def validate_instances(instances, room_id='demo-room'):
             raise SceneError('placement', 'Outside room.', details={'issues': [{'code': 'out_of_bounds', 'instanceId': identifier, 'bounds': {'minX': box['center'][0] - box['extents'][0], 'maxX': box['center'][0] + box['extents'][0], 'minZ': box['center'][1] - box['extents'][1], 'maxZ': box['center'][1] + box['extents'][1]}, 'roomBounds': {'minX': 0, 'maxX': room['widthCm'], 'minZ': 0, 'maxZ': room['depthCm']}}]})
         validate_fixed_geometry(room, box, identifier)
         for previous, previous_product, previous_id in boxes:
+            if is_flat(product) or is_flat(previous_product):
+                continue
             if overlaps(box, previous):
                 raise SceneError('placement', f"Overlaps {previous_product['name']}.", details={'issues': [{'code': 'overlap', 'instanceId': identifier, 'conflictingInstanceIds': [previous_id]}]})
         boxes.append((box, product, identifier))
@@ -280,11 +291,15 @@ def store(scene, revision, instances):
     if not updated:
         raise SceneError('revision_conflict', 'The scene changed. Reload before saving.', 409)
     scene.instances, scene.revision = instances, revision + 1
+    from shopping.services import sync_scene_cart
+    sync_scene_cart(scene)
     return serialize(scene)
 
 
 @transaction.atomic
 def save_scene(session_key, base_revision, instances, room_id='demo-room'):
+    from shopping.services import lock_scene_cart
+    lock_scene_cart(session_key)
     validate_revision(base_revision)
     scene = scene_for_session(session_key, room_id)
     scene = SceneLayout.objects.select_for_update().get(pk=scene.pk)
@@ -293,6 +308,8 @@ def save_scene(session_key, base_revision, instances, room_id='demo-room'):
 
 @transaction.atomic
 def apply_scene_commands(session_key, base_revision, command_id, commands, room_id='demo-room'):
+    from shopping.services import lock_scene_cart
+    lock_scene_cart(session_key)
     validate_revision(base_revision)
     if not isinstance(command_id, str) or not command_id.strip() or len(command_id) > 128:
         raise SceneError('validation', 'commandId must be a nonempty string up to 128 characters.')
@@ -350,6 +367,8 @@ def apply_scene_commands(session_key, base_revision, command_id, commands, room_
 @transaction.atomic
 def attempt_placement(session_key, payload, room_id='demo-room'):
     """Trusted agent entry point. Callers must supply the browser's scoped session."""
+    from shopping.services import lock_scene_cart
+    lock_scene_cart(session_key)
     required = {'baseRevision', 'commandId', 'instance'}
     if not isinstance(payload, dict) or not required <= set(payload) or set(payload) - required - {'dryRun'}:
         raise SceneError('validation', 'Provide baseRevision, commandId, instance, and optional dryRun.')

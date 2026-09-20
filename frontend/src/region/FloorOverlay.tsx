@@ -9,6 +9,7 @@
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { ClampToEdgeWrapping, DataTexture, DoubleSide, Mesh, NearestFilter, RedFormat, ShaderMaterial, UnsignedByteType } from "three";
+import { FLAT_MAX_CM } from "../scene/placement";
 import { cmToScene, sceneToCm } from "../scene/units";
 import type { Pose } from "../scene/types";
 import { stateAtPoint } from "./grid";
@@ -26,7 +27,9 @@ type Props = {
 };
 
 const NO_RAYCAST = () => null;
-const LIFT_CM = 0.6; // above the floor and grid lines, below any furniture
+// Above the floor, the grid lines and any flat item: a rug does not block placement (FLAT_MAX_CM in
+// scene/placement.ts), so floor on a rug is lit and must not be hidden inside the rug's own box.
+const LIFT_CM = FLAT_MAX_CM + 0.4;
 
 const VERTEX = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
 // Texel centres sit on grid points. A soft edge inside each texel keeps the region readable at the

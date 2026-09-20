@@ -40,6 +40,14 @@ class SceneTests(TestCase):
         self.assertEqual(self.put([], revision=0).status_code, 409)
         self.assertEqual(self.put([self.item], revision=1).json()['revision'], 1)
 
+    def test_provisional_sofa_fixture_can_enter_placement_flow(self):
+        preview = {'instanceId': 'preview', 'productId': 'concept-kivik',
+                   'pose': {'xCm': 300, 'zCm': 200, 'yawRad': 0}}
+        response = self.commands([{'type': 'add', 'instance': preview}])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['instances'], [preview])
+        self.assertIn('concept-kivik', {product['productId'] for product in response.json()['products']})
+
     def test_invalid_snapshots_do_not_modify_scene(self):
         cases = [
             [dict(self.item, pose={'xCm': True, 'zCm': 100, 'yawRad': 0})],

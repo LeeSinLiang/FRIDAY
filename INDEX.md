@@ -20,6 +20,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 ### Frontend
 
 - [AI furniture movers](docs/frontend/angel-movers/README.md) — approved halo-blob concept, AI moves, user-add choreography and rendering integration.
+- [Room, cart and Vercel release](docs/frontend/room-cart-deployment.md) — guest shopping routes, atomic cart/scene persistence, account handoff, deployment configuration and remaining release gates.
 
 - [Team room setup](docs/frontend/room-capture/team-room-setup.md) — one-command checked import of the prepared room, packaging and sharing instructions.
 
@@ -50,6 +51,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 | [docs/frontend/3d-object/ektorp-sofa-ramnefjall-bed-asset-notes.md](docs/frontend/3d-object/ektorp-sofa-ramnefjall-bed-asset-notes.md) | EKTORP sofa + RAMNEFJÄLL bed assets: gltf-transform compression, and a dimension-check failure pushed on purpose — read before merging |
 | [docs/frontend/3d-object/lisabo-hektar-stockholm-asset-notes.md](docs/frontend/3d-object/lisabo-hektar-stockholm-asset-notes.md) | LISABO table+chair, HEKTAR lamp, STOCKHOLM mirror: a caught-and-fixed orientation bug (mirror generated lying flat), two clean passes, two dimension-check failures |
 | [docs/frontend/3d-object/bookshelf-stockholm-table-asset-notes.md](docs/frontend/3d-object/bookshelf-stockholm-table-asset-notes.md) | Generic bookshelf (passes) + STOCKHOLM coffee table (failed the dimension check as generated; landed refitted at the 10% stretch cap with a recorded 1.69 cm residual) |
+| [docs/frontend/3d-object/abo-asset-notes.md](docs/frontend/3d-object/abo-asset-notes.md) | Amazon Berkeley Objects assets: CC BY 4.0 licence and attribution, the one-product importer, and the traps (inches, width/length naming, self-consistent wrong records, no prices) |
 | [docs/frontend/design/visual-directions.md](docs/frontend/design/visual-directions.md) | Three futuristic furniture-editor concepts, saved images, and generation prompts |
 
 ### Backend
@@ -65,6 +67,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 - [Demo run of show](docs/demo/run-of-show.md) — what to click, in order, what each beat proves, and what happens when a dependency fails.
 
 ### Setup and tooling
+
+- [Preserve William's UI while integrating into main](docs/handoffs/ui-main-integration.md) — current branch/remote comparison, specific conflict rules, three-stage PR sequence and visual/runtime acceptance gates.
 
 - [Visa/auth integration handoff and branch-sharing workflow](docs/handoffs/visa-auth-integration.md)
 - [Account signup, SMTP and local email verification, authenticator MFA, recovery, and approved checkout](docs/account-mfa-checkout.md)

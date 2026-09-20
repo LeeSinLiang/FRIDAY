@@ -1,0 +1,64 @@
+{
+  "productId": "abo-B082JH6LSF",
+  "modelUrl": "/models/furniture/abo-B082JH6LSF/model.glb",
+  "widthCm": 55.1,
+  "depthCm": 39.1,
+  "heightCm": 59.9,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "abo-B082JH6LSF",
+  "matchType": "verified",
+  "priceProvenance": "placeholder",
+  "license": {
+    "name": "CC BY 4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "3D model and product data from Amazon Berkeley Objects (c) Amazon.com, licensed CC BY 4.0. Dataset built by Matthieu Guillaumin, Thomas Dideriksen, Kenan Deng, Himanshu Arora (Amazon.com), Jasmine Collins and Jitendra Malik (UC Berkeley).",
+    "changes": "Textures resized to 512 px, mesh simplified and re-saved with gltf-transform; uniform scale to the listed height. Proportions untouched."
+  },
+  "source": {
+    "dataset": "Amazon Berkeley Objects",
+    "datasetUrl": "https://amazon-berkeley-objects.s3.amazonaws.com/index.html",
+    "itemId": "B082JH6LSF",
+    "domain": "amazon.com",
+    "productName": "Amazon Brand – Stone & Beam Mid-Century 2-Drawer File Cabinet, 21.7\"W, Pine Finish",
+    "modelFile": "3dmodels/original/F/B082JH6LSF.glb",
+    "rawDimensions": {
+      "width": {
+        "value": 15.4,
+        "unit": "inches"
+      },
+      "length": {
+        "value": 21.7,
+        "unit": "inches"
+      },
+      "height": {
+        "value": 23.6,
+        "unit": "inches"
+      }
+    },
+    "axisAssignment": {
+      "w": "length",
+      "d": "width",
+      "h": "height"
+    },
+    "titleConfirms": [
+      "551 mm W"
+    ],
+    "colour": "#d2a06c",
+    "colourSource": "base-colour texture median",
+    "processing": "scripts/abo_import.py: strip cameras/lights/animations, @gltf-transform/cli@4 optimize --compress false --texture-compress auto --texture-size 512 --simplify, fit_to_height",
+    "simplifyError": "default"
+  },
+  "residualCm": {
+    "width": -0.02,
+    "height": 0.0,
+    "depth": 0.24
+  },
+  "knownLimitations": [
+    "ABO scaled this model to the record's item_dimensions, so the size check cannot catch a wrong record. The product title, which states a size, is the independent witness: see source.titleConfirms.",
+    "The catalogue colour is the nearest of the 30 seed-palette colours to source.colour, not that colour itself.",
+    "price_cents is 0 because ABO has no price. 0 means unknown, not free."
+  ]
+}

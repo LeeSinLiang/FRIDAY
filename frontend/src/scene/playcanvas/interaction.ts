@@ -185,11 +185,18 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
     if (unavailable() || event.button !== 0 || !event.isPrimary || gesture) return;
     canvas.focus({ preventScroll: true });
     event.preventDefault();
+    if (state.mode === "walk" && document.pointerLockElement === canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const hit = hitAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      if (hit) callbacks.onSelect(hit.instance.instanceId);
+      return;
+    }
     if (ghost && state.editingEnabled) {
       updateGhost(event.clientX, event.clientY);
       gesture = { kind: "pending", pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
     } else {
       const hit = hitAt(event.clientX, event.clientY);
+      if (state.mode === "walk" && !hit) void canvas.requestPointerLock().catch(() => { /* Keep drag-look when pointer lock is unavailable. */ });
       if (state.mode === "place" && state.editingEnabled) {
         if (!hit) { callbacks.onSelect(null); return; }
         callbacks.onSelect(hit.instance.instanceId);
@@ -206,6 +213,10 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
   };
   const move = (event: PointerEvent) => {
     if (unavailable()) return;
+    if (state.mode === "walk" && document.pointerLockElement === canvas) {
+      navigation.moveLookDelta(event.movementX, event.movementY);
+      return;
+    }
     if (!gesture) {
       if (event.target === canvas) {
         if (ghost) updateGhost(event.clientX, event.clientY);
@@ -228,7 +239,9 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
     if (unavailable()) { cancelGesture(); return; }
     if (current.kind === "drag") updateDrag(event, current);
     gesture = null; navigation.stop(); release(event.pointerId); canvas.style.cursor = "";
-    if (current.kind === "look") { if (!current.moved) callbacks.onSelect(current.hitId); }
+    if (current.kind === "look") {
+      if (!current.moved && (current.hitId || state.mode !== "walk")) callbacks.onSelect(current.hitId);
+    }
     else if (current.kind === "pending") {
       if (!current.moved && ghost) void confirm(ghost, ghost.pose, true);
     } else {
@@ -239,6 +252,7 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
   };
   const cancel = () => { cancelGesture(); if (ghost && !busy) { ghost = null; callbacks.onCancelPlacement(); syncFurniture(); selectedPreview(); } };
   const pointerCancel = (event: PointerEvent) => { if (gesture?.pointerId === event.pointerId) cancelGesture(); };
+  const lockChange = () => { canvas.style.cursor = document.pointerLockElement === canvas ? "none" : ""; };
   const key = (event: KeyboardEvent) => {
     if (event.key === "Escape") { cancel(); return; }
     if (unavailable() || isTextEntry(event.target) || !ghost || !state.editingEnabled) return;
@@ -267,6 +281,7 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
   window.addEventListener("pointerup", up);
   window.addEventListener("pointercancel", pointerCancel);
   canvas.addEventListener("lostpointercapture", pointerCancel);
+  document.addEventListener("pointerlockchange", lockChange);
   window.addEventListener("keydown", key);
   window.addEventListener("blur", cancel);
   document.addEventListener("focusin", focus);
@@ -281,6 +296,7 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
     if (gesture && (next.mode !== prior.mode || next.view !== prior.view || !next.editingEnabled ||
       gesture.kind === "drag" && (!activeInstance || JSON.stringify(activeInstance.pose) !== JSON.stringify(gesture.initial)))) cancelGesture();
     navigation.update(next);
+    if (next.mode !== "walk" && document.pointerLockElement === canvas) document.exitPointerLock();
     if (!runtime.capturing) runtime.roomRoot.enabled = next.view !== "top";
     surface.update(next.room, !!next.showSurface && next.view !== "top");
     if (next.pendingProductId !== prior.pendingProductId || !ghost && next.pendingProductId && !busy) {
@@ -312,12 +328,14 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
     dispose() {
       if (disposed) return;
       cancelGesture(); disposed = true; token++;
+      if (document.pointerLockElement === canvas) document.exitPointerLock();
       runtime.app.off("update", frame);
       navigation.dispose(); overlays.dispose(); surface.dispose(); angels.dispose(); furniture.dispose();
       canvas.style.cursor = ""; canvas.style.touchAction = originalTouchAction;
       canvas.removeEventListener("pointerdown", down); window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", pointerCancel);
       canvas.removeEventListener("lostpointercapture", pointerCancel); window.removeEventListener("keydown", key);
+      document.removeEventListener("pointerlockchange", lockChange);
       window.removeEventListener("blur", cancel); document.removeEventListener("focusin", focus);
       document.removeEventListener("visibilitychange", visibility); reportActive(false);
     },

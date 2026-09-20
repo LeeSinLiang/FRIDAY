@@ -1,0 +1,64 @@
+{
+  "productId": "abo-B073751DMJ",
+  "modelUrl": "/models/furniture/abo-B073751DMJ/model.glb",
+  "widthCm": 25.4,
+  "depthCm": 25.4,
+  "heightCm": 45.7,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "abo-B073751DMJ",
+  "matchType": "verified",
+  "priceProvenance": "placeholder",
+  "license": {
+    "name": "CC BY 4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "3D model and product data from Amazon Berkeley Objects (c) Amazon.com, licensed CC BY 4.0. Dataset built by Matthieu Guillaumin, Thomas Dideriksen, Kenan Deng, Himanshu Arora (Amazon.com), Jasmine Collins and Jitendra Malik (UC Berkeley).",
+    "changes": "Textures resized to 512 px, mesh simplified and re-saved with gltf-transform; uniform scale to the listed height. Proportions untouched."
+  },
+  "source": {
+    "dataset": "Amazon Berkeley Objects",
+    "datasetUrl": "https://amazon-berkeley-objects.s3.amazonaws.com/index.html",
+    "itemId": "B073751DMJ",
+    "domain": "amazon.com",
+    "productName": "Amazon Brand – Rivet Gold Bedside Table Desk Lamp with Light Bulb - 18 Inches, Linen Shade",
+    "modelFile": "3dmodels/original/J/B073751DMJ.glb",
+    "rawDimensions": {
+      "width": {
+        "value": 10,
+        "unit": "inches"
+      },
+      "length": {
+        "value": 10,
+        "unit": "inches"
+      },
+      "height": {
+        "value": 18,
+        "unit": "inches"
+      }
+    },
+    "axisAssignment": {
+      "w": "width",
+      "d": "length",
+      "h": "height"
+    },
+    "titleConfirms": [
+      "457 mm"
+    ],
+    "colour": "#dab275",
+    "colourSource": "base-colour texture median",
+    "processing": "scripts/abo_import.py: strip cameras/lights/animations, @gltf-transform/cli@4 optimize --compress false --texture-compress auto --texture-size 512 --simplify, fit_to_height",
+    "simplifyError": "default"
+  },
+  "residualCm": {
+    "width": -0.2,
+    "height": 0.0,
+    "depth": -0.25
+  },
+  "knownLimitations": [
+    "ABO scaled this model to the record's item_dimensions, so the size check cannot catch a wrong record. The product title, which states a size, is the independent witness: see source.titleConfirms.",
+    "The catalogue colour is the nearest of the 30 seed-palette colours to source.colour, not that colour itself.",
+    "price_cents is 0 because ABO has no price. 0 means unknown, not free."
+  ]
+}

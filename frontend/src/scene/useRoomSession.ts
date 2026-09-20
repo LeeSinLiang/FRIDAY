@@ -81,7 +81,7 @@ export function parseRoomSnapshot(value: unknown, roomId: string): RoomSnapshot 
 }
 
 type Transport = { fetch?: typeof fetch; csrf?: () => string; id?: () => string };
-type Pending = { body: {baseRevision: number; commandId: string; commands: SceneEdit[]}; before: Instance[]; kind: "edit" | "undo" | "redo" };
+type Pending = { body: {baseRevision: number; commandId: string; commands: SceneEdit[]}; confirmation?: {roomId:string; instance:Instance; baseRevision:number; cartRevision:number; operationId:string}; before: Instance[]; kind: "edit" | "undo" | "redo" };
 
 /** Server acceptance is the only commit point, including undo and retry after a lost response. */
 export function createRoomSession(roomId: string, transport: Transport = {}) {
@@ -147,7 +147,7 @@ export function createRoomSession(roomId: string, transport: Transport = {}) {
     inFlight=true;
     publish({status:"saving",message:"Saving layout…"});
     try {
-      const {response,json} = await request("/api/scene/commands/",sent.body);
+      const {response,json} = await request(sent.confirmation ? "/api/cart/confirm-placement/" : "/api/scene/commands/",sent.confirmation ?? sent.body);
       if (disposed) return false;
       if (!response.ok) {
         // A definite rejection can be reconciled; an uncertain transport failure retains the same request ID.
@@ -155,7 +155,7 @@ export function createRoomSession(roomId: string, transport: Transport = {}) {
         publish({status:response.status===409 ? "conflict" : response.status>=500 ? "offline" : "ready",message:json.error?.message ?? "Placement was rejected. Layout unchanged."});
         return false;
       }
-      const snapshot=parseRoomSnapshot(json,roomId);
+      const snapshot=parseRoomSnapshot(sent.confirmation ? json.scene : json,roomId);
       if (fingerprint(snapshot.instances)!==fingerprint(sent.before)) {
         if (sent.kind==="edit") { past=[...past,sent.before].slice(-100); future=[]; }
         else if (sent.kind==="undo") { past=past.slice(0,-1); future=[sent.before,...future]; }
@@ -163,6 +163,7 @@ export function createRoomSession(roomId: string, transport: Transport = {}) {
       }
       pending=null;
       publish({snapshot,status:"ready",message:"All changes saved"});
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('friday-cart-changed'));
       return true;
     } catch (error) {
       if (!disposed) publish({status:"offline",message:"Connection interrupted. Retry to confirm the saved result."});
@@ -195,6 +196,13 @@ export function createRoomSession(roomId: string, transport: Transport = {}) {
     getSnapshot: ()=>state,
     load,
     submit: (edit: SceneEdit)=>submit([edit]),
+    confirm: async (instance:Instance, cartRevision:number) => {
+      if (loading) await loading;
+      if (disposed || inFlight || pending || !state.snapshot || state.status !== 'ready') return false;
+      const operationId = transport.id?.() ?? crypto.randomUUID();
+      pending={body:{baseRevision:state.snapshot.revision,commandId:operationId,commands:[]},confirmation:{roomId,instance:structuredClone(instance),baseRevision:state.snapshot.revision,cartRevision,operationId},before:structuredClone(state.snapshot.instances),kind:'edit'};
+      return sendPending();
+    },
     undo: ()=>restore("undo"), redo: ()=>restore("redo"),
     setActive: (value:boolean)=>{active=value;},
     retry: ()=>pending ? sendPending() : load(false,true),
@@ -221,6 +229,7 @@ export function useRoomSession(roomId: string, interactionActive: boolean) {
   useEffect(()=>{ref.current?.setActive(interactionActive);},[interactionActive,roomId]);
   const actions=useMemo(()=>({
     submit:(edit:SceneEdit)=>ref.current?.submit(edit) ?? Promise.resolve(false),
+    confirm:(instance:Instance,cartRevision:number)=>ref.current?.confirm(instance,cartRevision) ?? Promise.resolve(false),
     undo:()=>ref.current?.undo(),redo:()=>ref.current?.redo(),retry:()=>ref.current?.retry(),reload:()=>ref.current?.load(true),
   }),[]);
   return {...state,...actions};

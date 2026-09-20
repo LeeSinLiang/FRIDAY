@@ -7,7 +7,7 @@ export type Category =
 
 export type Listing = {
   id: string;
-  source: 'ikea' | 'stub' | 'seed';
+  source: 'ikea' | 'stub' | 'seed' | 'abo';        // abo: Amazon Berkeley Objects
   title: string;
   category: Category;
   price_cents: number;                             // INTEGER cents. Never a float.

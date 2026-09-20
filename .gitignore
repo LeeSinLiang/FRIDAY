@@ -65,3 +65,5 @@ Thumbs.db
 
 # Agent scratch space: screenshots and throwaway files (see AGENTS.md)
 .scratch/
+.vercel
+backend/runtime_shared/

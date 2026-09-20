@@ -8,6 +8,7 @@ except the width gap, fits_room counts the ones that also fit. One request yield
 from collections import Counter
 from collections.abc import Sequence
 
+from catalogue.pricing import MIN_KNOWN_PRICE_CENTS, has_price
 from catalogue.types import CATEGORIES, FacetBucket, Facets, Listing
 
 # (key, from inclusive, to exclusive) in integer cents. Keys are stable identifiers, not display text.
@@ -46,6 +47,18 @@ def fit_filter(fit_mm: int) -> dict:
 HAS_MODEL_FILTER: dict = {"exists": {"field": "model_url"}}
 
 
+# How listings with a 3D model are treated in what search RETURNS. Counting never changes.
+MODELS_ONLY, MODELS_FIRST, MODELS_ALL = "only", "first", "all"
+# Far above any text score, so every listing with a model outranks every listing without one, and
+# text relevance still orders each group.
+MODEL_BOOST = 1000.0
+
+
+def model_boost() -> dict:
+    """A should-clause that lifts listings with a model to the top without excluding the rest."""
+    return {"constant_score": {"filter": HAS_MODEL_FILTER, "boost": MODEL_BOOST}}
+
+
 def hits_filter(fit_mm: int | None, models_only: bool) -> dict | None:
     """What narrows the RETURNED hits without touching what is counted: the width gap and, when asked,
     "has a 3D model". It runs after aggregation, so facets still describe every match."""
@@ -64,7 +77,8 @@ def memory_facets(hits: Sequence[Listing], find: Sequence, candidates: int) -> F
         candidates: how many listings match every clause except the gap.
     """
     by_category = Counter(listing.category for listing in hits)
-    by_band = Counter(_band_key(listing.price_cents) for listing in hits)
+    # A listing with no known price is a match and is counted by category, but it belongs to no price band.
+    by_band = Counter(_band_key(listing.price_cents) for listing in hits if has_price(listing))
     has_gap = fit_width_mm(find) is not None
     return Facets(
         # terms aggregation order: count descending, then key ascending; empty buckets omitted.
@@ -84,7 +98,8 @@ def es_aggs(find: Sequence) -> dict:
     aggregation scope is every candidate. fits_room narrows that scope to what fits and carries
     the category and price facets, so they still describe the final result set.
     """
-    ranges = [{"key": key, "from": low, **({} if high is None else {"to": high})}
+    # The first band starts at the lowest KNOWN price, not at 0: 0 means unknown and is in no band. The key is unchanged.
+    ranges = [{"key": key, "from": max(low, MIN_KNOWN_PRICE_CENTS), **({} if high is None else {"to": high})}
               for key, low, high in PRICE_BANDS]
     result_facets = {
         "category": {"terms": {"field": "category", "size": len(CATEGORIES)}},

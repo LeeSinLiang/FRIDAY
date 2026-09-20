@@ -1,5 +1,6 @@
 .shelf { position: fixed; left: 16px; bottom: 16px; z-index: 30; width: min(380px, calc(100vw - 32px)); max-height: min(62vh, 560px);
   display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 22px; color: var(--ink); }
+.shelf-close {align-self:flex-end;color:var(--accent);font-size:12px;text-decoration:underline;text-underline-offset:3px;}
 .shelf form { display: flex; gap: 8px; }
 .shelf input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: #fffdf8; color: var(--ink); font: inherit; }
 .shelf button.go { padding: 10px 14px; border-radius: 12px; border: 0; background: var(--accent); color: #fff; font: inherit; cursor: pointer; }

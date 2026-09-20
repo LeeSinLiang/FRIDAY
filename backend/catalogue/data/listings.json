@@ -906,6 +906,1493 @@
         "canvas",
         "aluminium"
       ]
+    },
+    {
+      "id": "abo-B072M1WJ8S",
+      "source": "abo",
+      "title": "Rivet Emerly Mid-Century Modern Velvet Metal Leg Sofa Couch, 83.5\"W, Pewter",
+      "category": "sofa",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 2121,
+        "d": 889,
+        "h": 864
+      },
+      "model_url": "/models/furniture/abo-B072M1WJ8S/model.glb",
+      "colour_hex": [
+        "#5b6770"
+      ],
+      "materials": [
+        "velvet",
+        "hardwood frame",
+        "metal legs"
+      ]
+    },
+    {
+      "id": "abo-B071W5VJFK",
+      "source": "abo",
+      "title": "Rivet Cove Modern Tufted Accent Chair with Tapered Legs, Mid-Century, 32.7\"W, Light Grey",
+      "category": "armchair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 831,
+        "d": 861,
+        "h": 899
+      },
+      "model_url": "/models/furniture/abo-B071W5VJFK/model.glb",
+      "colour_hex": [
+        "#8a8d8f"
+      ],
+      "materials": [
+        "polyester"
+      ]
+    },
+    {
+      "id": "abo-B075X4YDN6",
+      "source": "abo",
+      "title": "Rivet Zane Mid-Century Modern Swivel Top-Grain Leather Accent Chair, 28.75\" W, Saddle",
+      "category": "armchair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 730,
+        "d": 870,
+        "h": 864
+      },
+      "model_url": "/models/furniture/abo-B075X4YDN6/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "leather"
+      ]
+    },
+    {
+      "id": "abo-B07P5LN39V",
+      "source": "abo",
+      "title": "Rivet Emerly Modern Living Room Chair, 41\"W, Steel Grey",
+      "category": "armchair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1041,
+        "d": 889,
+        "h": 864
+      },
+      "model_url": "/models/furniture/abo-B07P5LN39V/model.glb",
+      "colour_hex": [
+        "#5b6770"
+      ],
+      "materials": [
+        "polyester"
+      ]
+    },
+    {
+      "id": "abo-B07QFP4WFR",
+      "source": "abo",
+      "title": "Rivet Stacey Mid-Century Modern Round-Backed, Armless Living Room Chair, 27\"W, Sangria",
+      "category": "armchair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 700,
+        "d": 660,
+        "h": 760
+      },
+      "model_url": "/models/furniture/abo-B07QFP4WFR/model.glb",
+      "colour_hex": [
+        "#3a2c22"
+      ],
+      "materials": [
+        "polyester"
+      ]
+    },
+    {
+      "id": "abo-B082QCVWWF",
+      "source": "abo",
+      "title": "Rivet Spear Mid-Century Modern Channel Tufted Leather Accent Chair with Wood Arms, 29.1\"W, Grey",
+      "category": "armchair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 739,
+        "d": 800,
+        "h": 831
+      },
+      "model_url": "/models/furniture/abo-B082QCVWWF/model.glb",
+      "colour_hex": [
+        "#4a4f57"
+      ],
+      "materials": [
+        "leather"
+      ]
+    },
+    {
+      "id": "abo-B082QCB52Z",
+      "source": "abo",
+      "title": "Rivet Theresa Modern Upholstered Accent Chair, 30\"W, Slate",
+      "category": "armchair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 762,
+        "d": 787,
+        "h": 838
+      },
+      "model_url": "/models/furniture/abo-B082QCB52Z/model.glb",
+      "colour_hex": [
+        "#8a8d8f"
+      ],
+      "materials": [
+        "polyester"
+      ]
+    },
+    {
+      "id": "abo-B07BWKFNF6",
+      "source": "abo",
+      "title": "Rivet Revolve Modern Upholstered Armchair with Tapered Legs, 33\"W, Linen",
+      "category": "armchair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 831,
+        "d": 879,
+        "h": 899
+      },
+      "model_url": "/models/furniture/abo-B07BWKFNF6/model.glb",
+      "colour_hex": [
+        "#c0c0c0"
+      ],
+      "materials": [
+        "polyester fabric",
+        "sturdy hardwood frame and solid beech wood legs"
+      ]
+    },
+    {
+      "id": "abo-B082QCY5SV",
+      "source": "abo",
+      "title": "Rivet New Luna Upholstered Crescent Mid-Century Accent Chair with Tapered Legs, 31.5\"W, Teal",
+      "category": "armchair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 800,
+        "d": 890,
+        "h": 930
+      },
+      "model_url": "/models/furniture/abo-B082QCY5SV/model.glb",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B07DBDZ3WW",
+      "source": "abo",
+      "title": "Ravenna Home Contemporary Faux Leather Nailhead Wingback Accent Chair, 28.5\"W, Black",
+      "category": "armchair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 724,
+        "d": 813,
+        "h": 1148
+      },
+      "model_url": "/models/furniture/abo-B07DBDZ3WW/model.glb",
+      "colour_hex": [
+        "#2b2b2b"
+      ],
+      "materials": [
+        "faux leather"
+      ]
+    },
+    {
+      "id": "abo-B07P5LP5MC",
+      "source": "abo",
+      "title": "Stone & Beam Lauren Down-Filled Oversized Leather Living Room Accent Armchair with Hardwood Frame, 46\"W, Dark Brown",
+      "category": "armchair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1170,
+        "d": 1140,
+        "h": 950
+      },
+      "model_url": "/models/furniture/abo-B07P5LP5MC/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "polyester"
+      ]
+    },
+    {
+      "id": "abo-B075X342T5",
+      "source": "abo",
+      "title": "Stone & Beam Westport Modern Nailhead Upholstered Accent Arm Chair, 36\"W, Stone Brown",
+      "category": "armchair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 914,
+        "d": 959,
+        "h": 838
+      },
+      "model_url": "/models/furniture/abo-B075X342T5/model.glb",
+      "colour_hex": [
+        "#5b6770"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B085554J7Q",
+      "source": "abo",
+      "title": "Rivet Henrik Modern Open-Back Plastic Dining Chair, 18.5\"W, Mild Gray",
+      "category": "chair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 470,
+        "d": 556,
+        "h": 790
+      },
+      "model_url": "/models/furniture/abo-B085554J7Q/model.glb",
+      "colour_hex": [
+        "#8a8d8f"
+      ],
+      "materials": [
+        "polypropylene"
+      ]
+    },
+    {
+      "id": "abo-B07HSBJ5D6",
+      "source": "abo",
+      "title": "Rivet Dunford Modern Kitchen Dining Chair, 33 Inch Height, Ivory",
+      "category": "chair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 610,
+        "d": 610,
+        "h": 838
+      },
+      "model_url": "/models/furniture/abo-B07HSBJ5D6/model.glb",
+      "colour_hex": [
+        "#c2a878"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B08569F1GX",
+      "source": "abo",
+      "title": "Rivet Vern Contemporary Round Back Swivel Dining Chair with Arms, 23\"W, Spearmint",
+      "category": "chair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 590,
+        "d": 610,
+        "h": 810
+      },
+      "model_url": "/models/furniture/abo-B08569F1GX/model.glb",
+      "colour_hex": [
+        "#8a8d8f"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B07QC876Z6",
+      "source": "abo",
+      "title": "Rivet Modern Coffee Table, 39.37\"W, Pine Veneer and Natural Wood",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1000,
+        "d": 550,
+        "h": 420
+      },
+      "model_url": "/models/furniture/abo-B07QC876Z6/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "pine"
+      ]
+    },
+    {
+      "id": "abo-B07DBDZ2TG",
+      "source": "abo",
+      "title": "Ravenna Home Flush Mount Wood Cross Side Table, 23.6\"W, Dark Brown Walnut",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 600,
+        "d": 560,
+        "h": 560
+      },
+      "model_url": "/models/furniture/abo-B07DBDZ2TG/model.glb",
+      "colour_hex": [
+        "#3a2c22"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B07QFB1TH8",
+      "source": "abo",
+      "title": "Rivet Modern Sliding-Top Coffee Table, 47\"W",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1194,
+        "d": 610,
+        "h": 330
+      },
+      "model_url": "/models/furniture/abo-B07QFB1TH8/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "metal"
+      ]
+    },
+    {
+      "id": "abo-B07QC85TNQ",
+      "source": "abo",
+      "title": "Stone & Beam Side Table with Drawer, 19\"W, Ash Veneer, Walnut and Antique Bronze Finish",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 483,
+        "d": 400,
+        "h": 610
+      },
+      "model_url": "/models/furniture/abo-B07QC85TNQ/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "metal"
+      ]
+    },
+    {
+      "id": "abo-B07DBDMN5F",
+      "source": "abo",
+      "title": "Ravenna Home Parker Coffee Table, 47.2\"W, Glass & Gold",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1199,
+        "d": 599,
+        "h": 399
+      },
+      "model_url": "/models/furniture/abo-B07DBDMN5F/model.glb",
+      "colour_hex": [
+        "#d8d2c4"
+      ],
+      "materials": [
+        "metal"
+      ]
+    },
+    {
+      "id": "abo-B075Z85K2F",
+      "source": "abo",
+      "title": "Stone & Beam Culver Reclaimed Industrial Wood Coffee Table, 55.1\"W, Natural and Steel",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1400,
+        "d": 800,
+        "h": 439
+      },
+      "model_url": "/models/furniture/abo-B075Z85K2F/model.glb",
+      "colour_hex": [
+        "#5b6770"
+      ],
+      "materials": [
+        "reclaimed wood"
+      ]
+    },
+    {
+      "id": "abo-B07QFB1TLZ",
+      "source": "abo",
+      "title": "Stone & Beam Ryder Industrial Round Coffee Table, 43.3\" Diameter, Brushed Natural Antique Copper",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1100,
+        "d": 1100,
+        "h": 420
+      },
+      "model_url": "/models/furniture/abo-B07QFB1TLZ/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "metal"
+      ]
+    },
+    {
+      "id": "abo-B075Z876TX",
+      "source": "abo",
+      "title": "Stone & Beam Coastal Breeze Rustic Farmhouse Console Table, 55.1\"W, Natural and White",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1400,
+        "d": 450,
+        "h": 932
+      },
+      "model_url": "/models/furniture/abo-B075Z876TX/model.glb",
+      "colour_hex": [
+        "#c0c0c0"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B07QGFZ2B4",
+      "source": "abo",
+      "title": "Rivet Industrial Mango-Topped Side Table, 19.61\"W",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 498,
+        "d": 498,
+        "h": 550
+      },
+      "model_url": "/models/furniture/abo-B07QGFZ2B4/model.glb",
+      "colour_hex": [
+        "#4a4f57"
+      ],
+      "materials": [
+        "metal"
+      ]
+    },
+    {
+      "id": "abo-B075Z6S9CY",
+      "source": "abo",
+      "title": "Stone & Beam Roland X-Frame Side End Table, 24\"W, Pine",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 610,
+        "d": 610,
+        "h": 508
+      },
+      "model_url": "/models/furniture/abo-B075Z6S9CY/model.glb",
+      "colour_hex": [
+        "#4a4f57"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B075X2X4GY",
+      "source": "abo",
+      "title": "Rivet Uptown Mid-Century Velvet Tufted Customizable Daybed Sofa, 78\"W, Dove Grey & Brass",
+      "category": "sofa",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1981,
+        "d": 686,
+        "h": 635
+      },
+      "model_url": "/models/furniture/abo-B075X2X4GY/model.glb",
+      "colour_hex": [
+        "#c0c0c0"
+      ],
+      "materials": [
+        "solid wood frame",
+        "velvet upholstery",
+        "metal"
+      ]
+    },
+    {
+      "id": "abo-B07DBDRN8S",
+      "source": "abo",
+      "title": "Ravenna Home Rai Tufted Arched Armless Loveseat Bench Settee, 52\"W, Light Grey",
+      "category": "sofa",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1321,
+        "d": 813,
+        "h": 1156
+      },
+      "model_url": "/models/furniture/abo-B07DBDRN8S/model.glb",
+      "colour_hex": [
+        "#c0c0c0"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B07B4M38B4",
+      "source": "abo",
+      "title": "Stone & Beam Andover Modern Loveseat Sofa, 67\"W, Cream",
+      "category": "sofa",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1702,
+        "d": 965,
+        "h": 889
+      },
+      "model_url": "/models/furniture/abo-B07B4M38B4/model.glb",
+      "colour_hex": [
+        "#e9e4d8"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B07B4M4HDS",
+      "source": "abo",
+      "title": "Stone & Beam Andover Modern Sofa Couch, 78\"W, Sand",
+      "category": "sofa",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1981,
+        "d": 965,
+        "h": 889
+      },
+      "model_url": "/models/furniture/abo-B07B4M4HDS/model.glb",
+      "colour_hex": [
+        "#c0c0c0"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B07P7NVGFL",
+      "source": "abo",
+      "title": "Rivet Sloane Mid-Century Modern Sofa with Tufted Back, 79.9\"W, Storm",
+      "category": "sofa",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 2029,
+        "d": 909,
+        "h": 841
+      },
+      "model_url": "/models/furniture/abo-B07P7NVGFL/model.glb",
+      "colour_hex": [
+        "#5b6770"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B07P5LMFPN",
+      "source": "abo",
+      "title": "Rivet Revolve Modern Leather Loveseat Sofa, 56\"W, Black",
+      "category": "sofa",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1430,
+        "d": 879,
+        "h": 899
+      },
+      "model_url": "/models/furniture/abo-B07P5LMFPN/model.glb",
+      "colour_hex": [
+        "#2b2b2b"
+      ],
+      "materials": [
+        "leather"
+      ]
+    },
+    {
+      "id": "abo-B07P5LM5CQ",
+      "source": "abo",
+      "title": "Rivet Emerly Modern Sofa Chaise, 96\"W, Steel Grey",
+      "category": "sofa",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 2438,
+        "d": 1626,
+        "h": 864
+      },
+      "model_url": "/models/furniture/abo-B07P5LM5CQ/model.glb",
+      "colour_hex": [
+        "#8a8d8f"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B082QDKRC5",
+      "source": "abo",
+      "title": "Rivet Bayard Contemporary Leather Couch with Curved Back and Armrests, 76\"W, Cognac",
+      "category": "sofa",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1930,
+        "d": 870,
+        "h": 830
+      },
+      "model_url": "/models/furniture/abo-B082QDKRC5/model.glb",
+      "colour_hex": [
+        "#b08d57"
+      ],
+      "materials": [
+        "leather"
+      ]
+    },
+    {
+      "id": "abo-B082XLB716",
+      "source": "abo",
+      "title": "Rivet Globe Stick Floor Lamp, 69\"H, White Marble",
+      "category": "lamp",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 229,
+        "d": 229,
+        "h": 1753
+      },
+      "model_url": "/models/furniture/abo-B082XLB716/model.glb",
+      "colour_hex": [
+        "#c0c0c0"
+      ],
+      "materials": [
+        "acrylic"
+      ]
+    },
+    {
+      "id": "abo-B0825DHHVM",
+      "source": "abo",
+      "title": "Rivet Scandinavian Real Blond Wood Table Lamp, LED Bulb Included, 17\"H, Beige",
+      "category": "lamp",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 229,
+        "d": 229,
+        "h": 432
+      },
+      "model_url": "/models/furniture/abo-B0825DHHVM/model.glb",
+      "colour_hex": [
+        "#d8c3a0"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B0824FBQF3",
+      "source": "abo",
+      "title": "Ravenna Home Traditional Chinoiserie Ceramic Table Lamp, LED Bulb Included, 15\"H, Blue Circle",
+      "category": "lamp",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 216,
+        "d": 216,
+        "h": 381
+      },
+      "model_url": "/models/furniture/abo-B0824FBQF3/model.glb",
+      "colour_hex": [
+        "#c0c0c0"
+      ],
+      "materials": [
+        "ceramic"
+      ]
+    },
+    {
+      "id": "abo-B073755HVV",
+      "source": "abo",
+      "title": "Stone & Beam Industrial Round Concrete Table Desk Lamp with Light Bulb and Beige Shade, 16\"H, Brushed Nickel",
+      "category": "lamp",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 254,
+        "d": 254,
+        "h": 406
+      },
+      "model_url": "/models/furniture/abo-B073755HVV/model.glb",
+      "colour_hex": [
+        "#8a8d8f"
+      ],
+      "materials": [
+        "polyresin",
+        "metal",
+        "fabric"
+      ]
+    },
+    {
+      "id": "abo-B073772TP9",
+      "source": "abo",
+      "title": "Stone & Beam Modern Slate Rock Table Desk Lamp with Light Bulb And Linen Shade,16\"H, Polished Nickel",
+      "category": "lamp",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 292,
+        "d": 178,
+        "h": 406
+      },
+      "model_url": "/models/furniture/abo-B073772TP9/model.glb",
+      "colour_hex": [
+        "#5b6770"
+      ],
+      "materials": [
+        "polyresin",
+        "metal",
+        "fabric"
+      ]
+    },
+    {
+      "id": "abo-B0825D873D",
+      "source": "abo",
+      "title": "Rivet Scandinavian Striped Floor Lamp, LED Bulb Included, 58.25\"H, Black and Blond Wood",
+      "category": "lamp",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 381,
+        "d": 381,
+        "h": 1480
+      },
+      "model_url": "/models/furniture/abo-B0825D873D/model.glb",
+      "colour_hex": [
+        "#c2a878"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B0825DNRXL",
+      "source": "abo",
+      "title": "Rivet Scandinavian Striped Table Lamp, LED Bulb Included, 25.25\"H, Black and Blond Wood",
+      "category": "lamp",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 305,
+        "d": 305,
+        "h": 641
+      },
+      "model_url": "/models/furniture/abo-B0825DNRXL/model.glb",
+      "colour_hex": [
+        "#b98b5e"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B0825D147R",
+      "source": "abo",
+      "title": "Stone & Beam Traditional Rectangular Chinoiserie Ceramic Table Lamp, LED Bulb Included, 24\"H, Blue Circle",
+      "category": "lamp",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 330,
+        "d": 330,
+        "h": 610
+      },
+      "model_url": "/models/furniture/abo-B0825D147R/model.glb",
+      "colour_hex": [
+        "#d8d2c4"
+      ],
+      "materials": [
+        "ceramic"
+      ]
+    },
+    {
+      "id": "abo-B075ZBW22K",
+      "source": "abo",
+      "title": "Stone & Beam Bryson Tall Narrow 3-Drawer Bookcase, 19.7\"W, Wood",
+      "category": "shelf",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 500,
+        "d": 419,
+        "h": 1900
+      },
+      "model_url": "/models/furniture/abo-B075ZBW22K/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B075ZF4S39",
+      "source": "abo",
+      "title": "Stone & Beam Barrett Reclaimed Wood 4-Shelf Bookcase, 40\"W, White and Sandstone Pine",
+      "category": "shelf",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1016,
+        "d": 381,
+        "h": 1880
+      },
+      "model_url": "/models/furniture/abo-B075ZF4S39/model.glb",
+      "colour_hex": [
+        "#c0c0c0"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B07B7DL32H",
+      "source": "abo",
+      "title": "Stone & Beam Rustic Casual Wood Bookcase with Doors, 36\"W, Grey",
+      "category": "shelf",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 914,
+        "d": 356,
+        "h": 1880
+      },
+      "model_url": "/models/furniture/abo-B07B7DL32H/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B075Z6YS1Z",
+      "source": "abo",
+      "title": "Stone & Beam Larson Industrial Wood and Metal 4-Shelf Bookcase, 73\"H, Walnut",
+      "category": "shelf",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 864,
+        "d": 356,
+        "h": 1861
+      },
+      "model_url": "/models/furniture/abo-B075Z6YS1Z/model.glb",
+      "colour_hex": [
+        "#4a3626"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B082JGV1YM",
+      "source": "abo",
+      "title": "Stone & Beam 5-Shelf Bookcase, 75\"H, Weathered Oak Finish",
+      "category": "shelf",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 805,
+        "d": 335,
+        "h": 1905
+      },
+      "model_url": "/models/furniture/abo-B082JGV1YM/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "pine"
+      ]
+    },
+    {
+      "id": "abo-B07B8NVHX1",
+      "source": "abo",
+      "title": "Stone & Beam Modern Ombre Stoneware Home Decor Flower Vase - 8 Inch, Dark Brown Red White",
+      "category": "decor",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 108,
+        "d": 108,
+        "h": 203
+      },
+      "model_url": "/models/furniture/abo-B07B8NVHX1/model.glb",
+      "colour_hex": [
+        "#3a2c22"
+      ],
+      "materials": [
+        "stoneware"
+      ]
+    },
+    {
+      "id": "abo-B07JM6GHC8",
+      "source": "abo",
+      "title": "Stone & Beam Emerick Rustic Tall Stoneware Decor Vase with Geometric Pattern - 15 Inch, Brown and White",
+      "category": "decor",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 185,
+        "d": 185,
+        "h": 380
+      },
+      "model_url": "/models/furniture/abo-B07JM6GHC8/model.glb",
+      "colour_hex": [
+        "#c0c0c0"
+      ],
+      "materials": [
+        "stoneware"
+      ]
+    },
+    {
+      "id": "abo-B07B8PXTSY",
+      "source": "abo",
+      "title": "Stone & Beam Modern Ombre Stoneware Home Decor Flower Vase - 10 Inch, Dark Brown Red White",
+      "category": "decor",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 105,
+        "d": 105,
+        "h": 260
+      },
+      "model_url": "/models/furniture/abo-B07B8PXTSY/model.glb",
+      "colour_hex": [
+        "#3a2c22"
+      ],
+      "materials": [
+        "stoneware"
+      ]
+    },
+    {
+      "id": "abo-B07QJ1X2QB",
+      "source": "abo",
+      "title": "Stone & Beam Mid-Century Wishbone Dining Chair, 22.4\"W, Black / Natural",
+      "category": "chair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 569,
+        "d": 579,
+        "h": 730
+      },
+      "model_url": "/models/furniture/abo-B07QJ1X2QB/model.glb",
+      "colour_hex": [
+        "#3d3f41"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B0842L2D5N",
+      "source": "abo",
+      "title": "Stone & Beam Shibori Inspired Stoneware Vase, 11.6\"H, Blue and White",
+      "category": "decor",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 160,
+        "d": 160,
+        "h": 295
+      },
+      "model_url": "/models/furniture/abo-B0842L2D5N/model.glb",
+      "colour_hex": [
+        "#1c1c1c"
+      ],
+      "materials": [
+        "stoneware"
+      ]
+    },
+    {
+      "id": "abo-B07HSJDN75",
+      "source": "abo",
+      "title": "Rivet Modern Computer Desk, 30\"H, Walnut and White",
+      "category": "desk",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1067,
+        "d": 399,
+        "h": 762
+      },
+      "model_url": "/models/furniture/abo-B07HSJDN75/model.glb",
+      "colour_hex": [
+        "#c0c0c0"
+      ],
+      "materials": [
+        "engineered wood"
+      ]
+    },
+    {
+      "id": "abo-B07QC84LRJ",
+      "source": "abo",
+      "title": "Rivet Industrial Desk Table, 51.18\"W, Espresso",
+      "category": "desk",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1300,
+        "d": 600,
+        "h": 780
+      },
+      "model_url": "/models/furniture/abo-B07QC84LRJ/model.glb",
+      "colour_hex": [
+        "#4a4f57"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B07QGFS4JC",
+      "source": "abo",
+      "title": "Rivet Mid-Century Desk, 42\"W, Warm Brown Wood with Veneer",
+      "category": "desk",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1067,
+        "d": 660,
+        "h": 754
+      },
+      "model_url": "/models/furniture/abo-B07QGFS4JC/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "engineered wood"
+      ]
+    },
+    {
+      "id": "abo-B07R7W7ZMP",
+      "source": "abo",
+      "title": "AmazonBasics Wooden, Home Office, Computer Study Desk with Drawer, 39 Inch, White",
+      "category": "desk",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 991,
+        "d": 499,
+        "h": 762
+      },
+      "model_url": "/models/furniture/abo-B07R7W7ZMP/model.glb",
+      "colour_hex": [
+        "#e9e4d8"
+      ],
+      "materials": [
+        "engineered wood"
+      ]
+    },
+    {
+      "id": "abo-B07QHKQLBH",
+      "source": "abo",
+      "title": "Ravenna Home Classic Two-Drawer Desk, 44\"W, Walnut",
+      "category": "desk",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1118,
+        "d": 508,
+        "h": 762
+      },
+      "model_url": "/models/furniture/abo-B07QHKQLBH/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "engineered wood"
+      ]
+    },
+    {
+      "id": "abo-B07QC85X9J",
+      "source": "abo",
+      "title": "Stone & Beam Classic Home Office Desk with Drawer, 54\"W, Dark Espresso",
+      "category": "desk",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1372,
+        "d": 597,
+        "h": 762
+      },
+      "model_url": "/models/furniture/abo-B07QC85X9J/model.glb",
+      "colour_hex": [
+        "#4a3626"
+      ],
+      "materials": [
+        "engineered wood"
+      ]
+    },
+    {
+      "id": "abo-B07HSCYS4C",
+      "source": "abo",
+      "title": "Rivet Modern 3-Drawer Desk, 51.9\"W, White",
+      "category": "desk",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1318,
+        "d": 607,
+        "h": 762
+      },
+      "model_url": "/models/furniture/abo-B07HSCYS4C/model.glb",
+      "colour_hex": [
+        "#d8d2c4"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B07QF9Y6Z9",
+      "source": "abo",
+      "title": "Rivet Classic Desk, 37.4\"W, Walnut",
+      "category": "desk",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 950,
+        "d": 590,
+        "h": 760
+      },
+      "model_url": "/models/furniture/abo-B07QF9Y6Z9/model.glb",
+      "colour_hex": [
+        "#b08d57"
+      ],
+      "materials": [
+        "engineered wood"
+      ]
+    },
+    {
+      "id": "abo-B075ZBW1SN",
+      "source": "abo",
+      "title": "Rivet Ventura Mid-Century Small Reversible Writing Home Office Computer Desk with File Drawer, 50\"W, Cherry",
+      "category": "desk",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1270,
+        "d": 610,
+        "h": 762
+      },
+      "model_url": "/models/furniture/abo-B075ZBW1SN/model.glb",
+      "colour_hex": [
+        "#3a2c22"
+      ],
+      "materials": [
+        "hardwoods"
+      ]
+    },
+    {
+      "id": "abo-B082JJJKT3",
+      "source": "abo",
+      "title": "Stone & Beam Modern Home Office Writing Desk with Recessed Metal Handles, 48\"W, Black",
+      "category": "desk",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1219,
+        "d": 508,
+        "h": 775
+      },
+      "model_url": "/models/furniture/abo-B082JJJKT3/model.glb",
+      "colour_hex": [
+        "#2b2b2b"
+      ],
+      "materials": [
+        "engineered wood"
+      ]
+    },
+    {
+      "id": "abo-B082BLFMRC",
+      "source": "abo",
+      "title": "Rivet Celine Upholstered Home Office Task Chair, 22.25\"W, Beige",
+      "category": "chair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 565,
+        "d": 667,
+        "h": 952
+      },
+      "model_url": "/models/furniture/abo-B082BLFMRC/model.glb",
+      "colour_hex": [
+        "#d8d2c4"
+      ],
+      "materials": [
+        "metal"
+      ]
+    },
+    {
+      "id": "abo-B082BL8QJM",
+      "source": "abo",
+      "title": "Rivet Bertha Mid-Century Velvet-Upholstered Swivel Office Chair, 25.25\"W, Sapphire Blue with Chrome Finish",
+      "category": "chair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 641,
+        "d": 635,
+        "h": 908
+      },
+      "model_url": "/models/furniture/abo-B082BL8QJM/model.glb",
+      "colour_hex": [
+        "#30475e"
+      ],
+      "materials": [
+        "velvet"
+      ]
+    },
+    {
+      "id": "abo-B082BM2BC1",
+      "source": "abo",
+      "title": "Rivet Modern Upholstered Swivel Home Office Task Chair, 25.5\"W, Ash Gray with Nickel Finish",
+      "category": "chair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 648,
+        "d": 654,
+        "h": 959
+      },
+      "model_url": "/models/furniture/abo-B082BM2BC1/model.glb",
+      "colour_hex": [
+        "#8a8d8f"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B082L28P18",
+      "source": "abo",
+      "title": "Stone & Beam Modern 2-Drawer File Cabinet with Recessed Metal Handles, 28.5\"H, White",
+      "category": "storage",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 521,
+        "d": 432,
+        "h": 724
+      },
+      "model_url": "/models/furniture/abo-B082L28P18/model.glb",
+      "colour_hex": [
+        "#e9e4d8"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B082L1FGYP",
+      "source": "abo",
+      "title": "Stone & Beam Classic 2-Drawer Lateral File Cabinet, Pine with Metal Hardware, 30\"H, Maple-Sand Finish",
+      "category": "storage",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 762,
+        "d": 503,
+        "h": 762
+      },
+      "model_url": "/models/furniture/abo-B082L1FGYP/model.glb",
+      "colour_hex": [
+        "#c2a878"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B082JH6LSF",
+      "source": "abo",
+      "title": "Stone & Beam Mid-Century 2-Drawer File Cabinet, 21.7\"W, Pine Finish",
+      "category": "storage",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 551,
+        "d": 391,
+        "h": 599
+      },
+      "model_url": "/models/furniture/abo-B082JH6LSF/model.glb",
+      "colour_hex": [
+        "#c9a77c"
+      ],
+      "materials": [
+        "pine"
+      ]
+    },
+    {
+      "id": "abo-B082JGPBLQ",
+      "source": "abo",
+      "title": "Stone & Beam 2-Drawer Rolling File Cabinet, 15.8\"W, Maple Finish",
+      "category": "storage",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 409,
+        "d": 401,
+        "h": 579
+      },
+      "model_url": "/models/furniture/abo-B082JGPBLQ/model.glb",
+      "colour_hex": [
+        "#b78c5a"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B07HSLVMP2",
+      "source": "abo",
+      "title": "Stone & Beam Rylee Modern Acacia Wood 3-Drawer Sideboard Buffet, 63\"W, Acacia, Gray-Wash Acacia",
+      "category": "storage",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1600,
+        "d": 450,
+        "h": 800
+      },
+      "model_url": "/models/furniture/abo-B07HSLVMP2/model.glb",
+      "colour_hex": [
+        "#b98b5e"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B075YQXQ5C",
+      "source": "abo",
+      "title": "Stone & Beam Dunbar Modern Wood Buffet, 55\"W, Oak",
+      "category": "storage",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1397,
+        "d": 483,
+        "h": 914
+      },
+      "model_url": "/models/furniture/abo-B075YQXQ5C/model.glb",
+      "colour_hex": [
+        "#4a3626"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B075YQXRJM",
+      "source": "abo",
+      "title": "Rivet Mid-Century Modern Minimalist Dining Kitchen Table, 53.1\"L, Walnut Wood",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1349,
+        "d": 800,
+        "h": 724
+      },
+      "model_url": "/models/furniture/abo-B075YQXRJM/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "hardwood"
+      ]
+    },
+    {
+      "id": "abo-B07HSJJF2X",
+      "source": "abo",
+      "title": "Stone & Beam Industrial Mango Wood Rectangle Dining Table, 71\"L, Black Metal Legs",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1801,
+        "d": 899,
+        "h": 765
+      },
+      "model_url": "/models/furniture/abo-B07HSJJF2X/model.glb",
+      "colour_hex": [
+        "#2b2b2b"
+      ],
+      "materials": []
+    },
+    {
+      "id": "abo-B07B7BM55W",
+      "source": "abo",
+      "title": "Stone & Beam Reclaimed Fir Rustic Wood Dining Kitchen Table, 78.8\"L, Brown",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 2000,
+        "d": 950,
+        "h": 759
+      },
+      "model_url": "/models/furniture/abo-B07B7BM55W/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B07B78LZQC",
+      "source": "abo",
+      "title": "Rivet Ian Modern Wood Round Dining Room Kitchen Table, 42\"W, Brown",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1067,
+        "d": 1067,
+        "h": 762
+      },
+      "model_url": "/models/furniture/abo-B07B78LZQC/model.glb",
+      "colour_hex": [
+        "#7a5235"
+      ],
+      "materials": [
+        "wood"
+      ]
+    },
+    {
+      "id": "abo-B07QGWMTDY",
+      "source": "abo",
+      "title": "Rivet Fulton Modern Rustic Dining Table, 71\"L, Natural",
+      "category": "table",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1803,
+        "d": 991,
+        "h": 762
+      },
+      "model_url": "/models/furniture/abo-B07QGWMTDY/model.glb",
+      "colour_hex": [
+        "#c9a77c"
+      ],
+      "materials": [
+        "metal"
+      ]
+    },
+    {
+      "id": "abo-B07QC85X9C",
+      "source": "abo",
+      "title": "Ravenna Home Springdale Modern Bookcase with Decorative Open Sides, 30\"W, White",
+      "category": "shelf",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 762,
+        "d": 342,
+        "h": 1829
+      },
+      "model_url": "/models/furniture/abo-B07QC85X9C/model.glb",
+      "colour_hex": [
+        "#d8d2c4"
+      ],
+      "materials": [
+        "engineered wood"
+      ]
+    },
+    {
+      "id": "abo-B07374VCVN",
+      "source": "abo",
+      "title": "Rivet Copper Geometric Bedside Table Desk Lamp With Light Bulb - 16.75 Inches, Copper",
+      "category": "lamp",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 292,
+        "d": 292,
+        "h": 427
+      },
+      "model_url": "/models/furniture/abo-B07374VCVN/model.glb",
+      "colour_hex": [
+        "#d6b98c"
+      ],
+      "materials": [
+        "polyresin",
+        "metal",
+        "fabric"
+      ]
+    },
+    {
+      "id": "abo-B0824F6HZ4",
+      "source": "abo",
+      "title": "Ravenna Home Traditional Metal Downbridge Desk Lamp with Adjustable Shade, LED Bulb Included, 19.25\"H, Brushed Nickel",
+      "category": "lamp",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 178,
+        "d": 330,
+        "h": 489
+      },
+      "model_url": "/models/furniture/abo-B0824F6HZ4/model.glb",
+      "colour_hex": [
+        "#8a8d8f"
+      ],
+      "materials": [
+        "metal"
+      ]
+    },
+    {
+      "id": "abo-B073751DMJ",
+      "source": "abo",
+      "title": "Rivet Gold Bedside Table Desk Lamp with Light Bulb - 18 Inches, Linen Shade",
+      "category": "lamp",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 254,
+        "d": 254,
+        "h": 457
+      },
+      "model_url": "/models/furniture/abo-B073751DMJ/model.glb",
+      "colour_hex": [
+        "#c9a77c"
+      ],
+      "materials": [
+        "metal",
+        "fabric"
+      ]
     }
   ]
 }

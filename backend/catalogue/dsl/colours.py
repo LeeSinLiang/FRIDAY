@@ -14,6 +14,9 @@ NAMED_COLOURS: dict[str, str] = {
     "silver": "#c0c0c0",
     "blue": "#2e5c8a",
     "navy": "#30475e",
+    # What a shopper calls HERRÅKRA's "dark yellow". Listed before "brass" (same hex) so its chip says yellow.
+    "yellow": "#b08d57",
+    "mustard": "#b08d57",
     "green": "#3f7d4e",
     "dark green": "#2f5d50",
     "brass": "#b08d57",
