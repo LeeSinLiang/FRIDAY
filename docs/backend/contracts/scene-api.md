@@ -31,6 +31,23 @@ Retry an uncertain command with the exact same command ID, base revision, and pa
 
 Server-side agent tools can call `api.scene_service.apply_scene_commands(session_key, base_revision, command_id, commands)` and `save_scene(session_key, base_revision, instances)`. The trusted adapter must derive the session from the originating request, never from model-supplied arguments. The OpenAI/voice agent itself is a teammate integration; this change supplies its validated service and HTTP path. A clean browser picks up agent changes through polling and resets local undo history.
 
+## Catalogue products (added by Saketh's lane, 2026-09-19)
+
+An instance may carry its product inline, so a scene no longer depends on `shared/scene-fixtures.json` for everything it can hold. Additive: instances of the three fixture products look and behave exactly as before and must not carry one.
+
+```json
+{"type": "add", "instance": {
+  "instanceId": "poang-1", "productId": "ikea-193.025.39",
+  "product": {"productId": "ikea-193.025.39", "name": "POÄNG armchair", "widthCm": 68, "depthCm": 82, "heightCm": 100, "color": "#c9a77c", "kind": "chair"},
+  "pose": {"xCm": 300, "zCm": 250, "yawRad": 0}}}
+```
+
+- `productId` must be a fixture id or a **catalogue listing id** (`GET /api/search`). Any other id is rejected.
+- **The backend stays the authority.** It derives the same product from its own catalogue (`backend/api/catalogue_products.py`, the backend's only mm→cm crossing: `dims_mm / 10`) and rejects an instance whose carried width, depth or height differs by more than 0.05 cm, with issue code `product_mismatch` and the catalogue's dimensions. A client cannot shrink a sofa to make it fit. Validation, collision messages and snapshots all use the server's copy.
+- `product` allows exactly `productId`, `name`, `widthCm`, `depthCm`, `heightCm`, `color`, `kind`, and optional `modelUrl`. `kind` is one of the scene's three; the catalogue's 12 categories fold onto them by silhouette.
+- Snapshots list every catalogue product placed in the scene under `products`, after the fixtures, so consumers that look products up by id need no change. The carried `product` also round-trips on the instance through `PUT /api/scene/`.
+- Frontend: `instanceFromListing(listing, instanceId, pose)` in `frontend/src/region/boundary.ts` builds such an instance; `productOf` and `productsWith` in `frontend/src/scene/products.ts` resolve it. `validatePlacement`, the edit reducer and `parseSceneSnapshot` accept it; a shared product always wins over a carried one.
+
 ## Placement and failures
 
 Both engines check rotated rectangular footprints using separating axes, room bounds, height, finite numbers, and known dimensions. Touching edges are allowed (1e-6 cm tolerance). This is conservative metadata geometry, not mesh collision, walking clearance, door swing, or a feasible-space overlay. New manual pieces find the nearest free grid slot; dragging previews green/red, and invalid drops restore the last committed pose.
