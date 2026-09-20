@@ -87,7 +87,8 @@ export function advanceWalk(room: Room, position: { xCm: number; zCm: number }, 
 }
 
 /** Camera pose lives in PlayCanvas; React receives only deliberate editor actions. */
-export function createNavigation(runtime: NavigationRuntime, initial: NavigationState, suspended: () => boolean) {
+export function createNavigation(runtime: NavigationRuntime, initial: NavigationState, suspended: () => boolean,
+                                 holding: () => boolean = () => false) {
   let state = initial;
   let disposed = false;
   let look: { x: number; y: number } | null = null;
@@ -109,6 +110,11 @@ export function createNavigation(runtime: NavigationRuntime, initial: Navigation
   };
   const blocked = () => disposed || runtime.disposed || runtime.capturing || suspended() ||
     state.view === "top" || state.mode === "place" || isTextEntry(document.activeElement);
+  // Looking is gated apart from moving. With a piece in hand you must still be able to turn and find a spot, in
+  // whatever mode the editor put you (choosing a piece switches to "place"); walking and jumping stay suspended.
+  const lookBlocked = () => holding()
+    ? disposed || runtime.disposed || runtime.capturing || state.view === "top" || isTextEntry(document.activeElement)
+    : blocked();
   const stop = () => { keys.clear(); jumpQueued = false; look = null; };
   const turn = (dx: number, dy: number) => {
     const { yaw, pitch } = yawPitch();
@@ -197,9 +203,9 @@ export function createNavigation(runtime: NavigationRuntime, initial: Navigation
   runtime.app.on("update", frame);
   if (state.view === "top") setView();
   return {
-    beginLook(x: number, y: number) { if (!blocked()) look = { x, y }; },
+    beginLook(x: number, y: number) { if (!lookBlocked()) look = { x, y }; },
     moveLook(x: number, y: number) {
-      if (!look || blocked()) return;
+      if (!look || lookBlocked()) return;
       turn(x - look.x, y - look.y);
       look = { x, y };
     },

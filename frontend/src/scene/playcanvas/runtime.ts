@@ -17,6 +17,9 @@ export type PlayCanvasRuntime = {
   ready: Promise<void>;
   capturing: boolean;
   disposed: boolean;
+  /** Set by the catalogue search layer while a piece from its panel is in hand. While true a press on the canvas is
+   *  a look, never a pointer lock, a selection or a furniture drag; that layer's own click handler does the placing. */
+  externalHold?: boolean;
   signal: AbortSignal;
   resize(): void;
   dispose(): void;

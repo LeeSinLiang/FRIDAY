@@ -36,6 +36,9 @@ type Props = {
   confirm?: (instance:Instance) => Promise<boolean>;
 };
 
+/** The engine's own drag threshold (interaction.ts): a press that moves this far is a look, not a click. */
+const LOOK_THRESHOLD_PX = 4;
+
 export default function SplatCatalogueLayer({ getRuntime, room, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, showShelf = true, onCloseShelf, confirm }: Props) {
   const [hovered, setHovered] = useState<Listing | null>(null);
   const [armed, setArmed] = useState<Listing | null>(null);
@@ -43,6 +46,7 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
   const [place, setPlace] = useState<PlaceClause[]>([]);
   const [yawChoice, setYawChoice] = useState<number | null>(null);
   const overlay = useRef<RegionOverlay | null>(null);
+  const press = useRef<{ x: number; y: number; looked: boolean } | null>(null);
   const ghost = useRef<PendingGhost | null>(null);
   const [unconfirmed, setUnconfirmed] = useState<Instance | null>(null);
   const [purchase, setPurchase] = useState<Listing | null>(null);
@@ -83,14 +87,28 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
 
   useEffect(() => { overlay.current?.setMask(region ? region.solution.masks[yawIndex] : null); }, [region, yawIndex, engineUp]);
 
+  // The engine reads this: with a piece in hand here, a press on the canvas is a look (interaction.ts), which is what
+  // keeps drag-to-look alive while holding. Placing stays with the click handler below.
+  const inHand = armed !== null;
+  useEffect(() => {
+    const runtime = getRuntime();
+    if (!runtime || !inHand) return;
+    runtime.externalHold = true;
+    return () => { runtime.externalHold = false; };
+  }, [inHand, getRuntime, engineUp]);
+
   // While an item is in hand, a click on lit floor places it. Captured before the engine's own
   // handlers so its drag and selection logic never sees a click that belongs to this placement.
   useEffect(() => {
     const canvas = getRuntime()?.canvas;
     if (!armed || !canvas || locked || !ready) return;
     const onClick = async (event: MouseEvent) => {
-      const pose = overlay.current?.poseAt(event.clientX, event.clientY);
       event.stopPropagation(); event.preventDefault();
+      // A press that travelled was a look: the click that ends it must not place anything.
+      const looked = press.current?.looked ?? false;
+      press.current = null;
+      if (looked) return;
+      const pose = overlay.current?.poseAt(event.clientX, event.clientY);
       if (!pose) return; // outside the lit region: nothing happens, and that is the message
       const instance = instanceFromListing(armed, crypto.randomUUID(), pose);
       const verdict = validatePlacement(room, [...known, instance.product!], [...standing, instance], instance.instanceId, pose);
@@ -108,12 +126,21 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
       ghost.current?.hide(); setUnconfirmed(null);
       onNotice?.(outcome === "saved" ? `${listing.title} placed` : `${listing.title} could not be placed there`);
     };
-    const swallow = (event: Event) => event.stopPropagation();
+    // The press itself goes through to the engine, which turns a moved press into a look (runtime.externalHold). Only the
+    // click is ours, and a click that ends a drag is the end of a look, not a placement.
+    const onDown = (event: PointerEvent) => { press.current = { x: event.clientX, y: event.clientY, looked: false }; };
+    // Latched like the engine's gesture.moved: out and back again is still a look, however close to the start it ends.
+    const onMove = (event: PointerEvent) => {
+      const pressed = press.current;
+      if (pressed && Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y) >= LOOK_THRESHOLD_PX) pressed.looked = true;
+    };
     canvas.addEventListener("click", onClick, true);
-    for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup"]) canvas.addEventListener(type, swallow, true);
+    canvas.addEventListener("pointerdown", onDown, true);
+    canvas.addEventListener("pointermove", onMove, true);
     return () => {
       canvas.removeEventListener("click", onClick, true);
-      for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup"]) canvas.removeEventListener(type, swallow, true);
+      canvas.removeEventListener("pointerdown", onDown, true);
+      canvas.removeEventListener("pointermove", onMove, true);
     };
   }, [armed, getRuntime, standing, known, locked, ready, onNotice, room, submit, retry, shopping]);
 
