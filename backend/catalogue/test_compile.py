@@ -54,8 +54,8 @@ def wire(program_dict: dict) -> dict:
 
 
 class FixtureTests(SimpleTestCase):
-    def test_there_are_nine_recorded_cases(self):
-        self.assertEqual(len(CASES), 9)
+    def test_there_are_ten_recorded_cases(self):
+        self.assertEqual(len(CASES), 10)
         self.assertTrue(all("recorded" in case for case in CASES))
 
     def test_recorded_model_outputs_compile_to_the_expected_programs(self):

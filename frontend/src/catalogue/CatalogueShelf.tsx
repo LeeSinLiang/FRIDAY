@@ -37,9 +37,13 @@ const DEV = new URLSearchParams(window.location.search).has("dev");
 const TURNS = ["back to the north wall", "back to the west wall", "back to the south wall", "back to the east wall"];
 
 /** "392 in the catalogue · 1 ready in 3D" when search returned fewer than it counted; the plain count otherwise. */
-export function countLine(total: number, matches: number | null, shown: number): string {
+export function countLine(total: number, matches: number | null, shown: number, readyShown = 0): string {
   const plural = (n: number) => `${n.toLocaleString()} match${n === 1 ? "" : "es"}`;
   const showing = total > shown ? `, showing ${shown}` : "";
+  // Models-first mode: everything is returned with the 3D ones on top, so once a listing without a model
+  // is on screen, every listing with one is above it and the count is exact.
+  if ((matches === null || matches <= total) && readyShown > 0 && readyShown < shown)
+    return `${plural(total)} · ${readyShown.toLocaleString()} ready in 3D, shown first`;
   if (matches === null || matches <= total) return `${plural(total)}${showing}`;
   return `${plural(matches)} in the catalogue · ${total === 0 ? "none has a 3D model yet" : `${total.toLocaleString()} ready in 3D${showing}`}`;
 }
@@ -177,7 +181,7 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
           </li>
         ))}
       </ul>
-      {total !== null && <p className="shelf-status">{countLine(total, matches, items.length)}</p>}
+      {total !== null && <p className="shelf-status">{countLine(total, matches, items.length, items.filter((item) => item.model_url).length)}</p>}
     </aside>
   );
 }
