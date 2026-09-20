@@ -2,11 +2,11 @@
 
 Owner: William. Branch: `codex/visa-cache-compatibility`. Updated: 2026-09-20.
 
-Review: [PR #21 — Add Visa IDX and account MFA with isolated catalogue cache tests](https://github.com/LeeSinLiang/hackmit2026/pull/21), from `codex/visa-cache-compatibility` into `main`, replaces [PR #19](https://github.com/LeeSinLiang/hackmit2026/pull/19). It retains the original implementation and resolves the reported P1 cache/test regression tracked in [issue #20](https://github.com/LeeSinLiang/hackmit2026/issues/20). Review and merge remain pending.
+Review: [PR #21 — Add Visa IDX and account MFA with isolated catalogue cache tests](https://github.com/LeeSinLiang/hackmit2026/pull/21), from `codex/visa-cache-compatibility` into `main`, replaces [PR #19](https://github.com/LeeSinLiang/hackmit2026/pull/19). It retains the original implementation and resolves the reported P1 cache/test regression tracked in [issue #20](https://github.com/LeeSinLiang/hackmit2026/issues/20). Fresh Codex review of code head `a391928` found no major issues; the PR page records its merge status.
 
 ## Baseline and teammates' work
 
-This branch incorporates `origin/main` through [`be795d8`](https://github.com/LeeSinLiang/hackmit2026/commit/be795d830acc7b67740f8ab9385db2444eaff33d). It includes the earlier catalogue/editor and region-solver work, catalogue products placeable in scenes from PR #18, and the compile cache test and throttle changes from PRs #22 and #24. The Gaussian-splatting research notes still describe planned work rather than an implemented splat renderer. Main was merged into this feature branch; that does not merge the Visa/auth branch into main.
+This branch incorporates `origin/main` through [`be795d8`](https://github.com/LeeSinLiang/hackmit2026/commit/be795d830acc7b67740f8ab9385db2444eaff33d). It includes the earlier catalogue/editor and region-solver work, catalogue products placeable in scenes from PR #18, and the compile cache test and throttle changes from PRs #22 and #24. The Gaussian-splatting research notes still describe planned work rather than an implemented splat renderer. The branch sync and PR delivery are separate Git operations.
 
 The committed `data/board.json` is a snapshot of the user's current **FRIDAY · Project Plan**, with the six existing components, IDs, task ownership and ordering preserved. The PR includes the compatible owner-coloured standalone UI and canvas adapter, combined with the main baseline's atomic transactions, locking and live polling/SSE. Historical phase metadata is retained, including the three new upstream catalogue tasks marked `mvp`; component identities and task order are not regenerated. This resolves the P2 board review in issue #23.
 
@@ -110,7 +110,7 @@ git diff --cached
 git push -u origin codex/visa-cache-compatibility
 ```
 
-Use [PR #21](https://github.com/LeeSinLiang/hackmit2026/pull/21), from `codex/visa-cache-compatibility` into `main`, for review of the integrated work. Never push directly to main or force-push over another contributor. Before another upstream update, preserve local edits and reconcile new changes; `git pull --ff-only` is appropriate only when the chosen branch can actually fast-forward.
+[PR #21](https://github.com/LeeSinLiang/hackmit2026/pull/21) records review and delivery from `codex/visa-cache-compatibility` into `main`. Never push directly to main or force-push over another contributor. Before another upstream update, preserve local edits and reconcile new changes; `git pull --ff-only` is appropriate only when the chosen branch can actually fast-forward.
 
 Run `node .github/extensions/project-manager/bin.mjs` to open this checkout's committed board snapshot. The user's canonical launch path in the main checkout has been refreshed with the exact board source from this PR. Other machines get the plan snapshot by pulling Git; they do not share this local live file. Stop board writers before Git/manual board updates and restart at the newly printed URL. See the [board guide](../../.github/extensions/project-manager/README.md). Owner-coloured rendering is included in this PR.
 
