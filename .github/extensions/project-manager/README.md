@@ -1,10 +1,16 @@
 # Project Manager
 
-A hackathon Kanban board. Columns are components (Frontend, Backend, AI/ML,
-Design, Pitch, etc.); each column holds an ordered stack of task cards
-tagged with a phase (`ideation` / `mvp` / `development`). Drag cards up/down
-to reprioritize within a component, or drag them into another component's
-column to reassign work.
+The FRIDAY Kanban board displays the user's existing project components as
+columns and ordered task cards coloured by owner: William, Sin, Saketh,
+Adelle, or Unassigned. Completion and priority remain separate. Add tasks
+below a column, select their owner, and drag or use the move controls.
+
+Owner-aware schema version 2 is supported by the standalone UI and Copilot
+canvas adapter shipped together here. Migration preserves component names,
+IDs, order, task metadata and historical `phase` values; a phase never
+implies an owner. Legacy phase model operations remain available for
+compatibility, while the UI displays owners rather than misleading phase
+defaults. The two existing phase values from the parent snapshot are retained.
 
 ## Two ways to open it
 

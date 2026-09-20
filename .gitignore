@@ -26,6 +26,7 @@ coverage.xml
 *.sqlite3-shm
 *.sqlite3-wal
 media/
+.runtime/
 staticfiles/
 
 # TypeScript / React tooling and build output

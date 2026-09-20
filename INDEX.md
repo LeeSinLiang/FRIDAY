@@ -32,12 +32,19 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Backend
 
+- [Blender MCP-style scene and object context: Saketh handoff](docs/backend/contracts/blender-mcp-agent-handoff.md) — pinned official/community references, model-facing metadata/images, complete capability map, implementation order, and acceptance checks.
+
 - [Spatial engine tools and screenshots](docs/backend/contracts/spatial-engine-tools.md) — explicit placement results, dry runs, selectable cameras, revision-specific PNGs, and Python agent adapters.
 
 - [Scene persistence and agent command API](docs/backend/contracts/scene-api.md) — session storage, validation, revisions, CSRF, and agent adapter handoff.
 
 ### Setup and tooling
 
+- [Visa/auth integration handoff and branch-sharing workflow](docs/handoffs/visa-auth-integration.md)
+- [Account signup, SMTP and local email verification, authenticator MFA, recovery, and approved checkout](docs/account-mfa-checkout.md)
+- [Sanitized real IDX response from the MFA-approved checkout](docs/evidence/account-checkout-2026-09-19.json)
+- [Visa IDX sandbox tester, evidence, and account/MFA/commerce implementation plan](docs/visa-sandbox.md)
+- [Sanitized live Visa IDX sandbox responses](docs/evidence/visa-idx-2026-09-19.json)
 - [Local setup and full-stack launcher](README.md#local-setup)
 - [Backend API, frontend/3D entry points, and configuration paths](README.md#layout)
 - [Verification and dependency commands](README.md#checks-and-common-commands)

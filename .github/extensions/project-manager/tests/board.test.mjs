@@ -150,3 +150,56 @@ test('an occupied lock times out without stealing it or changing board data', { 
     await fs.unlink(`${f.boardPath}.lock`);
     await call('addComponent', 'Recovered');
 });
+
+
+test('owner snapshots and legacy phases retain task metadata and column identity', async (t) => {
+    const f = await fixture(t);
+    const original = { title: 'Custom board', components: [
+        { id: 'column', name: 'Custom column', description: 'Keep me', phases: {
+            mvp: { tasks: [{ id: 'task', title: 'Build task list UI', done: true, owner: 'sin', priority: 2 }] },
+        } },
+    ] };
+    await fs.writeFile(f.boardPath, JSON.stringify(original));
+    const call = await f.worker();
+    const board = await call('getBoard');
+    assert.equal(board.schemaVersion, 2);
+    assert.deepEqual(board.components.map(({ id, name }) => ({ id, name })), [{ id: 'column', name: 'Custom column' }]);
+    assert.equal(board.components[0].description, 'Keep me');
+    assert.deepEqual(board.components[0].tasks[0], {
+        id: 'task', title: 'Build task list UI', done: true, owner: 'sin', priority: 2, phase: 'mvp',
+    });
+    await call('setTaskOwner', 'task', 'william');
+    const updated = await call('getBoard');
+    assert.equal(updated.components[0].tasks[0].phase, 'mvp');
+    assert.equal(updated.components[0].tasks[0].done, true);
+    const before = await fs.readFile(f.boardPath, 'utf8');
+    await assert.rejects(call('setTaskOwner', 'task', 'unknown'), /Unknown owner/);
+    assert.equal(await fs.readFile(f.boardPath, 'utf8'), before);
+    assert.equal((await call('addOwnedTask', 'column', 'New task')).owner, 'unassigned');
+});
+
+test('owner HTTP controls match the committed schema without phase defaults', async (t) => {
+    const f = await fixture(t);
+    const original = { schemaVersion: 2, title: 'Owners', components: [
+        { id: 'column', name: 'Keep column', tasks: [
+            { id: 'owned', title: 'Owned task', done: false, owner: 'saketh' },
+            { id: 'legacy', title: 'MVP task', done: false, phase: 'mvp', owner: 'unassigned' },
+        ] },
+    ] };
+    await fs.writeFile(f.boardPath, JSON.stringify(original));
+    const call = await f.worker();
+    const url = await call('start');
+    const html = await (await fetch(url)).text();
+    assert.match(html, /owner-select/);
+    assert.doesNotMatch(html, /option.*Ideation/);
+    const meta = await (await fetch(new URL('api/meta', url))).json();
+    assert.deepEqual(meta.owners.map(person => person.id), ['unassigned', 'william', 'sin', 'saketh', 'adelle']);
+    assert.deepEqual(await call('getBoard'), original);
+    const response = await fetch(new URL('api/task/owned/owner', url), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ owner: 'adelle' }),
+    });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).owner, 'adelle');
+    assert.equal((await call('getBoard')).components[0].tasks[1].phase, 'mvp');
+    assert.equal(await call('close'), 0);
+});

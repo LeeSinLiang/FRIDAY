@@ -256,10 +256,14 @@ class RenderTests(SimpleTestCase):
 # in-memory cache rather than inherit whatever the project configures: with a database-backed cache
 # (the accounts work uses one) a SimpleTestCase would be refused the query. Runtime keeps the
 # project's cache, so rate limits still persist where the project wants them to.
-@override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "compile-tests"}})
+@override_settings(CACHES={"default": {
+    "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    "LOCATION": "catalogue-compile-endpoint-tests",
+}})
 class CompileEndpointTests(SimpleTestCase):
     def setUp(self):
         cache.clear()  # throttle counters live in the cache
+        self.addCleanup(cache.clear)
 
     def post(self, body):
         return APIClient().post("/api/compile", body, format="json")
