@@ -19,6 +19,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Frontend
 
+- [Room, cart and Vercel release](docs/frontend/room-cart-deployment.md) — guest shopping routes, atomic cart/scene persistence, account handoff, deployment configuration and remaining release gates.
+
 - [Team room setup](docs/frontend/room-capture/team-room-setup.md) — one-command checked import of the prepared room, packaging and sharing instructions.
 
 | Document | Purpose |
@@ -63,6 +65,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 - [Demo run of show](docs/demo/run-of-show.md) — what to click, in order, what each beat proves, and what happens when a dependency fails.
 
 ### Setup and tooling
+
+- [Preserve William's UI while integrating into main](docs/handoffs/ui-main-integration.md) — current branch/remote comparison, specific conflict rules, three-stage PR sequence and visual/runtime acceptance gates.
 
 - [Visa/auth integration handoff and branch-sharing workflow](docs/handoffs/visa-auth-integration.md)
 - [Account signup, SMTP and local email verification, authenticator MFA, recovery, and approved checkout](docs/account-mfa-checkout.md)

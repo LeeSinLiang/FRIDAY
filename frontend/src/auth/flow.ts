@@ -5,6 +5,7 @@ export type Account = {
   mfa_enabled: boolean
   checkout_ready: boolean
   local_inbox: boolean
+  recovery_acknowledged?: boolean
 }
 
 export type AccountStep = 'sign-in' | 'create' | 'verify-email' | 'mfa' | 'reset' | 'setup' | 'recovery' | 'ready' | 'security' | 'checkout'
@@ -19,7 +20,7 @@ export function accountStep(account: Account | null, pending: string | null, pat
   }
   if (!account.email_verified) return 'verify-email'
   if (!account.mfa_enabled) return 'setup'
-  if (recoveryPending) return 'recovery'
+  if (recoveryPending || account.recovery_acknowledged === false) return 'recovery'
   if (pathname === '/account/security') return 'security'
   if (pathname.startsWith('/checkout') && account.checkout_ready) return 'checkout'
   return 'ready'
