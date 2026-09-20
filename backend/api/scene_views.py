@@ -68,7 +68,15 @@ def execute(callback, status=200, explicit=False):
 def scene(request):
     key = session_key(request)
     if request.method == 'GET':
-        return execute(lambda: serialize(scene_for_session(key, room_id(request))))
+        def read():
+            from .designer_jobs import active_request
+            saved = scene_for_session(key, room_id(request))
+            snapshot = serialize(saved)
+            active = active_request(saved)
+            if active:
+                snapshot['activeDesigner'] = active
+            return snapshot
+        return execute(read)
     if not isinstance(request.data, dict) or set(request.data) != {'baseRevision', 'instances'}:
         return Response({'error': {'code': 'validation', 'message': 'Provide baseRevision and instances.'}}, status=400)
     return execute(lambda: save_scene(key, request.data['baseRevision'], request.data['instances'], room_id(request)))

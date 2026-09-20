@@ -15,7 +15,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .models import SceneCapture, SceneLayout
-from .scene_service import SceneError, covered_by_free_areas, footprint, number, overlaps, room_context, scene_for_session, serialize, validate_revision
+from .scene_service import SceneError, covered_by_free_areas, footprint, number, overlaps, room_context, scene_for_session, serialize, validate_instances, validate_revision
 
 # Base64 + JSON stays below Django's default 2.5 MiB request-body limit.
 MAX_PNG_BYTES = 1536 * 1024
@@ -30,6 +30,9 @@ def metadata(job):
     result = {'captureId': str(job.pk), 'status': job.status, 'revision': job.revision, 'view': job.view, 'representation': job.representation,
               'roomId': room.get('roomId', job.scene.room_id), 'geometryRevision': job.snapshot.get('geometryRevision', str(room.get('revision', ''))),
               'camera': job.camera, 'width': job.width, 'height': job.height}
+    if job.snapshot.get('capturePreview'):
+        result.update(preview=True, snapshotKind='staged_preview', acceptedRevision=job.revision,
+                      previewHash=job.snapshot['capturePreview']['instancesHash'])
     if job.status == 'ready':
         result.update(imageUrl=f'/api/scene/captures/{job.pk}/image/?roomId={job.scene.room_id}', modelWarnings=job.model_warnings)
     if job.status == 'failed':
@@ -83,7 +86,13 @@ def capture_options(payload, room):
 
 
 @transaction.atomic
-def enqueue_capture(session_key, payload, room_id='demo-room'):
+def enqueue_capture(session_key, payload, room_id='demo-room', *, preview_instances=None, expected_geometry_revision=None):
+    """Freeze accepted geometry or a validated preview supplied by a trusted adapter.
+
+    Preview arguments are intentionally absent from the HTTP payload schema. A
+    preview uses the accepted layout revision as its base, not as a claim that its
+    furniture was saved. It writes only SceneCapture, never SceneLayout or cart.
+    """
     required = {'requestId', 'baseRevision', 'view'}
     if not isinstance(payload, dict) or not required <= set(payload) or set(payload) - required - {'camera', 'width', 'height', 'representation'}:
         raise SceneError('validation', 'Provide requestId, baseRevision, view, and optional camera/width/height/representation.')
@@ -100,7 +109,12 @@ def enqueue_capture(session_key, payload, room_id='demo-room'):
     # Bind the requested intent, not the mutable default camera. The resolved
     # camera and complete geometry snapshot are frozen below exactly once.
     try:
-        digest = hashlib.sha256(json.dumps({'revision': payload['baseRevision'], 'view': view, 'options': {key: payload[key] for key in ['camera', 'representation'] if key in payload}, 'width': width, 'height': height}, sort_keys=True, allow_nan=False).encode()).hexdigest()
+        intent = {'revision': payload['baseRevision'], 'view': view, 'options': {key: payload[key] for key in ['camera', 'representation'] if key in payload}, 'width': width, 'height': height}
+        if preview_instances is not None:
+            intent['previewInstances'] = preview_instances
+        if expected_geometry_revision is not None:
+            intent['geometryRevision'] = expected_geometry_revision
+        digest = hashlib.sha256(json.dumps(intent, sort_keys=True, allow_nan=False).encode()).hexdigest()
     except (ValueError, TypeError):
         raise SceneError('validation', 'Capture options must contain finite JSON values.')
     scene = scene_for_session(session_key, room_id)
@@ -116,7 +130,26 @@ def enqueue_capture(session_key, payload, room_id='demo-room'):
         raise SceneError('revision_conflict', 'Reload the scene before requesting a capture.', 409, scene.revision)
     if SceneCapture.objects.filter(scene=scene, status__in=['pending', 'rendering']).count() >= 4:
         raise SceneError('capture_queue_full', 'At most four captures can wait at once.', 429)
-    job = SceneCapture.objects.create(scene=scene, request_id=request_id, payload_hash=digest, snapshot=serialize(scene), revision=scene.revision, view=view, representation=representation, camera=camera, width=width, height=height, expires_at=timezone.now() + timedelta(seconds=120))
+    snapshot = serialize(scene)
+    if expected_geometry_revision is not None and snapshot['geometryRevision'] != expected_geometry_revision:
+        raise SceneError('geometry_conflict', 'The room geometry changed. Inspect it again before capturing.', 409, scene.revision)
+    if preview_instances is not None:
+        from .catalogue_products import catalogue_product
+        snapshot['instances'] = validate_instances(preview_instances, room_id)
+        known = {p['productId'] for p in snapshot['products']}
+        for item in snapshot['instances']:
+            if item['productId'] not in known:
+                product = catalogue_product(item['productId'])
+                if product is None:
+                    raise SceneError('unknown_product', 'The preview product is no longer available.')
+                snapshot['products'].append(product)
+                known.add(item['productId'])
+        snapshot.pop('agentMotion', None)
+        snapshot['capturePreview'] = {
+            'acceptedRevision': scene.revision,
+            'instancesHash': hashlib.sha256(json.dumps(snapshot['instances'], sort_keys=True, allow_nan=False).encode()).hexdigest(),
+        }
+    job = SceneCapture.objects.create(scene=scene, request_id=request_id, payload_hash=digest, snapshot=snapshot, revision=scene.revision, view=view, representation=representation, camera=camera, width=width, height=height, expires_at=timezone.now() + timedelta(seconds=120))
     prune(scene)
     return metadata(job)
 

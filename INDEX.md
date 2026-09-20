@@ -15,6 +15,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 | [TODO_WILLIAM.md](TODO_WILLIAM.md) | William's tasks and agent work log |
 | [TODO_ADELLE.md](TODO_ADELLE.md) | Adelle's tasks and agent work log |
 
+- [In-app scene designer](docs/backend/scene-designer/README.md) — stable object references, relative placement, agent tool loop and acceptance checks.
+
 ## Feature documentation
 
 ### Frontend

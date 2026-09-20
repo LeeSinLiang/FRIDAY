@@ -67,6 +67,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   const requestedRoom = roomId ?? roomParams.get("roomId") ?? roomParams.get("room");
   const [activeRoomId,setActiveRoomId]=useState(()=>initialRoom(requestedRoom,roomParams.get("floor")));
   const session=useRoomSession(activeRoomId,active || !!pendingProductId);
+  useEffect(()=>{ if(session.designerMessage) setNotice(session.designerMessage); },[session.designerMessage]);
   // Keep the building mounted while fetching the next independent floor layout.
   const previousSnapshot=useRef<RoomSnapshot|null>(null);
   if(session.snapshot)previousSnapshot.current=session.snapshot;
@@ -207,7 +208,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   return <main className={`splat-editor ${panelOpen?"has-panel":""}`}>
     <div className="splat-room" aria-label="First-person room editor">
       {state && <Suspense fallback={null}><PlayCanvasScene state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}
-      {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen} onCloseShelf={()=>setShopSearchOpen(false)} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
+      {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen} onCloseShelf={()=>setShopSearchOpen(false)} designMessage={session.designerMessage} onDesign={async text => { const result = await session.design(text, selectedId, getCamera()); setNotice(result.message); await refresh(); return result.message; }} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
       {runtimeStatus.phase!=="ready" && <div className="splat-loading" role="status">
         <div className="glass splat-loading-card"><span className="loading-orbit"/><h1>{runtimeStatus.phase==="error"?"Room unavailable":"Come on in."}</h1><p>{runtimeStatus.message}</p>
           {runtimeStatus.progress!==undefined && <progress max={1} value={runtimeStatus.progress} aria-label="Room loading progress"/>}
