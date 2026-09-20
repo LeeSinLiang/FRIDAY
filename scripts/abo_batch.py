@@ -27,17 +27,17 @@ def import_one(row: dict, args: argparse.Namespace) -> bool:
 
 
 def run(plan: dict, args: argparse.Namespace) -> dict[str, tuple[int, int]]:
-    """Imported and wanted counts per category."""
+    """Imported and wanted counts per plan rule (a catalogue category, sometimes split in two)."""
     outcome = {}
-    for category, quota in plan["quotas"].items():
+    for rule, quota in plan["quotas"].items():
         imported = 0
-        for row in (r for r in plan["items"] if r["category"] == category):
+        for row in (r for r in plan["items"] if r.get("rule", r["category"]) == rule):
             if imported >= quota:
                 break
             started = time.monotonic()
             imported += import_one(row, args)
-            print(f"  [{category} {imported}/{quota}] {row['asin']} {time.monotonic() - started:.1f}s", flush=True)
-        outcome[category] = (imported, quota)
+            print(f"  [{rule} {imported}/{quota}] {row['asin']} {time.monotonic() - started:.1f}s", flush=True)
+        outcome[rule] = (imported, quota)
     return outcome
 
 
