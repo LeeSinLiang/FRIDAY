@@ -4,6 +4,7 @@ import "./clauses.test";
 import "./cataloguePlacement.test";
 import "./rooms.test";
 import "../catalogue/quietSave.test";
+import "../catalogue/shelf.test";
 import type { Listing } from "../lib/types";
 import { findOpenPose, validatePlacement } from "../scene/placement";
 import type { Instance, Pose, Product, Room } from "../scene/types";
