@@ -1,0 +1,278 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "productId": "support-demo-table",
+      "modelUrl": "/models/furniture/support-demo-table/model.glb",
+      "revision": "1",
+      "widthCm": 120,
+      "depthCm": 70,
+      "heightCm": 75,
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 72,
+          "zCm": 0,
+          "widthCm": 120,
+          "heightCm": 3,
+          "depthCm": 70
+        },
+        {
+          "xCm": -52.5,
+          "yCm": 0,
+          "zCm": -27.5,
+          "widthCm": 5,
+          "heightCm": 72,
+          "depthCm": 5
+        },
+        {
+          "xCm": -52.5,
+          "yCm": 0,
+          "zCm": 27.5,
+          "widthCm": 5,
+          "heightCm": 72,
+          "depthCm": 5
+        },
+        {
+          "xCm": 52.5,
+          "yCm": 0,
+          "zCm": -27.5,
+          "widthCm": 5,
+          "heightCm": 72,
+          "depthCm": 5
+        },
+        {
+          "xCm": 52.5,
+          "yCm": 0,
+          "zCm": 27.5,
+          "widthCm": 5,
+          "heightCm": 72,
+          "depthCm": 5
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Tabletop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 75,
+          "zCm": 0,
+          "widthCm": 120,
+          "depthCm": 70,
+          "heightCm": 250
+        }
+      ],
+      "modelSha256": "b2b4637540a1426f01af09971596812e02291b7a9951e009ee0198640c8026bb"
+    },
+    {
+      "productId": "support-demo-cabinet",
+      "modelUrl": "/models/furniture/support-demo-cabinet/model.glb",
+      "revision": "1",
+      "widthCm": 100,
+      "depthCm": 40,
+      "heightCm": 100,
+      "solids": [
+        {
+          "xCm": -48.5,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 3,
+          "heightCm": 100,
+          "depthCm": 40
+        },
+        {
+          "xCm": 48.5,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 3,
+          "heightCm": 100,
+          "depthCm": 40
+        },
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 94,
+          "heightCm": 3,
+          "depthCm": 40
+        },
+        {
+          "xCm": 0,
+          "yCm": 48.5,
+          "zCm": 0,
+          "widthCm": 94,
+          "heightCm": 3,
+          "depthCm": 40
+        },
+        {
+          "xCm": 0,
+          "yCm": 97,
+          "zCm": 0,
+          "widthCm": 94,
+          "heightCm": 3,
+          "depthCm": 40
+        },
+        {
+          "xCm": 0,
+          "yCm": 3,
+          "zCm": -18.5,
+          "widthCm": 94,
+          "heightCm": 94,
+          "depthCm": 3
+        }
+      ],
+      "targets": [
+        {
+          "id": "lower",
+          "label": "Lower shelf",
+          "kind": "compartment",
+          "xCm": 0,
+          "yCm": 3,
+          "zCm": 1.5,
+          "widthCm": 94,
+          "depthCm": 37,
+          "heightCm": 45.5
+        },
+        {
+          "id": "upper",
+          "label": "Middle shelf",
+          "kind": "compartment",
+          "xCm": 0,
+          "yCm": 51.5,
+          "zCm": 1.5,
+          "widthCm": 94,
+          "depthCm": 37,
+          "heightCm": 45.5
+        },
+        {
+          "id": "top",
+          "label": "Cabinet top",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 100,
+          "zCm": 0,
+          "widthCm": 100,
+          "depthCm": 40,
+          "heightCm": 250
+        }
+      ],
+      "modelSha256": "2f56ba2acc79024ba9536d6e962bba61988bc53a9790056aad2194c921a38cb6"
+    },
+    {
+      "productId": "pc-workspace-desk",
+      "modelUrl": "/models/furniture/pc-workspace-desk/model.glb",
+      "widthCm": 180,
+      "depthCm": 90,
+      "heightCm": 75,
+      "modelSha256": "ec82ba283ebf5a190825e406c28ff39b155ec0121cf98c9d1725f380e17ad3cb",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 180,
+          "heightCm": 75,
+          "depthCm": 90
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Desktop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 75,
+          "zCm": 0,
+          "widthCm": 178,
+          "heightCm": 200,
+          "depthCm": 88
+        }
+      ]
+    },
+    {
+      "productId": "pc-workspace-shelf",
+      "modelUrl": "/models/furniture/pc-workspace-shelf/model.glb",
+      "widthCm": 95,
+      "depthCm": 42,
+      "heightCm": 100,
+      "modelSha256": "b57fd526d34291671f238a96aadb4590081727889fb766ea3e3f53cab1f5c6eb",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": -42.75,
+          "yCm": 0,
+          "zCm": -17.64,
+          "widthCm": 9.5,
+          "heightCm": 100,
+          "depthCm": 6.72
+        },
+        {
+          "xCm": -42.75,
+          "yCm": 0,
+          "zCm": 17.64,
+          "widthCm": 9.5,
+          "heightCm": 100,
+          "depthCm": 6.72
+        },
+        {
+          "xCm": 42.75,
+          "yCm": 0,
+          "zCm": -17.64,
+          "widthCm": 9.5,
+          "heightCm": 100,
+          "depthCm": 6.72
+        },
+        {
+          "xCm": 42.75,
+          "yCm": 0,
+          "zCm": 17.64,
+          "widthCm": 9.5,
+          "heightCm": 100,
+          "depthCm": 6.72
+        },
+        {
+          "xCm": 0,
+          "yCm": 25,
+          "zCm": 0,
+          "widthCm": 85.5,
+          "heightCm": 7.5,
+          "depthCm": 35.28
+        },
+        {
+          "xCm": 0,
+          "yCm": 85,
+          "zCm": 0,
+          "widthCm": 85.5,
+          "heightCm": 7.5,
+          "depthCm": 35.28
+        }
+      ],
+      "targets": [
+        {
+          "id": "lower",
+          "label": "Lower shelf",
+          "kind": "compartment",
+          "xCm": 0,
+          "yCm": 32.5,
+          "zCm": 0,
+          "widthCm": 76,
+          "heightCm": 52.5,
+          "depthCm": 35.28
+        },
+        {
+          "id": "top",
+          "label": "Top shelf",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 92.5,
+          "zCm": 0,
+          "widthCm": 76,
+          "heightCm": 200,
+          "depthCm": 35.28
+        }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 import type { FindClause, Program } from "../lib/dsl/schema";
 import type { SearchResponse } from "../lib/types";
 
-export type Compiled = { program: Program; chips: string[]; source: string; ms: number };
+export type Compiled = { program: Program; chips: string[]; source: string; ms: number; roomId?: string; sceneRevision?: number };
 
 const PARAM_BY_CLAUSE: Record<FindClause["k"], string> = {
   text: "q", category: "category", price_max: "price_max", price_min: "price_min",
@@ -26,8 +26,8 @@ async function json<T>(response: Response): Promise<T> {
   return body as T;
 }
 
-export const compileSentence = (text: string, signal: AbortSignal): Promise<Compiled> =>
-  fetch("/api/compile", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }), signal }).then((r) => json<Compiled>(r));
+export const compileSentence = (text: string, signal: AbortSignal, context?: {roomId:string;sceneRevision:number}): Promise<Compiled> =>
+  fetch("/api/compile", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, ...context }), signal }).then((r) => json<Compiled>(r));
 
 export const searchCatalogue = (find: FindClause[], signal: AbortSignal): Promise<SearchResponse> =>
   fetch(`/api/search?${searchParams(find)}`, { signal }).then((r) => json<SearchResponse>(r));

@@ -24,7 +24,6 @@ type Props = {
   onPlace: (pose: Pose) => void;
   /** The legal sample under the pointer while armed, or null. For a placement ghost. */
   onHoverPose?: (pose: Pose | null) => void;
-  supportHeightCm?: number;
 };
 
 const NO_RAYCAST = () => null;
@@ -58,7 +57,7 @@ const FRAGMENT = `
     gl_FragColor = vec4(colour, (0.30 + 0.38 * dot_) * mix(0.8, uPulse, uArmed));
   }`;
 
-export default function FloorOverlay({ mask, armed, onPlace, onHoverPose, supportHeightCm = 0 }: Props) {
+export default function FloorOverlay({ mask, armed, onPlace, onHoverPose }: Props) {
   const invalidate = useThree((state) => state.invalidate);
   const material = useRef<ShaderMaterial>(null);
 
@@ -112,7 +111,7 @@ export default function FloorOverlay({ mask, armed, onPlace, onHoverPose, suppor
 
   return (
     <mesh
-      position={[cmToScene(centreX), cmToScene(supportHeightCm > 0 ? supportHeightCm + 0.4 : LIFT_CM), cmToScene(centreZ)]}
+      position={[cmToScene(centreX), cmToScene(LIFT_CM), cmToScene(centreZ)]}
       rotation={[-Math.PI / 2, 0, 0]}
       renderOrder={2}
       // Unarmed, the overlay must not swallow clicks meant for the floor or furniture.

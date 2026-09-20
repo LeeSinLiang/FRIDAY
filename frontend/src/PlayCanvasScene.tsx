@@ -57,8 +57,8 @@ export default function PlayCanvasScene(props:Props) {
         switchBuildingFloor(runtime,latest.current.state.room);
       const forward:InteractionCallbacks={
         onSelect:id=>latest.current.callbacks.onSelect(id),
-        onCommit:(id,pose)=>latest.current.callbacks.onCommit(id,pose),
-        onPlace:(id,pose)=>latest.current.callbacks.onPlace(id,pose),
+        onCommit:(id,pose,attachment)=>latest.current.callbacks.onCommit(id,pose,attachment),
+        onPlace:(id,pose,attachment)=>latest.current.callbacks.onPlace(id,pose,attachment),
         onCancelPlacement:()=>latest.current.callbacks.onCancelPlacement(),
         onPreview:preview=>latest.current.callbacks.onPreview(preview),
         onActiveChange:active=>latest.current.callbacks.onActiveChange(active),

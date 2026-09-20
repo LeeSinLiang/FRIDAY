@@ -11,9 +11,11 @@ import { compileSentence, searchCatalogue, type Compiled } from "./api";
 import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend } from "./transcribe";
 import "./shelf.css";
 import { priceLabel } from "./price";
-import { resolveLiveSupport } from "./liveSupport";
+import { isDesignerRequest } from "../scene/designerIntent";
 
 type Props = {
+  roomId?: string;
+  sceneRevision?: number;
   region: Region | null;
   yawIndex: number;
   armedId: string | null;
@@ -26,8 +28,9 @@ type Props = {
   onHover: (listing: Listing | null) => void;
   onPick: (listing: Listing | null) => void;
   onPlace: (place: PlaceClause[]) => void;
-  supports?: { id: string; name: string }[];
   onClose?: () => void;
+  onDesign?: (text: string) => Promise<string>;
+  designMessage?: string;
 };
 
 // Display only. Everything on the wire stays integer cents and millimetres.
@@ -71,7 +74,8 @@ function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: 
   );
 }
 
-export default function CatalogueShelf({ region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, supports = [], onClose }: Props) {
+export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose, onDesign, designMessage }: Props) {
+  const currentRevision = useRef(sceneRevision); currentRevision.current=sceneRevision;
   const [sentence, setSentence] = useState("an armchair");
   const [compiled, setCompiled] = useState<Compiled | null>(null);
   const [items, setItems] = useState<Listing[]>([]);
@@ -81,6 +85,14 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
   const [matches, setMatches] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [designerReply, setDesignerReply] = useState("");
+  const lastDesignMessage = useRef(designMessage);
+  useEffect(() => {
+    if (designMessage !== lastDesignMessage.current) {
+      lastDesignMessage.current = designMessage;
+      if (designMessage) setDesignerReply(designMessage);
+    }
+  }, [designMessage]);
   const request = useRef<AbortController | null>(null);
   const [voice, setVoice] = useState<TranscribeBackend>("browser");
   const [listening, setListening] = useState<Listening | null>(null);
@@ -91,14 +103,22 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
     request.current?.abort();
     const controller = (request.current = new AbortController());
     setBusy(true);
+    setDesignerReply("");
     try {
+      if (onDesign && isDesignerRequest(text)) {
+        onHover(null); onPick(null); onPlace([]); setError(""); setCompiled(null);
+        const reply = await onDesign(text);
+        if (request.current === controller && !controller.signal.aborted) setDesignerReply(reply);
+        return;
+      }
       // compile() never fails on a bad sentence: at worst it returns a plain text search.
-      const result = await compileSentence(text, controller.signal);
+      const result = await compileSentence(text, controller.signal, roomId && sceneRevision !== undefined ? {roomId,sceneRevision} : undefined);
       const found = await searchCatalogue(result.program.find, controller.signal);
+      if (result.sceneRevision !== undefined && result.sceneRevision !== currentRevision.current) throw Error("The room changed. Describe the placement again.");
       setCompiled(result); setItems(found.items); setTotal(found.total); setError("");
       setMatches(found.facets ? found.facets.category.reduce((sum, bucket) => sum + bucket.count, 0) : null);
       onHover(null); // the card under the pointer is a different listing now
-      onPlace(resolveLiveSupport(text, result.program.place, supports));
+      onPlace(result.program.place);
     } catch (caught) {
       if ((caught as Error).name !== "AbortError") setError((caught as Error).message);
     } finally {
@@ -147,7 +167,7 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
       )}
       <form onSubmit={submit}>
         <input value={sentence} onChange={(event) => setSentence(event.target.value)} maxLength={300}
-          aria-label="Describe what you are looking for" placeholder="a reading chair by the window, under $400" />
+          aria-label="Describe what you are looking for" placeholder={onDesign ? "Find a chair, or place a chair beside the table" : "a reading chair by the window, under $400"} />
         {canListen(voice) && (
           <button type="button" className="mic" onClick={() => void talk()} aria-pressed={listening !== null}
             aria-label={listening ? "Stop listening" : "Say what you are looking for"} title={listening ? "Stop" : "Speak"}>
@@ -167,7 +187,7 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
           at its max height, so a taller explanation used to shrink the list from the top, and the card under a
           still pointer became a different card. */}
       <div className={DEV ? "shelf-explain dev" : "shelf-explain"}>
-        <Status region={region} yawIndex={yawIndex} armed={armedId !== null} />
+        {designerReply ? <p className="shelf-status" role="status">{designerReply}</p> : <Status region={region} yawIndex={yawIndex} armed={armedId !== null} />}
         {dropped.length > 0 && (
           <ul className="shelf-dropped">
             {dropped.map((item, index) => <li key={index}>Couldn’t use “{item.clause.k.replace("_", " ")} {"id" in item.clause.ref && item.clause.ref.id ? item.clause.ref.id : item.clause.ref.kind.replace("_", " ")}”: {item.reason}</li>)}

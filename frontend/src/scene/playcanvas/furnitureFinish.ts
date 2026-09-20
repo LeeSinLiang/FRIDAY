@@ -63,8 +63,8 @@ export function createFurnitureFinish(model: Entity, product: Product, profile: 
   }
   let disposed = false;
   return {
-    setPose(pose: Pose, supportHeightCm: number) {
-      const origin = new Float32Array([cmToScene(pose.xCm), cmToScene(supportHeightCm), cmToScene(pose.zCm)]);
+    setPose(pose: Pose) {
+      const origin = new Float32Array([cmToScene(pose.xCm), cmToScene(pose.yCm ?? 0), cmToScene(pose.zCm)]);
       for (const { mesh } of instances) mesh.setParameter("uFurnitureOrigin", origin);
     },
     dispose() {

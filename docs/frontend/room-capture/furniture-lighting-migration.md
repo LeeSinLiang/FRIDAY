@@ -2,7 +2,7 @@
 
 ## Integration base and scope
 
-`codex/room-furniture-lighting` starts at main `9adbf97` and locally merges completed stacking commit `76fd9ae` in `18e9a7e`. Stacking is a dependency, not a second support detector. The older `c12abd1` prototype was ported selectively; its floor-only finish origin is not retained.
+PR #102 integrates with current main `5afe392`, including its scene designer and reviewed surface/compartment attachment contract. The renderer consumes `pose.yCm` after main's attachment resolver; it never infers support from bounding-box overlap. The branch's initial `76fd9ae` stacking dependency was superseded during integration, including its obsolete probe, agreement test, documentation and temporary CI setup. Current main's backend, support tests, interaction, catalogue and capture paths are preserved. The older `c12abd1` lighting prototype was ported selectively; its floor-only shader origin is not retained.
 
 The editor UI, room GLB/textures, catalogue, cart, saved-scene format, navigation and placement rules are retained. This uses PlayCanvas 2.22.2's existing PBR shaders. It does not reconstruct room lights, ray trace, or generate new high-resolution textures.
 
@@ -17,19 +17,21 @@ The editor UI, room GLB/textures, catalogue, cart, saved-scene format, navigatio
 
 Shadow maps are reused until an item changes, an animation runs, the camera moves 15 cm or turns 3 degrees, or the capture target/projection changes. Captures force a fresh map. No shadow texture is allocated per object.
 
-The completed stacking dependency rendered raised objects but kept selection bounds and selection footprints at floor height. This integration corrects both using the same derived height, with an off-centre inside/outside hit regression; placement validation is unchanged.
+Current main already selects raised items through authored cabinet openings and moves attached children with their parent. Those paths are retained. The only overlay adjustment suppresses the floor grid for an elevated preview; its existing raised footprint remains visible.
 
-`FurnitureVisual.setPose` updates model, shader origin and contact visibility together. Live movement, previews and frozen photographic models use that path with `supportHeightCm`. Source resources stay cached; visual disposal frees owned material clones. Room disposal frees lights, layer, contact material/texture; the existing environment owner frees its HDR-derived resources.
+`FurnitureVisual.setPose` updates model, shader origin and contact visibility together. Live movement, previews and frozen photographic models use that path with resolved `pose.yCm`. Source resources stay cached; visual disposal frees owned material clones. Room disposal frees lights, layer, contact material/texture; the existing environment owner frees its HDR-derived resources.
 
 ## Reproduce checks
 
 Run `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,rendering.localhost BACKEND_PORT=8247 FRONTEND_PORT=5247 ./run-local.sh` from the repository root and open `http://rendering.localhost:5247`. The separate hostname avoids guest-cookie clashes with teammates' localhost servers (cookies are not isolated by port). Normal user path: `/rooms` → `/room/empty-room` or `/room/london-skyscraper?floor=C01`.
 
-Development-only fixture: `/dev/rendering-check.html?room=london-skyscraper-test&lighting=room`. This HTML is not a production build entry. It uses the production runtime, furniture layer, stacking and photographic capture with the grey sofa, LISABO table and a small off-centre Stone & Beam vase. `lighting=legacy` keeps identical geometry/camera with old furniture illumination. Links cover empty, London, CGArch and Haussmann.
+Development-only fixture: `/dev/rendering-check.html?room=london-skyscraper-test&lighting=room`. This HTML is not a production build entry. It uses the production runtime, furniture layer, reviewed attachments and photographic capture with the grey sofa, 75 cm demo support table and a small off-centre Stone & Beam vase. `lighting=legacy` keeps identical geometry/camera with old furniture illumination. Links cover empty, London, CGArch and Haussmann.
 
 Use Table detail, Move and rotate vase, Photographic capture and 30 second walkthrough. Timing reports raw frame-end intervals after 3 s warm-up; these are browser measurements on a shared workstation, not isolated GPU timings. Evidence is under ignored `.scratch/rendering/`.
 
-## Verification and release status
+## Historical verification before the newer support integration
+
+The results below were measured on the earlier branch with the 74 cm LISABO table. They establish rendering behavior and cost on that revision; current attachment integration has separate acceptance below.
 
 - Fresh main: `manage.py test` → `Ran 281 tests in 16.787s / OK (skipped=5)`; `npm test` → `181 + 25 passed`; build `6.21s`.
 - Integrated stacking baseline: `manage.py test` → `Ran 284 tests in 15.195s / OK (skipped=5)`; `npm test` → `184 + 25 passed`; build `5.15s`.
@@ -40,7 +42,7 @@ Use Table detail, Move and rotate vase, Photographic capture and 30 second walkt
 - Local assets: original London/empty, CGArch 68,229,960-byte GLB and Haussmann SOG/collision pair. Studio 11 and CGArch lightmapper proof binaries are absent; those paths are not visually accepted.
 - CGArch's existing mottled trim/lightmap artifacts and original model texture resolution remain. Lighting cannot recover absent source detail.
 - Cleanup verified: no listeners remain on 8247, 5247 or 5248; temporary browser tabs were closed. Other stacks remain untouched.
-- Follow-up: the user authorized publishing and merging this rendering branch into main. Fresh remote-main baseline `9adbf97` passed `281` backend tests (4 optional skips), `181+25` frontend tests and a `4.10s` build. PR #102 integration and post-merge verification are in progress. Initial CI exposed that the stacking agreement test needs uv/backend dependencies in the frontend job; the job now installs them from the existing lock file, without skipping the cross-language check. Vercel has not been refreshed; hosted acceptance remains separate.
+
 
 ## Frame pacing
 
@@ -54,13 +56,11 @@ One 30 second London walkthrough, three placed GLBs, first three seconds exclude
 
 The accepted effect has a higher median cost than the baseline. It improves this run's tail pacing but does not establish 60 fps, GPU-isolated performance, or a large-catalogue stress result. No Haussmann performance result is claimed.
 
-## Migrate into the current integration branch
+## Current main integration and acceptance
 
-1. Let overlapping furniture/capture work settle and run the required fresh-main baseline at a task boundary. This branch was tested against `9adbf97` plus stacking `76fd9ae`; it is not evidence that a later main is compatible.
-2. Integrate the completed stacking contract first if it is absent. The local merge `18e9a7e` records that dependency. Do not replay the old `c12abd1` experiment. If the newer branch has richer support surfaces, preserve its height solver and adapt these visual calls to its result.
-3. Apply this branch's rendering commit after the dependency. Review overlaps in `furniture.ts`, `runtime.ts`, `interaction.ts`, `overlays.ts` and the test import list. Keep the newer agent harness, movement and capture contracts. Reconcile current TODO/board records rather than replacing teammates' records.
-4. No database migration, new dependency, API credential or saved-scene-format change is required by the rendering commit. Provision the existing licensed assets using the room preparation docs; this change does not publish or change their binaries.
-5. Run the full backend suite, both groups in `npm test`, and `npm run build`; then repeat the ordinary editor and photographic checks on the integrated artifact. Any later hosted release must verify its actual served bundle and the same saved-scene workflow.
+The user authorized merging PR #102. Current main `5afe392` baseline passed `manage.py test`: `Ran 390 tests in 17.735s / OK (skipped=4)`; `npm test`: `195+25` passed; build `3.99s`. The integration preserves that release's explicit supports and scene designer. The renderer adds no database migration, provider credential, catalogue model or saved-scene format change.
+
+Current regression resolves actual reviewed attachments at table 75 cm and cabinet middle shelf 51.5 cm, translates/rotates the parent, then detaches the child. Both entity position and shader origin must agree after every transition. The development fixture has been migrated to that same contract. Integrated checks: `manage.py test` → `Ran 390 tests in 17.884s / OK (skipped=4)`; `npm test` → `202/202` plus `25/25`, zero failures; `npm run build` → `built in 5.87s`. Chrome selected the middle-shelf box through the opening, dragged X250→270, undid, moved the cabinet X270→320 and rotated it 90 degrees. Server revision 9 confirms child (322,135,Y51.5) with unchanged local attachment. Undo and reload preserved its shelf contact. The London fixture renders the 75 cm tabletop vase and real shadow; move/rotation and frozen photographic capture preserve the same contact. Evidence: `.scratch/rendering/integrated-{london-table,london-capture,cabinet-child-drag,parent-rotation,editor-reloaded}.png`. Main's designer, support, catalogue, API, capture and navigation source remains unchanged by the rendering delta. Vercel has not been refreshed by this rendering task; a hosted release must verify its served bundle and saved-scene workflow independently.
 
 Evidence files live in ignored `.scratch/rendering/`: `before-*.png`, `after-*.png`, `capture-{empty,london,cgarch,haussmann}.png`, `vase-before-move.png`, `vase-after-move.png`, `editor-vase-after-undo.png`, `editor-london-{lobby,mezzanine}.png`, `production-build-empty-room.png`, walkthrough JSON and `final-*.log`. These are local evidence, not source assets.
 
@@ -69,4 +69,4 @@ Evidence files live in ignored `.scratch/rendering/`: `before-*.png`, `after-*.p
 - [PlayCanvas PBR](https://developer.playcanvas.com/user-manual/graphics/physical-rendering/)
 - [Dynamic lighting and baked lightmaps](https://developer.playcanvas.com/user-manual/graphics/lighting/)
 - [StandardMaterial](https://api.playcanvas.com/engine/classes/StandardMaterial.html)
-- [Stacking contract](../3d-object/furniture-stacking.md)
+- [Reviewed support contract and UI verification](../3d-object/supported-placement-verification.md)

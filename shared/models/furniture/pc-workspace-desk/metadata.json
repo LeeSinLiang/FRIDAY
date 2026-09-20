@@ -1,0 +1,20 @@
+{
+  "productId": "pc-workspace-desk",
+  "catalogueListingId": "pc-workspace-desk",
+  "modelUrl": "/models/furniture/pc-workspace-desk/model.glb",
+  "widthCm": 180,
+  "depthCm": 90,
+  "heightCm": 75,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "license": "CC0-1.0",
+  "creator": "Kenney",
+  "sourceUrl": "https://kenney.nl/assets/furniture-kit",
+  "originalFile": "desk.glb",
+  "dimensionBasis": "Authored demo size, not manufacturer measurements",
+  "modelSha256": "ec82ba283ebf5a190825e406c28ff39b155ec0121cf98c9d1725f380e17ad3cb",
+  "matchType": "generic_visual_proxy",
+  "matchNote": "CC0 Kenney model at authored demo dimensions; this is a synthetic catalogue item, not a retail product match."
+}

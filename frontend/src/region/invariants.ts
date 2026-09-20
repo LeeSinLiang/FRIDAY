@@ -14,7 +14,7 @@ export type Candidate = {
   product: Product;
   /** Set when an item already in the scene is being moved; it must not collide with itself. */
   movingInstanceId?: string;
-  /** Explicit exclusions for callers with a separate collision contract; tabletop support uses the validator directly. */
+  /** Instances that may be overlapped, e.g. the table an item is being placed on. */
   ignoreInstanceIds?: string[];
 };
 

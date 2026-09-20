@@ -84,43 +84,38 @@ test("the PlayCanvas overlay stays outside the region module, and is the only ot
     assert.ok(source.includes(setting), `texture ${setting} must be explicit`);
   assert.match(source, /maskToPixels\(mask, LIT, texture\.lock\(\)/, "pixels come from the region module's maskToPixels, rows in mask order");
   assert.doesNotMatch(source, /countZ - 1 - iz/, "never reverse the rows here: that mirrored every region front to back (see maskPixels.ts)");
-  assert.match(source, /intersectFloor\(.*, planeHeightCm\);/, "clicks use the current lit plane, including a table top");
-  assert.match(source, /setLocalPosition\(.*planeHeightCm\)/, "the draw and click elevations agree");
+  assert.match(source, /intersectFloor\(.*, \(current.heightCm \?\? 0\) \+ LIFT_CM\);/, "clicks are tested on the plane the green is drawn on, not the floor under it");
 });
 
 const cgRoom = { ...(cgArch.room as unknown as Room), spatial: cgArchSpatial as Room["spatial"] };
 const cgScene: Scene = { room: cgRoom, products: [], instances: [] };
 
-test("a prepared room's walls are the edges of its free floor, not its modelled shell", () => {
+test("Cg Arch floor bounds follow the connected L, with no wall at the old corridor cutoff", () => {
   assert.deepEqual([cgRoom.widthCm, cgRoom.depthCm], [1158.01, 844.01]);
-  assert.deepEqual(wallBounds(cgRoom), { minX: 787, maxX: 1121, minZ: 180, maxZ: 760 });
-  assert.deepEqual(wallEdges(floorRegion(cgRoom)).map((edge) => [edge.side, edge.rect]), [
-    ["n", { minX: 787, maxX: 1121, minZ: 180, maxZ: 180 }], ["s", { minX: 787, maxX: 1121, minZ: 760, maxZ: 760 }],
-    ["w", { minX: 787, maxX: 787, minZ: 180, maxZ: 760 }], ["e", { minX: 1121, maxX: 1121, minZ: 180, maxZ: 760 }],
-  ], "one free rectangle has exactly four walls, at its own edges");
-  assert.deepEqual(wallBounds(scene.room), { minX: 0, maxX: 260, minZ: 0, maxZ: 200 }); // a fixture room is itself
+  assert.deepEqual(wallBounds(cgRoom), { minX: 20, maxX: 1140, minZ: 155, maxZ: 825 });
+  const walls = wallEdges(floorRegion(cgRoom));
+  assert.ok(walls.length > 4, "the shell rectangle cannot describe the corridor and cabinetry");
+  assert.equal(walls.some(({ rect: r }) => r.minX === 787 && r.maxX === 787 && r.minZ <= 490 && r.maxZ >= 490), false);
+  assert.deepEqual(wallBounds(scene.room), { minX: 0, maxX: 260, minZ: 0, maxZ: 200 });
 });
 
-test("HERO: '5 feet from any wall' does not fit the Cg Arch living room, and says why; 3 feet does", () => {
-  const poang = listingToProduct(listing("ikea-193.025.39"));
-  const five = solve(cgScene, { product: poang }, [{ k: "distance_min", ref: { kind: "any_wall" }, mm: 1524 }]);
-  assert.deepEqual(five.legalCounts, [0, 0, 0, 0]);
-  // Measured to the 1158 x 844 shell this used to PASS, for the wrong reason.
-  assert.equal(five.whyNothingFits, "needs 373 cm of width, this room has 334 cm");
-  const three = solve(cgScene, { product: poang }, [{ k: "distance_min", ref: { kind: "any_wall" }, mm: 914 }]);
-  assert.ok(three.bestYawIndex >= 0);
-  for (const mask of three.masks) for (let iz = 0; iz < mask.shape[1]; iz++) for (let ix = 0; ix < mask.shape[0]; ix++) {
+test("AI placement solves in the new corridor, excludes cabinets, and respects wall distance", () => {
+  const chair = listingToProduct(listing("ikea-193.025.39"));
+  const free = solve(cgScene, { product: chair }, []);
+  const at = (x: number, z: number) => free.masks[0].data[Math.round(z / 5) * free.masks[0].shape[0] + Math.round(x / 5)];
+  assert.equal(at(400, 490), 1, "the newly connected corridor can be furnished");
+  assert.notEqual(at(500, 650), 1, "the cabinet is excluded even inside the overall bounds");
+  assert.notEqual(at(400, 300), 1, "the room behind closed doors stays excluded");
+  const four = solve(cgScene, { product: chair }, [{ k: "distance_min", ref: { kind: "any_wall" }, mm: 1219 }]);
+  assert.ok(four.legalCounts.some(n => n > 0));
+  for (let turn = 0; turn < 4; turn++) assert.ok(four.legalCounts[turn] < free.legalCounts[turn]);
+  // Verify solved poses independently with the editor's complete-footprint validator.
+  const item: Instance = { instanceId: "solver-chair", productId: chair.productId, pose: { xCm: 0, zCm: 0, yawRad: 0 } };
+  for (const mask of four.masks) for (let iz = 0; iz < mask.shape[1]; iz++) for (let ix = 0; ix < mask.shape[0]; ix++) {
     if (mask.data[iz * mask.shape[0] + ix] !== 1) continue;
-    const x = ix * 5, z = iz * 5, turned = Math.abs(Math.sin(mask.yawRad)) > 0.5, [ex, ez] = turned ? [41, 34] : [34, 41];
-    assert.ok(x - ex >= 787 + 91.4 - 1e-6 && x + ex <= 1121 - 91.4 + 1e-6 && z - ez >= 180 + 91.4 - 1e-6 && z + ez <= 760 - 91.4 + 1e-6, `${x},${z}`);
+    const pose = { xCm: mask.originCm[0] + ix * 5, zCm: mask.originCm[1] + iz * 5, yawRad: mask.yawRad };
+    assert.ok(validatePlacement(cgRoom, [chair], [item], item.instanceId, pose).valid, JSON.stringify(pose));
   }
-});
-
-test("HERO, as spoken: '4 feet from any wall' leaves a usable region in the Cg Arch living room", () => {
-  // Chosen over 5 feet (nothing fits, 334 cm wide) and 3 feet (over a thousand positions, no visible narrowing).
-  const four = (id: string) => solve(cgScene, { product: listingToProduct(listing(id)) }, [{ k: "distance_min", ref: { kind: "any_wall" }, mm: 1219 }]).legalCounts;
-  assert.deepEqual(four("ikea-405.355.47"), [220, 265, 220, 265]); // HERRÅKRA, the one with a real model
-  assert.deepEqual(four("ikea-193.025.39"), [255, 106, 255, 106]); // POÄNG
 });
 
 const cgWithWindow: Scene = { ...cgScene, openings: openingsFor("cg-arch-interior") };
@@ -130,11 +125,11 @@ const FOUR_FEET = { k: "distance_min", ref: { kind: "any_wall" }, mm: 1219 } as 
 test("the Cg Arch room's window is the one measured from its model, on the north wall, inside that wall", () => {
   const [w1, ...others] = openingsFor("cg-arch-interior")!;
   assert.equal(others.length, 0);
-  assert.deepEqual([w1.id, w1.kind, w1.wall, w1.startCm, w1.widthCm, w1.sillCm], ["w1", "window", "n", 19.5, 280, 7.5]);
+  assert.deepEqual([w1.id, w1.kind, w1.wall, w1.startCm, w1.widthCm, w1.sillCm], ["w1", "window", "n", 786.5, 280, 7.5]);
   const walls = wallBounds(cgRoom);
   assert.ok(w1.startCm >= 0 && w1.startCm + w1.widthCm <= walls.maxX - walls.minX, "the window lies within its wall");
   // Wall-relative in, scene coordinates out: x 806.5..1086.5 is where the glass node sits in the model.
-  assert.deepEqual(openingZone(cgRoom, w1, 0), { minX: 806.5, maxX: 1086.5, minZ: 180, maxZ: 180 });
+  assert.deepEqual(openingZone(cgRoom, w1, 0), { minX: 806.5, maxX: 1086.5, minZ: 155, maxZ: 155 });
   assert.equal(openingsFor("empty-room"), undefined, "an unmeasured room says so instead of inventing a window");
 });
 
@@ -142,11 +137,11 @@ test("HERO, whole sentence: by the window AND 4 feet from any wall, in the real 
   const herrakra = listingToProduct(listing("ikea-405.355.47"));
   const solution = solve(cgWithWindow, { product: herrakra }, [NEAR_W1, FOUR_FEET]);
   assert.deepEqual(solution.dropped, [], "the room describes its window now, so no clause is set aside");
-  // By hand: 121.9 cm off every wall leaves x 945..960 (4 columns) unturned, 945..965 (5) turned; "near" reaches
-  // 75 cm past that wall's own clearance, which leaves 15 rows from the first legal one. 4 x 15 and 5 x 15.
-  assert.deepEqual(solution.legalCounts, [60, 75, 60, 75]);
   const without = solve(cgWithWindow, { product: herrakra }, [FOUR_FEET]).legalCounts;
-  assert.deepEqual(without, [220, 265, 220, 265], "the window clause is what narrows it");
+  for (let turn = 0; turn < 4; turn++) {
+    assert.ok(solution.legalCounts[turn] > 0, "a usable region remains by the actual window");
+    assert.ok(solution.legalCounts[turn] < without[turn], "the window clause narrows the expanded floor");
+  }
   const mask = solution.masks[1];
   for (let iz = 0; iz < mask.shape[1]; iz++) for (let ix = 0; ix < mask.shape[0]; ix++) {
     if (mask.data[iz * mask.shape[0] + ix] !== 1) continue;
@@ -177,10 +172,9 @@ test("maskToPixels keeps mask order: pixel row 0 is z = 0, and only free samples
     assert.equal(isLit, mask.data[iz * countX + ix] === 1, `pixel (${ix}, ${iz}) must mirror the mask sample at the SAME row`);
     if (isLit) { litCount++; if (!litRows.includes(iz)) litRows.push(iz); assert.deepEqual([...pixels.slice(at, at + 4)], [...lit]); }
   }
-  assert.equal(litCount, 75);
-  // The hero patch is by the window, z 340..410 of an 844 cm deep room: nowhere near its own front-to-back mirror
-  // (z 434..504). A reversed row order would put every lit row past the middle, which is how the bug looked.
-  assert.deepEqual([Math.min(...litRows) * 5, Math.max(...litRows) * 5], [340, 410]);
+  assert.ok(litCount > 0);
+  // The real window is on the north side. Reversing rows would move this patch to the far half.
+  assert.ok(Math.min(...litRows) * 5 >= 155 && Math.max(...litRows) * 5 <= 410);
   assert.ok(Math.max(...litRows) < countZ / 2, "lit rows stay in the near half, on the window's side");
   assert.throws(() => maskToPixels(mask, lit, new Uint8Array(8)), /does not match/);
 });

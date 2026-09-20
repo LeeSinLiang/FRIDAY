@@ -10,7 +10,7 @@ def package_shared(source=None, target=None):
     target = target or Path(__file__).resolve().parent / 'runtime_shared'
     if target.exists():
         shutil.rmtree(target)  # This directory contains only regenerable build output.
-    files = [source/'scene-fixtures.json', source/'public-rooms.json']
+    files = [source/'scene-fixtures.json', source/'public-rooms.json', source/'placement-profiles.json']
     # App's homepage and cart preview open this room independently of the gallery.
     pending = ['haussmann-apartment', *[room['id'] for room in json.loads((source/'public-rooms.json').read_text())]]
     seen = set()
@@ -28,6 +28,8 @@ def package_shared(source=None, target=None):
         if spatial.resolve().parent != directory.resolve():
             raise ValueError('Room spatial metadata must remain inside its directory')
         files.extend([manifest, spatial])
+        if (directory/"openings.json").exists():
+            files.append(directory/"openings.json")
         pending.extend(level['roomId'] for level in data['room'].get('scan', {}).get('building', {}).get('levels', []))
         pending.extend(data['room'].get('scan', {}).get('building', {}).get('legacyRoomIds', []))
     files.extend((source/'models/furniture').glob('*/metadata.json'))

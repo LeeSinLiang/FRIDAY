@@ -1,0 +1,20 @@
+{
+  "productId": "pc-workspace-display",
+  "catalogueListingId": "pc-workspace-display",
+  "modelUrl": "/models/furniture/pc-workspace-display/model.glb",
+  "widthCm": 58,
+  "depthCm": 18,
+  "heightCm": 42,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "license": "CC0-1.0",
+  "creator": "Kenney",
+  "sourceUrl": "https://kenney.nl/assets/furniture-kit",
+  "originalFile": "computerScreen.glb",
+  "dimensionBasis": "Authored demo size, not manufacturer measurements",
+  "modelSha256": "50d18e1aa80247888e11049cae63284a9a2700be0fb7e24c49d71536884c0a49",
+  "matchType": "generic_visual_proxy",
+  "matchNote": "CC0 Kenney model at authored demo dimensions; this is a synthetic catalogue item, not a retail product match."
+}

@@ -1,0 +1,20 @@
+{
+  "productId": "pc-workspace-chair",
+  "catalogueListingId": "pc-workspace-chair",
+  "modelUrl": "/models/furniture/pc-workspace-chair/model.glb",
+  "widthCm": 60,
+  "depthCm": 60,
+  "heightCm": 95,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "license": "CC0-1.0",
+  "creator": "Kenney",
+  "sourceUrl": "https://kenney.nl/assets/furniture-kit",
+  "originalFile": "chairDesk.glb",
+  "dimensionBasis": "Authored demo size, not manufacturer measurements",
+  "modelSha256": "05ca8a223eb58e8b11eb575a6d9f47241de9541092dd873b86980d210f1dc350",
+  "matchType": "generic_visual_proxy",
+  "matchNote": "CC0 Kenney model at authored demo dimensions; this is a synthetic catalogue item, not a retail product match."
+}

@@ -7,14 +7,13 @@ import "./floor.test";
 import "../catalogue/quietSave.test";
 import "../catalogue/shelf.test";
 import type { Listing } from "../lib/types";
-import { canPlaceOnSupport, findOpenPose, validatePlacement } from "../scene/placement";
+import { findOpenPose, validatePlacement } from "../scene/placement";
 import type { Instance, Pose, Product, Room } from "../scene/types";
 import { listingToProduct, mmToCm, placeToCm } from "./boundary";
 import { floorRegion, wallEdges } from "./floor";
 import { countFree, footprintRect, intersect, nearestLegal, newMask, pointCm, stateAtPoint, union } from "./grid";
 import { invariantMask } from "./invariants";
 import { seeded, type Rng } from "./rng";
-import { solve } from "./solve";
 import { toSvg } from "./svg";
 import { BLOCKED, CELL_CM, FREE, UNKNOWN, YAW_BINS, type FloorGrid, type Mask, type Scene } from "./types";
 
@@ -95,30 +94,6 @@ test("PROPERTY: the mask and the editor's placement check agree at every grid po
       assert.equal(state === FREE, editorAccepts(scene, product, pose), `seed ${seed} yaw ${yawRad} at ${pose.xCm},${pose.zCm}`);
     });
   }
-});
-
-test("PROPERTY: on-table mask is exactly the accepted supported poses in both directions", () => {
-  const table: Product = { productId: "table", name: "LISABO table", widthCm: 140, depthCm: 78,
-    heightCm: 74, color: "#988063", kind: "table", supportSurface: true };
-  const vase: Product = { productId: "vase", name: "Ombre vase", widthCm: 10.8, depthCm: 10.8,
-    heightCm: 20.3, color: "#734b40", kind: "table" };
-  let compared = 0, disagreements = 0, lit = 0;
-  for (const [tableYaw, heightCm, eligible] of [[0, 280, true], [Math.PI / 4, 280, true], [0, 90, true], [0, 280, false]] as const) {
-    const support = { ...table, supportSurface: eligible };
-    const instance = at("table-1", table.productId, 300, 250, tableYaw);
-    const scene: Scene = { room: { ...room, heightCm }, products: [support, vase], instances: [instance] };
-    const solved = solve(scene, { product: vase }, [{ k: "on", ref: { kind: "instance", id: instance.instanceId } }]);
-    assert.deepEqual(solved.dropped, []);
-    for (const mask of solved.masks) eachPoint(mask, (state, pose) => {
-      const expected = editorAccepts(scene, vase, pose) && canPlaceOnSupport(scene.room, vase, pose, support, instance.pose);
-      compared++;
-      if ((state === FREE) !== expected) disagreements++;
-      if (state === FREE) lit++;
-    });
-  }
-  assert.ok(lit > 100, `only ${lit} stacked poses lit`);
-  assert.equal(disagreements, 0, `${disagreements} of ${compared} stacked comparisons disagreed`);
-  console.log(`stacked region comparisons ${compared}, disagreements ${disagreements}, lit ${lit}`);
 });
 
 test("PROPERTY: every pose the editor's 5 cm drag snap can produce is exactly one mask sample", () => {

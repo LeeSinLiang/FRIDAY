@@ -1,4 +1,6 @@
 import os
+import json
+from pathlib import Path
 from unittest import mock
 
 from django.http import QueryDict
@@ -6,7 +8,7 @@ from django.test import SimpleTestCase
 from rest_framework.test import APIClient
 
 from catalogue import memory
-from catalogue.feed import load_listings
+from catalogue.feed import FEED_PATH, load_listings
 from catalogue.mock.room import MOCK_ROOM, room_refs
 from catalogue.params import parse_search_params
 from catalogue.types import CATEGORIES, SearchResponse
@@ -23,8 +25,17 @@ class FeedTests(SimpleTestCase):
         self.assertGreaterEqual(len(listings), 43)  # a floor, not a pin: the feed grows as assets land, but never loses a hero item
         self.assertEqual({listing.category for listing in listings}, set(CATEGORIES))
 
-    def test_every_listing_gets_a_generated_thumb(self):
-        self.assertTrue(all(l.thumb_url.startswith("data:image/svg+xml") for l in load_listings()))
+    def test_listing_thumbnails_preserve_real_assets_and_generate_missing_ones(self):
+        originals = {item['id']: item for item in json.loads(FEED_PATH.read_text())['items']}
+        shared = Path(__file__).resolve().parents[2] / 'shared'
+        for listing in load_listings():
+            explicit = originals[listing.id].get('thumb_url')
+            if explicit:
+                self.assertEqual(listing.thumb_url, explicit)
+                if explicit.startswith('/models/'):
+                    self.assertTrue((shared / explicit.lstrip('/')).read_bytes().startswith(b'\x89PNG\r\n\x1a\n'))
+            else:
+                self.assertTrue(listing.thumb_url.startswith('data:image/svg+xml'))
 
 
 class MemorySearchTests(SimpleTestCase):

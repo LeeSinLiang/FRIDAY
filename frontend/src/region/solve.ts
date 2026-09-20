@@ -2,6 +2,7 @@
 // Program.place (mm) + scene (cm) + candidate -> one floor-grid-v1 mask per quarter turn.
 
 import type { PlaceClause } from "../lib/dsl/schema";
+import { isSupportClause, solveSupported } from "./supported";
 import { placeToCm } from "./boundary";
 import { doorSwingRule, resolveClause, wallClearances, type Dropped, type Rule } from "./clauses";
 import { explainNothingFits } from "./explain";
@@ -32,6 +33,7 @@ function ruleMask(scene: Scene, candidate: Candidate, yawRad: number, rules: Rul
 
 /** Where may this item go? Invariants always apply; clauses narrow; unknown floor never lights. */
 export function solve(scene: Scene, candidate: Candidate, place: PlaceClause[]): Solution {
+  if (place.some(isSupportClause)) return solveSupported(scene, candidate, place);
   const { masks, dropped, legalCounts } = solveOnce(scene, candidate, place);
   const most = Math.max(...legalCounts);
   if (most > 0) return { masks, dropped, legalCounts, bestYawIndex: legalCounts.indexOf(most) };
@@ -45,14 +47,9 @@ function solveOnce(scene: Scene, candidate: Candidate, place: PlaceClause[]): Pi
   const region = floorRegion(scene.room, scene.portals); // once per solve, not once per clause or per grid point
   for (const clause of clauses) {
     const resolved = resolveClause(scene, candidate.product, clause, clearances, region);
-    if ("dropped" in resolved) {
-      dropped.push({ clause, reason: resolved.dropped });
-      // "On" names a required physical support. A missing or ambiguous target is impossible,
-      // never permission to place the item on the floor.
-      if (clause.k === "on") rules.push(() => false);
-      continue;
-    }
+    if ("dropped" in resolved) { dropped.push({ clause, reason: resolved.dropped }); continue; }
     rules.push(resolved.rule);
+    if (resolved.ignoreInstanceId) ignore.push(resolved.ignoreInstanceId);
   }
   const withIgnores = { ...candidate, ignoreInstanceIds: ignore };
   const masks = YAW_BINS.map((yawRad) => intersect(invariantMask(scene, withIgnores, yawRad), ruleMask(scene, candidate, yawRad, rules)));

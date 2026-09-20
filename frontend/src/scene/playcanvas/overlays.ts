@@ -14,12 +14,11 @@ function footprintCorners(product: Pick<Product, "widthCm" | "depthCm">, pose: P
   const c = Math.cos(pose.yawRad), s = Math.sin(pose.yawRad);
   return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sz]) => {
     const x = sx * product.widthCm / 2, z = sz * product.depthCm / 2;
-    return new pc.Vec3(cmToScene(pose.xCm + c * x + s * z), cmToScene(height), cmToScene(pose.zCm - s * x + c * z));
+    return new pc.Vec3(cmToScene(pose.xCm + c * x + s * z), cmToScene((pose.yCm ?? 0) + height), cmToScene(pose.zCm - s * x + c * z));
   });
 }
 
-export function createPlacementOverlays(runtime: { app: pc.Application; capturing: boolean; disposed: boolean }, parent: pc.Entity,
-  supportHeight: (preview: PlacementPreview) => number = () => 0) {
+export function createPlacementOverlays(runtime: { app: pc.Application; capturing: boolean; disposed: boolean }, parent: pc.Entity) {
   const root = new pc.Entity("Placement overlays"); parent.addChild(root);
   const fill = new pc.StandardMaterial();
   fill.useLighting = false; fill.blendType = pc.BLEND_NORMAL; fill.opacity = 0.15;
@@ -77,10 +76,9 @@ export function createPlacementOverlays(runtime: { app: pc.Application; capturin
     }
     if (!product || !preview) return;
     const color = new pc.Color().fromString(palette[placementTone(preview)]);
-    const baseHeight = supportHeight(preview);
-    const corners = footprintCorners(product, preview.pose, baseHeight + 1.2);
+    const corners = footprintCorners(product, preview.pose, 1.2);
     for (let i = 0; i < 4; i++) line(corners[i], corners[(i + 1) % 4], color);
-    if (baseHeight > 0) return;
+    if ((preview.pose.yCm ?? 0) > 0) return;
     // Only a local patch receives fine lines; it is a calibrated floor overlay, never painted into the splat.
     const radius = Math.min(200, Math.max(product.widthCm, product.depthCm) / 2 + 35);
     const minX = Math.max(0, Math.floor((preview.pose.xCm - radius) / GRID_STEP_CM) * GRID_STEP_CM);
@@ -113,7 +111,7 @@ export function createPlacementOverlays(runtime: { app: pc.Application; capturin
       plan.setLocalScale(cmToScene(room.widthCm), 1, cmToScene(room.depthCm));
       footprint.enabled = !!(product && preview);
       if (!product || !preview) return;
-      footprint.setLocalPosition(cmToScene(preview.pose.xCm), cmToScene(supportHeight(preview) + 0.8), cmToScene(preview.pose.zCm));
+      footprint.setLocalPosition(cmToScene(preview.pose.xCm), cmToScene((preview.pose.yCm ?? 0) + 0.8), cmToScene(preview.pose.zCm));
       footprint.setLocalScale(cmToScene(product.widthCm), 1, cmToScene(product.depthCm));
       footprint.setLocalEulerAngles(0, preview.pose.yawRad * pc.math.RAD_TO_DEG, 0);
       fill.diffuse = new pc.Color().fromString(palette[placementTone(preview)]); fill.update();

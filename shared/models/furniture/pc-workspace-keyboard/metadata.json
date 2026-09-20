@@ -1,0 +1,20 @@
+{
+  "productId": "pc-workspace-keyboard",
+  "catalogueListingId": "pc-workspace-keyboard",
+  "modelUrl": "/models/furniture/pc-workspace-keyboard/model.glb",
+  "widthCm": 44,
+  "depthCm": 15,
+  "heightCm": 3,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "license": "CC0-1.0",
+  "creator": "Kenney",
+  "sourceUrl": "https://kenney.nl/assets/furniture-kit",
+  "originalFile": "computerKeyboard.glb",
+  "dimensionBasis": "Authored demo size, not manufacturer measurements",
+  "modelSha256": "3dc805ba6e28211ce871f62a881d129ed38fcf4a8f994bd95743e13f4ff7c77f",
+  "matchType": "generic_visual_proxy",
+  "matchNote": "CC0 Kenney model at authored demo dimensions; this is a synthetic catalogue item, not a retail product match."
+}

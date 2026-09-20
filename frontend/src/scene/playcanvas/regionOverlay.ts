@@ -29,7 +29,7 @@ const LIT = [99, 186, 140, 150] as const; // the engine's "valid" green (#63ba8c
 
 export type RegionOverlay = {
   /** Draw this mask, or nothing for null. */
-  setMask(mask: Mask | null, supportHeightCm?: number): void;
+  setMask(mask: Mask | null): void;
   /** The lit sample under a pointer position (client coordinates), or null. Snaps to a proven pose. */
   poseAt(clientX: number, clientY: number): Pose | null;
   dispose(): void;
@@ -54,7 +54,6 @@ export function createRegionOverlay(runtime: Runtime): RegionOverlay {
 
   let texture: pc.Texture | null = null;
   let current: Mask | null = null;
-  let planeHeightCm = LIFT_CM;
 
   const upload = (mask: Mask) => {
     const [countX, countZ] = mask.shape;
@@ -77,16 +76,15 @@ export function createRegionOverlay(runtime: Runtime): RegionOverlay {
   };
 
   return {
-    setMask(mask, supportHeightCm = 0) {
+    setMask(mask) {
       if (runtime.disposed) return;
       current = mask;
-      planeHeightCm = supportHeightCm > 0 ? supportHeightCm + 0.4 : LIFT_CM;
       entity.enabled = mask !== null;
       if (!mask) return;
       upload(mask);
       // One texel per grid point, so the quad overhangs the first and last point by half a cell.
       const size = mask.cellSizeCm, widthCm = mask.shape[0] * size, depthCm = mask.shape[1] * size;
-      entity.setLocalPosition(cmToScene(mask.originCm[0] + widthCm / 2 - size / 2), cmToScene(planeHeightCm), cmToScene(mask.originCm[1] + depthCm / 2 - size / 2));
+      entity.setLocalPosition(cmToScene(mask.originCm[0] + widthCm / 2 - size / 2), cmToScene((mask.heightCm ?? 0) + LIFT_CM), cmToScene(mask.originCm[1] + depthCm / 2 - size / 2));
       entity.setLocalScale(cmToScene(widthCm), 1, cmToScene(depthCm));
     },
     poseAt(clientX, clientY) {
@@ -99,10 +97,10 @@ export function createRegionOverlay(runtime: Runtime): RegionOverlay {
       // Intersect the plane the green is DRAWN on, not the floor under it. The overlay floats LIFT_CM up, and at eye level
       // a few centimetres of height is ten or more along the view: tested against the floor, the far edge of a drawn
       // patch did not accept clicks. What is clickable must be exactly what is lit, at any lift and any camera angle.
-      const hit = intersectFloor({ origin: { x: sceneToCm(near.x), y: sceneToCm(near.y), z: sceneToCm(near.z) }, direction }, planeHeightCm);
+      const hit = intersectFloor({ origin: { x: sceneToCm(near.x), y: sceneToCm(near.y), z: sceneToCm(near.z) }, direction }, (current.heightCm ?? 0) + LIFT_CM);
       if (!hit) return null;
       const size = current.cellSizeCm, xCm = Math.round(hit.x / size) * size, zCm = Math.round(hit.z / size) * size;
-      return stateAtPoint(current, xCm, zCm) === FREE ? { xCm, zCm, yawRad: current.yawRad } : null;
+      return stateAtPoint(current, xCm, zCm) === FREE ? { xCm, zCm, yawRad: current.yawRad, ...(current.heightCm === undefined ? {} : {yCm:current.heightCm}) } : null;
     },
     dispose() { entity.destroy(); texture?.destroy(); material.destroy(); },
   };

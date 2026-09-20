@@ -3,10 +3,12 @@ import test from "node:test";
 import { BLEND_NORMAL, Entity, SHADERLANGUAGE_GLSL, StandardMaterial, type MeshInstance, type RenderComponent } from "playcanvas";
 import { createFurnitureFinish, furnitureAmbient } from "./furnitureFinish";
 import { furnitureLightingProfile } from "./furnitureLightingProfile";
-import type { Product, Room } from "../types";
+import type { Instance, Product, Room } from "../types";
 import { applyFurniturePose } from "./furniture";
 import { createFurnitureShadowRefresh } from "./furnitureAppearance";
 import { cmToScene } from "../units";
+import { PRODUCTS } from "../fixtures";
+import { moveWithAttachments, resolveAttachments } from "../supports";
 
 const profile = furnitureLightingProfile({ roomId: "cg-arch-interior" } as Room);
 const product = { widthCm: 10.8, depthCm: 10.8, heightCm: 20.3 } as Product;
@@ -20,15 +22,28 @@ function fixture(original = new StandardMaterial()) {
   return { original, mesh, render, entity, parameters };
 }
 
-test("furniture finish and model use the same raised origin after a move and floor transition", () => {
-  const f = fixture(), finish = createFurnitureFinish(f.entity, product, profile, 1001);
-  for (const [pose, height] of [[{ xCm: 445, zCm: 290, yawRad: 1.1 }, 74], [{ xCm: 200, zCm: 320, yawRad: -0.7 }, 0]] as const) {
-    applyFurniturePose(f.entity, pose, height); finish.setPose(pose, height);
-    const origin = f.parameters.get("uFurnitureOrigin") as Float32Array;
-    f.entity.getLocalPosition().toArray().forEach((value, i) => assert.ok(Math.abs(value - origin[i]) < 0.00001));
-    assert.ok(Math.abs(origin[1] - cmToScene(height)) < 0.00001);
+test("finish and model follow reviewed table and cabinet attachments through moves and detachment", () => {
+  for (const [productId, targetId, kind, height] of [
+    ["support-demo-table", "top", "surface", 75],
+    ["support-demo-cabinet", "upper", "compartment", 51.5],
+  ] as const) {
+    const parent: Instance = { instanceId: "support", productId, pose: { xCm: 300, zCm: 250, yawRad: 0 } };
+    const child: Instance = { instanceId: "child", productId: "support-demo-box", pose: { xCm: 0, zCm: 0, yawRad: 0 },
+      attachment: { parentInstanceId: "support", profileRevision: "1", target: { id: targetId, kind },
+        localPose: { xCm: 15, zCm: 2, yawRad: .2 } } };
+    const placed = resolveAttachments([parent, child], PRODUCTS);
+    const moved = moveWithAttachments(placed, PRODUCTS, "support", { xCm: 350, zCm: 300, yawRad: Math.PI / 2 });
+    const detached = moveWithAttachments(moved, PRODUCTS, "child", { xCm: 200, zCm: 320, yawRad: -.7 }, null);
+    const f = fixture(), finish = createFurnitureFinish(f.entity, product, profile, 1001);
+    for (const [instances, expectedHeight] of [[placed, height], [moved, height], [detached, 0]] as const) {
+      const pose = instances[1].pose;
+      applyFurniturePose(f.entity, pose); finish.setPose(pose);
+      const origin = f.parameters.get("uFurnitureOrigin") as Float32Array;
+      f.entity.getLocalPosition().toArray().forEach((value, i) => assert.ok(Math.abs(value - origin[i]) < .00001));
+      assert.ok(Math.abs(origin[1] - cmToScene(expectedHeight)) < .00001);
+    }
+    finish.dispose(); f.entity.destroy();
   }
-  finish.dispose(); f.entity.destroy();
 });
 
 test("per-instance shading preserves authored PBR and cached source materials", () => {

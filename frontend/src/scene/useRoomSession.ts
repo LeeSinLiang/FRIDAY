@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
-import type { Instance, Product, Room, SceneEdit } from "./types";
+import type { FirstPersonCamera, Instance, Product, Room, SceneEdit } from "./types";
 import type { AgentMotion } from "./playcanvas/angelMotion";
+import { resolveAttachments } from "./supports";
 import { validInlineProduct } from "./products";
 
 export type RoomSnapshot = { room: Room; products: Product[]; instances: Instance[]; revision: number; geometryRevision?: string; agentMotion?: AgentMotion };
@@ -8,6 +9,7 @@ export type RoomSessionState = {
   snapshot: RoomSnapshot | null;
   status: "loading" | "ready" | "saving" | "offline" | "conflict";
   message: string;
+  designerMessage?: string;
   canUndo: boolean;
   canRedo: boolean;
 };
@@ -17,7 +19,10 @@ const fingerprint = (items: Instance[]) => JSON.stringify(items.map(item => ({
     widthCm: item.product.widthCm, depthCm: item.product.depthCm, heightCm: item.product.heightCm,
     color: item.product.color, kind: item.product.kind, modelUrl: item.product.modelUrl,
     thumbnailUrl: item.product.thumbnailUrl, catalogueVisible: item.product.catalogueVisible } } : {}),
-  pose: { xCm: item.pose.xCm, zCm: item.pose.zCm, yawRad: item.pose.yawRad },
+  pose: {xCm:item.pose.xCm,zCm:item.pose.zCm,yawRad:item.pose.yawRad,...(item.pose.yCm===undefined?{}:{yCm:item.pose.yCm})},
+  ...(item.attachment ? {attachment: {parentInstanceId:item.attachment.parentInstanceId,profileRevision:item.attachment.profileRevision,
+    target:{kind:item.attachment.target.kind,id:item.attachment.target.id},
+    localPose:{xCm:item.attachment.localPose.xCm,zCm:item.attachment.localPose.zCm,yawRad:item.attachment.localPose.yawRad}}} : {}),
 })));
 export function parseRoomSnapshot(value: unknown, roomId: string): RoomSnapshot {
   if (!value || typeof value !== "object") throw Error("The server returned an invalid room.");
@@ -63,7 +68,7 @@ export function parseRoomSnapshot(value: unknown, roomId: string): RoomSnapshot 
   for (const item of s.instances) {
     if (!item || typeof item.instanceId !== "string" || !item.instanceId.trim() || item.instanceId.length > 128 || ids.has(item.instanceId) || !productIds.has(item.productId) ||
         (item.product !== undefined && !validInlineProduct(item.product, item.productId)) ||
-        !item.pose || ![item.pose.xCm,item.pose.zCm,item.pose.yawRad].every(Number.isFinite)) throw Error("The saved layout contains an invalid object.");
+        !item.pose || ![item.pose.xCm,item.pose.zCm,item.pose.yawRad,item.pose.yCm ?? 0].every(Number.isFinite)) throw Error("The saved layout contains an invalid object.");
     ids.add(item.instanceId);
   }
   const motion = s.agentMotion;
@@ -72,7 +77,7 @@ export function parseRoomSnapshot(value: unknown, roomId: string): RoomSnapshot 
   const agentMotion = motion && motion.revision === s.revision && ids.has(motion.instanceId) &&
     validPose(motion.toPose) && (motion.fromPose === null || validPose(motion.fromPose)) ? motion : undefined;
   // Keep catalogue metadata for history/restore, but the API product list is authoritative.
-  const instances = s.instances.map(item => ({ ...item,
+  const instances = resolveAttachments(s.instances, s.products).map(item => ({ ...item,
     ...(item.product === undefined ? {} : { product: s.products.find(product => product.productId === item.productId)! }),
   }));
   return structuredClone({room:s.room,products:s.products,instances,revision:s.revision,
@@ -81,7 +86,8 @@ export function parseRoomSnapshot(value: unknown, roomId: string): RoomSnapshot 
 }
 
 type Transport = { fetch?: typeof fetch; csrf?: () => string; id?: () => string };
-type Pending = { body: {baseRevision: number; commandId: string; commands: SceneEdit[]}; confirmation?: {roomId:string; instance:Instance; baseRevision:number; cartRevision:number; operationId:string}; before: Instance[]; kind: "edit" | "undo" | "redo" };
+type DesignerRequest = {text:string; requestId:string; baseRevision:number; selectedId:string|null; camera:FirstPersonCamera|null};
+type Pending = { body: {baseRevision: number; commandId: string; commands: SceneEdit[]}; designer?:DesignerRequest; confirmation?: {roomId:string; instance:Instance; baseRevision:number; cartRevision:number; operationId:string}; before: Instance[]; kind: "edit" | "undo" | "redo" };
 
 /** Server acceptance is the only commit point, including undo and retry after a lost response. */
 export function createRoomSession(roomId: string, transport: Transport = {}) {
@@ -94,6 +100,7 @@ export function createRoomSession(roomId: string, transport: Transport = {}) {
   const listeners = new Set<() => void>();
   const publish = (patch: Partial<RoomSessionState>) => {
     if (disposed) return;
+    if (pending?.designer && patch.message) patch.designerMessage=patch.message;
     state = { ...state, ...patch, canUndo: past.length > 0, canRedo: future.length > 0 };
     listeners.forEach(fn => fn());
   };
@@ -101,7 +108,7 @@ export function createRoomSession(roomId: string, transport: Transport = {}) {
   async function request(path: string, body?: unknown) {
     const controller = new AbortController();
     abort = controller;
-    const timer = setTimeout(() => controller.abort(), 12_000);
+    const timer = setTimeout(() => controller.abort(), path.startsWith("/api/designer/") ? 50_000 : 12_000);
     try {
       const token = body ? csrf() : "";
       if (body && !token) throw Error("Reload the room to restore its security token.");
@@ -116,6 +123,8 @@ export function createRoomSession(roomId: string, transport: Transport = {}) {
   }
   async function performLoad(force: boolean, reconcile: boolean) {
     inFlight = true;
+    const initial = !state.snapshot;
+    let resume = false;
     if (!state.snapshot) publish({status:"loading"});
     try {
       const {response,json} = await request("/api/scene/");
@@ -132,9 +141,15 @@ export function createRoomSession(roomId: string, transport: Transport = {}) {
       }
       if (changed || force) { past=[]; future=[]; }
       publish({snapshot,status:"ready",message:changed ? "Updated from saved layout" : "All changes saved"});
+      if (initial && json.activeDesigner && !pending) {
+        const recovered = json.activeDesigner;
+        pending={body:{baseRevision:recovered.payload.baseRevision,commandId:recovered.payload.requestId,commands:[]},designer:recovered.payload,before:recovered.before,kind:'edit'};
+        resume=true;
+      }
     } catch (error) {
       if (!disposed) publish({status:"offline",message:error instanceof Error ? error.message : "Cannot reach the room service."});
     } finally { inFlight=false; }
+    if (resume && !disposed) void sendPending();
   }
   function load(force = false, reconcile = false): Promise<void> {
     if (disposed || inFlight || pending || (!force && !reconcile && (active || state.status === "conflict"))) return Promise.resolve();
@@ -145,24 +160,47 @@ export function createRoomSession(roomId: string, transport: Transport = {}) {
     if (!pending || disposed || inFlight) return false;
     const sent = pending;
     inFlight=true;
-    publish({status:"saving",message:"Saving layout…"});
+    publish({status:"saving",message:sent.designer ? "Inspecting the room and arranging furniture…" : "Saving layout…"});
     try {
-      const {response,json} = await request(sent.confirmation ? "/api/cart/confirm-placement/" : "/api/scene/commands/",sent.confirmation ?? sent.body);
+      let {response,json} = await request(sent.designer ? "/api/designer/" : sent.confirmation ? "/api/cart/confirm-placement/" : "/api/scene/commands/",sent.designer ?? sent.confirmation ?? sent.body);
+      while (sent.designer && response.ok && json.status === "running" && !disposed) {
+        if (typeof json.jobId !== 'string' || !/^[a-zA-Z0-9-]{1,80}$/.test(json.jobId)) throw Error('Invalid designer job');
+        publish({message:json.message ?? "Designing your layout…"});
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        if (disposed) return false;
+        ({response,json} = await request(`/api/designer/${json.jobId}/`,{}));
+      }
       if (disposed) return false;
+      if (sent.designer && json.status === "failed") {
+        pending=null;
+        const message=json.error?.message ?? 'The designer did not change the room.';
+        publish({status:json.error?.code === 'revision_conflict' ? 'conflict' : 'ready',message,designerMessage:message});
+        return false;
+      }
       if (!response.ok) {
         // A definite rejection can be reconciled; an uncertain transport failure retains the same request ID.
         if (response.status < 500) pending=null;
         publish({status:response.status===409 ? "conflict" : response.status>=500 ? "offline" : "ready",message:json.error?.message ?? "Placement was rejected. Layout unchanged."});
         return false;
       }
-      const snapshot=parseRoomSnapshot(sent.confirmation ? json.scene : json,roomId);
+      const snapshot=parseRoomSnapshot(sent.confirmation || sent.designer ? json.scene : json,roomId);
+      if (sent.designer && state.snapshot && (snapshot.revision < state.snapshot.revision || snapshot.geometryRevision !== state.snapshot.geometryRevision)) {
+        // A post-save visual review can finish after another tab has edited.
+        // Its receipt proves the earlier save, but must not replace newer state
+        // or create an undo entry that would erase that subsequent edit.
+        pending=null;
+        const message="The designer finished an earlier layout. Showing the newer saved room.";
+        publish({status:"ready",message,designerMessage:message});
+        return false;
+      }
       if (fingerprint(snapshot.instances)!==fingerprint(sent.before)) {
         if (sent.kind==="edit") { past=[...past,sent.before].slice(-100); future=[]; }
         else if (sent.kind==="undo") { past=past.slice(0,-1); future=[sent.before,...future]; }
         else { past=[...past,sent.before].slice(-100); future=future.slice(1); }
       }
       pending=null;
-      publish({snapshot,status:"ready",message:"All changes saved"});
+      const message = sent.designer ? [json.designer?.appliedCount ? "Layout saved." : "", json.designer?.message, json.designer?.visualNote].filter(Boolean).join(" ") : "All changes saved";
+      publish({snapshot,status:"ready",message,...(sent.designer ? {designerMessage:message} : {})});
       if (typeof window !== 'undefined') window.dispatchEvent(new Event('friday-cart-changed'));
       return true;
     } catch (error) {
@@ -188,7 +226,7 @@ export function createRoomSession(roomId: string, transport: Transport = {}) {
   const restore = (kind: "undo"|"redo") => {
     const target = kind==="undo" ? past.at(-1) : future[0];
     if (!target || !state.snapshot) return Promise.resolve(false);
-    const commands: SceneEdit[] = [...state.snapshot.instances.map(i=>({type:"remove" as const,instanceId:i.instanceId})),...target.map(instance=>({type:"add" as const,instance}))];
+    const commands: SceneEdit[] = [...[...state.snapshot.instances].sort((a,b)=>Number(!!b.attachment)-Number(!!a.attachment)).map(i=>({type:"remove" as const,instanceId:i.instanceId})),...[...target].sort((a,b)=>Number(!!a.attachment)-Number(!!b.attachment)).map(instance=>({type:"add" as const,instance}))];
     return submit(commands,kind);
   };
   return {
@@ -196,6 +234,16 @@ export function createRoomSession(roomId: string, transport: Transport = {}) {
     getSnapshot: ()=>state,
     load,
     submit: (edit: SceneEdit)=>submit([edit]),
+    design: async (text:string, selectedId:string|null, camera:FirstPersonCamera|null) => {
+      const revision = state.snapshot?.revision;
+      if (loading) await loading;
+      if (disposed || inFlight || pending || active || !state.snapshot || state.status !== 'ready' || state.snapshot.revision !== revision)
+        return {ok:false,message:"Finish the current edit and review the saved room before asking the designer."};
+      const requestId=transport.id?.() ?? crypto.randomUUID();
+      pending={body:{baseRevision:revision!,commandId:requestId,commands:[]},designer:structuredClone({text,requestId,baseRevision:revision!,selectedId,camera}),before:structuredClone(state.snapshot.instances),kind:'edit'};
+      const ok=await sendPending();
+      return {ok,message:state.message};
+    },
     confirm: async (instance:Instance, cartRevision:number) => {
       if (loading) await loading;
       if (disposed || inFlight || pending || !state.snapshot || state.status !== 'ready') return false;
@@ -229,6 +277,7 @@ export function useRoomSession(roomId: string, interactionActive: boolean) {
   useEffect(()=>{ref.current?.setActive(interactionActive);},[interactionActive,roomId]);
   const actions=useMemo(()=>({
     submit:(edit:SceneEdit)=>ref.current?.submit(edit) ?? Promise.resolve(false),
+    design:(text:string,selectedId:string|null,camera:FirstPersonCamera|null)=>ref.current?.design(text,selectedId,camera) ?? Promise.resolve({ok:false,message:"The room is still opening."}),
     confirm:(instance:Instance,cartRevision:number)=>ref.current?.confirm(instance,cartRevision) ?? Promise.resolve(false),
     undo:()=>ref.current?.undo(),redo:()=>ref.current?.redo(),retry:()=>ref.current?.retry(),reload:()=>ref.current?.load(true),
   }),[]);

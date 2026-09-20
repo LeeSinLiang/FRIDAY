@@ -8,6 +8,7 @@ export type Ref =
   | { kind: 'wall'; id: string }
   | { kind: 'window'; id?: string }
   | { kind: 'door'; id?: string }
+  | { kind: 'surface' | 'compartment'; id: string }
   | { kind: 'instance'; id: string };      // something already in the room
 
 // ---- filters the CATALOGUE (7) ----
@@ -27,6 +28,7 @@ export type PlaceClause =
   | { k: 'distance_min';  ref: Ref; mm: number }
   | { k: 'clear';         ref: Ref; mm: number }
   | { k: 'on';            ref: Ref }
+  | { k: 'inside';        ref: { kind: 'compartment'; id: string } }
   | { k: 'not_blocking';  ref: Ref };
 
 export type Program = {

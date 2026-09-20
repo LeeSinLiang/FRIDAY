@@ -1,8 +1,10 @@
 import { createAngelMovers } from "./angelMovers";
 import { planAngelMove, type AgentMotion } from "./angelMotion";
 import * as pc from "playcanvas";
-import type { Instance, Pose, Product } from "../types";
-import { supportHeightCm, validatePlacement } from "../placement";
+import { moveWithAttachments, solidParts, profileOf, attachmentTarget, worldToLocal, localToWorld } from "../supports";
+import { pickSupport } from "./supportPicking";
+import type { Attachment, Instance, Pose, Product } from "../types";
+import { validatePlacement } from "../placement";
 import { sceneToCm } from "../units";
 import { createFurnitureLayer } from "./furniture";
 import { createNavigation, isTextEntry } from "./navigation";
@@ -22,10 +24,15 @@ export function intersectFloor(ray: SceneRay, heightCm = 0, maxDistanceCm = 3000
 }
 
 /** Oriented catalogue bounds give stable hit targets even while the GLB is loading. */
-export function furnitureHit(ray: SceneRay, instance: Instance, product: Product, baseHeightCm = 0): { distance: number; point: Point } | null {
+export function furnitureHit(ray: SceneRay, instance: Instance, product: Product): { distance: number; point: Point } | null {
+  if (profileOf(product)) {
+    const hits = solidParts(instance, product).map(part => furnitureHit(ray,
+      { ...instance, pose: part }, { ...product, productId: "__solid", ...part })).filter(hit => hit !== null);
+    return hits.sort((a,b) => a.distance-b.distance)[0] ?? null;
+  }
   const c = Math.cos(instance.pose.yawRad), s = Math.sin(instance.pose.yawRad);
   const dx = ray.origin.x - instance.pose.xCm, dz = ray.origin.z - instance.pose.zCm;
-  const origin = [c * dx - s * dz, ray.origin.y - baseHeightCm, s * dx + c * dz];
+  const origin = [c * dx - s * dz, ray.origin.y - (instance.pose.yCm ?? 0), s * dx + c * dz];
   const direction = [c * ray.direction.x - s * ray.direction.z, ray.direction.y, s * ray.direction.x + c * ray.direction.z];
   const lower = [-product.widthCm / 2, 0, -product.depthCm / 2];
   const upper = [product.widthCm / 2, product.heightCm, product.depthCm / 2];
@@ -51,7 +58,7 @@ export function dragPose(point: Point, offset: { x: number; z: number }, yawRad:
 type Gesture =
   | { kind: "look"; pointerId: number; x: number; y: number; moved: boolean; hitId: string | null }
   | { kind: "pending"; pointerId: number; x: number; y: number; moved: boolean }
-  | { kind: "drag"; pointerId: number; x: number; y: number; moved: boolean; instanceId: string; initial: Pose; pose: Pose; heightCm: number; offset: { x: number; z: number } };
+  | { kind: "drag"; pointerId: number; x: number; y: number; moved: boolean; instanceId: string; initial: Pose; pose: Pose; attachment?: Attachment; heightCm: number; offset: { x: number; z: number } };
 
 /** Owns only transient previews. Accepted edits and history remain with the application. */
 export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: InteractionState, callbacks: InteractionCallbacks) {
@@ -72,10 +79,9 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
   canvas.style.touchAction = "none";
   const furniture = createFurnitureLayer(runtime, runtime.contentRoot, (id, status) => {
     if (id !== ghost?.instanceId) callbacks.onModelStatus(id, status);
-  }, () => ({ room: state.room, products: state.products, instances: ghost ? [...state.instances, ghost] : state.instances }));
+  });
   const angels = createAngelMovers(runtime, (id, pose) => furniture.preview(id, pose));
-  const overlays = createPlacementOverlays(runtime, runtime.contentRoot, preview => preview.instanceId
-    ? supportHeightCm(state.room, state.products, ghost ? [...state.instances, ghost] : state.instances, preview.instanceId, preview.pose) : 0);
+  const overlays = createPlacementOverlays(runtime, runtime.contentRoot);
   const surface = createSurfaceReference(runtime, callbacks.onSurfaceStatus);
   // A piece in hand suspends walking and jumping, NOT looking: a moved press turns the camera, a plain click places.
   const holding = () => !!state.pendingProductId || !!runtime.externalHold;
@@ -113,15 +119,14 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
     let closest: { instance: Instance; point: Point; distance: number } | null = null;
     for (const instance of state.instances) {
       const product = productFor(instance.productId); if (!product) continue;
-      const hit = furnitureHit(ray, instance, product,
-        supportHeightCm(state.room, state.products, state.instances, instance.instanceId, instance.pose));
+      const hit = furnitureHit(ray, instance, product);
       if (hit && (!closest || hit.distance < closest.distance)) closest = { instance, ...hit };
     }
     return closest;
   };
-  const validate = (instance: Instance, pose: Pose): PlacementPreview => ({
+  const validate = (instance: Instance, pose: Pose, attachment?: Attachment | null): PlacementPreview => ({
     instanceId: instance.instanceId, pose,
-    ...validatePlacement(state.room, state.products, ghost?.instanceId === instance.instanceId ? [...state.instances, instance] : state.instances, instance.instanceId, pose),
+    ...validatePlacement(state.room, state.products, ghost?.instanceId === instance.instanceId ? [...state.instances, instance] : state.instances, instance.instanceId, pose, attachment),
   });
   const syncFurniture = (movingId?: string) => {
     furniture.sync(ghost ? [...state.instances, ghost] : state.instances, state.products, state.retries, movingId ?? pendingEdit?.instanceId);
@@ -143,17 +148,20 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
   };
   const updateGhost = (x: number, y: number) => {
     if (!ghost || unavailable() || !state.editingEnabled) return;
-    const point = floorAt(x, y);
+    const ray = rayAt(x,y);
+    const picked = ray ? pickSupport(ray,state.instances,state.products,ghost.pose.yawRad,state.snap) : null;
+    const point = picked?.pose;
     ghostHasFloor = !!point;
     if (!point) {
       furniture.setVisible(ghost.instanceId, false);
       reportPreview({ instanceId: ghost.instanceId, pose: ghost.pose, valid: false, reason: "Point at the floor to place furniture", collidingIds: [] });
       return;
     }
-    ghost.pose = dragPose(point, { x: 0, z: 0 }, ghost.pose.yawRad, state.snap);
+    ghost.pose = picked!.pose;
+    ghost.attachment = picked!.attachment;
     furniture.setVisible(ghost.instanceId, true);
     furniture.preview(ghost.instanceId, ghost.pose);
-    reportPreview(validate(ghost, ghost.pose));
+    reportPreview(validate(ghost, ghost.pose, ghost.attachment ?? null));
   };
   const updateDrag = (event: PointerEvent, current: Extract<Gesture, { kind: "drag" }>) => {
     if (!current.moved && Math.hypot(event.clientX - current.x, event.clientY - current.y) < 4) return;
@@ -163,17 +171,33 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
     current.pose = dragPose(point, current.offset, current.initial.yawRad, state.snap);
     const instance = state.instances.find(item => item.instanceId === current.instanceId);
     if (!instance) { cancelGesture(); return; }
-    furniture.preview(current.instanceId, current.pose);
-    reportPreview(validate(instance, current.pose));
+    current.pose.yCm = instance.pose.yCm;
+    if (instance.attachment && state.snap) {
+      const {parent,target}=attachmentTarget(instance.attachment,state.instances,state.products);
+      const local=worldToLocal(parent.pose,current.pose);
+      local.xCm=Math.round(local.xCm/5)*5;local.zCm=Math.round(local.zCm/5)*5;
+      current.pose=localToWorld(parent.pose,{...local,yCm:target.yCm});
+    }
+    if (!instance.attachment && !state.instances.some(i=>i.attachment?.parentInstanceId===instance.instanceId)) {
+      const ray = rayAt(event.clientX,event.clientY);
+      const picked = ray ? pickSupport(ray,state.instances,state.products,current.pose.yawRad,state.snap,instance.instanceId) : null;
+      if (picked?.attachment) { current.pose=picked.pose;current.attachment=picked.attachment; }
+      else current.attachment=undefined;
+    }
+    try {
+      const moved = moveWithAttachments(state.instances,state.products,current.instanceId,current.pose,current.attachment);
+      for (const item of moved) if (item.instanceId===current.instanceId || item.attachment?.parentInstanceId===current.instanceId) furniture.preview(item.instanceId,item.pose);
+    } catch { furniture.preview(current.instanceId,current.pose); }
+    reportPreview(validate(instance, current.pose,current.attachment));
   };
-  const confirm = async (instance: Instance, pose: Pose, pending: boolean) => {
+  const confirm = async (instance: Instance, pose: Pose, pending: boolean, attachment?: Attachment) => {
     if (pending && !ghostHasFloor) return;
-    const result = validate(instance, pose); reportPreview(result, true);
+    const result = validate(instance, pose, attachment); reportPreview(result, true);
     if (!result.valid || unavailable() || !state.editingEnabled) return;
     busy = true; pendingEdit = { instanceId: instance.instanceId, pose }; reportActive(true); navigation.stop(); canvas.style.cursor = "progress";
     const request = ++token;
     try {
-      const accepted = pending ? await callbacks.onPlace(instance.productId, pose) : await callbacks.onCommit(instance.instanceId, pose);
+      const accepted = pending ? await callbacks.onPlace(instance.productId, pose, attachment) : await callbacks.onCommit(instance.instanceId, pose, attachment);
       if (disposed || request !== token) return;
       // onPlace owns accepted application state. Cancellation is only an explicit user action.
       if (accepted && pending) ghost = null;
@@ -257,10 +281,10 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
       if (!runtime.externalHold && !current.moved && (current.hitId || state.mode !== "walk")) callbacks.onSelect(current.hitId);
     }
     else if (current.kind === "pending") {
-      if (!current.moved && ghost) void confirm(ghost, ghost.pose, true);
+      if (!current.moved && ghost) void confirm(ghost, ghost.pose, true, ghost.attachment);
     } else {
       const instance = state.instances.find(item => item.instanceId === current.instanceId);
-      if (current.moved && instance) void confirm(instance, current.pose, false);
+      if (current.moved && instance) void confirm(instance, current.pose, false, current.attachment);
       if (!busy) { syncFurniture(); reportActive(false); }
     }
   };
@@ -272,7 +296,7 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
     if (unavailable() || isTextEntry(event.target) || !ghost || !state.editingEnabled) return;
     if (event.code === "KeyR") {
       event.preventDefault(); ghost.pose = { ...ghost.pose, yawRad: ghost.pose.yawRad + Math.PI / 2 };
-      furniture.preview(ghost.instanceId, ghost.pose); if (ghostHasFloor) reportPreview(validate(ghost, ghost.pose));
+      furniture.preview(ghost.instanceId, ghost.pose); if (ghostHasFloor) reportPreview(validate(ghost, ghost.pose, ghost.attachment ?? null));
     }
   };
   const focus = (event: FocusEvent) => { if (isTextEntry(event.target)) cancelGesture(); };
@@ -325,7 +349,7 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
       if (ghost) { const rect = canvas.getBoundingClientRect(); updateGhost(rect.left + rect.width / 2, rect.top + rect.height * 0.66); }
     } else syncFurniture(gesture?.kind === "drag" ? gesture.instanceId : undefined);
     if (next.agentMotion?.revision !== prior.agentMotion?.revision) pendingMotion = next.agentMotion ?? null;
-    if (ghost && ghostHasFloor) reportPreview(validate(ghost, ghost.pose));
+    if (ghost && ghostHasFloor) reportPreview(validate(ghost, ghost.pose, ghost.attachment ?? null));
     else if (ghost) reportPreview({ instanceId: ghost.instanceId, pose: ghost.pose, valid: false, reason: "Point at the floor to place furniture", collidingIds: [] });
     else if (gesture?.kind === "drag") {
       const current = gesture;

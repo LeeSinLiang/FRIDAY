@@ -10,6 +10,67 @@ const item: Instance = { instanceId: "one", productId: PRODUCTS[0].productId, po
 const payload = (revision = 0, instances: Instance[] = []): RoomSnapshot => ({ room: ROOM, products: PRODUCTS, revision, instances, geometryRevision: String(ROOM.revision) });
 const flush = () => new Promise<void>(resolve => setImmediate(resolve));
 
+test('designer retries the same frozen request and creates one normal undo entry', async t => {
+  const h = harness(); t.after(h.session.dispose); await h.ready();
+  const task = h.session.design('place a chair beside the table', null, null);
+  assert.equal(h.requests[1].url, `/api/designer/?roomId=${ROOM.roomId}`);
+  const original = h.body(1);
+  assert.equal(original.baseRevision, 0);
+  h.requests[1].reject(new Error('reply lost after commit'));
+  assert.equal((await task).ok, false);
+  const retry = h.session.retry();
+  assert.deepEqual(h.body(2), original);
+  h.respond(2, {scene:payload(1, [item]), designer:{appliedCount:1, message:'Chair placed.', visualNote:'Both visible.'}});
+  assert.equal(await retry, true);
+  assert.equal(h.state().message, 'Layout saved. Chair placed. Both visible.');
+  assert.equal(h.state().canUndo, true);
+  const undo = h.session.undo();
+  assert.deepEqual(h.body(3).commands, [{type:'remove',instanceId:'one'}]);
+  h.respond(3,payload(2)); await undo;
+  assert.equal(h.state().canUndo, false);
+  assert.equal(h.state().canRedo, true);
+});
+
+test('designer clarification adds no undo history and an intervening poll invalidates selection context', async t => {
+  const h = harness(); t.after(h.session.dispose); await h.ready([item]);
+  const task = h.session.design('move the chair', 'one', null);
+  h.respond(1, {scene:payload(0,[item]), designer:{appliedCount:0,message:'Which direction?'}});
+  assert.equal((await task).ok, true);
+  assert.equal(h.state().canUndo, false);
+  const poll = h.session.load();
+  const stale = h.session.design('move it left', 'one', null);
+  h.respond(2,payload(1,[])); await poll;
+  assert.equal((await stale).ok, false);
+  assert.equal(h.requests.length, 3);
+});
+
+test('designer async polling waits for the accepted layout and terminal failure never commits a preview', async t => {
+  const h = harness(); t.after(h.session.dispose); await h.ready([item]);
+  const task = h.session.design('move it', 'one', null);
+  h.respond(1,{jobId:'job-one',status:'running',message:'Checking a preview…'});
+  await new Promise(resolve => setTimeout(resolve, 1300));
+  assert.equal(h.requests[2].url, `/api/designer/job-one/?roomId=${ROOM.roomId}`);
+  assert.deepEqual(h.state().snapshot?.instances,[item]);
+  assert.equal(h.state().message,'Checking a preview…');
+  h.respond(2,{jobId:'job-one',status:'failed',error:{code:'capture_unavailable',message:'Keep the room open.'}});
+  assert.equal((await task).ok,false);
+  assert.equal(h.state().status,'ready');
+  assert.equal(h.state().canUndo,false);
+});
+
+test('reload resumes the server-owned active designer with its original request and undo base', async t => {
+  const h = harness(); t.after(h.session.dispose);
+  const task = h.session.load();
+  const original = {text:'place a chair', requestId:'original-job',baseRevision:0,selectedId:null,camera:null};
+  h.respond(0,{...payload(1,[item]),activeDesigner:{payload:original,before:[]}});
+  await task;
+  assert.equal(h.requests[1].url, `/api/designer/?roomId=${ROOM.roomId}`);
+  assert.deepEqual(h.body(1),original);
+  h.respond(1,{status:'completed',scene:payload(1,[item]),designer:{appliedCount:1,message:'Chair arranged.'}});
+  await flush();
+  assert.equal(h.state().canUndo,true);
+});
+
 test('shopping confirmation retries its operation and participates in undo history',async t=>{
   const h=harness();t.after(h.session.dispose);await h.ready();
   const task=h.session.confirm(item,3);
@@ -19,6 +80,21 @@ test('shopping confirmation retries its operation and participates in undo histo
   const retry=h.session.retry();assert.deepEqual(h.body(2),original);
   h.respond(2,{scene:payload(1,[item]),cart:{revision:4}});assert.equal(await retry,true);
   assert.equal(h.state().canUndo,true);
+});
+
+test('resumed designer receipt cannot replace a newer saved scene or add obsolete undo', async t => {
+  const h = harness(); t.after(h.session.dispose);
+  const load = h.session.load();
+  const newer = {...item,pose:{...item.pose,xCm:300}};
+  h.respond(0,{...payload(3,[newer]),activeDesigner:{
+    payload:{text:'move chair',requestId:'original-job',baseRevision:1,selectedId:null,camera:null},before:[]}});
+  await load;
+  h.respond(1,{status:'completed',scene:payload(2,[item]),designer:{appliedCount:1,message:'Chair moved.'}});
+  await flush();
+  assert.equal(h.state().snapshot?.revision,3);
+  assert.deepEqual(h.state().snapshot?.instances,[newer]);
+  assert.equal(h.state().canUndo,false);
+  assert.equal(h.state().status,'ready');
 });
 
 function harness() {
@@ -286,4 +362,21 @@ test("catalogue remove and undo restore server-approved inline metadata", async 
   assert.deepEqual(h.body(2).commands, [{ type: "add", instance: catalogueItem }]);
   h.respond(2, snapshot(2, [catalogueItem])); assert.equal(await undo, true);
   assert.deepEqual(h.state().snapshot?.instances, [catalogueItem]);
+});
+
+
+test('attachment history removes children first, restores parents first, and keeps elevated poses',async t=>{
+  const h=harness();t.after(h.session.dispose);
+  const parent:Instance={instanceId:'table',productId:'support-demo-table',pose:{xCm:200,zCm:200,yawRad:0}};
+  const child:Instance={instanceId:'lamp',productId:'support-demo-lamp',pose:{xCm:200,zCm:200,yawRad:0,yCm:75},
+    attachment:{parentInstanceId:'table',profileRevision:'1',target:{kind:'surface',id:'top'},localPose:{xCm:0,zCm:0,yawRad:0}}};
+  await h.ready([parent]);
+  const add=h.session.submit({type:'add',instance:child});h.respond(1,payload(1,[parent,child]));await add;
+  const undo=h.session.undo();
+  assert.deepEqual(h.body(2).commands.map((c:SceneEdit)=>c.type==='add'?c.instance.instanceId:c.instanceId),['lamp','table','table']);
+  h.respond(2,payload(2,[parent]));await undo;
+  const redo=h.session.redo();
+  assert.deepEqual(h.body(3).commands.map((c:SceneEdit)=>c.type==='add'?c.instance.instanceId:c.instanceId),['table','table','lamp']);
+  h.respond(3,payload(3,[parent,child]));await redo;
+  assert.deepEqual(h.state().snapshot?.instances[1],child);
 });

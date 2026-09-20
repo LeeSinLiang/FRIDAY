@@ -8,7 +8,7 @@ import PerformanceProbe, {
 import Grid from "./scene/Grid";
 import SceneControls from "./scene/SceneControls";
 import Furniture from "./scene/Furniture";
-import { supportHeightCm, validatePlacement } from "./scene/placement";
+import { validatePlacement } from "./scene/placement";
 import { useFurnitureDrag, type PlacementPreview } from "./scene/useFurnitureDrag";
 import { ROOM } from "./scene/fixtures";
 import { cmToScene } from "./scene/units";
@@ -64,7 +64,6 @@ function Item({
   retryKey,
   placementValid,
   placementReason,
-  baseHeightCm,
 }: {
   instance: Instance;
   product: Product;
@@ -74,7 +73,6 @@ function Item({
   retryKey: number;
   placementValid: boolean;
   placementReason: string;
-  baseHeightCm: number;
 }) {
   const report = useCallback(
     (value: ModelStatus) => status(instance.instanceId, value),
@@ -87,7 +85,6 @@ function Item({
       selected={selected}
       placementValid={placementValid}
       placementReason={placementReason}
-      baseHeightCm={baseHeightCm}
       {...bind(instance)}
       onModelStatus={report}
       retryKey={retryKey}
@@ -129,7 +126,6 @@ function Contents(props: Props) {
             selected={props.selectedId === instance.instanceId}
             placementValid={placement.valid}
             placementReason={placement.reason}
-            baseHeightCm={supportHeightCm(ROOM, props.products, props.instances, instance.instanceId, instance.pose)}
             bind={drag.bind}
             status={props.onModelStatus}
             retryKey={props.retries[instance.instanceId] ?? 0}

@@ -1,6 +1,5 @@
 import * as pc from "playcanvas";
-import type { Instance, Pose, Product, Room } from "../types";
-import { supportHeightCm } from "../placement";
+import type { Instance, Pose, Product } from "../types";
 import { cmToScene, meterGlbToSceneScale } from "../units";
 import type { ModelStatus } from "./contracts";
 import { animateMaterialization, MATERIALIZE_DURATION_MS, MATERIALIZE_PREVIEW_EVENT } from "./materialize";
@@ -14,13 +13,13 @@ export type FurnitureRuntime = {
 export type FurnitureVisual = {
   entity: pc.Entity;
   ready: Promise<string | undefined>;
-  setPose(pose: Pose, supportHeightCm?: number): void;
+  setPose(pose: Pose): void;
   materialize(): void;
   dispose(): void;
 };
 
-export function applyFurniturePose(entity: pc.Entity, pose: Pose, baseHeightCm = 0) {
-  entity.setLocalPosition(cmToScene(pose.xCm), cmToScene(baseHeightCm), cmToScene(pose.zCm));
+export function applyFurniturePose(entity: pc.Entity, pose: Pose) {
+  entity.setLocalPosition(cmToScene(pose.xCm), cmToScene(pose.yCm ?? 0), cmToScene(pose.zCm));
   entity.setLocalEulerAngles(0, pose.yawRad * pc.math.RAD_TO_DEG, 0);
 }
 
@@ -99,12 +98,13 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
   const contact = runtime.furnitureAppearance?.contact(product);
   if (contact) entity.addChild(contact);
   let currentPose = instance.pose, currentHeight = 0;
-  const setPose = (pose: Pose, supportHeightCm = 0) => {
+  const setPose = (pose: Pose) => {
+    const supportHeightCm = pose.yCm ?? 0;
     if (pose.xCm !== currentPose.xCm || pose.zCm !== currentPose.zCm || pose.yawRad !== currentPose.yawRad || supportHeightCm !== currentHeight)
       runtime.furnitureAppearance?.invalidateShadows();
     currentPose = pose; currentHeight = supportHeightCm;
-    applyFurniturePose(entity, pose, supportHeightCm);
-    finish?.setPose(pose, supportHeightCm);
+    applyFurniturePose(entity, pose);
+    finish?.setPose(pose);
     // Raised objects receive/cast actual geometry shadows on the lit support.
     // A baked-floor approximation must never float above that support.
     if (contact) contact.enabled = supportHeightCm === 0;
@@ -126,7 +126,7 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
       finish?.dispose();
       proxy?.dispose(); proxy = null;
       finish = runtime.furnitureAppearance?.dress(loaded, product);
-      setPose(currentPose, currentHeight);
+      setPose(currentPose);
       onStatus?.("ready");
       return undefined;
     } catch (error) {
@@ -160,16 +160,15 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
 }
 
 /** Frozen screenshot geometry shares source resources but owns its own hierarchy. */
-export async function createFurnitureEntity(runtime: FurnitureRuntime, instance: Instance, product: Product, baseHeightCm = 0) {
+export async function createFurnitureEntity(runtime: FurnitureRuntime, instance: Instance, product: Product) {
   const visual = createFurnitureVisual(runtime, instance, product);
-  visual.setPose(instance.pose, baseHeightCm);
+  visual.setPose(instance.pose);
   const warning = await visual.ready;
   return { entity: visual.entity, warning, dispose: visual.dispose };
 }
 
 export function createFurnitureLayer(runtime: FurnitureRuntime, parent: pc.Entity,
-  status: (id: string, status: ModelStatus) => void,
-  context: () => { room: Room; products: Product[]; instances: Instance[] }) {
+  status: (id: string, status: ModelStatus) => void) {
   const entries = new Map<string, { signature: string; visual: FurnitureVisual }>();
   let initialized = false;
   const replay = (event: Event) => {
@@ -194,15 +193,13 @@ export function createFurnitureLayer(runtime: FurnitureRuntime, parent: pc.Entit
           entry = { signature, visual }; entries.set(instance.instanceId, entry);
           if (initialized && isNew) visual.materialize();
         }
-        if (instance.instanceId !== movingId) entry.visual.setPose(instance.pose,
-          supportHeightCm(context().room, products, instances, instance.instanceId, instance.pose));
+        if (instance.instanceId !== movingId) entry.visual.setPose(instance.pose);
       }
       initialized = true;
     },
     preview(id: string, pose: Pose) {
-      const entry = entries.get(id), current = context();
-      if (entry) entry.visual.setPose(pose,
-        supportHeightCm(current.room, current.products, current.instances, id, pose));
+      const entry = entries.get(id);
+      if (entry) entry.visual.setPose(pose);
     },
     setVisible(id: string, visible: boolean) {
       const entry = entries.get(id);

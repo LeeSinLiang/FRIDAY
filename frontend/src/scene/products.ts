@@ -10,7 +10,6 @@ export function validInlineProduct(value: unknown, productId: string): value is 
   return product.productId === productId && typeof product.name === "string" && !!product.name.trim() &&
     typeof product.color === "string" && KINDS.has(product.kind as Product["kind"]) &&
     (product.modelUrl === undefined || typeof product.modelUrl === "string") &&
-    (product.supportSurface === undefined || typeof product.supportSurface === "boolean") &&
     [product.widthCm, product.depthCm, product.heightCm].every((n) => typeof n === "number" && Number.isFinite(n) && n > 0);
 }
 
@@ -42,7 +41,6 @@ export function productsWith(products: Product[], instances: Instance[]): Produc
 export function instanceToAdd(instanceId: string, productId: string, pose: Pose, instances: Instance[]): Instance {
   const carried = instances.find((item) => item.productId === productId && item.product)?.product;
   if (!carried) return { instanceId, productId, pose };
-  const { name, widthCm, depthCm, heightCm, color, kind, modelUrl, supportSurface } = carried;
-  return { instanceId, productId, pose, product: { productId, name, widthCm, depthCm, heightCm, color, kind,
-    ...(modelUrl ? { modelUrl } : {}), ...(supportSurface === true ? { supportSurface: true } : {}) } };
+  const { name, widthCm, depthCm, heightCm, color, kind, modelUrl } = carried;
+  return { instanceId, productId, pose, product: { productId, name, widthCm, depthCm, heightCm, color, kind, ...(modelUrl ? { modelUrl } : {}) } };
 }

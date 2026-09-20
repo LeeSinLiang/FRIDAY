@@ -10,12 +10,33 @@ import type { Instance, Product, Room } from "../types";
 import manifest from "../../../../shared/rooms/studio-11/manifest.json";
 import skyscraper from "../../../../shared/skyscraper-test-scene.json";
 import spatial from "../../../../shared/rooms/studio-11/spatial.json";
+import cgArch from "../../../../shared/rooms/cg-arch-interior/manifest.json";
+import cgSpatial from "../../../../shared/rooms/cg-arch-interior/spatial.json";
 
 const room: Room = { roomId: "interaction-test", revision: 1, widthCm: 600, depthCm: 500, heightCm: 280 };
 const product: Product = { productId: "test-sofa", name: "Sofa", kind: "sofa", color: "#b96942", widthCm: 200, depthCm: 100, heightCm: 80 };
 const instance: Instance = { instanceId: "sofa-1", productId: product.productId, pose: { xCm: 300, zCm: 250, yawRad: 0 } };
 const studio: Room = { ...manifest.room, spatial } as Room;
 const scanned = { ...room, scan: studio.scan };
+
+test("Cg Arch walking reaches the corridor and entry across old boundaries, then returns", () => {
+  const apartment = { ...cgArch.room, spatial: cgSpatial } as unknown as Room;
+  let pose = { xCm: 1100, zCm: 735 };
+  for (const target of [{ xCm: 1000, zCm: 490 }, { xCm: 80, zCm: 490 },
+    { xCm: 80, zCm: 650 }, { xCm: 80, zCm: 490 }, { xCm: 1000, zCm: 490 }]) {
+    for (let step = 0; step < 300 && Math.hypot(target.xCm - pose.xCm, target.zCm - pose.zCm) > 0.01; step++) {
+      const dx = target.xCm - pose.xCm, dz = target.zCm - pose.zCm;
+      const scale = Math.min(1, 12 / Math.hypot(dx, dz));
+      pose = advanceWalk(apartment, pose, dx * scale, dz * scale);
+      assert.ok(canWalkAt(apartment, pose.xCm, pose.zCm));
+    }
+    assert.ok(Math.hypot(target.xCm - pose.xCm, target.zCm - pose.zCm) < 0.01, JSON.stringify(pose));
+  }
+  for (const [x, z] of [[400, 420], [400, 300], [500, 650], [10, 490], [730, 300]])
+    assert.equal(canWalkAt(apartment, x, z), false, `wall/door/cabinet/unknown ${x},${z}`);
+  const atDoor = advanceWalk(apartment, { xCm: 400, zCm: 490 }, 0, -100);
+  assert.ok(atDoor.zCm >= 460, "a long step cannot tunnel through the closed glass door");
+});
 
 test("proxy fabric, seams, wood and stone use finite normalized shader gloss and independent materials", () => {
   const first = createProxyMaterials("#a98458");
@@ -52,16 +73,6 @@ test("floor placement does not use a stale point for a horizontal, upward or exc
   assert.equal(intersectFloor({ origin, direction: { x: 0, y: 1, z: 0 } }), null);
   assert.equal(intersectFloor({ origin, direction: { x: 0, y: -0.001, z: -1 } }), null);
   assert.deepEqual(intersectFloor({ origin, direction: { x: 0, y: -1, z: 0 } }), { x: 200, y: 0, z: 400 });
-});
-
-test("a small raised object's hit bounds match its rendered support, with no floor-height phantom hit", () => {
-  const vase = { ...product, widthCm: 10.8, depthCm: 10.8, heightCm: 20.3 };
-  const item = { ...instance, pose: { xCm: 445, zCm: 290, yawRad: 0 } };
-  const ray = { origin: { x: 445, y: 85, z: 430 }, direction: { x: 0, y: 0, z: -1 } };
-  assert.ok(furnitureHit(ray, item, vase, 74));
-  assert.equal(furnitureHit({ ...ray, origin: { ...ray.origin, x: 451 } }, item, vase, 74), null);
-  assert.equal(furnitureHit({ ...ray, origin: { ...ray.origin, y: 10 } }, item, vase, 74), null);
-  assert.equal(furnitureHit(ray, item, vase), null);
 });
 
 test("dragging preserves the grabbed surface offset before optional grid snapping", () => {

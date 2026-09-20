@@ -1,0 +1,20 @@
+{
+  "productId": "pc-workspace-lamp",
+  "catalogueListingId": "pc-workspace-lamp",
+  "modelUrl": "/models/furniture/pc-workspace-lamp/model.glb",
+  "widthCm": 24,
+  "depthCm": 24,
+  "heightCm": 48,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "license": "CC0-1.0",
+  "creator": "Kenney",
+  "sourceUrl": "https://kenney.nl/assets/furniture-kit",
+  "originalFile": "lampRoundTable.glb",
+  "dimensionBasis": "Authored demo size, not manufacturer measurements",
+  "modelSha256": "b76210d832af50aeaebce9274301bde2e439f6145084b433c057baf43c62e460",
+  "matchType": "generic_visual_proxy",
+  "matchNote": "CC0 Kenney model at authored demo dimensions; this is a synthetic catalogue item, not a retail product match."
+}

@@ -49,3 +49,21 @@ class SceneCapture(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['scene', 'request_id'], name='unique_scene_capture_request')]
+
+
+class SceneDesignJob(models.Model):
+    """Durable orchestration; provider reasoning and renderer waits occur outside DB locks."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    scene = models.ForeignKey(SceneLayout, on_delete=models.CASCADE)
+    request_id = models.UUIDField()
+    request_hash = models.CharField(max_length=64)
+    phase = models.CharField(max_length=32, default='before')
+    data = models.JSONField(default=dict)
+    result = models.JSONField(null=True)
+    lease_token = models.UUIDField(null=True)
+    lease_until = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['scene', 'request_id'], name='unique_scene_design_request')]

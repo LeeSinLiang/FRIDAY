@@ -1,0 +1,20 @@
+{
+  "productId": "pc-workspace-shelf",
+  "catalogueListingId": "pc-workspace-shelf",
+  "modelUrl": "/models/furniture/pc-workspace-shelf/model.glb",
+  "widthCm": 95,
+  "depthCm": 42,
+  "heightCm": 100,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "license": "CC0-1.0",
+  "creator": "Kenney",
+  "sourceUrl": "https://kenney.nl/assets/furniture-kit",
+  "originalFile": "bookcaseOpenLow.glb",
+  "dimensionBasis": "Authored demo size, not manufacturer measurements",
+  "modelSha256": "b57fd526d34291671f238a96aadb4590081727889fb766ea3e3f53cab1f5c6eb",
+  "matchType": "generic_visual_proxy",
+  "matchNote": "CC0 Kenney model at authored demo dimensions; this is a synthetic catalogue item, not a retail product match."
+}

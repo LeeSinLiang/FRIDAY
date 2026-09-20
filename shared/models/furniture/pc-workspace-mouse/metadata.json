@@ -1,0 +1,20 @@
+{
+  "productId": "pc-workspace-mouse",
+  "catalogueListingId": "pc-workspace-mouse",
+  "modelUrl": "/models/furniture/pc-workspace-mouse/model.glb",
+  "widthCm": 7,
+  "depthCm": 12,
+  "heightCm": 4,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "license": "CC0-1.0",
+  "creator": "Kenney",
+  "sourceUrl": "https://kenney.nl/assets/furniture-kit",
+  "originalFile": "computerMouse.glb",
+  "dimensionBasis": "Authored demo size, not manufacturer measurements",
+  "modelSha256": "c306170a469a95bd5190df8bba7865e869fab8cc45b2fd6c14024a7d1fe3166e",
+  "matchType": "generic_visual_proxy",
+  "matchNote": "CC0 Kenney model at authored demo dimensions; this is a synthetic catalogue item, not a retail product match."
+}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CameraMode, FirstPersonCamera, Instance, Product, Room } from "./types";
 import type { CaptureAngle } from "./captureCamera";
+import { resolveAttachments } from "./supports";
 
 export type CaptureJob = {
   captureId: string; leaseToken: string; revision: number; view: CameraMode;
@@ -54,10 +55,11 @@ export function parseCaptureJob(value: unknown): CaptureJob {
     const product = products.get(instance.productId);
     if (!product || ![product.widthCm, product.depthCm, product.heightCm].every(n => Number.isFinite(n) && n > 0) ||
       typeof instance.instanceId !== "string" || !instance.instanceId || ids.has(instance.instanceId) || !instance.pose ||
-      ![instance.pose.xCm, instance.pose.zCm, instance.pose.yawRad].every(Number.isFinite)) throw Error("Invalid capture furniture");
+      ![instance.pose.xCm, instance.pose.zCm, instance.pose.yawRad, instance.pose.yCm ?? 0].every(Number.isFinite)) throw Error("Invalid capture furniture");
     ids.add(instance.instanceId);
   }
-  return structuredClone(job);
+  return structuredClone({...job, snapshot: {...job.snapshot,
+    instances: resolveAttachments(job.snapshot.instances, job.snapshot.products)}});
 }
 
 export function useCaptureWorker(enabled: boolean, roomId = "demo-room") {

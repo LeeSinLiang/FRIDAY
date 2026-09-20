@@ -92,7 +92,7 @@
     {
       "id": "ikea-193.025.39",
       "source": "ikea",
-      "title": "POÄNG armchair",
+      "title": "PO\u00c4NG armchair",
       "category": "armchair",
       "price_cents": 12900,
       "dims_mm": {
@@ -133,7 +133,7 @@
     {
       "id": "ikea-004.885.65",
       "source": "ikea",
-      "title": "EKENÄSET armchair",
+      "title": "EKEN\u00c4SET armchair",
       "category": "armchair",
       "price_cents": 27900,
       "dims_mm": {
@@ -174,7 +174,7 @@
     {
       "id": "ikea-392.560.91",
       "source": "ikea",
-      "title": "GRÖNLID armchair",
+      "title": "GR\u00d6NLID armchair",
       "category": "armchair",
       "price_cents": 54900,
       "dims_mm": {
@@ -195,7 +195,7 @@
     {
       "id": "ikea-405.355.47",
       "source": "ikea",
-      "title": "HERRÅKRA armchair",
+      "title": "HERR\u00c5KRA armchair",
       "category": "armchair",
       "price_cents": 14900,
       "dims_mm": {
@@ -236,7 +236,7 @@
     {
       "id": "ikea-805.589.66",
       "source": "ikea",
-      "title": "RAMNEFJÄLL upholstered bed frame, Kilanda dark blue, Queen",
+      "title": "RAMNEFJ\u00c4LL upholstered bed frame, Kilanda dark blue, Queen",
       "category": "bed",
       "price_cents": 24900,
       "dims_mm": {
@@ -256,7 +256,7 @@
     {
       "id": "ikea-002.191.78",
       "source": "ikea",
-      "title": "ÄDDE chair",
+      "title": "\u00c4DDE chair",
       "category": "chair",
       "price_cents": 2500,
       "dims_mm": {
@@ -673,7 +673,7 @@
     {
       "id": "ikea-093.245.20",
       "source": "ikea",
-      "title": "BESTÅ TV unit",
+      "title": "BEST\u00c5 TV unit",
       "category": "storage",
       "price_cents": 24900,
       "dims_mm": {
@@ -809,7 +809,7 @@
     {
       "id": "ikea-704.713.98",
       "source": "ikea",
-      "title": "NYMÅNE floor/reading lamp",
+      "title": "NYM\u00c5NE floor/reading lamp",
       "category": "lamp",
       "price_cents": 7999,
       "dims_mm": {
@@ -889,7 +889,7 @@
     {
       "id": "ikea-205.220.27",
       "source": "ikea",
-      "title": "BJÖRKSTA picture with frame",
+      "title": "BJ\u00d6RKSTA picture with frame",
       "category": "decor",
       "price_cents": 7900,
       "dims_mm": {
@@ -2392,6 +2392,258 @@
       "materials": [
         "metal",
         "fabric"
+      ]
+    },
+    {
+      "id": "pc-workspace-desk",
+      "source": "stub",
+      "title": "Workstation desk",
+      "category": "desk",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 1800,
+        "d": 900,
+        "h": 750
+      },
+      "model_url": "/models/furniture/pc-workspace-desk/model.glb",
+      "thumb_url": "/models/furniture/pc-workspace-desk/thumbnail.png",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "wood",
+        "metal"
+      ]
+    },
+    {
+      "id": "pc-workspace-display",
+      "source": "stub",
+      "title": "Workstation monitor display",
+      "category": "decor",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 580,
+        "d": 180,
+        "h": 420
+      },
+      "model_url": "/models/furniture/pc-workspace-display/model.glb",
+      "thumb_url": "/models/furniture/pc-workspace-display/thumbnail.png",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "plastic",
+        "metal"
+      ]
+    },
+    {
+      "id": "pc-workspace-keyboard",
+      "source": "stub",
+      "title": "Workstation keyboard",
+      "category": "decor",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 440,
+        "d": 150,
+        "h": 30
+      },
+      "model_url": "/models/furniture/pc-workspace-keyboard/model.glb",
+      "thumb_url": "/models/furniture/pc-workspace-keyboard/thumbnail.png",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "plastic",
+        "metal"
+      ]
+    },
+    {
+      "id": "pc-workspace-mouse",
+      "source": "stub",
+      "title": "Workstation mouse",
+      "category": "decor",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 70,
+        "d": 120,
+        "h": 40
+      },
+      "model_url": "/models/furniture/pc-workspace-mouse/model.glb",
+      "thumb_url": "/models/furniture/pc-workspace-mouse/thumbnail.png",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "plastic",
+        "metal"
+      ]
+    },
+    {
+      "id": "pc-workspace-shelf",
+      "source": "stub",
+      "title": "Workstation open shelving",
+      "category": "shelf",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 950,
+        "d": 420,
+        "h": 1000
+      },
+      "model_url": "/models/furniture/pc-workspace-shelf/model.glb",
+      "thumb_url": "/models/furniture/pc-workspace-shelf/thumbnail.png",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "wood",
+        "metal"
+      ]
+    },
+    {
+      "id": "pc-workspace-chair",
+      "source": "stub",
+      "title": "Workstation chair",
+      "category": "chair",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 600,
+        "d": 600,
+        "h": 950
+      },
+      "model_url": "/models/furniture/pc-workspace-chair/model.glb",
+      "thumb_url": "/models/furniture/pc-workspace-chair/thumbnail.png",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "plastic",
+        "metal"
+      ]
+    },
+    {
+      "id": "pc-workspace-lamp",
+      "source": "stub",
+      "title": "Workstation lamp",
+      "category": "lamp",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 240,
+        "d": 240,
+        "h": 480
+      },
+      "model_url": "/models/furniture/pc-workspace-lamp/model.glb",
+      "thumb_url": "/models/furniture/pc-workspace-lamp/thumbnail.png",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "plastic",
+        "metal"
+      ]
+    },
+    {
+      "id": "pc-workspace-books",
+      "source": "stub",
+      "title": "Workstation books",
+      "category": "decor",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 240,
+        "d": 180,
+        "h": 260
+      },
+      "model_url": "/models/furniture/pc-workspace-books/model.glb",
+      "thumb_url": "/models/furniture/pc-workspace-books/thumbnail.png",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "plastic",
+        "metal"
+      ]
+    },
+    {
+      "id": "pc-workspace-coffee",
+      "source": "stub",
+      "title": "Workstation coffee cup",
+      "category": "decor",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 90,
+        "d": 90,
+        "h": 140
+      },
+      "model_url": "/models/furniture/pc-workspace-coffee/model.glb",
+      "thumb_url": "/models/furniture/pc-workspace-coffee/thumbnail.png",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "plastic",
+        "metal"
+      ]
+    },
+    {
+      "id": "pc-workspace-can",
+      "source": "stub",
+      "title": "Workstation soda can",
+      "category": "decor",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 66,
+        "d": 66,
+        "h": 120
+      },
+      "model_url": "/models/furniture/pc-workspace-can/model.glb",
+      "thumb_url": "/models/furniture/pc-workspace-can/thumbnail.png",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "plastic",
+        "metal"
+      ]
+    },
+    {
+      "id": "pc-workspace-bottle",
+      "source": "stub",
+      "title": "Workstation water bottle",
+      "category": "decor",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 70,
+        "d": 70,
+        "h": 240
+      },
+      "model_url": "/models/furniture/pc-workspace-bottle/model.glb",
+      "thumb_url": "/models/furniture/pc-workspace-bottle/thumbnail.png",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "plastic",
+        "metal"
+      ]
+    },
+    {
+      "id": "pc-workspace-pc",
+      "source": "stub",
+      "title": "Workstation PC tower",
+      "category": "decor",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 200,
+        "d": 320,
+        "h": 400
+      },
+      "model_url": "/models/furniture/pc-workspace-pc/model.glb",
+      "thumb_url": "/models/furniture/pc-workspace-pc/thumbnail.png",
+      "colour_hex": [
+        "#3c3f44"
+      ],
+      "materials": [
+        "plastic",
+        "metal"
       ]
     }
   ]

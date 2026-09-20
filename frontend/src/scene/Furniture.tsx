@@ -203,7 +203,6 @@ export default function Furniture({
   retryKey,
   placementValid = true,
   placementReason,
-  baseHeightCm = 0,
 }: {
   product: Product;
   instance: Instance;
@@ -214,7 +213,6 @@ export default function Furniture({
   retryKey?: number;
   placementValid?: boolean;
   placementReason?: string;
-  baseHeightCm?: number;
 }) {
   const canvas = useThree((state) => state.gl.domElement);
   const hovering = useRef(false);
@@ -225,7 +223,7 @@ export default function Furniture({
     <group
       ref={groupRef}
       name={instance.instanceId}
-      position={[cmToScene(instance.pose.xCm), cmToScene(baseHeightCm), cmToScene(instance.pose.zCm)]}
+      position={[cmToScene(instance.pose.xCm), 0, cmToScene(instance.pose.zCm)]}
       rotation={[0, instance.pose.yawRad, 0]}
       onPointerDown={onPointerDown}
       onPointerOver={(event) => {

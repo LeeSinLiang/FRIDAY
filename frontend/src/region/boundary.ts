@@ -42,7 +42,6 @@ export function listingToProduct(listing: Listing): Product {
     ...(listing.model_url ? { modelUrl: listing.model_url } : {}),
     color: listing.colour_hex[0] ?? "#999999",
     kind: KIND_BY_CATEGORY[listing.category],
-    ...(["table", "desk"].includes(listing.category) ? { supportSurface: true } : {}),
   };
 }
 

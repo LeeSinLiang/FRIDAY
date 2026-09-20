@@ -41,7 +41,11 @@ def get_scene_context(session_key, room_id='demo-room'):
     floors expose room.scan.building; poses remain centimetres in that floor's
     local frame. This does not install a tool into the separate shopping agent.
     """
-    return _result(lambda: {'ok': True, **serialize(scene_for_session(session_key, room_id))})
+    def read():
+        from .support_context import scene_references
+        snapshot = serialize(scene_for_session(session_key, room_id))
+        return {'ok': True, **snapshot, 'references': scene_references(snapshot)}
+    return _result(read)
 
 
 def request_scene_capture(session_key, base_revision, request_id, view='perspective', camera=None, width=1024, height=768, room_id='demo-room', representation=None):

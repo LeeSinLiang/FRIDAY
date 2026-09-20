@@ -7,7 +7,7 @@ import { cmToScene } from "../units";
 
 type Runtime = { contentRoot: pc.Entity; disposed: boolean };
 
-export type PendingGhost = { show(product: Product, pose: Pose, baseHeightCm?: number): void; hide(): void; dispose(): void };
+export type PendingGhost = { show(product: Product, pose: Pose): void; hide(): void; dispose(): void };
 
 export function createPendingGhost(runtime: Runtime): PendingGhost {
   const material = new pc.StandardMaterial();
@@ -18,12 +18,12 @@ export function createPendingGhost(runtime: Runtime): PendingGhost {
   entity.enabled = false;
   runtime.contentRoot.addChild(entity);
   return {
-    show(product, pose, baseHeightCm = 0) {
+    show(product, pose) {
       if (runtime.disposed) return;
       const colour = new pc.Color(); colour.fromString(product.color);
       material.diffuse = colour; material.update();
       entity.setLocalScale(cmToScene(product.widthCm), cmToScene(product.heightCm), cmToScene(product.depthCm));
-      entity.setLocalPosition(cmToScene(pose.xCm), cmToScene(baseHeightCm + product.heightCm / 2), cmToScene(pose.zCm));
+      entity.setLocalPosition(cmToScene(pose.xCm), cmToScene((pose.yCm ?? 0) + product.heightCm / 2), cmToScene(pose.zCm));
       entity.setLocalEulerAngles(0, pose.yawRad * pc.math.RAD_TO_DEG, 0);
       entity.enabled = true;
     },

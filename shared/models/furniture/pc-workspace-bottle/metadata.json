@@ -1,0 +1,20 @@
+{
+  "productId": "pc-workspace-bottle",
+  "catalogueListingId": "pc-workspace-bottle",
+  "modelUrl": "/models/furniture/pc-workspace-bottle/model.glb",
+  "widthCm": 7,
+  "depthCm": 7,
+  "heightCm": 24,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "license": "CC0-1.0",
+  "creator": "Kenney",
+  "sourceUrl": "https://kenney.nl/assets/food-kit",
+  "originalFile": "soda-bottle.glb",
+  "dimensionBasis": "Authored demo size, not manufacturer measurements",
+  "modelSha256": "3856fd4b16b0ef1fdb5ab7e76c9598c84f0ef4761dfa20cf84b04aa18dbe5c3f",
+  "matchType": "generic_visual_proxy",
+  "matchNote": "CC0 Kenney model at authored demo dimensions; this is a synthetic catalogue item, not a retail product match."
+}

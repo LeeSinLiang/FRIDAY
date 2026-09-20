@@ -201,7 +201,7 @@ def check_refs(program: Program, refs: dict) -> None:
         InvalidProgram: a place clause points at an unknown id.
     """
     known = {kind: {entry["id"] for entry in refs.get(group, [])}
-             for kind, group in (("wall", "walls"), ("window", "windows"), ("door", "doors"), ("instance", "instances"))}
+             for kind, group in (("wall", "walls"), ("window", "windows"), ("door", "doors"), ("instance", "instances"), ("surface", "surfaces"), ("compartment", "compartments"))}
     for clause in program.place:
         ref_id = getattr(clause.ref, "id", None)
         if ref_id is not None and ref_id not in known[clause.ref.kind]:

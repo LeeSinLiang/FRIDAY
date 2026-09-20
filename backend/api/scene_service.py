@@ -87,7 +87,7 @@ def number(value):
 
 
 def valid_pose(pose):
-    return isinstance(pose, dict) and set(pose) == {'xCm', 'zCm', 'yawRad'} and all(number(value) for value in pose.values())
+    return isinstance(pose, dict) and {'xCm', 'zCm', 'yawRad'} <= set(pose) and not set(pose) - {'xCm', 'zCm', 'yawRad', 'yCm'} and all(number(value) for value in pose.values())
 
 
 def footprint(product, pose):
@@ -99,18 +99,6 @@ def footprint(product, pose):
 
 def is_flat(product):
     return product['heightCm'] <= FLAT_MAX_CM + EPSILON
-
-
-def supported_by(room, candidate, box, support, top):
-    """Same one-level, full rotated-footprint support rule as frontend/src/scene/placement.ts."""
-    if (is_flat(candidate) or is_flat(support) or candidate.get('supportSurface') or not support.get('supportSurface') or
-            candidate['heightCm'] + support['heightCm'] > room['heightCm'] + EPSILON):
-        return False
-    for corner in polygon(box):
-        relative = [corner[i] - top['center'][i] for i in range(2)]
-        if any(abs(sum(relative[i] * top['axes'][axis][i] for i in range(2))) > top['half'][axis] + EPSILON for axis in range(2)):
-            return False
-    return True
 
 
 def overlaps(a, b):
@@ -220,8 +208,9 @@ def validate_instances(instances, room_id='demo-room'):
     room = data['room']
     products = {p['productId']: p for p in data['products']}
     seen, boxes = set(), []
+    resolved_products = {}
     for item in instances:
-        if not isinstance(item, dict) or not {'instanceId', 'productId', 'pose'} <= set(item) or set(item) - {'instanceId', 'productId', 'pose', 'product'}:
+        if not isinstance(item, dict) or not {'instanceId', 'productId', 'pose'} <= set(item) or set(item) - {'instanceId', 'productId', 'pose', 'product', 'attachment'}:
             raise SceneError('validation', 'Each instance needs instanceId, productId, and pose.')
         identifier = item['instanceId']
         if not isinstance(identifier, str) or not identifier.strip() or len(identifier) > 128 or identifier in seen:
@@ -229,23 +218,27 @@ def validate_instances(instances, room_id='demo-room'):
         seen.add(identifier)
         if not isinstance(item['productId'], str) or not valid_pose(item['pose']):
             raise SceneError('validation', 'Use a known product and finite centimeter position and rotation.')
-        product, pose = resolve_product(item, products), item['pose']
+        resolved_products[item['productId']] = resolve_product(item, products)
+    from .supports import resolve_attachments, support_fit, collides
+    instances = resolve_attachments(instances, resolved_products)
+    for item in instances:
+        identifier = item['instanceId']
+        product, pose = resolved_products[item['productId']], item['pose']
+        support_fit(item, product, instances, resolved_products)
         if any(not number(product[key]) or product[key] <= 0 for key in ['widthCm', 'depthCm', 'heightCm']):
             raise SceneError('validation', 'Invalid furniture dimensions.')
-        if product['heightCm'] > room['heightCm'] + EPSILON:
+        if pose.get('yCm', 0) + product['heightCm'] > room['heightCm'] + EPSILON:
             raise SceneError('placement', 'Too tall for this room.', details={'issues': [{'code': 'too_tall', 'instanceId': identifier, 'heightCm': product['heightCm'], 'roomHeightCm': room['heightCm']}]})
         box = footprint(product, pose)
         if any(box['center'][i] - box['extents'][i] < -EPSILON or box['center'][i] + box['extents'][i] > room[key] + EPSILON for i, key in enumerate(['widthCm', 'depthCm'])):
             raise SceneError('placement', 'Outside room.', details={'issues': [{'code': 'out_of_bounds', 'instanceId': identifier, 'bounds': {'minX': box['center'][0] - box['extents'][0], 'maxX': box['center'][0] + box['extents'][0], 'minZ': box['center'][1] - box['extents'][1], 'maxZ': box['center'][1] + box['extents'][1]}, 'roomBounds': {'minX': 0, 'maxX': room['widthCm'], 'minZ': 0, 'maxZ': room['depthCm']}}]})
         validate_fixed_geometry(room, box, identifier)
         for previous, previous_product, previous_id in boxes:
-            if is_flat(product) or is_flat(previous_product):
+            if (is_flat(product) and not item.get("attachment")) or (is_flat(previous_product) and not previous.get("attachment")):
                 continue
-            if supported_by(room, product, box, previous_product, previous) or supported_by(room, previous_product, previous, product, box):
-                continue
-            if overlaps(box, previous):
+            if collides(item, product, previous, previous_product):
                 raise SceneError('placement', f"Overlaps {previous_product['name']}.", details={'issues': [{'code': 'overlap', 'instanceId': identifier, 'conflictingInstanceIds': [previous_id]}]})
-        boxes.append((box, product, identifier))
+        boxes.append((item, product, identifier))
     stored = copy.deepcopy(instances)
     # Persist the server's copy of a carried product, never the client's: name, colour, kind and model
     # come from the catalogue too, so what is saved is always something the editor can load back.
@@ -271,7 +264,23 @@ def serialize(scene):
     context = room_context(scene.room_id)
     revision = geometry_revision(context['room'])
     if scene.geometry_revision and scene.geometry_revision != revision:
-        raise SceneError('geometry_conflict', 'The fixed room geometry changed. Activate a new room ID to preserve this layout.', 409, scene.revision)
+        # This reviewed transition only expands free floor: identical GLB,
+        # dimensions, transform and every v1 permitted point. Never generalize
+        # this exception to arbitrary geometry revisions or other rooms.
+        compatible = (scene.room_id, scene.geometry_revision, revision) == (
+            'cg-arch-interior', 'cg-arch-interior-v1', 'cg-arch-interior-v2')
+        if compatible:
+            try:
+                validate_instances(scene.instances, scene.room_id)
+            except SceneError:
+                compatible = False
+        if not compatible:
+            raise SceneError('geometry_conflict', 'The fixed room geometry changed. Activate a new room ID to preserve this layout.', 409, scene.revision)
+        updated = SceneLayout.objects.filter(pk=scene.pk, revision=scene.revision,
+                                             geometry_revision=scene.geometry_revision).update(geometry_revision=revision)
+        if not updated:
+            raise SceneError('revision_conflict', 'The scene changed. Reload before saving.', 409)
+        scene.geometry_revision = revision
     known = {product['productId'] for product in context['products']}
     # All catalogue dimensions and rendering metadata stay server-authoritative.
     for item in scene.instances:
@@ -352,14 +361,21 @@ def apply_scene_commands(session_key, base_revision, command_id, commands, room_
             instances.append(command['instance'])
             # Structural and placement validation after each command avoids invalid
             # intermediate geometry while the entire batch still commits atomically.
-        elif kind in ('setPose', 'remove') and set(command) == ({'type', 'instanceId', 'pose'} if kind == 'setPose' else {'type', 'instanceId'}):
+        elif kind in ('setPose', 'remove') and (set(command) in ({'type', 'instanceId', 'pose'}, {'type', 'instanceId', 'pose', 'attachment'}) if kind == 'setPose' else set(command) == {'type', 'instanceId'}):
             target = next((item for item in instances if item['instanceId'] == command['instanceId']), None)
             if target is None:
                 raise SceneError('validation', 'The command refers to an unknown instance.')
             if kind == 'remove':
+                if any(i.get('attachment', {}).get('parentInstanceId') == target['instanceId'] for i in instances):
+                    raise SceneError('has_children', 'Remove or relocate supported items before removing their support.')
                 instances.remove(target)
             else:
-                target['pose'] = command['pose']
+                if not valid_pose(command['pose']):
+                    raise SceneError('validation', 'Invalid pose.')
+                from .supports import move_attachment
+                known = {p['productId']: p for p in room_context(room_id)['products']}
+                resolved = {i['productId']: resolve_product(i, known) for i in instances}
+                move_attachment(target, command['pose'], instances, resolved, 'attachment' in command, command.get('attachment'))
         else:
             raise SceneError('validation', 'Use add, setPose, or remove with the documented fields.')
         instances = validate_instances(instances, room_id)
@@ -393,13 +409,9 @@ def attempt_placement(session_key, payload, room_id='demo-room'):
     if not isinstance(command_id, str) or not command_id.strip() or len(command_id) > 128:
         raise SceneError('validation', 'commandId must be a nonempty string up to 128 characters.')
     item = payload['instance']
-    # Validate the proposed object's structure before indexing its fields.
-    try:
-        item = validate_instances([item], room_id)[0]
-    except SceneError as error:
-        if error.details is None:
-            error.details = {'issues': [{'code': 'invalid_instance', 'message': error.message}]}
-        raise
+    if (not isinstance(item, dict) or not isinstance(item.get('instanceId'), str)
+            or not isinstance(item.get('productId'), str) or not valid_pose(item.get('pose'))):
+        raise SceneError('validation', 'Provide a valid instance.')
     scene = scene_for_session(session_key, room_id)
     scene = SceneLayout.objects.select_for_update().get(pk=scene.pk)
     existing = next((i for i in scene.instances if i['instanceId'] == item['instanceId']), None)
@@ -421,10 +433,13 @@ def attempt_placement(session_key, payload, room_id='demo-room'):
         instances.append(copy.deepcopy(item))
     # Validate target last so any collision identifies the attempted object and
     # names the existing obstacle, without changing persisted object order.
-    validate_instances([i for i in instances if i['instanceId'] != item['instanceId']] + [item], room_id)
+    validated = validate_instances([i for i in instances if i['instanceId'] != item['instanceId']] + [item], room_id)
+    by_id = {i['instanceId']: i for i in validated}
+    instances = [by_id[i['instanceId']] for i in instances]
+    item = by_id[item['instanceId']]
     assurance = placement_assurance(room_context(room_id)['room'])
     if payload.get('dryRun', False):
-        return {'ok': True, 'applied': False, 'validation': {'valid': True, 'issues': [], 'assurance': assurance}, **serialize(scene)}
+        return {'ok': True, 'applied': False, 'resolvedInstance': item, 'validation': {'valid': True, 'issues': [], 'assurance': assurance}, **serialize(scene)}
     changed = instances != scene.instances
     result = {'ok': True, 'applied': changed, 'validation': {'valid': True, 'issues': [], 'assurance': assurance}, **store(scene, payload['baseRevision'], instances), 'commandId': command_id}
     if changed:
