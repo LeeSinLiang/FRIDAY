@@ -94,17 +94,18 @@ class EndpointTests(SimpleTestCase):
 
 class ModelsFirstTests(SimpleTestCase):
     def test_memory_puts_models_first_keeps_id_order_inside_each_group_and_pages_over_everything(self):
-        everything = memory.search(load_catalogue(), [], 24, 0)
-        first = memory.search(load_catalogue(), [], 24, 0, models="first")
         with_models = sorted(l.id for l in load_catalogue() if l.model_url)
+        page = len(with_models) + 24  # one page must hold every listing with a model AND some without, however many models there are
+        everything = memory.search(load_catalogue(), [], page, 0)
+        first = memory.search(load_catalogue(), [], page, 0, models="first")
         self.assertEqual((first.total, first.facets), (everything.total, everything.facets))
         self.assertEqual([l.id for l in first.items[:len(with_models)]], with_models)
         rest = [l.id for l in first.items[len(with_models):]]
         self.assertEqual(rest, sorted(rest))
         self.assertFalse(any(l.model_url for l in first.items[len(with_models):]))
         # The second page carries on where the first stopped: nothing repeated, nothing skipped.
-        second = memory.search(load_catalogue(), [], 24, 24, models="first")
-        self.assertEqual(len({l.id for l in first.items} | {l.id for l in second.items}), 48)
+        second = memory.search(load_catalogue(), [], page, page, models="first")
+        self.assertEqual(len({l.id for l in first.items} | {l.id for l in second.items}), 2 * page)
 
     def test_elastic_boosts_in_the_query_and_never_requires_the_boost(self):
         plain = to_es_query(find(ARMCHAIRS_THAT_FIT), (), 24, 0)
