@@ -42,6 +42,7 @@
 - Prefer the simplest working solution. Check existing code before adding dependencies or patterns.
 - Run checks appropriate to the change and record what passed, failed, or could not run in the owner's TODO file.
 - **Symmetric test cases cannot detect a mirror.** Anything drawn from data (an overlay, a heat map, a hit area) is verified by acting on a SMALL, OFF-CENTRE target in the least ambiguous view, in both directions: acting on the drawn thing works, acting just beside it does not. The lit floor was once drawn mirrored front to back for hours: every check passed because large regions overlap their own mirror and the test room was symmetric, until a small patch by the window was drawn where a click did nothing. "It looks right" and "flaky" are both hypotheses, not diagnoses.
+- **A green test proves the code agrees with the test, not with reality.** Twice in one night a test encoded a mistaken belief and passed happily: a texture row order "verified" in a symmetric room, and an Elasticsearch query shape asserted by a unit test that the live index then showed returns 7 of 12,045 documents. When a test pins how an external system behaves (an engine's UV convention, a query's semantics, a status code), run it against the real thing once and say in the test that you did.
 - Keep secrets out of the repo. Checkout is sandbox-only and requires explicit user approval in the application.
 
 ## Sync before starting work
