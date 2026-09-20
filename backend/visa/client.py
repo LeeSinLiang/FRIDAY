@@ -27,24 +27,32 @@ class ConfigurationError(Exception):
 
 def load_credentials():
     try:
-        path = Path(settings.VISA_SANDBOX_CREDENTIALS_FILE)
-        if not settings.VISA_SANDBOX_CREDENTIALS_FILE or path.stat().st_mode & 0o077:
-            raise ValueError("Use a private credential file with mode 0600.")
-        config = json.loads(path.read_text())
+        inline = bool(settings.VISA_CREDENTIALS_JSON)
+        if inline:
+            config = json.loads(settings.VISA_CREDENTIALS_JSON)
+        else:
+            path = Path(settings.VISA_SANDBOX_CREDENTIALS_FILE)
+            if not settings.VISA_SANDBOX_CREDENTIALS_FILE or path.stat().st_mode & 0o077:
+                raise ValueError("Use a private credential file with mode 0600.")
+            config = json.loads(path.read_text())
         for key in ("api_key", "shared_secret", "mle_key_id", "server_certificate", "client_private_key"):
             if not isinstance(config.get(key), str) or not config[key].strip():
                 raise ValueError("Missing credential setting.")
-        certificate = x509.load_pem_x509_certificate(Path(config["server_certificate"]).read_bytes())
+        certificate = x509.load_pem_x509_certificate(config["server_certificate"].encode() if inline else Path(config["server_certificate"]).read_bytes())
         from datetime import datetime, timezone
         now = datetime.now(timezone.utc)
         if not certificate.not_valid_before_utc <= now <= certificate.not_valid_after_utc:
             raise ValueError("Server certificate is outside its validity period.")
         config["server_key"] = jwk.JWK.from_pem(certificate.public_key().public_bytes(
             serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo))
-        private_path = Path(config["client_private_key"])
-        if private_path.stat().st_mode & 0o077:
-            raise ValueError("Use a private key file with mode 0600.")
-        config["client_key"] = jwk.JWK.from_pem(private_path.read_bytes())
+        if inline:
+            private_bytes = config["client_private_key"].encode()
+        else:
+            private_path = Path(config["client_private_key"])
+            if private_path.stat().st_mode & 0o077:
+                raise ValueError("Use a private key file with mode 0600.")
+            private_bytes = private_path.read_bytes()
+        config["client_key"] = jwk.JWK.from_pem(private_bytes)
         return config
     except Exception as exc:
         # Never include parser exceptions, credential values, or private paths in UI/logs.

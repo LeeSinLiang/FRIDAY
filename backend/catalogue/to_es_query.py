@@ -7,6 +7,7 @@ from collections.abc import Callable, Sequence
 
 from catalogue.colour import is_near
 from catalogue.facets import MODELS_ALL, MODELS_FIRST, MODELS_ONLY, es_aggs, fit_filter, fit_width_mm, hits_filter, model_boost, without_fit
+from catalogue.pricing import MIN_KNOWN_PRICE_CENTS
 from catalogue.text import tokenize
 
 _WILDCARD_SPECIALS = str.maketrans({"*": r"\*", "?": r"\?", "\\": "\\\\"})
@@ -38,8 +39,10 @@ def _colour_filter(clause, palette: Sequence[str]) -> dict:
 
 FILTERS: dict[str, Callable[[object], dict]] = {
     "category": lambda clause: {"term": {"category": clause.value}},
-    "price_max": lambda clause: {"range": {"price_cents": {"lte": clause.cents}}},
-    "price_min": lambda clause: {"range": {"price_cents": {"gte": clause.cents}}},
+    # Same rule as memory.py: an unknown price (0) satisfies neither clause. Prices are whole cents, so
+    # "known" is "at least 1", which one range can say together with the bound.
+    "price_max": lambda clause: {"range": {"price_cents": {"gte": MIN_KNOWN_PRICE_CENTS, "lte": clause.cents}}},
+    "price_min": lambda clause: {"range": {"price_cents": {"gte": max(clause.cents, MIN_KNOWN_PRICE_CENTS)}}},
     "material": lambda clause: _contains("materials", clause.value),
     "fits_w_max": lambda clause: fit_filter(clause.mm),
 }

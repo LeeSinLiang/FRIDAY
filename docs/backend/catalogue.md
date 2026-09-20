@@ -195,6 +195,17 @@ listings change sits in an open PR the check on that branch will say DISAGREE, a
 
 On 2026-09-20 five listings have models (mirror, chair, armchair, table, bed), so the hero sentence (an armchair under $400) returns **one** hit. The list reads as a store once there are about ten armchairs with models under $400; that is the asset lane's target, and nothing here needs to change when they land, apart from a re-ingest.
 
+## A price of 0 means unknown, not free
+
+`Listing.price_cents` is a required integer, so a listing whose price nobody knows carries **0** (the Amazon Berkeley Objects listings: real products, real models, no price). Zero is not a price (`catalogue/pricing.py`):
+
+- It **never satisfies a price filter**, in either direction. `price_max` is `1 <= price <= max`; `price_min` is `price >= max(min, 1)`. "Armchairs under $400" is a claim about a price we would have to know.
+- It is **in no price band**. The memory backend skips it when counting bands, and the Elasticsearch range aggregation's first band starts at 1 cent with its key still `0-10000`. It is still counted by category, so with unpriced matches the bands sum to less than the category facet, which is correct.
+- It is **never shown as `$0`**: the catalogue panel and the dev page print "price unavailable" (`frontend/src/catalogue/price.ts`).
+- With no price clause it is found like anything else.
+
+Before this rule a probe with one sofa at `price_cents: 0` was returned by `price_max=40000`, moved the `0-10000` band from 0 to 1, and its card read `$0`; `catalogue/test_unknown_price.py` replays exactly that. After ingesting unpriced listings, `ELASTIC_LIVE_TEST=1 uv run python manage.py test catalogue.test_unknown_price` checks that memory and the live index still agree on six price queries.
+
 ## Catalogue size
 
 The catalogue is the hero items in `listings.json` (43 on 2026-09-20) plus `CATALOGUE_SEED_COUNT` seed listings (default 12,000),

@@ -19,6 +19,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Frontend
 
+- [Room, cart and Vercel release](docs/frontend/room-cart-deployment.md) — guest shopping routes, atomic cart/scene persistence, account handoff, deployment configuration and remaining release gates.
+
 - [Team room setup](docs/frontend/room-capture/team-room-setup.md) — one-command checked import of the prepared room, packaging and sharing instructions.
 
 | Document | Purpose |
@@ -64,6 +66,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Setup and tooling
 
+- [Preserve William's UI while integrating into main](docs/handoffs/ui-main-integration.md) — current branch/remote comparison, specific conflict rules, three-stage PR sequence and visual/runtime acceptance gates.
+
 - [Visa/auth integration handoff and branch-sharing workflow](docs/handoffs/visa-auth-integration.md)
 - [Account signup, SMTP and local email verification, authenticator MFA, recovery, and approved checkout](docs/account-mfa-checkout.md)
 - [Sanitized real IDX response from the MFA-approved checkout](docs/evidence/account-checkout-2026-09-19.json)
@@ -76,3 +80,11 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 - [Catalogue, search and language layer: shared types, constraint DSL, configuration](docs/backend/catalogue.md)
 
 Add dedicated feature docs here as they are created.
+
+### Demo video
+
+- [Higgsfield video model prices](docs/demo/video-model-pricing.md) — complete connected catalog, live credit quotes, duration limits and recommendation for the one-shot film.
+
+- [Split-screen opening preview](docs/demo/split-screen-preview.md) — one video with wheelchair-user and responder panes, alternating dialogue, editable Higgsedit composition and export QA.
+- [One-shot demo script](docs/demo/twenty-second-treatment.md) — one Higgsfield generation with seamless location transition, unfolding equal panes, speaking iris and room materialization; Mini duration constraint noted.
+- [FRIDAY iris logo concepts](docs/demo/friday-logo-concepts.md) — three icon-only film variations, earlier wordmark explorations, site header mockup, saved PNGs and exact Codex image-generation prompts.
