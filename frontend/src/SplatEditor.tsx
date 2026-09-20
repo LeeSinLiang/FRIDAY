@@ -176,7 +176,7 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
   const updatePose=(patch:Partial<Pose>)=>selected?commit(selected.instanceId,{...selected.pose,...patch}):Promise.resolve(false);
   const validLabel=preview?.valid ? "Fits test geometry" : preview?.reason;
   const tone=preview ? preview.valid?"valid":/unknown|unreviewed|unconfirmed|floor/i.test(preview.reason)?"unknown":"invalid" : "";
-  const help=pendingProductId ? "Point at the floor · Click to place · Esc to cancel" : active ? "Release to place · Esc to cancel" : mode==="walk" ? pointerLocked ? "W A S D to walk · Move mouse to look · Click furniture to edit · F or Esc to stop" : "Click room or press F to capture pointer · Esc to stop Walk" : mode==="place"&&selected ? "Drag your furniture · F to walk" : "Drag to look around · F to walk · Choose furniture to begin";
+  const help=pendingProductId ? "Point at the floor · Click to place · Esc to cancel" : active ? "Release to place · Esc to cancel" : mode==="walk" ? pointerLocked ? "W A S D to walk · Space to jump · Shift to sprint · F or Esc to stop" : "Click room or press F to capture pointer · Space to jump" : mode==="place"&&selected ? "Drag your furniture · F to walk" : "Drag to look around · F to walk · Choose furniture to begin";
 
   return <main className={`splat-editor ${panelOpen?"has-panel":""}`}>
     <div className="splat-room" aria-label="First-person room editor">

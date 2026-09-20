@@ -89,6 +89,12 @@
           "title": "Prepare and verify the shared Haussmann room locally",
           "done": false,
           "owner": "william"
+        },
+        {
+          "id": "1de24261-fcb7-4008-8cf5-f65bb81e84c8",
+          "title": "Add gravity and furniture-top jumping to Walk mode",
+          "done": false,
+          "owner": "william"
         }
       ]
     },
