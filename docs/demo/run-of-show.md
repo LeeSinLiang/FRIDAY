@@ -52,4 +52,4 @@ Everything so far has been seen only in headless Chrome on software WebGL. Repor
 
 ## Before going on
 
-**Once this run has been rehearsed end to end on this machine, `main` is frozen** (see `AGENTS.md`). `git status` clean on the tag; `./setup.sh`; both suites and `npm run build` green; `python3 scripts/hammer_storage.py http://127.0.0.1:<port>` reports no server errors.
+**Once this run has been rehearsed end to end on this machine, `main` is frozen** (see `AGENTS.md`). `git status` clean on the tag; `./setup.sh`; both suites and `npm run build` green; **`(cd backend && uv run python -m catalogue.index_check)` says `AGREE`** (if not, `uv run python -m catalogue.ingest`, restart the API, check again: a stale index hands back listings without their models); `python3 scripts/hammer_storage.py http://127.0.0.1:<port>` reports no server errors.
