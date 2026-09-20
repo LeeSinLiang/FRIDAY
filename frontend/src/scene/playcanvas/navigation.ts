@@ -2,6 +2,7 @@ import * as pc from "playcanvas";
 import type { Instance, Product, Room } from "../types";
 import { cmToScene, sceneToCm } from "../units";
 import { validatePlacement } from "../placement";
+import { productOf } from "../products";
 
 export type NavigationMode = "explore" | "walk" | "place";
 export type NavigationState = { room: Room; mode: NavigationMode; view: "perspective" | "top"; instances?: Instance[]; products?: Product[] };
@@ -17,6 +18,45 @@ export const isTextEntry = (target: EventTarget | null) => target instanceof HTM
 
 const WALK_SPEED_CM_PER_SECOND = 240;
 const FAST_WALK_SPEED_CM_PER_SECOND = 360;
+const GRAVITY_CM_PER_SECOND_SQUARED = 980;
+const JUMP_SPEED_CM_PER_SECOND = 430;
+const CEILING_CLEARANCE_CM = 10;
+export type VerticalMotion = { feetCm: number; velocityCmPerSecond: number; grounded: boolean };
+
+/** Product bounds are the conservative walkable top, not a claim about a mesh's cushions or openings. */
+export function furnitureTopAt(xCm: number, zCm: number, instance: Instance, product: Product): boolean {
+  const dx = xCm - instance.pose.xCm, dz = zCm - instance.pose.zCm;
+  const c = Math.cos(instance.pose.yawRad), s = Math.sin(instance.pose.yawRad);
+  return Math.abs(c * dx - s * dz) <= product.widthCm / 2 &&
+    Math.abs(s * dx + c * dz) <= product.depthCm / 2;
+}
+
+export function walkRoomAtHeight(room: Room, instances: Instance[], products: Product[], feetCm: number): Room {
+  const placedObstacles = instances.flatMap(instance => {
+    const product = productOf(instance, products);
+    return product && product.heightCm > Math.max(3, feetCm + 0.5) ? [
+      { obstacleId: instance.instanceId, label: product.name, ...instance.pose, widthCm: product.widthCm, depthCm: product.depthCm },
+    ] : [];
+  });
+  return { ...room, spatial: { freeAreas: room.spatial?.freeAreas ?? [], obstacles: [...(room.spatial?.obstacles ?? []), ...placedObstacles] } };
+}
+
+/** Only a surface crossed from above can catch a fall; moving a sofa away releases its support. */
+export function advanceVertical(motion: VerticalMotion, dt: number, jump: boolean, maxFeetCm: number, supportsCm: number[]): VerticalMotion {
+  const step = Math.max(0, Math.min(Number.isFinite(dt) ? dt : 0, 0.05));
+  const supports = [0, ...supportsCm.filter(height => Number.isFinite(height) && height > 0 && height <= maxFeetCm)];
+  const standing = motion.grounded && supports.some(height => Math.abs(height - motion.feetCm) < 0.5);
+  if (standing && !jump) return { feetCm: motion.feetCm, velocityCmPerSecond: 0, grounded: true };
+  if (!step) return { ...motion, grounded: standing };
+  let velocity = (standing && jump ? JUMP_SPEED_CM_PER_SECOND : motion.velocityCmPerSecond) - GRAVITY_CM_PER_SECOND_SQUARED * step;
+  let feet = motion.feetCm + velocity * step;
+  if (feet >= maxFeetCm) { feet = maxFeetCm; velocity = Math.min(velocity, 0); }
+  if (velocity <= 0) {
+    const landing = Math.max(...supports.filter(height => motion.feetCm >= height - 0.5 && feet <= height));
+    if (Number.isFinite(landing)) return { feetCm: landing, velocityCmPerSecond: 0, grounded: true };
+  }
+  return { feetCm: feet, velocityCmPerSecond: velocity, grounded: false };
+}
 
 /** A short frame cap prevents a background-tab resume from jumping across the room. */
 export function movementDelta(dt: number, speedCm = WALK_SPEED_CM_PER_SECOND): number {
@@ -53,6 +93,10 @@ export function createNavigation(runtime: NavigationRuntime, initial: Navigation
   let look: { x: number; y: number } | null = null;
   const camera = runtime.camera;
   const startPosition = camera.getPosition().clone();
+  const eyeHeightCm = sceneToCm(startPosition.y);
+  const maxFeetCm = Math.max(0, state.room.heightCm - eyeHeightCm - CEILING_CLEARANCE_CM);
+  let vertical: VerticalMotion = { feetCm: 0, velocityCmPerSecond: 0, grounded: true };
+  let jumpQueued = false;
   const startRotation = camera.getRotation().clone();
   let perspectivePosition = startPosition.clone();
   let perspectiveRotation = startRotation.clone();
@@ -65,7 +109,7 @@ export function createNavigation(runtime: NavigationRuntime, initial: Navigation
   };
   const blocked = () => disposed || runtime.disposed || runtime.capturing || suspended() ||
     state.view === "top" || state.mode === "place" || isTextEntry(document.activeElement);
-  const stop = () => { keys.clear(); look = null; };
+  const stop = () => { keys.clear(); jumpQueued = false; look = null; };
   const turn = (dx: number, dy: number) => {
     const { yaw, pitch } = yawPitch();
     const nextPitch = Math.max(-Math.PI * 0.44, Math.min(Math.PI * 0.44, pitch - dy * 0.003));
@@ -89,6 +133,9 @@ export function createNavigation(runtime: NavigationRuntime, initial: Navigation
   const keydown = (event: KeyboardEvent) => {
     if (event.key === "Escape") { stop(); return; }
     if (blocked() || state.mode !== "walk" || event.metaKey || event.ctrlKey || event.altKey) return;
+    if (event.code === "Space" && !event.repeat && !(document.activeElement instanceof HTMLElement && document.activeElement.closest("button, a, [role='button']"))) {
+      event.preventDefault(); jumpQueued = true; return;
+    }
     if (["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "ShiftLeft", "ShiftRight"].includes(event.code)) {
       event.preventDefault(); keys.add(event.code);
     }
@@ -108,29 +155,39 @@ export function createNavigation(runtime: NavigationRuntime, initial: Navigation
   const frame = (dt: number) => {
     if (!runtime.capturing && deferredState) { const next = deferredState; deferredState = null; update(next); }
     if (!runtime.capturing && deferredReset) {
-      deferredReset = false; perspectivePosition = startPosition.clone(); perspectiveRotation = startRotation.clone(); setView();
+      deferredReset = false; perspectivePosition = startPosition.clone(); perspectiveRotation = startRotation.clone();
+      vertical = { feetCm: 0, velocityCmPerSecond: 0, grounded: true }; setView();
     }
     if (!runtime.capturing && state.view === "top") {
       const canvas = runtime.app.graphicsDevice.canvas;
       const aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);
       camera.camera!.orthoHeight = cmToScene(Math.max(state.room.depthCm, state.room.widthCm / aspect) * 0.57);
     }
-    if (blocked() || state.mode !== "walk") { keys.clear(); return; }
+    if (state.view !== "perspective" || runtime.capturing || disposed || runtime.disposed) return;
+    const inputBlocked = blocked() || state.mode !== "walk";
+    if (inputBlocked) { keys.clear(); jumpQueued = false; }
     const forward = Number(keys.has("KeyW") || keys.has("ArrowUp")) - Number(keys.has("KeyS") || keys.has("ArrowDown"));
     const right = Number(keys.has("KeyD") || keys.has("ArrowRight")) - Number(keys.has("KeyA") || keys.has("ArrowLeft"));
-    if (!forward && !right) return;
+    const stepTime = Math.max(0, Math.min(Number.isFinite(dt) ? dt : 0, 0.05));
+    const jumping = jumpQueued && vertical.grounded && !inputBlocked;
+    jumpQueued = false;
+    const collisionFeet = vertical.grounded && !jumping ? vertical.feetCm : Math.min(maxFeetCm,
+      vertical.feetCm + ((jumping ? JUMP_SPEED_CM_PER_SECOND : vertical.velocityCmPerSecond) - GRAVITY_CM_PER_SECOND_SQUARED * stepTime) * stepTime);
     const { yaw } = yawPitch();
-    const step = movementDelta(dt, keys.has("ShiftLeft") || keys.has("ShiftRight") ? FAST_WALK_SPEED_CM_PER_SECOND : WALK_SPEED_CM_PER_SECOND) / Math.hypot(forward, right);
+    const step = forward || right ? movementDelta(dt, keys.has("ShiftLeft") || keys.has("ShiftRight") ? FAST_WALK_SPEED_CM_PER_SECOND : WALK_SPEED_CM_PER_SECOND) / Math.hypot(forward, right) : 0;
     const current = camera.getPosition();
-    const placedObstacles = (state.instances ?? []).flatMap(instance => {
-      const product = state.products?.find(item => item.productId === instance.productId);
-      return product ? [{ obstacleId: instance.instanceId, label: product.name, ...instance.pose, widthCm: product.widthCm, depthCm: product.depthCm }] : [];
+    const furniture = (state.instances ?? []).flatMap(instance => {
+      const product = productOf(instance, state.products ?? []);
+      return product && product.heightCm > 3 ? [{ instance, product }] : [];
     });
-    const walkRoom = { ...state.room, spatial: { freeAreas: state.room.spatial?.freeAreas ?? [], obstacles: [...(state.room.spatial?.obstacles ?? []), ...placedObstacles] } };
-    const next = advanceWalk(walkRoom, { xCm: sceneToCm(current.x), zCm: sceneToCm(current.z) },
+    const walkRoom = walkRoomAtHeight(state.room, state.instances ?? [], state.products ?? [], collisionFeet);
+    const next = forward || right ? advanceWalk(walkRoom, { xCm: sceneToCm(current.x), zCm: sceneToCm(current.z) },
       (-Math.sin(yaw) * forward + Math.cos(yaw) * right) * step,
-      (-Math.cos(yaw) * forward - Math.sin(yaw) * right) * step);
-    camera.setPosition(cmToScene(next.xCm), current.y, cmToScene(next.zCm));
+      (-Math.cos(yaw) * forward - Math.sin(yaw) * right) * step) : { xCm: sceneToCm(current.x), zCm: sceneToCm(current.z) };
+    const supports = furniture.filter(({ instance, product }) => furnitureTopAt(next.xCm, next.zCm, instance, product)).map(({ product }) => product.heightCm);
+    if (jumping) supports.push(vertical.feetCm);
+    vertical = advanceVertical(vertical, dt, jumping, maxFeetCm, supports);
+    camera.setPosition(cmToScene(next.xCm), cmToScene(eyeHeightCm + vertical.feetCm), cmToScene(next.zCm));
   };
   window.addEventListener("keydown", keydown);
   window.addEventListener("keyup", keyup);
@@ -152,7 +209,8 @@ export function createNavigation(runtime: NavigationRuntime, initial: Navigation
     reset() {
       stop();
       if (runtime.capturing) { deferredReset = true; return; }
-      perspectivePosition = startPosition.clone(); perspectiveRotation = startRotation.clone(); setView();
+      perspectivePosition = startPosition.clone(); perspectiveRotation = startRotation.clone();
+      vertical = { feetCm: 0, velocityCmPerSecond: 0, grounded: true }; setView();
     },
     dispose() {
       disposed = true; stop(); runtime.app.off("update", frame);
