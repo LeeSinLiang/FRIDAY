@@ -8,13 +8,13 @@ Review: [PR #21 — Add Visa IDX and account MFA with isolated catalogue cache t
 
 This branch incorporates `origin/main` through [`e6a046e`](https://github.com/LeeSinLiang/hackmit2026/commit/e6a046e). In addition to the earlier `98ca88d` catalogue/editor baseline, it now includes the wall-exception fixes, pure TypeScript region solver, nothing-fits explanations, and task-boundary sync convention from PRs #13, #15, #16 and #17. The Gaussian-splatting research notes still describe planned work rather than an implemented splat renderer. Main was merged into this feature branch; that does not merge the Visa/auth branch into main.
 
-The committed `data/board.json` is a snapshot of the user's current **FRIDAY · Project Plan**, with the six existing components, IDs, task ownership and ordering preserved. Board implementation files remain exactly as they appear in this main baseline. The owner-coloured board UI is on the separate `codex/fix-kanban-controls` branch; the shared data snapshot does not claim that UI has been merged here.
+The committed `data/board.json` is a snapshot of the user's current **FRIDAY · Project Plan**, with the six existing components, IDs, task ownership and ordering preserved. The PR now includes the compatible owner-coloured standalone UI and canvas adapter, combined with the main baseline's atomic transactions, locking and live polling/SSE. Historical phase metadata is retained; component identities and task order are not regenerated. This resolves the P2 board review in issue #23.
 
 The previously separate `codex/saketh-wall-exceptions` work is now included through main. The other checkout's uncommitted asset-browser work remains outside this branch.
 
 ## What this branch adds
 
-**Scope boundary:** The editor and existing Visa HTML tester remain unchanged. William subsequently authorized resolving the P1 review: the only additional executable-source change is a class-scoped cache override and cleanup in `backend/catalogue/test_compile.py`. Catalogue runtime logic and application authentication/cache settings are unchanged. Account components are provided for the UI owner to integrate using the steps below; they are not currently mounted by the new editor.
+**Scope boundary:** The editor and existing Visa HTML tester remain unchanged. William subsequently authorized resolving the P1 review: the P1 correction is a class-scoped cache override and cleanup in `backend/catalogue/test_compile.py`; the subsequent P2 correction ships matching owner-aware board code with the snapshot. Catalogue runtime logic and application authentication/cache settings are unchanged. Account components are provided for the UI owner to integrate using the steps below; they are not currently mounted by the new editor.
 
 | Area | Current behaviour and source |
 | --- | --- |
@@ -67,6 +67,8 @@ These changes are proposed, **not applied to the teammate's editor**:
 
 ## Verification
 
+P2 board correction: the canonical launch was reproduced and repaired in Chrome. All six board regression tests pass, including legacy-phase preservation, owner HTTP controls and concurrent/SSE writes. Chrome DevTools verified task creation, assignment, movement, completion, reload persistence and deletion with HTTP 200 and no console errors. The deployed main-checkout board source matches this branch; its single active listener is `http://127.0.0.1:54221/`. Copilot's host itself was not available for verification; the adapter uses the shared model/server.
+
 Current P1 correction, on main baseline `e6a046e`:
 
 - Canonical `./setup.sh` passed during the preceding main sync; no dependency, schema or setup changes were introduced by this test-only correction.
@@ -75,7 +77,7 @@ Current P1 correction, on main baseline `e6a046e`:
 - TypeScript/Vite production build passed again; the existing large Three.js furniture chunk warning remains. Earlier **54 scene/region and 9 auth/API/routing tests** passed on the same unchanged frontend source and were not repeated for this test-only correction.
 - During the preceding main sync, refreshed this worktree using `./run-local.sh` on **5174/8001**. The independent **5173/8000** checkout was preserved. Chrome loaded the unchanged HTML tester with X-Pay/MLE readiness and a source hash matching the local Visa implementation, then validated a new sample locally without sending it to Visa. Auth user/email/authenticator rows and the MFA encryption key matched the pre-pull fingerprints.
 - Freshness for this correction: the executed test module resolves to `backend/catalogue/test_compile.py` in this worktree. The existing Vite/Django processes on **5174/8001** resolve to the same frontend/backend paths; all application source and settings are byte-for-byte unchanged from PR #19 head `f5d2d90`, so no application deployment/restart was required. Tests use a disposable test database; existing accounts, MFA keys and SMTP settings were not changed.
-- Account → editor navigation was checked during an exploratory integration, then removed in accordance with the final scope. That check is not proof of mounted account routes on this branch. The board-code reconciliation was likewise removed; its exploratory tests do not describe code shipped here.
+- Account → editor navigation was checked during an exploratory integration, then removed in accordance with the final scope. That check is not proof of mounted account routes on this branch. The earlier exploratory board reconciliation was removed at that time; the later P2 correction now includes the compatible board implementation and its own verification.
 
 The earlier real Gmail delivery, phone-generated FRIDAY code, and Visa IDX response are recorded in [TODO_WILLIAM.md](../../TODO_WILLIAM.md) and the sanitized [checkout receipt](../evidence/account-checkout-2026-09-19.json). The current integration checks do not resend email or Visa requests. Automated Visa transport is mocked; Elasticsearch/OpenAI live services are not qualified by this test run.
 
@@ -111,6 +113,6 @@ git push -u origin codex/visa-cache-compatibility
 
 Use [PR #21](https://github.com/LeeSinLiang/hackmit2026/pull/21), from `codex/visa-cache-compatibility` into `main`, for review of the integrated work. Never push directly to main or force-push over another contributor. Before another upstream update, preserve local edits and reconcile new changes; `git pull --ff-only` is appropriate only when the chosen branch can actually fast-forward.
 
-Run `node .github/extensions/project-manager/bin.mjs` to open this checkout's committed board snapshot. The user's existing owner-coloured board continues to run from the separate main checkout and its existing branch code. Other machines get the plan snapshot by pulling Git; they do not share this local live file. Stop board writers before Git/manual board updates and restart at the newly printed URL. See the [board guide](../../.github/extensions/project-manager/README.md). Owner-coloured rendering itself still requires the separate board-controls branch.
+Run `node .github/extensions/project-manager/bin.mjs` to open this checkout's committed board snapshot. The user's canonical launch path in the main checkout has been refreshed with the exact board source from this PR. Other machines get the plan snapshot by pulling Git; they do not share this local live file. Stop board writers before Git/manual board updates and restart at the newly printed URL. See the [board guide](../../.github/extensions/project-manager/README.md). Owner-coloured rendering is included in this PR.
 
 Two local recovery stashes preserve the work before the pulls (`3a3751a`, `69efdb4`). They are backup checkpoints, not outstanding work to apply again, and are not transferred by pushing the branch.

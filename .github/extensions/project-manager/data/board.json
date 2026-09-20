@@ -59,6 +59,18 @@
           "title": "Implement region masks, place clauses and nothing-fits explanations",
           "done": true,
           "owner": "saketh"
+        },
+        {
+          "id": "2133f112-5c47-4325-adcd-545b04e3000c",
+          "title": "Pull Sin’s current 3D editor and review model references",
+          "done": true,
+          "owner": "sin"
+        },
+        {
+          "id": "8dce166d-7602-4ce1-b76e-9b7d076a060b",
+          "title": "Define composite desk assemblies and mixed-asset collision contract",
+          "done": false,
+          "owner": "unassigned"
         }
       ]
     },
@@ -107,6 +119,30 @@
           "title": "Resolve catalogue test compatibility with the persistent auth cache",
           "done": true,
           "owner": "william"
+        },
+        {
+          "id": "32d084ff-d650-4337-a1ca-628283aca8dd",
+          "title": "Assess GLB catalogue import format and required fields",
+          "done": true,
+          "owner": "saketh"
+        },
+        {
+          "id": "46dd9a0d-bb2e-4ae8-8a42-e035f8199f58",
+          "title": "Import CC0 GLB asset metadata into a separate Elasticsearch index",
+          "done": false,
+          "owner": "saketh"
+        },
+        {
+          "id": "5f377efe-8281-4a31-bbf1-311b0661c8af",
+          "title": "Normalize DummyJSON and WANDS reference products for Elasticsearch",
+          "done": false,
+          "owner": "saketh"
+        },
+        {
+          "id": "1baafdb6-1a43-4f24-bda1-a1746b5f46fe",
+          "title": "Curate product-to-GLB links for placeable demo listings",
+          "done": false,
+          "owner": "saketh"
         }
       ],
       "description": "Product records, dimensions, prices, assets, and filtered search."
@@ -119,7 +155,8 @@
           "id": "d4f175a8-a117-4461-aa7b-6a38c8be3c4b",
           "title": "Sketch wireframes",
           "done": false,
-          "owner": "sin"
+          "owner": "sin",
+          "phase": "ideation"
         },
         {
           "id": "4664675d-d4c0-428e-a90b-82ef856f568c",
@@ -131,7 +168,8 @@
           "id": "82fbd617-6833-43ca-b029-e057d9e937f6",
           "title": "Build task list UI",
           "done": false,
-          "owner": "unassigned"
+          "owner": "unassigned",
+          "phase": "mvp"
         },
         {
           "id": "a249bfb6-02e4-45a3-a393-e01945363c2a",
@@ -235,7 +273,7 @@
           "id": "ae490364-b75e-41ca-8d81-0485d0d78a73",
           "title": "Review Visa/auth PR before merge",
           "done": false,
-          "owner": "unassigned"
+          "owner": "william"
         }
       ]
     },

@@ -2,9 +2,8 @@
 // board. Columns = components (horizontal axis). Each column holds an
 // ordered stack of task cards (vertical axis = stack order / priority).
 // Cards can move within a column (reorder up/down) or across columns
-// (reassign to a different component). Each card carries a `phase` tag
-// (ideation / mvp / development) so phase is visible without constraining
-// where the card lives.
+// (reassign to a different component). Cards display named owners. Legacy
+// phase metadata remains stored for compatibility and is never inferred as ownership.
 //
 // Sessions sharing this local file coordinate through its write lock;
 // open panels poll it for changes. Separate checkouts share changes via Git.
@@ -21,6 +20,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BOARD_PATH = path.resolve(process.env.PROJECT_MANAGER_BOARD_PATH || path.join(__dirname, "data/board.json"));
 const DATA_DIR = path.dirname(BOARD_PATH);
 const LOCK_PATH = `${BOARD_PATH}.lock`;
+
+export const OWNERS = [
+    { id: "unassigned", label: "Unassigned", color: "#59636e", tint: "#f5f6f8" },
+    { id: "william", label: "William", color: "#2458c6", tint: "#eef3ff" },
+    { id: "sin", label: "Sin", color: "#915500", tint: "#fff5df" },
+    { id: "saketh", label: "Saketh", color: "#086a5e", tint: "#e8f7f1" },
+    { id: "adelle", label: "Adelle", color: "#793fa4", tint: "#f7eefb" },
+];
 
 export const PHASES = ["ideation", "mvp", "development"];
 export const PHASE_LABELS = {
@@ -41,6 +48,7 @@ function defaultBoard() {
         "Pitch & Demo",
     ];
     return {
+        schemaVersion: 2,
         title: "Hackathon Project Plan",
         components: seedComponents.map((name) => ({
             id: randomUUID(),
@@ -62,13 +70,23 @@ function migrateIfNeeded(board) {
                 const phaseData = component.phases[phase];
                 if (!phaseData) continue;
                 for (const task of phaseData.tasks || []) {
-                    tasks.push({ id: task.id, title: task.title, done: !!task.done, phase });
+                    tasks.push({ ...task, done: !!task.done, phase });
                 }
             }
             component.tasks = tasks;
             delete component.phases;
             migrated = true;
         }
+        for (const task of component.tasks) {
+            if (!OWNERS.some(owner => owner.id === task.owner)) {
+                task.owner = "unassigned";
+                migrated = true;
+            }
+        }
+    }
+    if (!board.schemaVersion || board.schemaVersion < 2) {
+        board.schemaVersion = 2;
+        migrated = true;
     }
     return migrated;
 }
@@ -167,6 +185,10 @@ function findTask(board, taskId) {
     throw new Error(`Unknown task: ${taskId}`);
 }
 
+function assertOwner(owner) {
+    if (!OWNERS.some(person => person.id === owner)) throw new Error(`Unknown owner: ${owner}`);
+}
+
 function assertPhase(phase) {
     if (!PHASES.includes(phase)) throw new Error(`Unknown phase: ${phase}`);
 }
@@ -215,8 +237,28 @@ export async function addTask(componentId, phase, title) {
     if (!title || !title.trim()) throw new Error("Task title is required");
     return mutate((board) => {
         const component = findComponent(board, componentId);
-        const task = { id: randomUUID(), title: title.trim(), done: false, phase };
+        const task = { id: randomUUID(), title: title.trim(), done: false, phase, owner: "unassigned" };
         component.tasks.push(task);
+        return task;
+    });
+}
+
+export async function addOwnedTask(componentId, title, owner = "unassigned") {
+    assertOwner(owner);
+    if (!title || !title.trim()) throw new Error("Task title is required");
+    return mutate((board) => {
+        const component = findComponent(board, componentId);
+        const task = { id: randomUUID(), title: title.trim(), done: false, owner };
+        component.tasks.push(task);
+        return task;
+    });
+}
+
+export async function setTaskOwner(taskId, owner) {
+    assertOwner(owner);
+    return mutate((board) => {
+        const { task } = findTask(board, taskId);
+        task.owner = owner;
         return task;
     });
 }
