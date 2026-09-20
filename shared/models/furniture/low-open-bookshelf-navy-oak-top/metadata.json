@@ -10,6 +10,7 @@
   "frontAxis": "+Z",
   "pivot": "floor-footprint-center",
   "catalogueListingId": "demo-low-bookshelf-navy-oak",
+  "matchType": "generic_visual_proxy",
   "source": {
     "product": "UNIDENTIFIED — generic low open bookshelf, navy/black body with an oak-look top, 3 columns x 2 rows of open cubbies, no doors. Visually similar to (but NOT a confirmed match for) IKEA SKRUVBY, which is a different shape (tall single-column unit, not this wide low 3-bay layout).",
     "dimensionsVerifiedAt": null,

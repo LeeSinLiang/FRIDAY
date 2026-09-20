@@ -10,6 +10,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from catalogue.feed import load_listings
 from django.conf import settings
 from django.test import SimpleTestCase
 
@@ -24,6 +25,11 @@ FLOOR_TOLERANCE_CM = 1.0
 CENTRE_TOLERANCE_CM = 2.0
 MAX_BYTES = 5 * 1024 * 1024
 MAX_TRIANGLES = 30000
+# verified: the model IS the product, both from one source record (Amazon Berkeley Objects).
+# reconstructed_from_product_photo: generated from the real product's own photo, then dimension-checked.
+# generic_visual_proxy: a stand-in. It may only back a synthetic listing, never a real SKU.
+MATCH_TYPES = ('verified', 'reconstructed_from_product_photo', 'generic_visual_proxy')
+SYNTHETIC_SOURCES = ('stub', 'seed')
 # The regression tests below replay what happened to one specific asset, so they name it. Picking
 # "the first folder" would silently test a different model the day a lamp sorts ahead of this chair.
 HERRAKRA = ASSETS / 'herrakra-armchair-diseroed-dark-yellow'
@@ -84,6 +90,19 @@ class FurnitureAssetTests(SimpleTestCase):
                 # larger future versions or relax the budget for other assets.
                 self.assertLessEqual(box['bytes'], 10814596 if legacy_sofa else MAX_BYTES)
                 self.assertLessEqual(box['triangles'], 46385 if legacy_sofa else MAX_TRIANGLES)
+
+    def test_every_binding_says_how_its_model_relates_to_the_product(self):
+        listings = {listing.id: listing for listing in load_listings()}
+        for folder in asset_folders():
+            with self.subTest(asset=folder.name):
+                metadata = json.loads((folder / 'metadata.json').read_text())
+                if metadata.get('unbound'):
+                    continue
+                self.assertIn(metadata.get('matchType'), MATCH_TYPES, 'every binding records its matchType')
+                listing = listings.get(metadata.get('catalogueListingId'))  # None: the fixture sofa, which has no retail listing
+                if metadata['matchType'] == 'generic_visual_proxy':
+                    self.assertTrue(listing is None or listing.source in SYNTHETIC_SOURCES,
+                                    'a generic model may only back a synthetic listing; a real SKU needs a model of that product')
 
     def test_the_check_really_catches_a_unit_cube_export(self):
         """Undo the fit on a copy and make sure the numbers it would have failed on are the ones we saw."""
