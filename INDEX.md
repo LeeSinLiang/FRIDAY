@@ -80,3 +80,11 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 - [Catalogue, search and language layer: shared types, constraint DSL, configuration](docs/backend/catalogue.md)
 
 Add dedicated feature docs here as they are created.
+
+### Demo video
+
+- [Higgsfield video model prices](docs/demo/video-model-pricing.md) — complete connected catalog, live credit quotes, duration limits and recommendation for the one-shot film.
+
+- [Split-screen opening preview](docs/demo/split-screen-preview.md) — one video with wheelchair-user and responder panes, alternating dialogue, editable Higgsedit composition and export QA.
+- [One-shot demo script](docs/demo/twenty-second-treatment.md) — one Higgsfield generation with seamless location transition, unfolding equal panes, speaking iris and room materialization; Mini duration constraint noted.
+- [FRIDAY iris logo concepts](docs/demo/friday-logo-concepts.md) — three icon-only film variations, earlier wordmark explorations, site header mockup, saved PNGs and exact Codex image-generation prompts.
