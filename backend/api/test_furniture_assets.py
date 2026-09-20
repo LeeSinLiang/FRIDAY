@@ -230,6 +230,9 @@ class AboAssetTests(SimpleTestCase):
                 self.assertIn('Amazon', metadata['license']['attribution'])
                 self.assertTrue(metadata['license']['changes'], 'CC BY requires saying what was changed')
                 self.assertIn(metadata['priceProvenance'], ('placeholder', 'source'))
+                if metadata['priceProvenance'] == 'placeholder':  # ABO has no price. 0 means unknown; an invented number is a claim
+                    self.assertEqual(listings[metadata['catalogueListingId']].price_cents, 0)
+                self.assertTrue(metadata['source']['titleConfirms'], 'the product title must have confirmed the record: see below')
 
     def test_listed_dimensions_are_the_record_read_with_its_unit(self):
         to_mm = abo_importer().to_mm
@@ -250,7 +253,7 @@ class AboAssetTests(SimpleTestCase):
                 continue
             width_cm = 100 * measure(folder / 'model.glb')['size'][0]
             misread_cm = raw[axes['w']]['value']  # 83.5 inches taken for 83.5 cm
-            self.assertGreater(abs(width_cm - misread_cm), allowed(misread_cm) * 10, folder.name)
+            self.assertGreater(abs(width_cm - misread_cm), allowed(misread_cm), f'{folder.name}: the size check would not notice')
             checked += 1
         self.assertTrue(checked, 'no inch record to replay the misread on')
 
@@ -271,8 +274,20 @@ class AboAssetTests(SimpleTestCase):
         with self.assertRaises(importer.Refused):  # a model 1 m wide is not this 2.1 m sofa, whatever the record says
             importer.dims_from_record(self.SOFA_RECORD, (1000.0, 863.6, 889.0))
 
-    def test_a_size_stated_in_the_title_must_agree_with_the_record(self):
+    def test_the_title_must_state_a_size_that_agrees_with_the_record(self):
+        """ABO scaled its models to the record, so the size check cannot catch a wrong record. The title is the only
+        independent witness, and it is a gate: no size in the title, no import."""
         importer = abo_importer()
-        importer.check_title('Rivet Emerly Mid-Century Modern Velvet Metal Leg Sofa Couch, 83.5"W, Pewter', {'w': 2121, 'd': 889, 'h': 864})
+        sofa = {'w': 2121, 'd': 889, 'h': 864}
+        self.assertEqual(importer.require_title_size('Rivet Emerly Mid-Century Modern Velvet Metal Leg Sofa Couch, 83.5"W, Pewter', sofa), ['2121 mm W'])
+        self.assertEqual(importer.require_title_size('AmazonBasics Floating Shelves - 24-Inch, Espresso', {'w': 610, 'd': 150, 'h': 170}), ['610 mm'])
         with self.assertRaises(importer.Refused):  # a real ABO record: a nightstand whose item_dimensions are a bed's
-            importer.check_title('Rivet Eastport Industrial Wood Nightstand Table, 21.7"W', {'w': 1707, 'd': 2149, 'h': 1041})
+            importer.require_title_size('Rivet Eastport Industrial Wood Nightstand Table, 21.7"W', {'w': 1707, 'd': 2149, 'h': 1041})
+        with self.assertRaises(importer.Refused):  # the width is right but the stated height is not: every stated size must agree
+            importer.require_title_size('Sofa, 83.5"W x 50"H', sofa)
+        with self.assertRaises(importer.Refused):  # nothing independent confirms this record, however plausible it looks
+            importer.require_title_size('Stone & Beam Casual Wood Bookcase, Grey', {'w': 914, 'd': 356, 'h': 1880})
+
+    def test_watts_tiers_and_pack_counts_are_not_sizes(self):
+        sizes = abo_importer().title_sizes('Table Lamp with LED Bulb 9W, 5-Tier Shelf, 2-Pack, Set of 4, 3000K')
+        self.assertEqual(sizes, [], 'only a number with a length unit is a size')

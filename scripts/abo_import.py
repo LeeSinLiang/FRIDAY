@@ -2,7 +2,7 @@
 """Bring one Amazon Berkeley Objects (ABO) product into the catalogue: model, metadata and listing.
 
 Usage, from backend/ (it needs the project's Python environment for the catalogue contract):
-  uv run python ../scripts/abo_import.py <ASIN> --category <category> --price-cents <int> --price-provenance <placeholder|source>
+  uv run --with pillow python ../scripts/abo_import.py <ASIN> --category <category> --price-cents <int> --price-provenance <placeholder|source>
                                          [--meta .scratch/abo/meta] [--work .scratch/abo] [--dry-run]
 
 ABO (CC BY 4.0, https://amazon-berkeley-objects.s3.amazonaws.com/index.html) is the one source where
@@ -13,20 +13,26 @@ the model and the measurements come from the same record. This script still trus
 - ABO's "width" and "length" do not say which one runs left to right. The model does (X is width,
   Z is depth), so the model's own box decides, and it must then agree with the record inside the
   asset tolerance of backend/api/test_furniture_assets.py. If it does not, the item is refused.
-- A width, depth or height stated in the product title (`83.5"W`) must agree too. ABO scaled its
-  models to item_dimensions, so a wrong record gives a wrongly sized model that agrees with itself.
+- ABO scaled its models to item_dimensions, so a wrong record gives a wrongly sized model that agrees
+  with itself, and the size check cannot see it. The product title is the only independent witness:
+  it MUST state a size (`83.5"W`, `24-Inch`) that agrees with the record. No size in the title, no import.
 - Cameras, lights, animations and skins are removed: the renderer owns those.
 
-Needs the ABO metadata on disk (listings_*.json.gz and 3dmodels.csv.gz under --meta) and `npx`.
+Needs the ABO metadata on disk (listings_*.json.gz and 3dmodels.csv.gz under --meta) and `npx`. Products
+without a color_code (every lamp and vase) take their colour from the model's base-colour texture, which
+needs Pillow: add `--with pillow` to the uv command. It is not a project dependency.
 Exit codes: 0 imported, 1 refused (the reason is printed), 2 bad arguments or missing metadata.
 """
 import argparse
 import csv
 import gzip
+import html
+import io
 import json
 import re
 import subprocess
 import sys
+import statistics
 import urllib.request
 from pathlib import Path
 
@@ -44,7 +50,7 @@ MM_PER_UNIT = {"inches": 25.4, "centimeters": 10.0, "millimeters": 1.0, "meters"
 TOLERANCE_MM, TOLERANCE_RATIO = 20.0, 0.03  # the same rule as backend/api/test_furniture_assets.py
 MAX_BYTES, MAX_TRIANGLES = 5 * 1024 * 1024, 30000
 OPTIMIZE = ["npx", "--yes", "@gltf-transform/cli@4", "optimize"]
-OPTIMIZE_FLAGS = ["--compress", "false", "--texture-compress", "auto", "--texture-size", "1024", "--simplify"]
+OPTIMIZE_FLAGS = ["--compress", "false", "--texture-compress", "auto", "--texture-size", "512", "--simplify"]
 LICENSE = {
     "name": "CC BY 4.0",
     "url": "https://creativecommons.org/licenses/by/4.0/",
@@ -101,16 +107,33 @@ def dims_from_record(item_dimensions: dict, extent_mm: tuple[float, float, float
     return {"w": round(w), "d": round(d), "h": round(height)}, {**axes, "h": "height"}
 
 
-def check_title(title: str, dims_mm: dict) -> None:
-    """A size stated in the title, such as `83.5"W`, must agree with the record.
+TITLE_SIZE = re.compile(r'(\d+(?:\.\d+)?)\s*(?:("|”|\'\'|-?\s*inch(?:es)?\b|in\.)|(cm\b|centimeters?\b))\s*-?\s*([WDHL])?\b', re.IGNORECASE)
+
+
+def title_sizes(title: str) -> list[tuple[float, str | None]]:
+    """Sizes a title states WITH a unit, as (mm, axis or None). `9W` is watts and `5-Tier` is not a size: neither matches."""
+    return [(float(number) * (10.0 if metric else 25.4), axis.upper() if axis else None)
+            for number, _, metric, axis in TITLE_SIZE.findall(title)]
+
+
+def require_title_size(title: str, dims_mm: dict) -> list[str]:
+    """The title must state at least one size, and every size it states must agree with the record. Returns what agreed.
+
+    An axis letter pins the size to that dimension (L, a long side, to width or depth); a bare `24-Inch` must
+    match one of the three.
 
     Raises:
-        Refused: the title states a width, depth or height more than 3% away from the record.
+        Refused: the title states no size, or states one more than 3% away from the record.
     """
-    for number, axis in re.findall(r'(\d+(?:\.\d+)?)\s*(?:"|”|inch(?:es)?|in\.?)?\s*-?\s*([WDH])\b', title):
-        stated, record = float(number) * 25.4, dims_mm[axis.lower()]
-        if abs(stated - record) > TOLERANCE_RATIO * record:
-            raise Refused(f'the title says {number}"{axis} ({stated:.0f} mm) but the record gives {record} mm')
+    agreed = []
+    for stated, axis in title_sizes(title):
+        targets = {"W": ["w"], "D": ["d"], "H": ["h"], "L": ["w", "d"], None: ["w", "d", "h"]}[axis]
+        if not any(abs(stated - dims_mm[key]) <= TOLERANCE_RATIO * dims_mm[key] for key in targets):
+            raise Refused(f"the title states {stated:.0f} mm{' ' + axis if axis else ''} but the record gives {dims_mm}")
+        agreed.append(f"{stated:.0f} mm{' ' + axis if axis else ''}")
+    if not agreed:
+        raise Refused("the title states no size, so nothing independent confirms the record")
+    return agreed
 
 
 def find_record(asin: str, meta: Path) -> tuple[dict, dict]:
@@ -204,34 +227,74 @@ def check_model(path: Path, dims_mm: dict) -> dict:
     centre = [500 * (box["min"][i] + box["max"][i]) for i in (0, 2)]
     if abs(1000 * box["min"][1]) > 10 or max(abs(c) for c in centre) > 20:
         raise Refused(f"not standing centred on the floor: min y {1000 * box['min'][1]:.0f} mm, centre {centre}")
-    return {axis: round((measured[axis] - dims_mm[axis]) / 10, 2) for axis in ("w", "h", "d")}
+    return {axis: round((measured[axis] - dims_mm[axis]) / 10, 2) + 0.0 for axis in ("w", "h", "d")}  # + 0.0: no "-0.0" in metadata
 
 
 def nearest_palette(hex_colour: str) -> str:
     return min(PALETTE, key=lambda candidate: sum((a - b) ** 2 for a, b in zip(_rgb(hex_colour), _rgb(candidate))))
 
 
-def listing_for(asin: str, item: dict, args: argparse.Namespace, dims_mm: dict) -> dict:
-    """The catalogue listing. Colours come from the seed palette, because test_scale.py requires exactly that.
+def texture_colour(model: Path) -> str:
+    """The dominant colour of the model's base-colour texture: the per-channel median, which small islands
+    of legs and hardware in the atlas do not move. Approximate on purpose; it only feeds colour search.
 
     Raises:
-        Refused: the record has no English name or no usable colour code.
+        Refused: Pillow is missing, or the model has no base-colour texture.
+    """
+    try:
+        from PIL import Image
+    except ImportError as missing:
+        raise Refused("this product has no color_code; run with `uv run --with pillow` to read its texture") from missing
+    document, binary = read_glb(model)
+    try:
+        texture = document["materials"][0]["pbrMetallicRoughness"]["baseColorTexture"]["index"]
+        view = document["bufferViews"][document["images"][document["textures"][texture]["source"]]["bufferView"]]
+    except (KeyError, IndexError) as absent:
+        raise Refused("the model has no embedded base-colour texture to take a colour from") from absent
+    start = view.get("byteOffset", 0)
+    with Image.open(io.BytesIO(binary[start:start + view["byteLength"]])) as image:
+        raw = image.convert("RGB").resize((64, 64)).tobytes()
+    return "#" + "".join(f"{round(statistics.median(raw[offset::3])):02x}" for offset in range(3))
+
+
+def product_name(item: dict) -> str:
+    """The English product name as a person would read it: HTML entities decoded, the house-brand prefix dropped.
+
+    Raises:
+        Refused: the record has no English name.
     """
     name = english(item.get("item_name"))
+    if name is None:
+        raise Refused("the record has no English name")
+    return re.sub(r"^Amazon Brand\s*[–-]\s*", "", html.unescape(name)).strip()
+
+
+def materials_of(item: dict) -> list[str]:
+    """The record's materials, minus the brand's own words: ABO lists "stone" as the material of Stone & Beam
+    armchairs, and a fabric chair must not answer a search for stone."""
+    brand_words = set(re.findall(r"[a-z]+", (english(item.get("brand")) or "").lower()))
+    parts = [part.strip().lower() for part in re.split(r"[,;/+]", html.unescape(english(item.get("material")) or ""))]
+    return [part for part in parts if part and part not in brand_words]
+
+
+def source_colour(item: dict, model: Path) -> tuple[str, str]:
+    """The product's colour and where it came from: the record's color_code, else the model's own texture."""
     codes = [code for code in item.get("color_code") or [] if re.fullmatch(r"#[0-9a-fA-F]{6}", code)]
-    if name is None or not codes:
-        raise Refused("the record has no English name or no colour code")
-    materials = [part.strip().lower() for part in re.split(r"[,;/]", english(item.get("material")) or "") if part.strip()]
+    return (codes[0].lower(), "color_code") if codes else (texture_colour(model), "base-colour texture median")
+
+
+def listing_for(asin: str, item: dict, args: argparse.Namespace, dims_mm: dict, colour: str) -> dict:
+    """The catalogue listing. Its colour is the nearest seed-palette colour, because test_scale.py requires exactly that."""
     return {
-        "id": f"abo-{asin}", "source": "abo", "title": re.sub(r"^Amazon Brand\s*[–-]\s*", "", name),
+        "id": f"abo-{asin}", "source": "abo", "title": product_name(item),
         "category": args.category, "price_cents": args.price_cents, "dims_mm": dims_mm,
         "model_url": f"/models/furniture/abo-{asin}/model.glb",
-        "colour_hex": [nearest_palette(codes[0].lower())], "materials": materials[:4],
+        "colour_hex": [nearest_palette(colour)], "materials": materials_of(item)[:4],
     }
 
 
-def metadata_for(asin: str, item: dict, model_row: dict, listing: dict, axes: dict, residual_cm: dict, args: argparse.Namespace) -> dict:
-    dims = listing["dims_mm"]
+def metadata_for(asin: str, item: dict, model_row: dict, listing: dict, checks: dict, args: argparse.Namespace) -> dict:
+    dims, axes, residual_cm = listing["dims_mm"], checks["axes"], checks["residual_cm"]
     return {
         "productId": f"abo-{asin}", "modelUrl": listing["model_url"],
         "widthCm": dims["w"] / 10, "depthCm": dims["d"] / 10, "heightCm": dims["h"] / 10,
@@ -239,7 +302,7 @@ def metadata_for(asin: str, item: dict, model_row: dict, listing: dict, axes: di
         "catalogueListingId": listing["id"],
         "matchType": "verified",
         "priceProvenance": args.price_provenance,
-        "license": {**LICENSE, "changes": "Textures resized to 1024 px, mesh simplified and re-saved with gltf-transform; "
+        "license": {**LICENSE, "changes": "Textures resized to 512 px, mesh simplified and re-saved with gltf-transform; "
                                           "uniform scale to the listed height. Proportions untouched."},
         "source": {
             "dataset": "Amazon Berkeley Objects", "datasetUrl": f"{BUCKET}/index.html",
@@ -248,13 +311,15 @@ def metadata_for(asin: str, item: dict, model_row: dict, listing: dict, axes: di
             "rawDimensions": {key: {"value": item["item_dimensions"][key]["value"], "unit": item["item_dimensions"][key]["unit"]}
                               for key in ("width", "length", "height")},
             "axisAssignment": axes,
-            "colourCode": (item.get("color_code") or [None])[0],
+            "titleConfirms": checks["title_confirms"],
+            "colour": checks["colour"], "colourSource": checks["colour_source"],
             "processing": "scripts/abo_import.py: strip cameras/lights/animations, " + " ".join([*OPTIMIZE[2:], *OPTIMIZE_FLAGS]) + ", fit_to_height",
         },
         "residualCm": {"width": residual_cm["w"], "height": residual_cm["h"], "depth": residual_cm["d"]},
         "knownLimitations": [
-            "ABO scaled this model to the record's item_dimensions; the record was cross-checked against the product title where the title states a size.",
-            "The catalogue colour is the nearest of the 30 seed-palette colours to ABO's color_code, not the code itself.",
+            "ABO scaled this model to the record's item_dimensions, so the size check cannot catch a wrong record. The product title, which states a size, is the independent witness: see source.titleConfirms.",
+            "The catalogue colour is the nearest of the 30 seed-palette colours to source.colour, not that colour itself.",
+            "price_cents is 0 because ABO has no price. 0 means unknown, not free.",
         ],
     }
 
@@ -295,12 +360,14 @@ def main(argv: list[str]) -> int:
         item, model_row = find_record(args.asin, args.meta)
         extent_mm = tuple(1000 * float(model_row[key]) for key in ("extent_x", "extent_y", "extent_z"))
         dims_mm, axes = dims_from_record(item.get("item_dimensions"), extent_mm)
-        listing = listing_for(args.asin, item, args, dims_mm)
-        check_title(english(item.get("item_name")) or "", dims_mm)
+        title_confirms = require_title_size(product_name(item), dims_mm)
         model = prepare_model(args.asin, model_row, dims_mm["h"], args.work)
         residual_cm = check_model(model, dims_mm)
+        colour, colour_source = source_colour(item, model)
+        listing = listing_for(args.asin, item, args, dims_mm, colour)
+        checks = {"axes": axes, "residual_cm": residual_cm, "title_confirms": title_confirms, "colour": colour, "colour_source": colour_source}
         if not args.dry_run:
-            write_outputs(args.asin, model, listing, metadata_for(args.asin, item, model_row, listing, axes, residual_cm, args))
+            write_outputs(args.asin, model, listing, metadata_for(args.asin, item, model_row, listing, checks, args))
     except Refused as refusal:
         print(f"REFUSED {args.asin}: {refusal}", file=sys.stderr)
         return 1

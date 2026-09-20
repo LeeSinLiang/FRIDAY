@@ -15,7 +15,7 @@
     "name": "CC BY 4.0",
     "url": "https://creativecommons.org/licenses/by/4.0/",
     "attribution": "3D model and product data from Amazon Berkeley Objects (c) Amazon.com, licensed CC BY 4.0. Dataset built by Matthieu Guillaumin, Thomas Dideriksen, Kenan Deng, Himanshu Arora (Amazon.com), Jasmine Collins and Jitendra Malik (UC Berkeley).",
-    "changes": "Textures resized to 1024 px, mesh simplified and re-saved with gltf-transform; uniform scale to the listed height. Proportions untouched."
+    "changes": "Textures resized to 512 px, mesh simplified and re-saved with gltf-transform; uniform scale to the listed height. Proportions untouched."
   },
   "source": {
     "dataset": "Amazon Berkeley Objects",
@@ -43,8 +43,12 @@
       "d": "width",
       "h": "height"
     },
-    "colourCode": "#786F65",
-    "processing": "scripts/abo_import.py: strip cameras/lights/animations, @gltf-transform/cli@4 optimize --compress false --texture-compress auto --texture-size 1024 --simplify, fit_to_height"
+    "titleConfirms": [
+      "2121 mm W"
+    ],
+    "colour": "#786f65",
+    "colourSource": "color_code",
+    "processing": "scripts/abo_import.py: strip cameras/lights/animations, @gltf-transform/cli@4 optimize --compress false --texture-compress auto --texture-size 512 --simplify, fit_to_height"
   },
   "residualCm": {
     "width": 0.09,
@@ -52,7 +56,8 @@
     "depth": 0.04
   },
   "knownLimitations": [
-    "ABO scaled this model to the record's item_dimensions; the record was cross-checked against the product title where the title states a size.",
-    "The catalogue colour is the nearest of the 30 seed-palette colours to ABO's color_code, not the code itself."
+    "ABO scaled this model to the record's item_dimensions, so the size check cannot catch a wrong record. The product title, which states a size, is the independent witness: see source.titleConfirms.",
+    "The catalogue colour is the nearest of the 30 seed-palette colours to source.colour, not that colour itself.",
+    "price_cents is 0 because ABO has no price. 0 means unknown, not free."
   ]
 }
