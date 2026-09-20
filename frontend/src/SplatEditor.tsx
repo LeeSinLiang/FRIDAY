@@ -44,7 +44,10 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
   const [selectedId,setSelectedId]=useState<string|null>(null);
   const [pendingProductId,setPendingProductId]=useState<string|null>(null);
   const [panel,setPanel]=useState<"catalogue"|"inspector"|null>(null);
-  const [shopSearchOpen,setShopSearchOpen]=useState(false);
+  // The language search panel (sentence box, microphone, lit floor). In shopping mode it opens from the furniture
+  // catalogue; on the plain editor route (/?room=…) it starts open, because that route IS the search-and-fit demo and
+  // there was otherwise no control on it that could ever open the panel.
+  const [shopSearchOpen,setShopSearchOpen]=useState(!shopping);
   const [snap,setSnap]=useState(true);
   const [showSurface,setShowSurface]=useState(false);
   const [surfaceNote,setSurfaceNote]=useState("");
@@ -205,7 +208,7 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
     </nav>
     {view==="top"&&<div className="glass splat-plan-label">Schematic floor plan · shaded areas are unreviewed</div>}
     {panel&&<aside className={`glass splat-panel ${panel==="catalogue"?"is-catalogue":""}`} aria-label={panel==="catalogue"?"Furniture catalogue":"Furniture properties"}>
-      {panel==="catalogue" ? <FurnitureCatalogue products={products} ready={ready} locked={locked} onChoose={choose} onClose={()=>{setPanel(null);if(view==="perspective")startWalk();}} onOpenLiveCatalogue={shopping?()=>{setPanel(null);setMode("explore");setShopSearchOpen(true);}:undefined}/> : <>
+      {panel==="catalogue" ? <FurnitureCatalogue products={products} ready={ready} locked={locked} onChoose={choose} onClose={()=>{setPanel(null);if(view==="perspective")startWalk();}} onOpenLiveCatalogue={()=>{setPanel(null);setMode("explore");setShopSearchOpen(true);}}/> : <>
       <div className="splat-panel-heading"><h1>Your furniture</h1><button aria-label="Close furniture panel" className="icon-button" disabled={locked} onClick={()=>{if(pendingProductId){cancelPlacement();captureWalk();}else {setPanel(null);if(view==="perspective")startWalk();}}}><Icon name="close" size={18}/></button></div>
       {product ? <>
         <button className="splat-back" disabled={locked||!!pendingProductId} onClick={()=>setPanel("catalogue")}><Icon name="chevron" size={14}/>All furniture</button>
