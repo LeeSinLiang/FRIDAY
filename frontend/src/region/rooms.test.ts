@@ -84,6 +84,7 @@ test("the PlayCanvas overlay stays outside the region module, and is the only ot
     assert.ok(source.includes(setting), `texture ${setting} must be explicit`);
   assert.match(source, /maskToPixels\(mask, LIT, texture\.lock\(\)/, "pixels come from the region module's maskToPixels, rows in mask order");
   assert.doesNotMatch(source, /countZ - 1 - iz/, "never reverse the rows here: that mirrored every region front to back (see maskPixels.ts)");
+  assert.match(source, /intersectFloor\(.*, LIFT_CM\);/, "clicks are tested on the plane the green is drawn on, not the floor under it");
 });
 
 const cgRoom = { ...(cgArch.room as unknown as Room), spatial: cgArchSpatial as Room["spatial"] };
