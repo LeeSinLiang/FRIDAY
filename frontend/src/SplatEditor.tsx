@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { Icon } from "./Icons";
 import FurnitureCatalogue from "./FurnitureCatalogue";
 import FloorMap from "./scene/FloorMap";
+import RoomArrival from "./scene/RoomArrival";
 import SplatCatalogueLayer from "./catalogue/SplatCatalogueLayer";
 import { useRoomSession, type RoomSnapshot } from "./scene/useRoomSession";
 import { initialRoom } from "./scene/buildingFloors";
@@ -210,13 +211,13 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
     <div className="splat-room" aria-label="First-person room editor">
       {state && <Suspense fallback={null}><PlayCanvasScene state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}
       {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} sceneRevision={snapshot.revision} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen} onCloseShelf={()=>setShopSearchOpen(false)} designMessage={session.designerMessage} onDesign={async text => { const result = await session.design(text, selectedId, getCamera()); setNotice(result.message); await refresh(); return result.message; }} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
-      {runtimeStatus.phase!=="ready" && <div className="splat-loading" role="status">
+      {runtimeStatus.phase!=="ready" && (activeRoomId === "haussmann-apartment" ? <RoomArrival status={runtimeStatus} connectionError={session.status === "offline" ? session.message : undefined} retryConnection={() => void session.retry()}/> : <div className="splat-loading" role="status">
         <div className="glass splat-loading-card"><span className="loading-orbit"/><h1>{runtimeStatus.phase==="error"?"Room unavailable":"Come on in."}</h1><p>{runtimeStatus.message}</p>
           {runtimeStatus.progress!==undefined && <progress max={1} value={runtimeStatus.progress} aria-label="Room loading progress"/>}
           {runtimeStatus.phase==="error" && <button className="button" onClick={()=>location.reload()}>Reload room</button>}
           {session.status==="offline" && <><p>{session.message}</p><button className="button" onClick={()=>void session.retry()}>Retry connection</button></>}
         </div>
-      </div>}
+      </div>)}
     </div>
     {mode==="walk"&&pointerLocked&&<span className="splat-crosshair" aria-hidden="true"/>}
     <header className="glass splat-header">

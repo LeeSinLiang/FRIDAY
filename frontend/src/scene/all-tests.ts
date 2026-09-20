@@ -10,6 +10,8 @@ import "./capture.test";
 import "../region/region.test";
 import "./playcanvas/runtime.test";
 import "./playcanvas/room.test";
+import "./playcanvas/haussmannDownload.test";
+import "../shopping/haussmannPreload.test";
 import "./playcanvas/interaction.test";
 import "./useRoomSession.test";
 import "./designerIntent.test";

@@ -123,3 +123,8 @@
   .friday-gallery *, .friday-gallery *::before, .friday-gallery *::after { animation: none !important; transition: none !important; }
   .friday-gallery .friday-enter-space:hover, .friday-entrance-wordmark>a:hover span { transform: none; }
 }
+.friday-room-download {margin-top:18px;max-width:360px;display:grid;gap:8px;font-size:13px;color:#736351;}
+.friday-room-download progress {width:100%;height:4px;accent-color:#b84b24;}
+.friday-room-download small {font-size:11px;line-height:1.5;}
+.friday-room-download button {justify-self:start;min-height:44px;text-decoration:underline;text-underline-offset:4px;cursor:pointer;}
+.friday-room-download button:focus-visible {outline:2px solid #b84b24;outline-offset:3px;}

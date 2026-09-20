@@ -70,6 +70,7 @@ async function roomFiles(name: string, assetRoot = root): Promise<Map<string, st
 /** Only absent local downloads are optional; corrupt metadata and unsafe files are errors. */
 export async function inspectRoomPackages(assetRoot = root) {
   const packages = new Map<string, Map<string, string>>();
+  const metadataPackages = new Map<string, Map<string, string>>();
   const warnings: string[] = [];
   for (const room of await readdir(assetRoot, { withFileTypes: true })) {
     if (room.name.startsWith(".")) continue;
@@ -84,11 +85,14 @@ export async function inspectRoomPackages(assetRoot = root) {
         else throw error;
       }
     }
-    if (missing.length) warnings.push(`Room ${room.name} is not packaged: local assets are missing (${missing.join(", ")}). Provision this room's licensed assets and restart Vite or rebuild.`);
+    if (missing.length) {
+      warnings.push(`Room ${room.name} is not packaged: local assets are missing (${missing.join(", ")}). ${room.name === "haussmann-apartment" ? "The web app will download the Gaussian room from its creator." : "Provision this room's licensed assets and restart Vite or rebuild."}`);
+      if (room.name === "haussmann-apartment") metadataPackages.set(room.name, new Map([...files].filter(([url]) => !missing.includes(url))));
+    }
     else packages.set(room.name, files);
   }
   if (!packages.has("empty-room")) throw Error("The required tracked empty-room fallback is unavailable");
-  return { packages, warnings, defaultRoomId: "haussmann-apartment" };
+  return { packages, metadataPackages, warnings, defaultRoomId: "haussmann-apartment" };
 }
 
 export type PublicRoom = { id: string; title: string; description: string; thumbnail: string };
@@ -96,7 +100,7 @@ export type PublicRoom = { id: string; title: string; description: string; thumb
 /** The gallery lists every public room. One whose licensed assets are not on this machine is marked, so its card can
  *  say so instead of opening a room that cannot load its geometry. */
 export function galleryRooms(publicRooms: PublicRoom[], packaged: ReadonlySet<string> | ReadonlyMap<string, unknown>) {
-  return publicRooms.map(room => ({ ...room, packaged: packaged.has(room.id) }));
+  return publicRooms.map(room => ({ ...room, packaged: packaged.has(room.id), downloadable: room.id === "haussmann-apartment" }));
 }
 
 /** Stream prepared room assets; large source captures never enter a Vite bundle. */
@@ -143,7 +147,7 @@ export function sharedRoomAssets(): Plugin {
     },
     async generateBundle() {
       const emitted = new Set<string>();
-      for (const files of prepared.packages.values()) {
+      for (const files of [...prepared.packages.values(), ...prepared.metadataPackages.values()]) {
         for (const [url, path] of files) {
           if (emitted.has(url)) continue;
           const { actual } = await checkedFile(path);

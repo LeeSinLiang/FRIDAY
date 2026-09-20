@@ -1,6 +1,6 @@
 import { Asset, type Application, type ContainerResource, type Entity } from "playcanvas";
 
-export type AssetProgress = { loaded: number; total: number };
+export type AssetProgress = { loaded: number; total: number; message?: string };
 
 /** One registry per graphics device; instances never own the cached GLB resource. */
 export class AssetCache {
@@ -11,12 +11,15 @@ export class AssetCache {
 
   constructor(private app: Application) {}
 
-  load(url: string, type: "container" | "gsplat" | "texture", progress?: (value: AssetProgress) => void): Promise<Asset> {
+  load(url: string, type: "container" | "gsplat" | "texture", progress?: (value: AssetProgress) => void,
+    prepared?: { data?: Record<string, unknown>; mapUrl?: (name: string) => string }): Promise<Asset> {
     if (this.disposed) return Promise.reject(new Error("The renderer has been disposed"));
     const key = `${type}:${url}`;
     const existing = this.pending.get(key);
     if (existing) return existing;
-    const asset = new Asset(url.split("/").pop() ?? type, type, { url });
+    // PlayCanvas 2.22's SOG parser supports mapUrl; its Asset options declaration omits it.
+    const options = prepared?.mapUrl ? { crossOrigin: "anonymous" as const, mapUrl: prepared.mapUrl } : undefined;
+    const asset = new Asset(url.split("/").pop() ?? type, type, { url }, prepared?.data, options);
     this.assets.set(key, asset);
     this.app.assets.add(asset);
     const promise = new Promise<Asset>((resolve, reject) => {

@@ -1,0 +1,48 @@
+{
+  "roomId": "haussmann-apartment",
+  "baseUrl": "https://d28zzqy0iyovbz.cloudfront.net/4de797f4/v1/",
+  "cacheName": "friday-haussmann-v1-bf8cf523",
+  "count": 2995277,
+  "files": [
+    {
+      "name": "meta.json",
+      "bytes": 15616,
+      "sha256": "bf8cf5237c26a3a306afb40015325c2996948e4e74af46228176be0622770375"
+    },
+    {
+      "name": "means_l.webp",
+      "bytes": 8731170,
+      "sha256": "eadbfb7c30afefc1383483d51cf13caedc2b57474642c7d815a5244f401c5058"
+    },
+    {
+      "name": "means_u.webp",
+      "bytes": 1478148,
+      "sha256": "76649582e8f8a567e9e08f8ea1762908d1b588bc80aa2fa7ad15c14c9cafcdcb"
+    },
+    {
+      "name": "scales.webp",
+      "bytes": 8353780,
+      "sha256": "b2e2b3300e75361159956ff7d4216499ef89e6f3a4803715bb9221b5b241c66f"
+    },
+    {
+      "name": "quats.webp",
+      "bytes": 8844190,
+      "sha256": "630db86e6df15313a815d3985e2bf1945a1b16492c3ff19eaf19e19b366730c6"
+    },
+    {
+      "name": "sh0.webp",
+      "bytes": 9141512,
+      "sha256": "eb57ce02a2d03612b3be3ceac99a18bcd440a8ea1afbcc3fd22083c1a6086537"
+    },
+    {
+      "name": "shN_centroids.webp",
+      "bytes": 1269438,
+      "sha256": "3bcfe36f5103704d986b28727a40b09345f552b2122b968c3399d40d7d8193a2"
+    },
+    {
+      "name": "shN_labels.webp",
+      "bytes": 5755308,
+      "sha256": "9a4761156d077b5db550e47ec2b694e97d04eefa472ca84998b4536939d87258"
+    }
+  ]
+}

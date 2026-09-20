@@ -376,6 +376,18 @@
           "title": "Add FRIDAY entrance and animated room preview gallery",
           "done": true,
           "owner": "william"
+        },
+        {
+          "id": "77443209-07d4-4550-a0c5-f3e649c17cce",
+          "title": "List Haussmann apartment first in the room gallery",
+          "done": true,
+          "owner": "sin"
+        },
+        {
+          "id": "43097c06-4df6-4915-8a2f-e0eef80c94d1",
+          "title": "Download missing Haussmann assets automatically in the web app",
+          "done": true,
+          "owner": "sin"
         }
       ],
       "description": "React app shell, product browsing, constraint chips, and conversation."

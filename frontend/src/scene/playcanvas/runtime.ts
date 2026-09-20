@@ -190,8 +190,8 @@ export function createPlayCanvasRuntime(canvas: HTMLCanvasElement, options: {
   runtime.resize();
   onStatus?.({ phase: "loading", message: "Loading the room…" });
   app.start();
-  runtime.ready = loadSplatRoom(assets, roomRoot, room, ({ loaded, total }) => {
-    if (!runtime.disposed) onStatus?.({ phase: "loading", message: "Loading the room…", progress: total > 0 ? loaded / total : undefined });
+  runtime.ready = loadSplatRoom(assets, roomRoot, room, ({ loaded, total, message }) => {
+    if (!runtime.disposed) onStatus?.({ phase: "loading", message: message ?? "Loading the room…", progress: total > 0 ? loaded / total : undefined });
   }, runtime.signal).then(async model => {
     if (runtime.disposed) throw new Error("The renderer has been disposed");
     furnitureAppearance?.prepareRoom(model);
