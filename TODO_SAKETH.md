@@ -25,6 +25,14 @@ For each import, verify expected/actual counts, rejected rows, stable IDs on a s
 
 ## Done
 
+- **A failing save can no longer trap the user in a room (2026-09-20).** Branch `codex/saketh-room-switch-never-stuck`, off fresh `main` after merging PR #27 (suite re-run on that `main`: 175 / 65 / build OK). Sin was messaged directly (commit comment on `e93075a`) about the assertion of his that PR #26 changed.
+  - The trap Saketh spotted: PR #25 made room links wait for a saved scene; PR #26 made a failing save retry forever. With a wedged backend the Studio room would have been unreachable on stage.
+  - Fix, keeping both halves: `canLeaveRoom()` reopens the links after two failed saves or when offline/in conflict; from the first failed save the layout is parked per room in `localStorage` (`frontend/src/scene/pendingEdits.ts`), restored on return if the server still has that revision, then saved normally; cleared on success.
+  - Found by the dead-backend browser test: a failed background **poll** still set the old hard `offline` block, which stopped saves, so an item placed while the server was down was neither retried nor parked, and "The server is busy." leaked onto the status line. After the initial load nothing transient blocks anything now.
+  - Browser verification (Django and Vite started separately on 8211/5211, Django killed mid-session): status went to "Reconnecting. Your room is safe in this browser."; a chair placed with the backend dead showed "Saving your room…", the Studio link was inert after one failure and live after two, the layout was parked (`default=2`); switching to Studio worked; with the backend restarted and the living room reopened, the parked layout was restored and saved (server revision 2, both chairs).
+  - Answer to Saketh's question on PR #26's numbers: 3,297 and 1,733 were **attempts**. Successful saves went from 1,000 to 1,733 in the same 12 s, so `IMMEDIATE` bought throughput as well as correctness.
+  - Verification: frontend 70 tests (6 new), build OK, backend unchanged at 175. Processes stopped; 0 listeners on 8211/5211/9334.
+
 - **`AGENTS.md`: trust the remote, not your terminal (2026-09-20).** Branch `codex/saketh-merge-discipline`, off fresh `main` after merging PR #26 (`main` re-verified: 175 backend tests, 65 frontend tests, build OK; merged branch deleted locally and remotely; remote head compared by hash). One block holding the push-verification rules and the after-merge sequence, with the reason each exists. Posted to `TODO_SIN.md`, `TODO_WILLIAM.md` and `TODO_ADELLE.md`. Documentation only.
 
 - **Storage may delay a save, never refuse a placement (2026-09-20).** Branch `codex/saketh-storage-never-blocks`, off fresh `main` after merging PR #25 (`main`: 174 backend tests with William's accounts/Visa/checkout work in, 61 frontend tests, build OK). PR #25 first got a review fix: room switching is inert until the scene is saved.
