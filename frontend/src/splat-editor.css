@@ -133,6 +133,19 @@
 .splat-plan-label {position:absolute;left:24px;top:164px;border-radius:10px;padding:9px 13px;font-size:12px;z-index:3;}
 .floor-map {position:absolute;left:24px;bottom:18px;width:282px;padding:16px;border-radius:22px;z-index:3;overflow:hidden;transition:width .24s ease;}
 .floor-map.is-expanded {width:390px;}
+/* Search panel open: it is fixed in this same corner at z-index 30 and would cover the map. The map collapses to the
+   floor number and the up/down controls and sits under the view controls, clear of the panel at its tallest
+   (.shelf: bottom 16px, max-height min(62vh,560px)). The panel does not move and the map is never hidden. */
+.floor-map.is-compact {top:162px;bottom:auto;width:auto;max-width:306px;padding:8px 10px 8px 14px;border-radius:17px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;transition:none;}
+.floor-map.is-compact .floor-map-heading {min-height:0;}
+.floor-map.is-compact .floor-map-title {font-size:13px;gap:8px;}
+.floor-map.is-compact .floor-map-title svg {width:18px;height:18px;}
+.floor-map.is-compact .floor-map-content {display:block;margin-top:0;}
+.floor-map.is-compact .floor-map-levels {flex-direction:row;gap:6px;}
+.floor-map.is-compact .floor-map-levels button {width:32px;height:32px;}
+.floor-map.is-compact .floor-map-expand,.floor-map.is-compact .floor-map-viewport,.floor-map.is-compact .floor-map-level-count,.floor-map.is-compact .floor-map-north {display:none;}
+/* The room model's attribution stays on screen: for a CC BY room this line is the credit. */
+.floor-map.is-compact .floor-map-credit {flex-basis:100%;margin:0;}
 .floor-map-heading {display:flex;justify-content:space-between;align-items:center;min-height:30px;color:#352c24;}
 .floor-map-title {display:flex;align-items:center;gap:10px;font-size:16px;font-weight:650;letter-spacing:-.025em;font-variant-numeric:tabular-nums;}
 .floor-map-title svg {width:22px;height:22px;flex:none;}
@@ -156,7 +169,7 @@
 @media(max-width:1100px) {.splat-editor{--panel-width:280px;}.splat-panel{padding:20px;right:18px;}.splat-header{left:16px;right:16px;}.splat-title>span{display:none;}.splat-bottom-center{bottom:20px;}.splat-help{max-width:290px;font-size:11px;}.splat-bottom-left{left:20px;bottom:18px;}.splat-attribution{max-width:190px;line-height:1.5;}.splat-view-controls{left:20px;gap:7px;}.splat-segmented button{padding:11px;}.splat-view-controls .reset-button span{display:none;}.splat-panel-toggle.is-open{right:34px;top:115px;}}
 @media(max-width:1100px){.splat-editor.has-panel:has(.splat-panel.is-catalogue){--panel-width:380px;}.splat-panel.is-catalogue{width:min(380px,calc(100vw - 36px));top:160px;}.splat-editor.has-panel:has(.splat-panel.is-catalogue) .splat-panel-toggle.is-open{top:176px;}}
 .splat-editor.has-panel:has(.splat-panel.is-catalogue) .splat-bottom-center {bottom:31px;left:min(50%,calc(100% - var(--panel-width) - 200px));display:flex;}
-@media(max-width:1300px){.splat-editor.has-panel:has(.splat-panel.is-catalogue) .floor-map{display:none;}}
+@media(max-width:1300px){.splat-editor.has-panel:has(.splat-panel.is-catalogue) .floor-map{display:none;}.splat-editor.has-panel:has(.splat-panel.is-catalogue) .floor-map.is-compact{display:flex;}}
 @media(max-height:730px){.splat-panel{bottom:88px;padding-top:18px;}.splat-selected-preview{height:90px;}.splat-dimensions{margin-bottom:16px;}.splat-snap{margin:16px 0;}.splat-property-section{padding-top:16px;}.splat-room-note{margin-top:16px;}}
 @media(max-width:760px){.splat-header{gap:14px;padding:0 16px;}.splat-title{padding-left:14px;font-size:12px;}.splat-save{display:none;}.splat-reset{margin-left:auto;}.splat-reset span{display:none;}.splat-panel{--panel-width:270px;top:160px;bottom:120px;}.splat-bottom-center,.has-panel .splat-bottom-center,.has-panel:has(.floor-map) .splat-bottom-center{left:auto;right:16px;transform:none;}.splat-help{max-width:250px;}.splat-attribution{max-width:140px;}.splat-view-controls{right:18px;}.splat-walk{padding:14px!important;}.splat-panel-toggle.is-collapsed{top:160px;}}
 @media(max-width:760px){.splat-view-controls{gap:5px;}.splat-segmented button{gap:5px;padding:10px 7px;}.splat-walk{padding:12px 8px!important;}.floor-map{left:16px;bottom:140px;width:198px;padding:11px;}.floor-map.is-expanded{width:min(330px,calc(100vw - 32px));}.floor-map-title{font-size:13px;gap:6px;}.floor-map-title svg{width:18px;height:18px;}.floor-map-content{grid-template-columns:minmax(0,1fr) 30px;gap:8px;margin-top:7px;}.floor-map-levels{gap:5px;}.floor-map-levels button,.floor-map-north{width:30px;height:30px;}.floor-map-level-count{font-size:10px;}.has-panel .floor-map{display:none;}}

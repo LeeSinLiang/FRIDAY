@@ -16,3 +16,16 @@ test("Close search closes it, and only the rail's button opens it again", async 
   assert.match(source, /onOpenLiveCatalogue=\{\(\)=>\{setPanelOpen\(false\);setMode\("explore"\);setShopSearchOpen\(true\);\}\}/);
   assert.equal(source.split("setShopSearchOpen(true)").length - 1, 1, "nothing else reopens a panel the presenter closed");
 });
+
+test("with the search panel open the floor map collapses instead of hiding under it", async () => {
+  const source = await editor();
+  assert.match(source, /<FloorMap [^>]*compact=\{shopSearchOpen\}/, "the editor tells the map when the panel owns the corner");
+  const map = await readFile(new URL("scene/FloorMap.tsx", `file://${process.cwd()}/src/`), "utf8");
+  assert.match(map, /compact \? " is-compact" : expanded \? " is-expanded" : ""/);
+  const css = await readFile(new URL("splat-editor.css", `file://${process.cwd()}/src/`), "utf8");
+  const rule = css.split("\n").find((line) => line.startsWith(".floor-map.is-compact {")) ?? "";
+  assert.match(rule, /top:162px;bottom:auto;/, "above the panel, not in its corner");
+  assert.doesNotMatch(rule, /display:none/, "collapsed, never hidden");
+  const hidden = css.split("\n").find((line) => line.includes(".floor-map.is-compact .floor-map-viewport")) ?? "";
+  assert.doesNotMatch(hidden, /floor-map-levels|floor-map-title|floor-map-heading/, "the floor number and its up/down controls stay");
+});
