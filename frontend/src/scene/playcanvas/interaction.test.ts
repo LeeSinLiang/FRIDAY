@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import { dragPose, furnitureHit, intersectFloor } from "./interaction";
-import { advanceWalk, canWalkAt, movementDelta } from "./navigation";
+import { advanceVertical, advanceWalk, canWalkAt, furnitureTopAt, movementDelta, walkRoomAtHeight } from "./navigation";
 import { placementTone } from "./overlays";
 import { createProxyMaterials } from "./furniture";
 import type { Instance, Product, Room } from "../types";
@@ -66,6 +66,41 @@ test("walking is bounded after a suspended tab and cannot leave the room", () =>
   const moved = advanceWalk(room, { xCm: 580, zCm: 200 }, 40, 0);
   assert.ok(moved.xCm <= 580);
   assert.equal(canWalkAt(room, -1, 200), false);
+});
+
+test("Space launches once, gravity lands on a sofa top, and stepping off falls to the floor", () => {
+  let motion = { feetCm: 0, velocityCmPerSecond: 0, grounded: true };
+  motion = advanceVertical(motion, 0.05, true, 110, [80]);
+  assert.ok(motion.feetCm > 0 && !motion.grounded);
+  for (let frame = 0; frame < 30 && !motion.grounded; frame++) motion = advanceVertical(motion, 0.05, false, 110, [80]);
+  assert.deepEqual(motion, { feetCm: 80, velocityCmPerSecond: 0, grounded: true });
+  assert.deepEqual(advanceVertical(motion, 0.05, false, 110, [80]), motion);
+  motion = advanceVertical(motion, 0.05, false, 110, []);
+  assert.ok(motion.feetCm < 80 && !motion.grounded);
+  for (let frame = 0; frame < 30 && !motion.grounded; frame++) motion = advanceVertical(motion, 0.05, false, 110, []);
+  assert.deepEqual(motion, { feetCm: 0, velocityCmPerSecond: 0, grounded: true });
+});
+
+test("jump respects ceiling, cannot land on a taller unreachable object, and clamps long frames", () => {
+  let motion = { feetCm: 0, velocityCmPerSecond: 0, grounded: true };
+  for (let frame = 0; frame < 30; frame++) motion = advanceVertical(motion, 0.05, frame === 0, 60, [90]);
+  assert.deepEqual(motion, { feetCm: 0, velocityCmPerSecond: 0, grounded: true });
+  assert.ok(advanceVertical(motion, 10, true, 110, []).feetCm < 30);
+});
+
+test("rotated furniture bounds support only points over the placed object", () => {
+  const rotated = { ...instance, pose: { ...instance.pose, yawRad: Math.PI / 2 } };
+  assert.equal(furnitureTopAt(300, 300, rotated, product), true);
+  assert.equal(furnitureTopAt(380, 250, rotated, product), false);
+});
+
+test("floor-level furniture blocks the player but its top can be crossed without removing fixed walls", () => {
+  const withWall: Room = { ...scanned, spatial: { freeAreas: [{ minXcm: 0, maxXcm: 600, minZcm: 0, maxZcm: 500 }], obstacles: [
+    { obstacleId: "fixed-wall", label: "wall", xCm: 500, zCm: 250, widthCm: 4, depthCm: 500, yawRad: 0 },
+  ] } };
+  assert.equal(canWalkAt(walkRoomAtHeight(withWall, [instance], [product], 0), 300, 250), false);
+  assert.equal(canWalkAt(walkRoomAtHeight(withWall, [instance], [product], 80), 300, 250), true);
+  assert.equal(canWalkAt(walkRoomAtHeight(withWall, [instance], [product], 80), 500, 250), false);
 });
 
 test("walking sweeps across thin fixed obstacles and slides along their edge", () => {

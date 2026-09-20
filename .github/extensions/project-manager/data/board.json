@@ -91,6 +91,12 @@
           "owner": "william"
         },
         {
+          "id": "1de24261-fcb7-4008-8cf5-f65bb81e84c8",
+          "title": "Add gravity and furniture-top jumping to Walk mode",
+          "done": false,
+          "owner": "william"
+        },
+        {
           "id": "bb9306c1-5350-4917-8048-995c64709e7f",
           "title": "Research multistory GLB integration and floor detection",
           "done": true,
@@ -289,7 +295,7 @@
         },
         {
           "id": "f5b7aa7e-70e7-4b8c-acaa-7c0f30368873",
-          "title": "Collapse furniture panel behind persistent chevron",
+          "title": "Keep category rail visible when furniture panel collapses",
           "done": false,
           "owner": "william"
         }

@@ -46,7 +46,10 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
   const [pendingProductId,setPendingProductId]=useState<string|null>(null);
   const [panel,setPanel]=useState<"catalogue"|"inspector">("catalogue");
   const [panelOpen,setPanelOpen]=useState(false);
-  const [shopSearchOpen,setShopSearchOpen]=useState(false);
+  // The language search panel (sentence box, microphone, lit floor). In shopping mode it opens from the furniture
+  // catalogue; on the plain editor route (/?room=…) it starts open, because that route IS the search-and-fit demo and
+  // there was otherwise no control on it that could ever open the panel.
+  const [shopSearchOpen,setShopSearchOpen]=useState(!shopping);
   const [snap,setSnap]=useState(true);
   const [showSurface,setShowSurface]=useState(false);
   const [surfaceNote,setSurfaceNote]=useState("");
@@ -78,7 +81,7 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
     const next=building?.levels.find(level=>level.roomId===nextRoomId);
     if(!next||!ready||locked||pendingProductId||runtime.current?.capturing)return;
     if(document.pointerLockElement===runtime.current?.canvas)document.exitPointerLock();
-    setSelectedId(null);setPreview(null);setMode("explore");setPanel("catalogue");
+    setSelectedId(null);setPreview(null);setMode("explore");setPanel("catalogue");setShopSearchOpen(false);
     setActiveRoomId(next.roomId);
     const url=new URL(window.location.href);url.searchParams.set("floor",next.floorId);
     window.history.replaceState(null,"",url);
@@ -187,12 +190,12 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
   const updatePose=(patch:Partial<Pose>)=>selected?commit(selected.instanceId,{...selected.pose,...patch}):Promise.resolve(false);
   const validLabel=preview?.valid ? "Fits test geometry" : preview?.reason;
   const tone=preview ? preview.valid?"valid":/unknown|unreviewed|unconfirmed|floor/i.test(preview.reason)?"unknown":"invalid" : "";
-  const help=pendingProductId ? "Point at the floor · Click to place · Esc to cancel" : active ? "Release to place · Esc to cancel" : mode==="walk" ? pointerLocked ? "W A S D to walk · Move mouse to look · Click furniture to edit · F or Esc to stop" : "Click room or press F to capture pointer · Esc to stop Walk" : mode==="place"&&selected ? "Drag your furniture · F to walk" : "Drag to look around · F to walk · Choose furniture to begin";
+  const help=pendingProductId ? "Point at the floor · Click to place · Esc to cancel" : active ? "Release to place · Esc to cancel" : mode==="walk" ? pointerLocked ? "W A S D to walk · Space to jump · Shift to sprint · F or Esc to stop" : "Click room or press F to capture pointer · Space to jump" : mode==="place"&&selected ? "Drag your furniture · F to walk" : "Drag to look around · F to walk · Choose furniture to begin";
 
   return <main className={`splat-editor ${panelOpen?"has-panel":""}`}>
     <div className="splat-room" aria-label="First-person room editor">
       {state && <Suspense fallback={null}><PlayCanvasScene state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}
-      {snapshot && <SplatCatalogueLayer getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen} onCloseShelf={()=>setShopSearchOpen(false)} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
+      {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen} onCloseShelf={()=>setShopSearchOpen(false)} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
       {runtimeStatus.phase!=="ready" && <div className="splat-loading" role="status">
         <div className="glass splat-loading-card"><span className="loading-orbit"/><h1>{runtimeStatus.phase==="error"?"Room unavailable":"Come on in."}</h1><p>{runtimeStatus.message}</p>
           {runtimeStatus.progress!==undefined && <progress max={1} value={runtimeStatus.progress} aria-label="Room loading progress"/>}
@@ -218,9 +221,9 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
       <button className={`glass splat-walk ${mode==="walk"?"is-active":""}`} aria-pressed={mode==="walk"} disabled={!ready||locked||view==="top"||!!pendingProductId} onClick={()=>pointerLocked?stopWalk():startWalk()}><Icon name="move" size={17}/>{pointerLocked?"Stop walking":mode==="walk"?"Capture pointer":"Walk"}</button>
     </nav>
     {view==="top"&&<div className="glass splat-plan-label">Schematic floor plan · shaded areas are unreviewed</div>}
-    <button type="button" className={`splat-panel-toggle ${panelOpen?"is-open":"is-collapsed"}`} aria-label={panelOpen?"Collapse furniture panel":"Expand furniture panel"} aria-controls="furniture-panel" aria-expanded={panelOpen} disabled={!ready||locked} onClick={()=>setPanelOpen(open=>!open)}><Icon name="chevron" size={20}/></button>
-    <aside id="furniture-panel" className={`glass splat-panel ${panel==="catalogue"?"is-catalogue":""} ${panelOpen?"":"is-collapsed"}`} aria-label={panel==="catalogue"?"Furniture catalogue":"Furniture properties"} aria-hidden={!panelOpen} inert={!panelOpen}>
-      {panel==="catalogue" ? <FurnitureCatalogue products={products} ready={ready} locked={locked} onChoose={choose} onOpenLiveCatalogue={shopping?()=>{setPanelOpen(false);setMode("explore");setShopSearchOpen(true);}:undefined}/> : <>
+    <button type="button" className={`splat-panel-toggle ${panelOpen?"is-open":"is-collapsed"}`} aria-label={panelOpen?"Collapse furniture panel":"Expand furniture panel"} aria-controls="furniture-panel" aria-expanded={panelOpen} disabled={!ready||locked} onClick={()=>{if(panelOpen)setPanel("catalogue");setPanelOpen(open=>!open);}}><Icon name="chevron" size={20}/></button>
+    <aside id="furniture-panel" className={`glass splat-panel ${panel==="catalogue"?"is-catalogue":""} ${panelOpen?"":"is-collapsed"}`} aria-label={panel==="catalogue"?"Furniture catalogue":"Furniture properties"}>
+      {panel==="catalogue" ? <FurnitureCatalogue products={products} ready={ready} locked={locked} onChoose={choose} onOpenLiveCatalogue={()=>{setPanelOpen(false);setMode("explore");setShopSearchOpen(true);}} collapsed={!panelOpen} onExpand={()=>setPanelOpen(true)}/> : <>
       <div className="splat-panel-heading"><h1>Your furniture</h1></div>
       {product ? <>
         <button className="splat-back" disabled={locked||!!pendingProductId} onClick={()=>{setPanel("catalogue");setPanelOpen(true);}}><Icon name="chevron" size={14}/>All furniture</button>
