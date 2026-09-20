@@ -340,6 +340,12 @@
           "title": "Look around while a piece is in hand (drag looks, click places)",
           "done": true,
           "owner": "saketh"
+        },
+        {
+          "id": "c4e8a1f6-2b7d-4a93-8e15-6f0d9b3a7c21",
+          "title": "Editor fixes before the demo: rail add carries its product, walk keys respect a held piece, search panel open on load, floor map above the panel",
+          "done": true,
+          "owner": "saketh"
         }
       ],
       "description": "React app shell, product browsing, constraint chips, and conversation."
