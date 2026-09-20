@@ -55,5 +55,5 @@ export default function PlayCanvasScene(props:Props) {
   },[roomKey]);
   useEffect(()=>{controller.current?.update(props.state);},[props.state]);
   useEffect(()=>{controller.current?.resetView();},[props.resetKey]);
-  return <><canvas ref={canvas} className="splat-canvas" aria-label="Interactive room. Drag to look; choose Walk for WASD movement." tabIndex={0}/><PlayCanvasCapture runtime={runtime} enabled={ready}/>{perfEnabled && runtime && <PerformancePanel runtime={runtime} startedAt={startedAt.current}/>}</>;
+  return <><canvas ref={canvas} className="splat-canvas" aria-label="Interactive room. Click or press F to capture the pointer for Walk; press F or Escape to exit." tabIndex={0}/><PlayCanvasCapture runtime={runtime} enabled={ready}/>{perfEnabled && runtime && <PerformancePanel runtime={runtime} startedAt={startedAt.current}/>}</>;
 }

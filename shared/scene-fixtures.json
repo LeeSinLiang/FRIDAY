@@ -59,6 +59,66 @@
       "color": "#8e8d87",
       "kind": "sofa",
       "catalogueVisible": true
+    },
+    {
+      "productId": "concept-kivik",
+      "name": "Kivik Modular Sofa",
+      "widthCm": 240,
+      "depthCm": 100,
+      "heightCm": 80,
+      "color": "#777774",
+      "kind": "sofa",
+      "catalogueVisible": false
+    },
+    {
+      "productId": "concept-jatte",
+      "name": "Jatte Sectional",
+      "widthCm": 265,
+      "depthCm": 160,
+      "heightCm": 85,
+      "color": "#ded5c8",
+      "kind": "sofa",
+      "catalogueVisible": false
+    },
+    {
+      "productId": "concept-sven",
+      "name": "Sven Sofa",
+      "widthCm": 230,
+      "depthCm": 90,
+      "heightCm": 80,
+      "color": "#67705a",
+      "kind": "sofa",
+      "catalogueVisible": false
+    },
+    {
+      "productId": "concept-logan",
+      "name": "Logan Sofa",
+      "widthCm": 235,
+      "depthCm": 95,
+      "heightCm": 82,
+      "color": "#a86c44",
+      "kind": "sofa",
+      "catalogueVisible": false
+    },
+    {
+      "productId": "concept-mellow",
+      "name": "Mellow Sectional",
+      "widthCm": 250,
+      "depthCm": 155,
+      "heightCm": 78,
+      "color": "#e2dbd1",
+      "kind": "sofa",
+      "catalogueVisible": false
+    },
+    {
+      "productId": "concept-aiden",
+      "name": "Aiden Sofa",
+      "widthCm": 230,
+      "depthCm": 88,
+      "heightCm": 80,
+      "color": "#545b66",
+      "kind": "sofa",
+      "catalogueVisible": false
     }
   ],
   "rooms": {

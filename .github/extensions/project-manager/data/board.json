@@ -256,6 +256,12 @@
           "title": "Build room selection, confirmed furniture cart and Vercel deployment",
           "done": false,
           "owner": "william"
+        },
+        {
+          "id": "e43d4acb-3e24-4597-9db0-93dc39daf6fd",
+          "title": "Integrate local room editor UI with shopping pages and Vercel release",
+          "done": false,
+          "owner": "william"
         }
       ],
       "description": "React app shell, product browsing, constraint chips, and conversation."

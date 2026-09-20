@@ -30,12 +30,15 @@ type Props = {
   status: string;
   onNotice?: (message: string) => void;
   shopping?: boolean;
+  showShelf?: boolean;
+  onCloseShelf?: () => void;
   confirm?: (instance:Instance) => Promise<boolean>;
 };
 
-export default function SplatCatalogueLayer({ getRuntime, room, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, confirm }: Props) {
+export default function SplatCatalogueLayer({ getRuntime, room, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, showShelf = true, onCloseShelf, confirm }: Props) {
   const [hovered, setHovered] = useState<Listing | null>(null);
   const [armed, setArmed] = useState<Listing | null>(null);
+  useEffect(() => { if (!showShelf) { setHovered(null); setArmed(null); } }, [showShelf]);
   const [place, setPlace] = useState<PlaceClause[]>([]);
   const [yawChoice, setYawChoice] = useState<number | null>(null);
   const overlay = useRef<RegionOverlay | null>(null);
@@ -152,8 +155,8 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
   }
   const verdict = unconfirmed ? validatePlacement(room,known,[...instances,unconfirmed],unconfirmed.instanceId,unconfirmed.pose) : null;
   return <>
-    <CatalogueShelf region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
-      canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} />
+    {showShelf && <CatalogueShelf region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
+      canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} onClose={onCloseShelf} />}
     {shopping && armed && <section className="purchase-confirm" aria-label="Preview furniture"><p>Click the lit floor, or use a suggested position.</p><button className="button" disabled={!ready || locked || !fitting.length} onClick={previewSuggested}>Preview a fitting position</button><button className="button" onClick={()=>setArmed(null)}>Cancel</button></section>}
     {shopping && purchase && unconfirmed && <section className="purchase-confirm" aria-label="Confirm furniture placement">
       <p className="eyebrow">Placement preview</p><h2>{purchase.title}</h2><p>${(purchase.price_cents/100).toFixed(2)} USD · sandbox</p>
