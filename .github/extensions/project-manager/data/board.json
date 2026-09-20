@@ -89,6 +89,24 @@
           "title": "Prepare and verify the shared Haussmann room locally",
           "done": false,
           "owner": "william"
+        },
+        {
+          "id": "bb9306c1-5350-4917-8048-995c64709e7f",
+          "title": "Research multistory GLB integration and floor detection",
+          "done": true,
+          "owner": "william"
+        },
+        {
+          "id": "7d543e22-c744-43a3-ac28-0dcc4aa52dd0",
+          "title": "Research support surfaces and cabinet containment",
+          "done": true,
+          "owner": "william"
+        },
+        {
+          "id": "ea8e4665-bce1-4de3-b90d-71140ad6d8c3",
+          "title": "Verify skyscraper scale and floor-surface dragging",
+          "done": false,
+          "owner": "william"
         }
       ]
     },

@@ -68,3 +68,41 @@ test("a malformed proof lightmap fails before adding the model to the room", asy
   assert.equal(destroyed, true);
   assert.equal(f.root.children.length, 0);
 });
+
+// The same checked manifests drive frontend rejection and the backend tool tests.
+import lowerFloor from "../../../../shared/rooms/london-skyscraper-test/manifest.json";
+import middleFloor from "../../../../shared/rooms/london-skyscraper-c17/manifest.json";
+import upperFloor from "../../../../shared/rooms/london-skyscraper-c32/manifest.json";
+import lowerSpatial from "../../../../shared/rooms/london-skyscraper-test/spatial.json";
+import middleSpatial from "../../../../shared/rooms/london-skyscraper-c17/spatial.json";
+import upperSpatial from "../../../../shared/rooms/london-skyscraper-c32/spatial.json";
+import sceneFixtures from "../../../../shared/scene-fixtures.json";
+import { validatePlacement } from "../placement";
+import { cmToScene, meterGlbToSceneScale } from "../units";
+import type { Product } from "../types";
+
+test("three skyscraper floors preserve source metres, materials and independent elevations", async () => {
+  for (const manifest of [lowerFloor, middleFloor, upperFloor]) {
+    const f = fixture(false);
+    const room = manifest.room as unknown as Room;
+    const model = await loadSplatRoom(f.assets, f.root, room);
+    const pos = model.getLocalPosition();
+    assert.ok(Math.abs(pos.y + cmToScene(manifest.room.scan.building.elevationM * 100)) < .0002);
+    assert.equal(model.getLocalScale().x, meterGlbToSceneScale());
+    assert.equal(f.material.diffuseMap, f.albedo);
+    assert.equal(f.material.aoMap, f.carrier);
+  }
+});
+
+test("skyscraper footprint checks accept dragging and rotation but reject unchecked edges", () => {
+  const product = sceneFixtures.products.find(item => item.productId === "scale-reference") as Product;
+  for (const [manifest, spatial] of [[lowerFloor, lowerSpatial], [middleFloor, middleSpatial], [upperFloor, upperSpatial]] as const) {
+    const room = {...manifest.room, spatial} as unknown as Room;
+    const item = {instanceId:"reference", productId:product.productId, pose:{xCm:250,zCm:450,yawRad:0}};
+    for (const pose of [item.pose, {...item.pose,xCm:300}, {...item.pose,yawRad:Math.PI/2}])
+      assert.equal(validatePlacement(room,[product],[item],item.instanceId,pose).valid,true);
+    const outside = validatePlacement(room,[product],[item],item.instanceId,{...item.pose,xCm:100});
+    assert.equal(outside.valid,false);
+    assert.equal(outside.code,"unknown_area");
+  }
+});
