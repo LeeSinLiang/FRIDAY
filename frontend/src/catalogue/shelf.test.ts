@@ -18,3 +18,14 @@ test("what changes on hover sits in a fixed-height slot, so the card under a sti
   assert.ok(order.every((at) => at >= 0), "markers present");
   assert.deepEqual(order, [...order].sort((a, b) => a - b), "the status and the set-aside clauses are inside the slot, and the list comes after it");
 });
+
+test("the count line keeps the catalogue-wide number on screen when only listings with models are returned", async () => {
+  // Imported lazily: CatalogueShelf reads window.location at module load, which node does not have.
+  (globalThis as { window?: unknown }).window ??= { location: { search: "" } };
+  const { countLine } = await import("./CatalogueShelf");
+  assert.equal(countLine(392, 392, 12), "392 matches, showing 12"); // filter off: as before
+  assert.equal(countLine(1, 392, 1), "392 matches in the catalogue · 1 ready in 3D");
+  assert.equal(countLine(40, 1006, 12), "1,006 matches in the catalogue · 40 ready in 3D, showing 12");
+  assert.equal(countLine(0, 25, 0), "25 matches in the catalogue · none has a 3D model yet");
+  assert.equal(countLine(1, null, 1), "1 match");
+});

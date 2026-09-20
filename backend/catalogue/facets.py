@@ -42,6 +42,19 @@ def fit_filter(fit_mm: int) -> dict:
     return {"range": {"dims_mm.w": {"lte": fit_mm}}}
 
 
+# model_url is mapped keyword with index: false, but doc values are on, so exists works on it.
+HAS_MODEL_FILTER: dict = {"exists": {"field": "model_url"}}
+
+
+def hits_filter(fit_mm: int | None, models_only: bool) -> dict | None:
+    """What narrows the RETURNED hits without touching what is counted: the width gap and, when asked,
+    "has a 3D model". It runs after aggregation, so facets still describe every match."""
+    parts = ([] if fit_mm is None else [fit_filter(fit_mm)]) + ([HAS_MODEL_FILTER] if models_only else [])
+    if not parts:
+        return None
+    return parts[0] if len(parts) == 1 else {"bool": {"filter": parts}}
+
+
 def memory_facets(hits: Sequence[Listing], find: Sequence, candidates: int) -> Facets:
     """Facets over already-filtered hits, bucketed and ordered the way Elasticsearch returns them.
 
