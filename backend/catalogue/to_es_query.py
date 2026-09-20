@@ -6,7 +6,7 @@ Structured constraints go in filter context (cached, unscored). Only free text g
 from collections.abc import Callable, Sequence
 
 from catalogue.colour import is_near
-from catalogue.facets import es_aggs, fit_filter, fit_width_mm, without_fit
+from catalogue.facets import es_aggs, fit_filter, fit_width_mm, hits_filter, without_fit
 from catalogue.text import tokenize
 
 _WILDCARD_SPECIALS = str.maketrans({"*": r"\*", "?": r"\?", "\\": "\\\\"})
@@ -59,7 +59,7 @@ def to_es_bool(find: Sequence, palette: Sequence[str]) -> dict:
     return {"bool": {"must": must, "filter": filters}}
 
 
-def to_es_query(find: Sequence, palette: Sequence[str], limit: int, offset: int) -> dict:
+def to_es_query(find: Sequence, palette: Sequence[str], limit: int, offset: int, models_only: bool = False) -> dict:
     """Build the full search body.
 
     Args:
@@ -67,13 +67,16 @@ def to_es_query(find: Sequence, palette: Sequence[str], limit: int, offset: int)
         palette: every colour hex present in the index, used to expand colour clauses.
         limit: page size.
         offset: page start.
+        models_only: return only listings that have a 3D model. Aggregations still cover every match.
     """
     fit_mm = fit_width_mm(find)
+    after_aggs = hits_filter(fit_mm, models_only)
     return {
-        # The width gap filters hits after aggregation, so one request counts both what fits
-        # and what it was chosen from. post_filter does not affect scoring.
+        # post_filter narrows hits AFTER aggregation and does not affect scoring, so one request both
+        # counts the whole catalogue (what fits, and what it was chosen from) and returns only what
+        # the shopper can be shown.
         "query": to_es_bool(without_fit(find), palette),
-        **({} if fit_mm is None else {"post_filter": fit_filter(fit_mm)}),
+        **({} if after_aggs is None else {"post_filter": after_aggs}),
         "from": offset,
         "size": limit,
         "track_total_hits": True,

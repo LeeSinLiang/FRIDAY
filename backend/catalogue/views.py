@@ -31,19 +31,30 @@ logger = logging.getLogger(__name__)
 PUBLIC: list = []
 
 BACKEND_HEADER = "X-Search-Backend"
+RESULTS_HEADER = "X-Search-Results"  # "with-model" or "all": which listings were returned
+
+
+def results_require_model() -> bool:
+    """Return only listings the shopper can place as a real 3D model. ON by default.
+
+    ONE LINE TO FLIP BACK: SEARCH_RESULTS_REQUIRE_MODEL=0 in .env. Counting is never affected: facets,
+    fits_room and fits_room_of are computed over every match either way; only items and total change.
+    """
+    return os.getenv("SEARCH_RESULTS_REQUIRE_MODEL", "1") != "0"
 
 
 def run_search(query: SearchQuery) -> tuple[SearchResponse, str]:
     """Search with the configured backend. Elasticsearch failures fall back to memory, never to an error."""
+    models_only = results_require_model()
     if os.getenv("SEARCH_BACKEND", "memory") == "elastic":
         try:
-            return es.search(query.find, query.limit, query.offset), "elastic"
+            return es.search(query.find, query.limit, query.offset, models_only), "elastic"
         except ApiError as exc:
             logger.warning("elastic search failed, using memory: HTTP %s", exc.status_code)
         except (TransportError, KeyError) as exc:
             logger.warning("elastic search unavailable, using memory: %s", type(exc).__name__)
-        return memory.search(load_catalogue(), query.find, query.limit, query.offset), "memory-fallback"
-    return memory.search(load_catalogue(), query.find, query.limit, query.offset), "memory"
+        return memory.search(load_catalogue(), query.find, query.limit, query.offset, models_only), "memory-fallback"
+    return memory.search(load_catalogue(), query.find, query.limit, query.offset, models_only), "memory"
 
 
 # Browsing the catalogue is public, like any storefront. Cart and checkout auth are decided elsewhere.
@@ -56,7 +67,8 @@ def search(request):
     except ValueError as exc:
         return Response({"error": "invalid_search_params", "detail": str(exc)}, status=400)
     result, backend = run_search(query)
-    return Response(to_wire(result), headers={BACKEND_HEADER: backend})
+    returned = "with-model" if results_require_model() else "all"
+    return Response(to_wire(result), headers={BACKEND_HEADER: backend, RESULTS_HEADER: returned})
 
 
 def text_search_has_results(words: list[str]) -> bool:

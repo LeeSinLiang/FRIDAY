@@ -201,6 +201,10 @@ class BackendSwitchTests(SimpleTestCase):
     def setUp(self):
         es.get_client.cache_clear()
         self.addCleanup(es.get_client.cache_clear)
+        # These tests are about shape and backend choice; the results filter has its own tests.
+        flag = mock.patch.dict(os.environ, {"SEARCH_RESULTS_REQUIRE_MODEL": "0"})
+        flag.start()
+        self.addCleanup(flag.stop)
         patcher = mock.patch("catalogue.views.load_catalogue", return_value=load_listings())
         patcher.start()
         self.addCleanup(patcher.stop)
