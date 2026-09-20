@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PRODUCTS, ROOM } from "./fixtures";
+import { PRODUCTS, ROOM, ROOM_ID } from "./fixtures";
+import { clearPending, parkPending, takePending, type PendingStore } from "./pendingEdits";
 import { validInlineProduct } from "./products";
 import type { Instance } from "./types";
 
 export type SyncStatus = "loading" | "saved" | "saving" | "unsaved" | "offline" | "conflict";
 type Snapshot = { instances: Instance[]; revision: number };
-type SyncState = { ready: boolean; status: SyncStatus; message: string; revision: number | null };
+/** `saveFailures` counts consecutive failed saves; above zero, the room is safe here but not yet on the server. */
+type SyncState = { ready: boolean; status: SyncStatus; message: string; revision: number | null; saveFailures?: number;
+  /** True when the layout on screen is either saved or durably parked in this browser: leaving the room loses nothing. */
+  safeToLeave?: boolean };
 type Options = { instances: Instance[]; replace: (instances: Instance[]) => void; interactionActive: boolean };
 
 const RETRY_BASE_MS = 500;
@@ -19,6 +23,23 @@ class TransientError extends Error {
 }
 const isTransient = (error: unknown) =>
   error instanceof TransientError || (error instanceof Error && /fetch|network|load failed/i.test(error.message));
+
+/** Failed saves after which leaving the room is allowed again. */
+export const LEAVE_AFTER_FAILURES = 2;
+
+/**
+ * May the user switch rooms right now? Switching reloads the page. While a save is merely pending
+ * that would drop the edit, so wait for it. But a save that keeps failing must never trap someone
+ * in a room: after a couple of failures the layout is parked in the browser and the way out reopens.
+ */
+export const canLeaveRoom = (state: { status: SyncStatus; saveFailures?: number; safeToLeave?: boolean }, dragging: boolean): boolean => {
+  if (dragging) return false;
+  if (state.status === "saved" || state.status === "conflict") return true; // nothing to lose, or already lost to a reload
+  const stuck = state.status === "offline" || (state.saveFailures ?? 0) >= LEAVE_AFTER_FAILURES;
+  // Being stuck is not enough. The way out only opens once the layout is actually in browser storage:
+  // private mode, a full quota or a refused save must not turn "you may leave" into "you lost it".
+  return stuck && state.safeToLeave === true;
+};
 
 export function sceneFingerprint(instances: Instance[]): string {
   return JSON.stringify(instances.map(({ instanceId, productId, pose, product }) => ({
@@ -70,7 +91,7 @@ function readCsrfToken(): string | null {
 export function createSceneSyncController(
   latest: { current: Options },
   onState: (state: SyncState) => void,
-  transport: { fetch?: typeof fetch; csrfToken?: () => string | null } = {},
+  transport: { fetch?: typeof fetch; csrfToken?: () => string | null; storage?: PendingStore; roomId?: string } = {},
 ) {
     let disposed = false;
     let ready = false;
@@ -80,11 +101,15 @@ export function createSceneSyncController(
     let inFlight = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let saveFailures = 0;
+    let parkedFingerprint: string | null = null; // the layout known to be in browser storage, if any
+    let unreachable = false; // the last background poll failed; cleared by any successful request
+    const storage = transport.storage ?? (typeof localStorage === "undefined" ? undefined : localStorage);
+    const roomId = transport.roomId ?? ROOM_ID ?? "default";
     let controller: AbortController | null = null;
     const clearTimer = () => { if (timer !== undefined) clearTimeout(timer); timer = undefined; };
     const dirty = () => ready && sceneFingerprint(latest.current.instances) !== baseline;
     const publish = (status: SyncStatus, message: string) => {
-      if (!disposed) onState({ ready, status, message, revision });
+      if (!disposed) onState({ ready, status, message, revision, saveFailures, safeToLeave: !dirty() || parkedFingerprint === sceneFingerprint(latest.current.instances) });
     };
     const replace = (snapshot: Snapshot) => {
       baseline = sceneFingerprint(snapshot.instances);
@@ -104,11 +129,38 @@ export function createSceneSyncController(
       : saveFailures > 0 ? ["unsaved", "Saving your room…"]
       : ["unsaved", latest.current.interactionActive ? "Editing · changes pending" : "Changes pending…"];
     const saveDelay = () => saveFailures === 0 ? 400 : Math.min(RETRY_BASE_MS * 2 ** (saveFailures - 1), RETRY_MAX_MS);
+    // The parked copy must always be the layout on screen, not the layout at the last failed save: an
+    // edit made after the failure, or an undo back to the saved state, would otherwise be lost or
+    // resurrected on the next visit. Called on every reconcile, so it follows every edit.
+    const syncParked = () => {
+      if (!ready || revision === null) return;
+      const troubled = saveFailures > 0 || blocked === "offline";
+      if (!dirty() || !troubled) {
+        if (parkedFingerprint !== null) { clearPending(storage, roomId); parkedFingerprint = null; }
+        return;
+      }
+      const current = sceneFingerprint(latest.current.instances);
+      if (current === parkedFingerprint) return;
+      parkedFingerprint = parkPending(storage, roomId, { baseRevision: revision, instances: JSON.parse(current) }) ? current : null;
+    };
     const failed = (error: unknown, saving = false) => {
       if (disposed || (error instanceof DOMException && error.name === "AbortError")) return;
-      if (saving && ready && isTransient(error)) { saveFailures += 1; return; } // reconcile() schedules the retry
+      if (ready && isTransient(error)) {
+        // Once the room has loaded, nothing transient blocks anything. A failed SAVE is counted,
+        // parked in the browser so the room can be left or reloaded without losing it, and retried
+        // by reconcile(). A failed background POLL is just noted: blocking here would stop saves
+        // altogether, so an item placed while the server was down would be neither retried nor parked.
+        if (saving) {
+          saveFailures += 1;
+          syncParked();
+        } else {
+          unreachable = true;
+        }
+        return;
+      }
       blocked = "offline";
-      publish("offline", error instanceof Error && !/fetch|network|load failed/i.test(error.message)
+      syncParked(); // a refused save (400, 403) leaves a dirty layout too: park it before the way out opens
+      publish("offline", error instanceof Error && !isTransient(error)
         ? error.message : ready ? "Cannot reach the server. Local changes are retained." : "Cannot load the saved room. Retry to connect.");
     };
     const request = async (method: "GET" | "PUT", body?: unknown) => {
@@ -129,12 +181,19 @@ export function createSceneSyncController(
       }
       if (response.status >= 500) throw new TransientError(response.status);
       if (!response.ok) throw Error(`Scene request failed (${response.status}). Local changes are retained.`);
+      unreachable = false;
       return parseSceneSnapshot(await response.json());
     };
     const reconcile = () => {
       clearTimer();
+      syncParked();
       if (disposed || !ready || inFlight || blocked) return;
-      if (!dirty()) { saveFailures = 0; publish("saved", "All changes saved"); return; }
+      if (!dirty()) {
+        saveFailures = 0;
+        if (unreachable) publish("offline", "Reconnecting. Your room is safe in this browser.");
+        else publish("saved", "All changes saved");
+        return;
+      }
       publish(...savePending());
       if (!latest.current.interactionActive) timer = setTimeout(() => { void save(); }, saveDelay());
     };
@@ -149,6 +208,8 @@ export function createSceneSyncController(
         const snapshot = await request("PUT", { baseRevision: revision, instances });
         if (disposed || !snapshot) return;
         saveFailures = 0;
+        clearPending(storage, roomId);
+        parkedFingerprint = null;
         baseline = sceneFingerprint(snapshot.instances);
         revision = snapshot.revision;
         if (sceneFingerprint(latest.current.instances) === submitted && baseline !== submitted) replace(snapshot);
@@ -174,6 +235,13 @@ export function createSceneSyncController(
           return;
         }
         if (force || snapshot.revision !== revision || sceneFingerprint(snapshot.instances) !== baseline) replace(snapshot);
+        // Coming back to a room that was left with an unsaved layout: put it back, and the normal
+        // save path sends it. Only if the server still has the revision it was made against.
+        const parked = force ? takePending(storage, roomId, snapshot.revision) : null;
+        if (parked) {
+          latest.current = { ...latest.current, instances: parked };
+          latest.current.replace(parked);
+        }
         blocked = null;
       } catch (error) { failed(error); }
       finally { inFlight = false; if (!disposed && !blocked) reconcile(); }

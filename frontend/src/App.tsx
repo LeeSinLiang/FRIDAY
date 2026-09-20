@@ -18,7 +18,7 @@ import { instanceFromListing } from "./region/boundary";
 import FloorOverlay from "./region/FloorOverlay";
 import { useRegion } from "./region/useRegion";
 import { SCENE_UNIT_CM } from "./scene/units";
-import { useSceneSync } from "./scene/useSceneSync";
+import { canLeaveRoom, useSceneSync } from "./scene/useSceneSync";
 import { findOpenPose, validatePlacement } from "./scene/placement";
 import type { PlacementPreview } from "./scene/useFurnitureDrag";
 import { useSceneEditor } from "./scene/useSceneEditor";
@@ -688,7 +688,7 @@ export default function App() {
         yawIndex={yawIndex}
         armedId={armedListing?.id ?? null}
         disabled={!sync.ready}
-        canSwitchRooms={sync.status === "saved" && !dragging}
+        canSwitchRooms={canLeaveRoom(sync, dragging)}
         onHover={setHoveredListing}
         onPick={setArmedListing}
         onPlace={setPlaceClauses}
