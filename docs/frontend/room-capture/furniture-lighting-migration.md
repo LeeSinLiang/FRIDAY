@@ -40,7 +40,7 @@ Use Table detail, Move and rotate vase, Photographic capture and 30 second walkt
 - Local assets: original London/empty, CGArch 68,229,960-byte GLB and Haussmann SOG/collision pair. Studio 11 and CGArch lightmapper proof binaries are absent; those paths are not visually accepted.
 - CGArch's existing mottled trim/lightmap artifacts and original model texture resolution remain. Lighting cannot recover absent source detail.
 - Cleanup verified: no listeners remain on 8247, 5247 or 5248; temporary browser tabs were closed. Other stacks remain untouched.
-- This task has not pushed, merged main or refreshed Vercel. Hosted acceptance remains open; local checks do not prove a refreshed release.
+- Follow-up: the user authorized publishing and merging this rendering branch into main. Fresh remote-main baseline `9adbf97` passed `281` backend tests (4 optional skips), `181+25` frontend tests and a `4.10s` build. PR integration and post-merge verification are in progress. Vercel has not been refreshed; hosted acceptance remains separate.
 
 ## Frame pacing
 
