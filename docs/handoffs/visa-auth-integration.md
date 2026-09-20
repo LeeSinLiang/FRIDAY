@@ -2,6 +2,8 @@
 
 Owner: William. Branch: `codex/visa-sandbox`. Updated: 2026-09-19.
 
+Review: [PR #19 — Add Visa IDX sandbox, account MFA, and checkout handoff](https://github.com/LeeSinLiang/hackmit2026/pull/19), from `codex/visa-sandbox` into `main`. Opened for the team's Codex review workflow; no completed review or merge is claimed. The verification results and remaining integration work below still apply.
+
 ## Baseline and teammates' work
 
 This branch incorporates `origin/main` through [`e6a046e`](https://github.com/LeeSinLiang/hackmit2026/commit/e6a046e). In addition to the earlier `98ca88d` catalogue/editor baseline, it now includes the wall-exception fixes, pure TypeScript region solver, nothing-fits explanations, and task-boundary sync convention from PRs #13, #15, #16 and #17. The Gaussian-splatting research notes still describe planned work rather than an implemented splat renderer. Main was merged into this feature branch; that does not merge the Visa/auth branch into main.

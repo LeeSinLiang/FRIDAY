@@ -4,16 +4,20 @@ Record all agent work here when working for William. Include status, file paths,
 
 ## In progress
 
-- None in this publication scope; the integration follow-ups below remain open.
+- None in this PR-opening scope; review and integration follow-ups remain open.
 
 ## Next
 
+- **Review Visa/auth PR before merge** (Kanban `ae490364-b75e-41ca-8d81-0485d0d78a73`, reviewer unassigned): [PR #19](https://github.com/LeeSinLiang/hackmit2026/pull/19), `codex/visa-sandbox` into `main`. Review the authentication/checkout security boundaries and shared-app compatibility; the known failures below remain open. The PR is open for review and has not been merged. No completed Codex review has been verified.
 - Merge account and checkout routes with the pushed 3D editor (Kanban `03bc6470-6a84-48d8-ba48-1df4ed0f3277`): follow `docs/handoffs/visa-auth-integration.md`; changes to the UI owner's App/proxy are deliberately deferred at William's request.
 - Resolve catalogue test compatibility with the persistent auth cache: agree with the catalogue owner how to isolate the five database-forbidden `CompileEndpointTests` without weakening runtime rate-limit/TOTP reuse protection.
 - Define guest-room transfer and account scene ownership before claiming a room survives sign-in/logout/account switching.
 - Agree on the shared catalogue/cart contract and replace the explicit two-product fixture adapter. Payment authorization and merchant ordering remain separate integrations. Phone-generated FRIDAY MFA verification is now confirmed; the user's original camera-scan action was not replayed by the agent.
 
 ## Done
+
+- 2026-09-19: **Open the Visa/auth pull request for Codex review.** Created [PR #19](https://github.com/LeeSinLiang/hackmit2026/pull/19) as an open, non-draft PR from `codex/visa-sandbox` into `main`. Its body records the implementation scope, prior test results, five known catalogue/cache test failures, unwired account/checkout routes, remaining cart/ownership contracts and review focus. Verified the PR state, base/head branches and published head through GitHub. Linked the PR from `docs/handoffs/visa-auth-integration.md` and added the open review card to the running Project Plan and this branch's snapshot without changing existing cards.
+- Only documentation/work-log/board data changes accompany PR creation; no application code, HTML tester, credentials or runtime changed, and no application tests or external email/Visa calls were repeated. The Codex app's attachment call could not find this side conversation; the GitHub PR itself exists and is directly linked here. No merge or direct push to main was performed.
 
 - 2026-09-19: **Publish the latest Visa/auth handoff sync** (existing Kanban `836acd1c-7b85-46c7-bc0c-22d80438eb34`). Corrected the missing branch push after the second sync: `git push origin codex/visa-sandbox` advanced GitHub from `e11f450` to `e1a4476`. Verified the exact remote head with `git ls-remote`; `main` remained `e6a046e`. GitHub's PR listing returned no PR for this branch. The documented next delivery step is a PR from `codex/visa-sandbox` into `main`, followed by review and merge; pushing the feature branch alone does not update main. See `AGENTS.md` and `docs/handoffs/visa-auth-integration.md` under Branch sharing and Project Plan.
 - This publication follow-up changes only `TODO_WILLIAM.md`; application source, the existing HTML tester, teammate checkout and runtime remain untouched. Checked the running board: pull/handoff remains done and account/checkout UI integration remains open, so no board mutation is needed. Existing combined-suite cache failures and UI wiring gaps remain as recorded below; no new runtime test was required for a documentation-only publication record.

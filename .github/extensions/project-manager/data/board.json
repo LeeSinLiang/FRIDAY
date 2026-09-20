@@ -230,6 +230,12 @@
           "title": "Verify X-Pay signing, MLE and real IDX fixture checkout",
           "done": true,
           "owner": "william"
+        },
+        {
+          "id": "ae490364-b75e-41ca-8d81-0485d0d78a73",
+          "title": "Review Visa/auth PR before merge",
+          "done": false,
+          "owner": "unassigned"
         }
       ]
     },
