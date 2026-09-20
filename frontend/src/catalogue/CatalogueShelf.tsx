@@ -25,6 +25,7 @@ type Props = {
   onHover: (listing: Listing | null) => void;
   onPick: (listing: Listing | null) => void;
   onPlace: (place: PlaceClause[]) => void;
+  onClose?: () => void;
 };
 
 // Display only. Everything on the wire stays integer cents and millimetres.
@@ -63,7 +64,7 @@ function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: 
   );
 }
 
-export default function CatalogueShelf({ region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace }: Props) {
+export default function CatalogueShelf({ region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose }: Props) {
   const [sentence, setSentence] = useState("an armchair");
   const [compiled, setCompiled] = useState<Compiled | null>(null);
   const [items, setItems] = useState<Listing[]>([]);
@@ -122,6 +123,7 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
 
   return (
     <aside className="glass shelf" aria-label="Catalogue" onPointerLeave={() => onHover(null)}>
+      {onClose && <button type="button" className="shelf-close" aria-label="Close catalogue search" onClick={()=>{onPick(null);onHover(null);onClose();}}>Close search</button>}
       {showRooms && (
         <nav className="shelf-rooms" aria-label="Room">
           {ROOM_CHOICES.map((choice) => {

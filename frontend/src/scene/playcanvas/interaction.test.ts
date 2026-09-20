@@ -58,9 +58,11 @@ test("dragging preserves the grabbed surface offset before optional grid snappin
 });
 
 test("walking is bounded after a suspended tab and cannot leave the room", () => {
-  assert.equal(movementDelta(10), 7.5);
+  assert.equal(movementDelta(10), 12);
+  assert.equal(movementDelta(0.05, 360), 18);
   assert.equal(movementDelta(-1), 0);
   assert.equal(movementDelta(Number.NaN), 0);
+  assert.deepEqual(advanceWalk(room, { xCm: 300, zCm: 430 }, 12, 0), { xCm: 312, zCm: 430 });
   const moved = advanceWalk(room, { xCm: 580, zCm: 200 }, 40, 0);
   assert.ok(moved.xCm <= 580);
   assert.equal(canWalkAt(room, -1, 200), false);
