@@ -22,8 +22,34 @@ class SceneError(Exception):
         self.details = details
 
 
-def fixtures():
-    return json.loads((Path(settings.BASE_DIR).parent / 'shared' / 'scene-fixtures.json').read_text())
+ROOM_SEPARATOR = ':'
+
+
+def room_presets():
+    return json.loads((Path(settings.BASE_DIR).parent / 'shared' / 'scene-fixtures.json').read_text()).get('rooms', {})
+
+
+def layout_key(session_key, room_id=None):
+    """The storage key for a session's layout in a room. Each room preset keeps its own layout, so
+    switching rooms never drags furniture into walls. The default room uses the bare session key,
+    exactly as before presets existed."""
+    if not room_id:
+        return session_key
+    if room_id not in room_presets():
+        raise SceneError('validation', 'Unknown room.')
+    return f'{session_key}{ROOM_SEPARATOR}{room_id}'
+
+
+def room_id_of(key):
+    return key.split(ROOM_SEPARATOR, 1)[1] if isinstance(key, str) and ROOM_SEPARATOR in key else None
+
+
+def fixtures(room_id=None):
+    data = json.loads((Path(settings.BASE_DIR).parent / 'shared' / 'scene-fixtures.json').read_text())
+    presets = data.pop('rooms', {})
+    if room_id:
+        data['room'] = presets[room_id]['room']
+    return data
 
 
 def number(value):
@@ -83,10 +109,10 @@ def resolve_product(item, products):
     return authoritative
 
 
-def validate_instances(instances):
+def validate_instances(instances, room_id=None):
     if not isinstance(instances, list) or len(instances) > 100:
         raise SceneError('validation', 'Provide at most 100 furniture instances.')
-    data = fixtures()
+    data = fixtures(room_id)
     room = data['room']
     products = {p['productId']: p for p in data['products']}
     seen, boxes = set(), []
@@ -123,11 +149,14 @@ def validate_instances(instances):
 def scene_for_session(session_key):
     if not isinstance(session_key, str) or not session_key:
         raise SceneError('session', 'A session is required.', 403)
-    return SceneLayout.objects.get_or_create(session_key=session_key)[0]
+    room_id = room_id_of(session_key)
+    # A preset room starts furnished, once. After that the layout is the user's.
+    seeded = copy.deepcopy(room_presets()[room_id].get('instances', [])) if room_id else []
+    return SceneLayout.objects.get_or_create(session_key=session_key, defaults={'instances': seeded})[0]
 
 
 def serialize(scene):
-    data = fixtures()
+    data = fixtures(room_id_of(scene.session_key))
     known = {product['productId'] for product in data['products']}
     # Catalogue items placed in this scene join the product list, from the server's catalogue rather
     # than the client's copy, so every consumer that looks products up by id keeps working.
@@ -162,7 +191,7 @@ def save_scene(session_key, base_revision, instances):
     validate_revision(base_revision)
     scene = scene_for_session(session_key)
     scene = SceneLayout.objects.select_for_update().get(pk=scene.pk)
-    return store(scene, base_revision, validate_instances(instances))
+    return store(scene, base_revision, validate_instances(instances, room_id_of(session_key)))
 
 
 @transaction.atomic
@@ -205,7 +234,7 @@ def apply_scene_commands(session_key, base_revision, command_id, commands):
                 target['pose'] = command['pose']
         else:
             raise SceneError('validation', 'Use add, setPose, or remove with the documented fields.')
-        instances = validate_instances(instances)
+        instances = validate_instances(instances, room_id_of(session_key))
     response = {**store(scene, base_revision, instances), 'commandId': command_id}
     SceneCommandReceipt.objects.create(scene=scene, command_id=command_id, payload_hash=digest, response=response)
     return response
@@ -226,7 +255,7 @@ def attempt_placement(session_key, payload):
     item = payload['instance']
     # Validate the proposed object's structure before indexing its fields.
     try:
-        validate_instances([item])
+        validate_instances([item], room_id_of(session_key))
     except SceneError as error:
         if error.details is None:
             error.details = {'issues': [{'code': 'invalid_instance', 'message': error.message}]}
@@ -252,7 +281,7 @@ def attempt_placement(session_key, payload):
         instances.append(copy.deepcopy(item))
     # Validate target last so any collision identifies the attempted object and
     # names the existing obstacle, without changing persisted object order.
-    validate_instances([i for i in instances if i['instanceId'] != item['instanceId']] + [item])
+    validate_instances([i for i in instances if i['instanceId'] != item['instanceId']] + [item], room_id_of(session_key))
     if payload.get('dryRun', False):
         return {'ok': True, 'applied': False, 'validation': {'valid': True, 'issues': []}, **serialize(scene)}
     changed = instances != scene.instances

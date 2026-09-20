@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { PlaceClause } from "../lib/dsl/schema";
 import type { Listing } from "../lib/types";
 import type { Region } from "../region/useRegion";
+import { ROOM_CHOICES, ROOM_ID } from "../scene/fixtures";
 import { compileSentence, searchCatalogue, type Compiled } from "./api";
 import "./shelf.css";
 
@@ -23,15 +24,22 @@ type Props = {
 const dollars = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: cents % 100 ? 2 : 0 })}`;
 const size = (listing: Listing) => `${listing.dims_mm.w / 10} × ${listing.dims_mm.d / 10} × ${listing.dims_mm.h / 10} cm`;
 
+// ?dev=1 shows the raw per-rotation sample counts. A shopper needs "it fits" or "it doesn't, and why";
+// "8,961 spots" sounds precise and means nothing.
+const DEV = new URLSearchParams(window.location.search).has("dev");
+const TURNS = ["back to the north wall", "back to the west wall", "back to the south wall", "back to the east wall"];
+
 function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: number; armed: boolean }) {
   if (!region) return <p className="shelf-status">Hover a piece to see where it fits.</p>;
   const { solution, product } = region;
   if (solution.bestYawIndex < 0)
-    return <p className="shelf-status refused"><strong>Nothing fits</strong> — {solution.whyNothingFits}</p>;
+    return <p className="shelf-status refused"><strong>{product.name} won’t fit</strong> — {solution.whyNothingFits}.</p>;
+  const turns = solution.legalCounts.filter((count) => count > 0).length;
   return (
     <p className="shelf-status">
-      <strong>{product.name}</strong> fits in {solution.legalCounts[yawIndex].toLocaleString()} spots.{" "}
-      {armed ? "Click the lit floor to place it · R turns it · Esc cancels." : "Click it to pick it up."}
+      <strong>{product.name} fits.</strong>{" "}
+      {armed ? `Click the lit floor to place it${turns > 1 ? " · R turns it" : ""} · Esc cancels.` : "The lit floor is where it can go. Click it to pick it up."}
+      {DEV && <><br /><code>{TURNS[yawIndex]}: {solution.legalCounts[yawIndex]} centres · all turns: {solution.legalCounts.join(" / ")}</code></>}
     </p>
   );
 }
@@ -54,6 +62,7 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, on
       const result = await compileSentence(text, controller.signal);
       const found = await searchCatalogue(result.program.find, controller.signal);
       setCompiled(result); setItems(found.items); setTotal(found.total); setError("");
+      onHover(null); // the card under the pointer is a different listing now
       onPlace(result.program.place);
     } catch (caught) {
       if ((caught as Error).name !== "AbortError") setError((caught as Error).message);
@@ -68,6 +77,13 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, on
 
   return (
     <aside className="glass shelf" aria-label="Catalogue" onPointerLeave={() => onHover(null)}>
+      <nav className="shelf-rooms" aria-label="Room">
+        {ROOM_CHOICES.map((choice) => {
+          const params = new URLSearchParams(window.location.search);
+          if (choice.id) params.set("room", choice.id); else params.delete("room");
+          return <a key={choice.label} href={`?${params}`} aria-current={choice.id === ROOM_ID ? "page" : undefined}>{choice.label}</a>;
+        })}
+      </nav>
       <form onSubmit={submit}>
         <input value={sentence} onChange={(event) => setSentence(event.target.value)} maxLength={300}
           aria-label="Describe what you are looking for" placeholder="a reading chair by the window, under $400" />

@@ -4,5 +4,15 @@
     {"productId":"test-sofa","name":"Curve sofa","widthCm":220,"depthCm":95,"heightCm":74,"color":"#b9542c","kind":"sofa"},
     {"productId":"test-table","name":"Stone coffee table","widthCm":120,"depthCm":60,"heightCm":35,"color":"#d9c8ad","kind":"table"},
     {"productId":"test-chair","name":"Oak lounge chair","widthCm":70,"depthCm":75,"heightCm":75,"color":"#a98458","kind":"chair"}
-  ]
+  ],
+  "rooms": {
+    "studio": {
+      "label": "Studio",
+      "room": {"roomId":"demo-studio","revision":1,"widthCm":260,"depthCm":200,"heightCm":250},
+      "instances": [
+        {"instanceId":"studio-table","productId":"test-table","pose":{"xCm":200,"zCm":30,"yawRad":0}},
+        {"instanceId":"studio-chair","productId":"test-chair","pose":{"xCm":35,"zCm":160,"yawRad":0}}
+      ]
+    }
+  }
 }

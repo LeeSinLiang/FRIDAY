@@ -9,7 +9,7 @@ import {
 } from "react";
 import CapturePanel from "./CapturePanel";
 import { Icon } from "./Icons";
-import { PRODUCTS, ROOM } from "./scene/fixtures";
+import { PRODUCTS, ROOM, ROOM_LABEL } from "./scene/fixtures";
 import { productOf, productsWith } from "./scene/products";
 import CatalogueShelf from "./catalogue/CatalogueShelf";
 import type { PlaceClause } from "./lib/dsl/schema";
@@ -163,7 +163,10 @@ export default function App() {
   const region = useRegion(armedListing ?? hoveredListing, ROOM, sceneProducts, instances, placeClauses);
   const fitting = region ? region.solution.legalCounts.map((count, index) => (count > 0 ? index : -1)).filter((index) => index >= 0) : [];
   const yawIndex = yawChoice !== null && fitting.includes(yawChoice) ? yawChoice : Math.max(region?.solution.bestYawIndex ?? 0, 0);
-  useEffect(() => setYawChoice(null), [armedListing, hoveredListing]);
+  // A chosen turn belongs to the item in hand. Hovering other cards, or moving the pointer from the
+  // shelf to the floor, must not undo it.
+  const turnOwner = armedListing?.id ?? hoveredListing?.id ?? null;
+  useEffect(() => setYawChoice(null), [turnOwner]);
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const selectedRowRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -283,6 +286,10 @@ export default function App() {
   const placeListing = (pose: Pose) => {
     if (!armedListing || draggingRef.current || !sync.ready || instances.length >= 100) return;
     const instance = instanceFromListing(armedListing, crypto.randomUUID(), pose);
+    // The overlay only reports poses the solver proved, and the solver asks this same check, so a
+    // refusal here is a solver bug. Say so loudly rather than drop an item where the editor forbids it.
+    const verdict = validatePlacement(ROOM, sceneProducts, [...instances, instance], instance.instanceId, pose);
+    if (!verdict.valid) { console.error("region solver lit a pose the editor refuses", pose, verdict.reason); return; }
     edit({ type: "add", instance });
     select(instance.instanceId);
     setNotice(`${armedListing.title} placed`);
@@ -309,7 +316,7 @@ export default function App() {
         </a>
         <span className="header-divider" />
         <div className="room-title">
-          Living room
+          {ROOM_LABEL}
           <span>
             {ROOM.widthCm} × {ROOM.depthCm} cm
           </span>

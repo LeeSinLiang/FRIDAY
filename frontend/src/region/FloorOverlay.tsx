@@ -7,7 +7,7 @@
 // One textured plane, not a mesh per cell: a 600 x 500 cm room is 12,221 samples.
 
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { DataTexture, DoubleSide, Mesh, NearestFilter, RedFormat, ShaderMaterial, UnsignedByteType } from "three";
 import { cmToScene, sceneToCm } from "../scene/units";
 import type { Pose } from "../scene/types";
@@ -37,8 +37,13 @@ const FRAGMENT = `
     vec2 uv = vec2(vUv.x, 1.0 - vUv.y);
     float state = texture2D(uMask, uv).r * 255.0;
     if (abs(state - 1.0) > 0.5) discard;
-    vec2 cell = abs(fract(uv * uShape) - 0.5) * 2.0;
-    float dot_ = 1.0 - smoothstep(0.55, 0.95, max(cell.x, cell.y));
+    vec2 grid = uv * uShape;
+    vec2 cell = abs(fract(grid) - 0.5) * 2.0;
+    // Far away or at eye level a sample shrinks below a few pixels and the dots alias into crawling
+    // lines. fwidth is how many samples one pixel spans: fade the pattern to a flat fill as it grows.
+    vec2 span = fwidth(grid);
+    float detail = 1.0 - smoothstep(0.18, 0.45, max(span.x, span.y));
+    float dot_ = mix(0.45, 1.0 - smoothstep(0.55, 0.95, max(cell.x, cell.y)), detail);
     float pulse = 0.85 + 0.15 * sin(uTime * 3.0);
     vec3 colour = mix(vec3(0.16, 0.62, 0.36), vec3(0.35, 0.95, 0.55), dot_);
     gl_FragColor = vec4(colour, (0.30 + 0.38 * dot_) * mix(0.8, pulse, uArmed));
@@ -66,11 +71,19 @@ export default function FloorOverlay({ mask, armed, onPlace, onHoverPose }: Prop
     invalidate();
   });
 
-  const uniforms = useMemo(() => ({ uMask: { value: texture }, uShape: { value: [1, 1] }, uTime: { value: 0 }, uArmed: { value: 0 } }), []);
+  // Initial values only. three.js CLONES a ShaderMaterial's uniforms, so later writes to this object
+  // never reach the GPU: every update below goes through material.current.uniforms instead. Writing
+  // to this object is how the first version changed its count on R while drawing the same region.
+  const initialUniforms = useMemo(() => ({ uMask: { value: null }, uShape: { value: [1, 1] }, uTime: { value: 0 }, uArmed: { value: 0 } }), []);
+  useLayoutEffect(() => {
+    const live = material.current?.uniforms;
+    if (!live || !mask || !texture) return;
+    live.uMask.value = texture;
+    live.uShape.value = [mask.shape[0], mask.shape[1]];
+    live.uArmed.value = armed ? 1 : 0;
+    invalidate();
+  }, [mask, texture, armed, invalidate]);
   if (!mask || !texture) return null;
-  uniforms.uMask.value = texture;
-  uniforms.uShape.value = [mask.shape[0], mask.shape[1]];
-  uniforms.uArmed.value = armed ? 1 : 0;
 
   // One texel per grid point, so the quad overhangs the first and last point by half a cell.
   const size = mask.cellSizeCm, widthCm = mask.shape[0] * size, depthCm = mask.shape[1] * size;
@@ -98,7 +111,7 @@ export default function FloorOverlay({ mask, armed, onPlace, onHoverPose }: Prop
       }}
     >
       <planeGeometry args={[cmToScene(widthCm), cmToScene(depthCm)]} />
-      <shaderMaterial ref={material} vertexShader={VERTEX} fragmentShader={FRAGMENT} uniforms={uniforms}
+      <shaderMaterial ref={material} vertexShader={VERTEX} fragmentShader={FRAGMENT} uniforms={initialUniforms}
         transparent depthWrite={false} side={DoubleSide} polygonOffset polygonOffsetFactor={-2} />
     </mesh>
   );

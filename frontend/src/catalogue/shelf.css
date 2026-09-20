@@ -6,7 +6,7 @@
 .shelf button.go:disabled { opacity: 0.6; cursor: progress; }
 .shelf-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .shelf-chips span { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: 12px; background: #fffdf8; }
-.shelf-status { margin: 0; font-size: 13px; color: var(--muted); min-height: 1.3em; }
+.shelf-status { flex-shrink: 0; margin: 0; font-size: 13px; color: var(--muted); min-height: 1.3em; }
 .shelf-status strong { color: var(--ink); }
 .shelf-status.refused, .shelf-dropped { color: var(--accent); }
 .shelf-dropped { margin: 0; padding-left: 18px; font-size: 12px; }
@@ -17,3 +17,9 @@
 .shelf-results button[aria-pressed="true"] { border-color: var(--accent); background: #fff3e6; }
 .shelf-results img { width: 44px; height: 44px; border-radius: 10px; }
 .shelf-results small { display: block; color: var(--muted); }
+.shelf-status code { display: block; font-size: 11px; color: var(--muted); }
+.shelf form, .shelf-chips, .shelf-dropped { flex-shrink: 0; }
+.shelf-results { min-height: 0; }
+.shelf-rooms { display: flex; gap: 6px; flex-shrink: 0; font-size: 12px; }
+.shelf-rooms a { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); text-decoration: none; }
+.shelf-rooms a[aria-current=page] { background: var(--ink); color: #fff9f0; border-color: var(--ink); }
