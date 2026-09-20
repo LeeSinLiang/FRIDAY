@@ -71,8 +71,53 @@ const polygonArea = (points: Axis[]) => Math.abs(points.reduce((sum, point, inde
   return sum + point[0] * next[1] - next[0] * point[1];
 }, 0)) / 2;
 
+type FreeArea = NonNullable<Room["spatial"]>["freeAreas"][number];
+type FloorRow = { minX: number; maxX: number }[];
+const floorRows = new WeakMap<FreeArea[], { zs: number[]; rows: FloorRow[] }>();
+
+/** Exact horizontal coverage for quarter-turn footprints. Large prepared floors contain hundreds
+ * of reviewed rectangles; indexing their Z bands avoids clipping against every rectangle at each
+ * 5 cm fit sample. Touching intervals form one continuous verified strip. */
+function coveredByAxisAlignedAreas(box: Footprint, areas: FreeArea[]): boolean {
+  if (!areas.length) return false;
+  let index = floorRows.get(areas);
+  if (!index) {
+    const zs = [...new Set(areas.flatMap(area => [area.minZcm, area.maxZcm]))].sort((a, b) => a - b);
+    const rows: FloorRow[] = [];
+    for (let j = 0; j < zs.length - 1; j++) {
+      const spans = areas.filter(area => area.minZcm <= zs[j] + EPSILON_CM && area.maxZcm >= zs[j + 1] - EPSILON_CM)
+        .map(area => ({ minX: area.minXcm, maxX: area.maxXcm })).sort((a, b) => a.minX - b.minX);
+      const merged: FloorRow = [];
+      for (const span of spans) {
+        const previous = merged[merged.length - 1];
+        if (previous && span.minX <= previous.maxX + EPSILON_CM) previous.maxX = Math.max(previous.maxX, span.maxX);
+        else merged.push({ ...span });
+      }
+      rows.push(merged);
+    }
+    index = { zs, rows };
+    floorRows.set(areas, index);
+  }
+  const minX = box.x - box.extentX, maxX = box.x + box.extentX;
+  const minZ = box.z - box.extentZ, maxZ = box.z + box.extentZ;
+  if (minZ < index.zs[0] - EPSILON_CM || maxZ > index.zs[index.zs.length - 1] + EPSILON_CM) return false;
+  let low = 0, high = index.rows.length;
+  while (low < high) {
+    const middle = (low + high) >> 1;
+    if (index.zs[middle + 1] <= minZ + EPSILON_CM) low = middle + 1;
+    else high = middle;
+  }
+  for (let j = low; j < index.rows.length; j++) {
+    if (index.zs[j] >= maxZ - EPSILON_CM) break;
+    if (!index.rows[j].some(span => span.minX <= minX + EPSILON_CM && span.maxX >= maxX - EPSILON_CM)) return false;
+  }
+  return true;
+}
+
 /** Subtract the reviewed rectangle union, including gaps hidden inside the footprint. */
 function coveredByFreeAreas(box: Footprint, areas: NonNullable<Room["spatial"]>["freeAreas"]): boolean {
+  if (Math.abs(box.axes[0][0]) <= EPSILON_CM || Math.abs(box.axes[0][1]) <= EPSILON_CM)
+    return coveredByAxisAlignedAreas(box, areas);
   let remaining = [polygon(box)];
   for (const area of areas) {
     const next: Axis[][] = [];

@@ -32,6 +32,7 @@ class SearchQuery:
     find: list
     limit: int
     offset: int
+    models: str | None = None
 
 
 def _to_int(name: str, raw: str) -> int:
@@ -64,4 +65,7 @@ def parse_search_params(params: Mapping[str, str]) -> SearchQuery:
         raise ValueError(f"limit must be 1..{MAX_LIMIT} and offset must be >= 0")
     if offset + limit > MAX_WINDOW:
         raise ValueError(f"offset + limit must be <= {MAX_WINDOW}; narrow the search instead of paging deeper")
-    return SearchQuery(find=_FIND_LIST.validate_python(raw_clauses), limit=limit, offset=offset)
+    models = params.get("models") or None
+    if models not in (None, "only"):
+        raise ValueError("models must be only when supplied")
+    return SearchQuery(models=models, find=_FIND_LIST.validate_python(raw_clauses), limit=limit, offset=offset)
