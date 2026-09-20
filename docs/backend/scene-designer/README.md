@@ -6,6 +6,8 @@ William requests a working FRIDAY in-app agent that inspects the current model a
 
 The catalogue compiler remains a search/constraint compiler, now supplied with current scene references when the editor provides a room and revision. The separate scene designer calls existing `scene_service` validation/atomic commands and the browser capture queue. The [earlier Blender MCP handoff](../contracts/blender-mcp-agent-handoff.md) already identifies these gaps.
 
+Speech and typing enter the same catalogue sentence box. The microphone transcribes with Deepgram or the existing browser fallback, then passes the final transcript through the same action router as a typed sentence. An imperative such as “place a lamp on the desk” opens the scene designer. “Place a lamp on the desk, do it now” and “Do it now: place a lamp on the desk” do the same. Saying only “do it now” uses the last description entered in that box; an empty or already completed request asks for a new description instead of placing a guessed item. Normal product searches still use the catalogue. The phrase is an action cue, not a product ID or permission to bypass geometry validation.
+
 ## Tools and execution
 
 - Inspect the actual room/floor and every placed object; detailed lookup returns authoritative dimensions, transforms and rotated bounds. Resolve ambiguous names by asking; never guess an instance ID. Selection is passed from the editor and checked against this scene.
@@ -39,4 +41,4 @@ Test duplicate names/IDs, rotation and exact edge clearance, self-exclusion duri
 
 ## Integration status
 
-The floor-relative live loop has passed placement, measured clearance, target/preview/after capture, collision refusal, reload during reasoning, undo and redo. The support implementation is integrated from the existing `codex/supported-placement` worktree without modifying that source checkout. Its earlier manual proof is in [supported placement verification](../../frontend/3d-object/supported-placement-verification.md). Live monitor/desk and cabinet acceptance plus the combined release are in progress; prior worktree test counts do not verify this integration.
+The floor-relative live loop has passed placement, measured clearance, target/preview/after capture, collision refusal, reload during reasoning, undo and redo. The support implementation is integrated from the existing `codex/supported-placement` worktree without modifying that source checkout. Its earlier manual proof is in [supported placement verification](../../frontend/3d-object/supported-placement-verification.md). Live monitor/desk and cabinet acceptance passed locally and on the public skyscraper C32 floor in release `5afe392`; parent movement/rotation and undo/redo passed, with reload additionally checked locally. See [the public release evidence](../../demo/public-test-release.md) for exact checks, deployment identity and the cropped AI capture limitation.

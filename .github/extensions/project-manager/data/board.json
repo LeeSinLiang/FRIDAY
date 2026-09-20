@@ -467,7 +467,7 @@
         {
           "id": "25675e31-aaa6-43d7-a563-b94360fc6706",
           "title": "Publish integrated FRIDAY test release and record demo",
-          "done": false,
+          "done": true,
           "owner": "william"
         }
       ],
