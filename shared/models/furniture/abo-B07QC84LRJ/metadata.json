@@ -1,0 +1,64 @@
+{
+  "productId": "abo-B07QC84LRJ",
+  "modelUrl": "/models/furniture/abo-B07QC84LRJ/model.glb",
+  "widthCm": 130.0,
+  "depthCm": 60.0,
+  "heightCm": 78.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "abo-B07QC84LRJ",
+  "matchType": "verified",
+  "priceProvenance": "placeholder",
+  "license": {
+    "name": "CC BY 4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "3D model and product data from Amazon Berkeley Objects (c) Amazon.com, licensed CC BY 4.0. Dataset built by Matthieu Guillaumin, Thomas Dideriksen, Kenan Deng, Himanshu Arora (Amazon.com), Jasmine Collins and Jitendra Malik (UC Berkeley).",
+    "changes": "Textures resized to 512 px, mesh simplified and re-saved with gltf-transform; uniform scale to the listed height. Proportions untouched."
+  },
+  "source": {
+    "dataset": "Amazon Berkeley Objects",
+    "datasetUrl": "https://amazon-berkeley-objects.s3.amazonaws.com/index.html",
+    "itemId": "B07QC84LRJ",
+    "domain": "amazon.com",
+    "productName": "Amazon Brand – Rivet Industrial Desk Table, 51.18\"W, Espresso",
+    "modelFile": "3dmodels/original/J/B07QC84LRJ.glb",
+    "rawDimensions": {
+      "width": {
+        "value": 23.62,
+        "unit": "inches"
+      },
+      "length": {
+        "value": 51.18,
+        "unit": "inches"
+      },
+      "height": {
+        "value": 30.71,
+        "unit": "inches"
+      }
+    },
+    "axisAssignment": {
+      "w": "length",
+      "d": "width",
+      "h": "height"
+    },
+    "titleConfirms": [
+      "1300 mm W"
+    ],
+    "colour": "#564e44",
+    "colourSource": "color_code",
+    "processing": "scripts/abo_import.py: strip cameras/lights/animations, @gltf-transform/cli@4 optimize --compress false --texture-compress auto --texture-size 512 --simplify, fit_to_height",
+    "simplifyError": "default"
+  },
+  "residualCm": {
+    "width": 0.08,
+    "height": 0.0,
+    "depth": -0.04
+  },
+  "knownLimitations": [
+    "ABO scaled this model to the record's item_dimensions, so the size check cannot catch a wrong record. The product title, which states a size, is the independent witness: see source.titleConfirms.",
+    "The catalogue colour is the nearest of the 30 seed-palette colours to source.colour, not that colour itself.",
+    "price_cents is 0 because ABO has no price. 0 means unknown, not free."
+  ]
+}

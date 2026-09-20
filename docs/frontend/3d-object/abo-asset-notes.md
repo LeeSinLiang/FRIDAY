@@ -38,10 +38,21 @@ The sofa: 51.9 MB became 0.98 MB and 13,822 triangles; measured 212.19 × 88.94 
 ```bash
 cd backend
 uv run python ../scripts/abo_select.py --out ../.scratch/abo/plan.json          # about a second; prints the plan to read
+uv run python ../scripts/abo_select.py --profile office --out ../.scratch/abo/plan-office.json
 uv run --with pillow python ../scripts/abo_batch.py ../.scratch/abo/plan.json   # about 7 s a product, mostly download
 ```
 
 `abo_select.py` keeps a product only if its dimensions parse with their unit, its model agrees with them, **its title states a size that agrees with the record**, and its title says plainly what it is. It takes one product per distinct size, because five colours of one chair is padding, and lists spares after each quota. `abo_batch.py` walks the plan until each quota is met; a product the importer refuses once it has the real file is replaced by the next spare. Being picky is free: of about 8,000 modelled products, 117 sofas, 100 tables, 92 armchairs, 62 lamps, 25 dining chairs, 14 vases and 6 bookcases pass every gate.
+
+## Office furniture, and why office chairs are scarce
+
+`--profile office` selects desks, file cabinets, sideboards, desk lamps, a bookcase and dining tables. ABO has no table titled conference, meeting or boardroom. A 1.8 m rectangular table in a meeting room IS a meeting table, so dining tables are used there **and keep their label**: relabelling them would be the dishonest move, not using them.
+
+**Office chairs are scarce for a real reason, not a bug. Do not "fix" it.** Of 75 products titled office, desk or task chair, 48 fail the model-against-record check outright and only three pass every gate. An adjustable chair is modelled at one height while its record states another (often the top of the range, or the box), so model and record disagree by more than the tolerance; that disagreement is EXPECTED for this category and says nothing about the importer. Most of the rest have titles that state no size (the AmazonBasics chairs never do), so nothing independent confirms the record. One, the Rivet Swope, is refused correctly on its own words: the title says 26"W and the record 630 mm, 4.8% apart. Loosening either gate for this category would import chairs whose size nobody can vouch for. If more desk seating is needed, use dining or accent chairs, labelled as what they are.
+
+## The triangle budget and the simplify ladder
+
+`gltf-transform --simplify` stops at an error tolerance, not a ratio (`--simplify-ratio` defaults to 0, "as far as possible", so adding a ratio never simplifies more). A model that is over 30,000 triangles at the default tolerance of 0.0001 of its extent is tried again at 0.0003, 0.001, 0.003 and 0.01, and the first result inside the budget is kept; 0.01 is 1 cm on a 1 m chair, and the ladder stops there. The tolerance that was needed is recorded as `source.simplifyError`. The Rivet Celine task chair went from 48,085 triangles at the default to inside the budget one step up. A model over the byte budget is refused, not retried.
 
 ## Traps, each with a check behind it
 
@@ -65,7 +76,7 @@ An unknown price cannot satisfy a price constraint. "Under $400" that includes e
 
 Those files are the catalogue lane's. Probe against today's code, nothing written: one extra sofa at `price_cents` 0 is returned by `price_max=40000`, and moves the sofa price bands from `0-10000: 0` to `0-10000: 1`. **Consequence for the demo:** the hero sentence says "under $400", so it returns only priced listings, the IKEA ones. The ABO breadth shows on every other query.
 
-The catalogue's prices do not reach the Visa checkout, which uses its own fixture products.
+The catalogue's prices do not reach the Visa checkout today, which accepts only its own fixture products. If that changes, a room furnished from ABO would bill $0 for those items, so a total must say what it could price and what it could not ("142 items placed · 96 priced · $48,210"), never fill the gap with a number. `priceProvenance` is the field to read.
 
 ## The results list does not fetch models
 
@@ -132,3 +143,38 @@ The batch took about four minutes for fifty products. Eight were refused and rep
 | table | `abo-B075Z6S9CY` | Stone & Beam Roland X-Frame Side End Table, 24"W, Pine | 610 × 610 × 508 | 610 mm W | 0.29 |
 | table | `abo-B07QFB1TLZ` | Stone & Beam Ryder Industrial Round Coffee Table, 43.3" Diameter, Brushed Natural Antique Copper | 1100 × 1100 × 420 | 1100 mm | 0.87 |
 | table | `abo-B07QC85TNQ` | Stone & Beam Side Table with Drawer, 19"W, Ash Veneer, Walnut and Antique Bronze Finish | 483 × 400 × 610 | 483 mm W | 0.51 |
+
+## The office batch (2026-09-20)
+
+28 more products, 18.6 MB, for the tower's office floors: 10 desks, 4 file cabinets, 2 sideboards, 5 dining tables (meeting tables; the label stays), 3 desk lamps, 1 bookcase and **3 office chairs**, every office chair that passes the gates. The batch took about two and a half minutes and nothing was refused. Five models needed the simplify ladder: the three office chairs (22,707, 24,144 and 9,784 triangles), the bookcase that had been refused at 30,581, and the rolling file cabinet. With the living-room batch that is 79 ABO products.
+
+| Category | Listing | Title | w × d × h, mm | Title confirms | Simplify error | MB |
+| --- | --- | --- | --- | --- | --- | --- |
+| chair | `abo-B082BL8QJM` | Rivet Bertha Mid-Century Velvet-Upholstered Swivel Office Chair, 25.25"W, Sapphire Blue with Chrome Finish | 641 × 635 × 908 | 641 mm W | 0.0003 | 1.38 |
+| chair | `abo-B082BLFMRC` | Rivet Celine Upholstered Home Office Task Chair, 22.25"W, Beige | 565 × 667 × 952 | 565 mm W | 0.0003 | 1.33 |
+| chair | `abo-B082BM2BC1` | Rivet Modern Upholstered Swivel Home Office Task Chair, 25.5"W, Ash Gray with Nickel Finish | 648 × 654 × 959 | 648 mm W | 0.001 | 1.17 |
+| desk | `abo-B07R7W7ZMP` | AmazonBasics Wooden, Home Office, Computer Study Desk with Drawer, 39 Inch, White | 991 × 499 × 762 | 991 mm | default | 0.15 |
+| desk | `abo-B07QHKQLBH` | Ravenna Home Classic Two-Drawer Desk, 44"W, Walnut | 1118 × 508 × 762 | 1118 mm W | default | 0.73 |
+| desk | `abo-B07QF9Y6Z9` | Rivet Classic Desk, 37.4"W, Walnut | 950 × 590 × 760 | 950 mm W | default | 0.79 |
+| desk | `abo-B07QC84LRJ` | Rivet Industrial Desk Table, 51.18"W, Espresso | 1300 × 600 × 780 | 1300 mm W | default | 0.59 |
+| desk | `abo-B07QGFS4JC` | Rivet Mid-Century Desk, 42"W, Warm Brown Wood with Veneer | 1067 × 660 × 754 | 1067 mm W | default | 0.52 |
+| desk | `abo-B07HSCYS4C` | Rivet Modern 3-Drawer Desk, 51.9"W, White | 1318 × 607 × 762 | 1318 mm W | default | 0.16 |
+| desk | `abo-B07HSJDN75` | Rivet Modern Computer Desk, 30"H, Walnut and White | 1067 × 399 × 762 | 762 mm H | default | 0.12 |
+| desk | `abo-B075ZBW1SN` | Rivet Ventura Mid-Century Small Reversible Writing Home Office Computer Desk with File Drawer, 50"W, Cherry | 1270 × 610 × 762 | 1270 mm W | default | 0.17 |
+| desk | `abo-B07QC85X9J` | Stone & Beam Classic Home Office Desk with Drawer, 54"W, Dark Espresso | 1372 × 597 × 762 | 1372 mm W | default | 0.57 |
+| desk | `abo-B082JJJKT3` | Stone & Beam Modern Home Office Writing Desk with Recessed Metal Handles, 48"W, Black | 1219 × 508 × 775 | 1219 mm W | default | 0.29 |
+| lamp | `abo-B0824F6HZ4` | Ravenna Home Traditional Metal Downbridge Desk Lamp with Adjustable Shade, LED Bulb Included, 19.25"H, Brushed Nickel | 178 × 330 × 489 | 489 mm H | default | 0.50 |
+| lamp | `abo-B07374VCVN` | Rivet Copper Geometric Bedside Table Desk Lamp With Light Bulb - 16.75 Inches, Copper | 292 × 292 × 427 | 425 mm | default | 0.69 |
+| lamp | `abo-B073751DMJ` | Rivet Gold Bedside Table Desk Lamp with Light Bulb - 18 Inches, Linen Shade | 254 × 254 × 457 | 457 mm | default | 0.59 |
+| shelf | `abo-B07QC85X9C` | Ravenna Home Springdale Modern Bookcase with Decorative Open Sides, 30"W, White | 762 × 342 × 1829 | 762 mm W | 0.0003 | 0.47 |
+| storage | `abo-B082JGPBLQ` | Stone & Beam 2-Drawer Rolling File Cabinet, 15.8"W, Maple Finish | 409 × 401 × 579 | 401 mm W | 0.0003 | 1.30 |
+| storage | `abo-B082L1FGYP` | Stone & Beam Classic 2-Drawer Lateral File Cabinet, Pine with Metal Hardware, 30"H, Maple-Sand Finish | 762 × 503 × 762 | 762 mm H | default | 1.39 |
+| storage | `abo-B075YQXQ5C` | Stone & Beam Dunbar Modern Wood Buffet, 55"W, Oak | 1397 × 483 × 914 | 1397 mm W | default | 0.78 |
+| storage | `abo-B082JH6LSF` | Stone & Beam Mid-Century 2-Drawer File Cabinet, 21.7"W, Pine Finish | 551 × 391 × 599 | 551 mm W | default | 1.16 |
+| storage | `abo-B082L28P18` | Stone & Beam Modern 2-Drawer File Cabinet with Recessed Metal Handles, 28.5"H, White | 521 × 432 × 724 | 724 mm H | default | 0.26 |
+| storage | `abo-B07HSLVMP2` | Stone & Beam Rylee Modern Acacia Wood 3-Drawer Sideboard Buffet, 63"W, Acacia, Gray-Wash Acacia | 1600 × 450 × 800 | 1600 mm W | default | 0.56 |
+| table | `abo-B07QGWMTDY` | Rivet Fulton Modern Rustic Dining Table, 71"L, Natural | 1803 × 991 × 762 | 1803 mm L | default | 1.19 |
+| table | `abo-B07B78LZQC` | Rivet Ian Modern Wood Round Dining Room Kitchen Table, 42"W, Brown | 1067 × 1067 × 762 | 1067 mm W | default | 0.67 |
+| table | `abo-B075YQXRJM` | Rivet Mid-Century Modern Minimalist Dining Kitchen Table, 53.1"L, Walnut Wood | 1349 × 800 × 724 | 1349 mm L | default | 0.24 |
+| table | `abo-B07HSJJF2X` | Stone & Beam Industrial Mango Wood Rectangle Dining Table, 71"L, Black Metal Legs | 1801 × 899 × 765 | 1803 mm L | default | 0.38 |
+| table | `abo-B07B7BM55W` | Stone & Beam Reclaimed Fir Rustic Wood Dining Kitchen Table, 78.8"L, Brown | 2000 × 950 × 759 | 2002 mm L | default | 0.47 |
