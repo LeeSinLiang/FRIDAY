@@ -4,22 +4,27 @@ Record all agent work here when working for Saketh. Include status, file paths, 
 
 Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`. Feature doc: [docs/backend/catalogue.md](docs/backend/catalogue.md).
 
-## Shared room test download
+## MUST DO — Shared room test download
 
+- [ ] **Prepare and verify the shared Haussmann room locally** — required for each collaborator.
 - Use [HAUSSMANN APARTMENT](https://superspl.at/scene/4de797f4) as the shared Gaussian room test download. SuperSplat login may be required. Credit Stéphane Agullo (sa3d), CC BY 4.0; retain the downloaded license. This is an authored test scene with assumed scale, not a measured room.
 
-After downloading, keep the ZIP intact and run these commands from the repository root after saving current work:
+After downloading, keep the ZIP intact and run these commands from the repository root after saving current work. The `&&` chain stops at the first failure:
 
 ```bash
-git switch main
-git pull --ff-only
-./setup.sh
-python3 scripts/gaussian_room/prepare_haussmann.py "$HOME/Downloads/HAUSSMANN APARTMENT.zip"
-python3 scripts/gaussian_room/review_surface.py
+git switch main &&
+git pull --ff-only &&
+./setup.sh &&
+python3 scripts/gaussian_room/prepare_haussmann.py "$HOME/Downloads/HAUSSMANN APARTMENT.zip" &&
+python3 scripts/gaussian_room/review_surface.py &&
 BACKEND_PORT=8222 FRONTEND_PORT=5222 ./run-local.sh
 ```
 
-Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if needed. Run preparation in a normal terminal for GPU access; our latest run took about 2½ minutes. Preparation is a one-time step and refuses to overwrite existing output. Generated room assets are ignored by Git, so each collaborator must prepare them locally. Keep the attribution/license. This remains an experimental test room with assumed scale and known downward/ceiling/window artifacts. Stop the stack with Ctrl-C when finished.
+Open **[http://localhost:5222/](http://localhost:5222/)**, or `http://localhost:<FRONTEND_PORT>/` if using another frontend port. **Haussmann is already the default; no `?room` parameter is needed.**
+
+Adjust the ZIP path if needed. Run preparation in a normal terminal for GPU access; the previously reported run took about 2½ minutes. Preparation is a one-time step and refuses to overwrite existing output. If already prepared, skip preparation and run the surface review and stack commands. Generated room assets are ignored by Git, so each collaborator must prepare them locally. Keep the attribution/license. This remains an experimental test room with assumed scale and known downward/ceiling/window artifacts. Stop the stack with Ctrl-C when finished.
+
+Tracking update (2026-09-20): standardized this MUST DO checklist across `TODO_SIN.md`, `TODO_SAKETH.md`, `TODO_WILLIAM.md`, and `TODO_ADELLE.md`; synchronized owner-specific Kanban tasks. Checked the default `/` route in `frontend/src/App.tsx`. Local preparation and room verification remain pending for each collaborator; this documentation update does not claim they ran.
 
 ## In progress
 
