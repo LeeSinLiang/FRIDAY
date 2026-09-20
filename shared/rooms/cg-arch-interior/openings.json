@@ -1,0 +1,9 @@
+{
+  "roomId": "cg-arch-interior",
+  "measuredFrom": "assets/room.glb, node 'Room Glass Windows': world bounds x 8.065..10.865 m, y 0.075..2.125 m, z 1.49..1.51 m. The node and its ancestors carry no rotation, scale or matrix, and the manifest places the model with position 0, rotation 0, scale 1, so scene centimetres are model metres times 100. Re-derive with: python3 scripts/room_openings.py shared/rooms/cg-arch-interior",
+  "convention": "startCm runs along the wall from that wall's own low corner, which for a prepared room is the edge of its free floor (wallBounds): the north wall starts at x = 787 cm, so 806.5 - 787 = 19.5. The glazing itself stands at z = 150 cm, 30 cm behind the free floor's z-min edge at 180 cm.",
+  "notListed": "Three glass doors (nodes 'Room Glass Door', 'Room glass Door', 'Room glass door', x 0.37..5.38 m at z 4.2 m) open onto floor outside the free rectangle, so no placement can reach them.",
+  "openings": [
+    { "id": "w1", "kind": "window", "wall": "n", "startCm": 19.5, "widthCm": 280, "sillCm": 7.5, "headCm": 212.5 }
+  ]
+}

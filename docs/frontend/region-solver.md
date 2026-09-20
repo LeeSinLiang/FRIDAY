@@ -64,7 +64,7 @@ Tunables in `clauses.ts`, all judgement calls to adjust at rehearsal: `NEAR_DEFA
 
 ### What gets dropped, and why
 
-- A window or door when the room has no `openings`, or no opening with that id.
+- A window or door when the room has no `openings` (only the Cg Arch living room is measured so far), or no opening with that id.
 - A wall or item id the room does not have.
 - `not_blocking` a wall.
 - **`on(item)`.** The editor rejects an item overlapping its support, so a lit table top would be refused on drop, which is worse than no region. The rule is implemented behind `ALLOW_STACKING = false` in `clauses.ts`; it is one line to enable if stacking lands.
@@ -79,21 +79,31 @@ The catalogue and the DSL are integer millimetres; the scene is centimetres. Nei
 
 **Catalogue → scene.** `instanceFromListing` builds a placeable instance that carries its product; the scene accepts it and the server checks it against its own catalogue (see [scene API](../backend/contracts/scene-api.md#catalogue-products-added-by-sakeths-lane-2026-09-19)). `listingToProduct` converts `dims_mm / 10` and folds the 12 categories onto the scene's 3 `kind`s, which only pick a stand-in shape: sofa, bed → `sofa`; armchair, chair, lamp, plant → `chair`; table, desk, shelf, storage, rug, decor → `table`.
 
-## Proposed: `Room.openings`
+## Openings: where a room's windows and doors are
 
-`near(window)` and `clear(door)` have nothing to bind to until the room describes its openings. Proposed optional, additive field, already accepted by the solver as `scene.openings`:
+`near(window)`, `not_blocking(window)` and `clear(door)` bind to `scene.openings`. A room nobody has measured has none, and those clauses are then set aside with a reason while everything else still solves.
 
 ```ts
 type Opening = {
   id: string; kind: "door" | "window";
   wall: "n" | "e" | "s" | "w";
-  startCm: number;   // along the wall: +X for n and s, +Z for e and w
+  startCm: number;   // along the wall FROM THAT WALL'S OWN LOW CORNER (wallBounds): +X for n and s, +Z for e and w
   widthCm: number;
   swingCm?: number;  // doors; defaults to widthCm
+  sillCm?: number;   // windows: measured sill height. Absent means unmeasured, and 90 cm is assumed
+  headCm?: number;   // recorded, not used by the solver
 };
 ```
 
-Without it those clauses are dropped with a reason and everything else still solves.
+`startCm` is **wall-relative, not a scene coordinate**. An opening belongs to a wall and moves with it; in a prepared room the walls are the edges of the free floor, so the same window has a different scene x than its `startCm`. `openingZone()` is the one place that converts, and the SVG debug view draws through it.
+
+**The Cg Arch living room has one window, `w1`**, on the north wall: `startCm` 19.5, `widthCm` 280, sill 7.5 cm, head 212.5 cm (floor-to-ceiling glazing). It was measured from the room's own model, node `Room Glass Windows`, world bounds x 8.065 to 10.865 m, which has no rotation or scale of its own under a manifest that places the model untransformed. `python3 scripts/room_openings.py shared/rooms/cg-arch-interior` prints the measurement again, and `backend/api/test_room_openings.py` holds the file to the model wherever the licensed GLB is imported. The model's three glass doors open onto floor outside the free rectangle, so they are not listed. The id is `w1` because that is what the compiler's room stub calls "the window", on the same north wall, so "by the window" resolves with no compiler change.
+
+**Where the data lives, and why not in the manifest.** `shared/rooms/<room>/openings.json`, looked up by `frontend/src/region/roomOpenings.ts` and passed to `useRegion` by the editor's catalogue layer. It is deliberately *not* a field of `manifest.json` or `spatial.json`: `scripts/import-room.sh` refuses to install a room whose tracked metadata differs by one byte from the bundle it was packed with, so adding a field there would break the room import for the whole team. A test fails if openings ever appear in either file. Moving them into the scene's `Room` (served by the API, validated in `useRoomSession`) remains the proposal for after the demo; it is Sin's contract to change, and needs a re-packed bundle.
+
+**A measured sill replaces the assumed one.** `not_blocking(window)` lets anything up to the sill stand in front of a window. With no measurement that is 90 cm; this room's glazing starts 7.5 cm off the floor, so there a chair does block it.
+
+**The hero sentence, whole, in the real room:** "by the window, 4 feet from any wall" leaves HERRÅKRA 60 / 75 / 60 / 75 positions per turn (220 / 265 without the window clause; 240 / 255 at 3 feet; none at 5 feet: "needs 371 cm of width, this room has 334 cm"). Derived by hand in `rooms.test.ts` and matched by the solver: 121.9 cm off every wall leaves 4 columns unturned and 5 turned, and `near` reaches 75 cm past the window wall's own clearance, which leaves 15 rows.
 
 ## In the app: hover, pick up, place
 

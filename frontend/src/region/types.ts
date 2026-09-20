@@ -42,6 +42,9 @@ export type Opening = {
   startCm: number;
   widthCm: number;
   swingCm?: number; // doors: how far the leaf sweeps into the room. Defaults to widthCm.
+  /** Windows: height of the sill above the floor. Absent means unmeasured, and WINDOW_SILL_CM is assumed. */
+  sillCm?: number;
+  headCm?: number; // top of the opening above the floor; recorded, not used by the solver
 };
 
 export type Scene = {
