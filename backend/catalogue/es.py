@@ -42,7 +42,7 @@ def _palette() -> tuple[str, ...]:
     return tuple(bucket["key"] for bucket in response["aggregations"]["colours"]["buckets"])
 
 
-def search(find: Sequence, limit: int, offset: int, models_only: bool = False) -> SearchResponse:
+def search(find: Sequence, limit: int, offset: int, models: str = "all") -> SearchResponse:
     """Run find clauses against the index.
 
     Raises:
@@ -51,7 +51,7 @@ def search(find: Sequence, limit: int, offset: int, models_only: bool = False) -
         elasticsearch.TransportError: the cluster could not be reached.
     """
     needs_palette = any(clause.k == "colour" for clause in find)
-    body = to_es_query(find, _palette() if needs_palette else (), limit, offset, models_only)
+    body = to_es_query(find, _palette() if needs_palette else (), limit, offset, models)
     # `from` is a Python keyword, so the client spells that one parameter `from_`.
     params = {("from_" if key == "from" else key): value for key, value in body.items()}
     response = get_client().search(index=index_name(), **params)

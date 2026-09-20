@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR.parent / ".env")
 
-DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() == "true"
+DEBUG = os.getenv("DJANGO_DEBUG", "false" if os.getenv("VERCEL") else "true").lower() == "true"
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "")
 if not SECRET_KEY:
     if not DEBUG:
@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "allauth.mfa",
     "accounts",
     "checkout",
+    "shopping",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -42,6 +43,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "shopping.identity.ShoppingCookieMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "accounts.middleware.AccountSecurityMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -79,6 +81,11 @@ DATABASES = {"default": {
         "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;",
     },
 }}
+if os.getenv("DATABASE_URL"):
+    import dj_database_url
+    DATABASES = {"default": dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=0, ssl_require=not DEBUG)}
+elif not DEBUG:
+    raise ImproperlyConfigured("Set DATABASE_URL for persistent production storage.")
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": f"django.contrib.auth.password_validation.{name}"}
     for name in [
@@ -120,6 +127,8 @@ MFA_RECOVERY_CODES_SHOW_ONCE = True
 MFA_TOTP_ISSUER = "FRIDAY"
 MFA_ADAPTER = "accounts.adapters.EncryptedMFAAdapter"
 MFA_ENCRYPTION_KEY_FILE = Path(os.getenv("MFA_ENCRYPTION_KEY_FILE", str(BASE_DIR / ".runtime/mfa.key")))
+MFA_ENCRYPTION_KEY = os.getenv("MFA_ENCRYPTION_KEY", "")
+VISA_CREDENTIALS_JSON = os.getenv("VISA_CREDENTIALS_JSON", "")
 _frontend_origin = os.getenv("FRONTEND_ORIGIN", f"http://127.0.0.1:{os.getenv('FRONTEND_PORT', '5173')}").rstrip("/")
 HEADLESS_FRONTEND_URLS = {
     "account_confirm_email": _frontend_origin + "/account?verify={key}",
@@ -142,5 +151,13 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
-if not DEBUG and (not EMAIL_HOST or not os.getenv("MFA_ENCRYPTION_KEY_FILE")):
-    raise ImproperlyConfigured("Configure EMAIL_HOST and MFA_ENCRYPTION_KEY_FILE for deployment.")
+if not DEBUG:
+    if not EMAIL_HOST or not (MFA_ENCRYPTION_KEY or os.getenv("MFA_ENCRYPTION_KEY_FILE")):
+        raise ImproperlyConfigured("Configure SMTP and a persistent MFA encryption key for deployment.")
+    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("CSRF_TRUSTED_ORIGINS", _frontend_origin).split(",") if origin.strip()]
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Tests and isolated browser verification can select a separate SQLite file.
+if DEBUG and os.getenv("DJANGO_DATABASE_PATH") and not os.getenv("DATABASE_URL"):
+    DATABASES['default']['NAME'] = os.environ['DJANGO_DATABASE_PATH']

@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from .catalogue_products import agrees_with_catalogue, catalogue_product, well_formed
 from .models import SceneCommandReceipt, SceneLayout
+from .shared_data import shared_root
 
 EPSILON = 1e-6
 # A rug does not stop a chair: an item this low neither blocks other items nor is blocked by them. It must still lie
@@ -30,7 +31,7 @@ ROOM_SEPARATOR = ':'
 
 
 def room_presets():
-    return json.loads((Path(settings.BASE_DIR).parent / 'shared' / 'scene-fixtures.json').read_text()).get('rooms', {})
+    return json.loads((shared_root() / 'scene-fixtures.json').read_text()).get('rooms', {})
 
 
 def layout_key(session_key, room_id=None):
@@ -49,7 +50,7 @@ def room_id_of(key):
 
 
 def fixtures(room_id=None):
-    data = json.loads((Path(settings.BASE_DIR).parent / 'shared' / 'scene-fixtures.json').read_text())
+    data = json.loads((shared_root() / 'scene-fixtures.json').read_text())
     presets = data.pop('rooms', {})
     if room_id:
         data['room'] = presets[room_id]['room']
@@ -282,11 +283,15 @@ def store(scene, revision, instances):
     if not updated:
         raise SceneError('revision_conflict', 'The scene changed. Reload before saving.', 409)
     scene.instances, scene.revision = instances, revision + 1
+    from shopping.services import sync_scene_cart
+    sync_scene_cart(scene)
     return serialize(scene)
 
 
 @transaction.atomic
 def save_scene(session_key, base_revision, instances, room_id='demo-room'):
+    from shopping.services import lock_scene_cart
+    lock_scene_cart(session_key)
     validate_revision(base_revision)
     scene = scene_for_session(session_key, room_id)
     scene = SceneLayout.objects.select_for_update().get(pk=scene.pk)
@@ -295,6 +300,8 @@ def save_scene(session_key, base_revision, instances, room_id='demo-room'):
 
 @transaction.atomic
 def apply_scene_commands(session_key, base_revision, command_id, commands, room_id='demo-room'):
+    from shopping.services import lock_scene_cart
+    lock_scene_cart(session_key)
     validate_revision(base_revision)
     if not isinstance(command_id, str) or not command_id.strip() or len(command_id) > 128:
         raise SceneError('validation', 'commandId must be a nonempty string up to 128 characters.')
@@ -342,6 +349,8 @@ def apply_scene_commands(session_key, base_revision, command_id, commands, room_
 @transaction.atomic
 def attempt_placement(session_key, payload, room_id='demo-room'):
     """Trusted agent entry point. Callers must supply the browser's scoped session."""
+    from shopping.services import lock_scene_cart
+    lock_scene_cart(session_key)
     required = {'baseRevision', 'commandId', 'instance'}
     if not isinstance(payload, dict) or not required <= set(payload) or set(payload) - required - {'dryRun'}:
         raise SceneError('validation', 'Provide baseRevision, commandId, instance, and optional dryRun.')

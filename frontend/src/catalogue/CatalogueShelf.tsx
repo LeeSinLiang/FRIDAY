@@ -10,6 +10,7 @@ import { ROOM_CHOICES, ROOM_ID } from "../scene/fixtures";
 import { compileSentence, searchCatalogue, type Compiled } from "./api";
 import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend } from "./transcribe";
 import "./shelf.css";
+import { priceLabel } from "./price";
 
 type Props = {
   region: Region | null;
@@ -20,6 +21,7 @@ type Props = {
   canSwitchRooms: boolean;
   /** The room presets belong to the legacy editor. The PlayCanvas editor picks its room with ?room=. */
   showRooms?: boolean;
+  purchasableOnly?: boolean;
   onHover: (listing: Listing | null) => void;
   onPick: (listing: Listing | null) => void;
   onPlace: (place: PlaceClause[]) => void;
@@ -35,9 +37,13 @@ const DEV = new URLSearchParams(window.location.search).has("dev");
 const TURNS = ["back to the north wall", "back to the west wall", "back to the south wall", "back to the east wall"];
 
 /** "392 in the catalogue · 1 ready in 3D" when search returned fewer than it counted; the plain count otherwise. */
-export function countLine(total: number, matches: number | null, shown: number): string {
+export function countLine(total: number, matches: number | null, shown: number, readyShown = 0): string {
   const plural = (n: number) => `${n.toLocaleString()} match${n === 1 ? "" : "es"}`;
   const showing = total > shown ? `, showing ${shown}` : "";
+  // Models-first mode: everything is returned with the 3D ones on top, so once a listing without a model
+  // is on screen, every listing with one is above it and the count is exact.
+  if ((matches === null || matches <= total) && readyShown > 0 && readyShown < shown)
+    return `${plural(total)} · ${readyShown.toLocaleString()} ready in 3D, shown first`;
   if (matches === null || matches <= total) return `${plural(total)}${showing}`;
   return `${plural(matches)} in the catalogue · ${total === 0 ? "none has a 3D model yet" : `${total.toLocaleString()} ready in 3D${showing}`}`;
 }
@@ -57,7 +63,7 @@ function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: 
   );
 }
 
-export default function CatalogueShelf({ region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, onHover, onPick, onPlace }: Props) {
+export default function CatalogueShelf({ region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace }: Props) {
   const [sentence, setSentence] = useState("an armchair");
   const [compiled, setCompiled] = useState<Compiled | null>(null);
   const [items, setItems] = useState<Listing[]>([]);
@@ -162,19 +168,20 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
       <ul className="shelf-results">
         {items.map((listing) => (
           <li key={listing.id}>
-            <button aria-pressed={armedId === listing.id} disabled={disabled}
+            <button aria-pressed={armedId === listing.id} disabled={disabled || (purchasableOnly && (!listing.model_url?.startsWith('/models/furniture/') || listing.price_cents <= 0))}
               onPointerEnter={() => onHover(listing)} onFocus={() => onHover(listing)}
               onClick={() => onPick(armedId === listing.id ? null : listing)}>
               <img src={listing.thumb_url} alt="" />
               <span>
                 <strong>{listing.title}</strong>
-                <small>{dollars(listing.price_cents)} · {size(listing)}</small>
+                <small>{priceLabel(listing.price_cents, dollars)} · {size(listing)}</small>
+                {purchasableOnly && (!listing.model_url?.startsWith('/models/furniture/') || listing.price_cents <= 0) && <small>Preview model unavailable</small>}
               </span>
             </button>
           </li>
         ))}
       </ul>
-      {total !== null && <p className="shelf-status">{countLine(total, matches, items.length)}</p>}
+      {total !== null && <p className="shelf-status">{countLine(total, matches, items.length, items.filter((item) => item.model_url).length)}</p>}
     </aside>
   );
 }

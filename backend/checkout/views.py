@@ -46,7 +46,7 @@ def parse(request, cls):
 def public(checkout):
     return {"id": str(checkout.id), "snapshot": checkout.snapshot, "snapshot_hash": checkout.snapshot_hash,
             "state": checkout.state, "expires_at": checkout.expires_at.isoformat(), "trans_id": str(checkout.trans_id),
-            "evidence": checkout.evidence}
+            "evidence": checkout.evidence, "visa": readiness()}
 
 
 @account_required

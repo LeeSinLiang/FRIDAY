@@ -1,5 +1,12 @@
 import uuid
 from django.db import models
+from django.conf import settings
+
+
+class RecoveryAcknowledgement(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    authenticator = models.ForeignKey('mfa.Authenticator', on_delete=models.CASCADE)
+    acknowledged_at = models.DateTimeField(auto_now_add=True)
 
 
 class DevelopmentEmail(models.Model):
