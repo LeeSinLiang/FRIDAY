@@ -69,3 +69,23 @@ and chair, so their visual check uses the overhead view and saved geometry.
 Screenshots are in `.scratch/desk-workflow/` in the test worktree. This replay used
 the typed input; the earlier production microphone replay above verifies that
 microphone transcripts enter the same routing path for a simpler desk request.
+
+### Main release and verification limit
+
+[PR #112](https://github.com/LeeSinLiang/hackmit2026/pull/112) merged the workstation
+request routing fix at `b0d1d23` after backend, frontend and security CI passed.
+Fresh merged-main checks passed: 393 backend tests (five skipped), 209
+scene/catalogue and 25 account frontend tests, six board tests, and the Vite build.
+The current production API `dpl_HvYCBrT4hFwdJcFMpQscDbsdL9Y1` and frontend
+`dpl_9xMzd9Ld3AEPaQW4YxGecohvLVE5` are Ready. Direct and rewritten health,
+the London room, and the hosted build markers matched source identity
+`54a2843573981ddff8b373bd422bf9ee52dadebc2eb9323d2781e945ea4cfa5c`.
+Elastic model search was active.
+
+The full six-object action was not repeated on the public stable hostname:
+its existing guest scene/cart would have been modified. An isolated immutable
+deployment hostname returned a CSRF retry because that hostname is outside
+the frontend's trusted origin. The six-object save and reload evidence above
+comes from the local merged-source browser test. The earlier production
+microphone-button replay verifies a simpler desk placement, not this complete
+workstation request. Keep the Agent Harness acceptance card open.
