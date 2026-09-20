@@ -386,7 +386,7 @@
         {
           "id": "aaea8ec5-c380-46e9-8df2-16f5e46465f7",
           "title": "Publish a redistributable third room on Vercel",
-          "done": false,
+          "done": true,
           "owner": "william"
         }
       ],
