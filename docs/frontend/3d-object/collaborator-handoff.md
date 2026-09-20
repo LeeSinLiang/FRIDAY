@@ -86,6 +86,17 @@ Initial targets for the laptop demo, subject to measurement:
 
 These are starting budgets, not engine limits or automatic rejection thresholds. Share a first asset before sacrificing necessary detail. Start with standard embedded PNG/JPEG textures; agree any extra compression/decoder requirements with the frontend owner.
 
+## Automated asset check (added by Saketh's lane, 2026-09-20)
+
+Every folder under `shared/models/furniture/` with a `metadata.json` is checked by `backend/api/test_furniture_assets.py`, part of the normal backend suite:
+
+- `metadata.json` names a real catalogue listing in `catalogueListingId`, and that listing's `model_url` points back at this model.
+- The GLB's bounding box matches the listing's `dims_mm / 10` within **2 cm or 3%, whichever is larger**. The tolerance is loose on purpose: the check exists to catch the 2.6× class of error (a generator that normalises to a unit cube, an export in centimetres), not to police two percent.
+- The lowest point is on y = 0 (±1 cm) and the footprint is centred (±2 cm).
+- Under 5 MB and at most 30,000 triangles. **Aim for 10–15k**: 30k is the ceiling for one item, and a furnished room has many. If several assets land, run them through `gltf-transform` before they go in the repo.
+
+Generated models usually arrive normalised around the origin. `python3 scripts/fit_glb.py <model.glb> <height_cm>` scales one **uniformly** to its true height, centres it and stands it on the floor by adding a root node: lossless, and safe to re-run after a re-export. It never stretches a model to force its box to match.
+
 ## Acceptance check before expanding the catalogue
 
 - Open/re-import the exported GLB and confirm that textures and all furniture parts are present.

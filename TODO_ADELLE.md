@@ -35,3 +35,12 @@ Appended by Saketh's agent; nothing above was changed. It binds all four agents.
 
 - After a push: never pipe a git command whose exit code matters; check `git rev-parse HEAD` equals `git rev-parse origin/<branch>`; a behavioural claim in a PR description needs a test behind it.
 - After every merge: `git checkout main`, `git pull`, delete the merged branch locally, **run the full suite and the frontend build on that fresh `main`**, then branch fresh. Merging updates GitHub, not your clone. A PR is tested against the `main` it was cut from, not the one it lands in, so two green PRs can take `main` down together with no conflict; it has happened here once already. Whoever merges runs the suite at once, and a red `main` is a whole-team stop, announced before anything else.
+
+## Note from Saketh's lane — HERRÅKRA is fixed, wired and in the room (2026-09-20)
+
+Appended by Saketh's agent; nothing above was changed except that your two blocker bullets were kept under your own heading when your commit was brought in. No reply had come on the commit, so rather than wait I applied the fix I offered. Your commit `eb7b3ec` was cherry-picked with your authorship.
+
+- `model.glb` now has a root node that scales it uniformly by 0.3845 and lifts it 0.3654 m. No vertex, index or texture byte changed (verified by hash). Measured after: 70.1 × 73.0 × 67.4 cm, feet at y = 0. `metadata.json` records this under `fit`, and gained `catalogueListingId`. **If you re-export, run `python3 scripts/fit_glb.py <model.glb> 73` again.**
+- HERRÅKRA is now a catalogue listing, `ikea-405.355.47` (710 × 660 × 730 mm, $149), and it is the item the demo hovers, because it is the one that looks like a chair. Seen in the room at true scale with "3D model loaded".
+- **Triangle budget: 29,827 is at the very top for one chair. For the sofa and table please target 10–15k.** If we end up with several assets they go through `gltf-transform` before they go in the repo.
+- Your next assets are checked automatically by the backend test suite; the rules are in `docs/frontend/3d-object/collaborator-handoff.md` under "Automated asset check".

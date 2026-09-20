@@ -39,6 +39,10 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 - [Scene persistence and agent command API](docs/backend/contracts/scene-api.md) — session storage, validation, revisions, CSRF, and agent adapter handoff.
 
+### Demo
+
+- [Demo run of show](docs/demo/run-of-show.md) — what to click, in order, what each beat proves, and what happens when a dependency fails.
+
 ### Setup and tooling
 
 - [Visa/auth integration handoff and branch-sharing workflow](docs/handoffs/visa-auth-integration.md)
