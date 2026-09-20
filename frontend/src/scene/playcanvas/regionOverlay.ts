@@ -16,12 +16,15 @@ import { stateAtPoint } from "../../region/grid";
 import { maskToPixels } from "../../region/maskPixels";
 import { FREE, type Mask } from "../../region/types";
 import type { Pose } from "../types";
+import { FLAT_MAX_CM } from "../placement";
 import { cmToScene, sceneToCm } from "../units";
 import { intersectFloor } from "./interaction";
 
 type Runtime = { app: pc.Application; canvas: HTMLCanvasElement; camera: pc.Entity; contentRoot: pc.Entity; disposed: boolean };
 
-const LIFT_CM = 1.2; // above the floor and the engine's own footprint overlay
+// Above the floor, the engine's own footprint overlay, and any flat item: a rug does not block placement
+// (FLAT_MAX_CM in scene/placement.ts), so floor on a rug is lit and must not be hidden under the rug's own mesh.
+const LIFT_CM = FLAT_MAX_CM + 0.4;
 const LIT = [99, 186, 140, 150] as const; // the engine's "valid" green (#63ba8c), so the two overlays read as one system
 
 export type RegionOverlay = {

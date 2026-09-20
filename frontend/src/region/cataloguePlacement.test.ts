@@ -4,7 +4,7 @@ import feed from "../../../backend/catalogue/data/listings.json";
 import type { Listing } from "../lib/types";
 import { applyEdit } from "../scene/commands";
 import { PRODUCTS, ROOM } from "../scene/fixtures";
-import { validatePlacement } from "../scene/placement";
+import { FLAT_MAX_CM, validatePlacement } from "../scene/placement";
 import { productOf, productsWith } from "../scene/products";
 import type { Instance } from "../scene/types";
 import { parseSceneSnapshot, sceneFingerprint } from "../scene/useSceneSync";
@@ -63,4 +63,41 @@ test("malformed or unknown products never enter editor state", () => {
   }
   // The server must also list it: a snapshot whose products lack the id is rejected.
   assert.throws(() => parseSceneSnapshot({ revision: 1, room: ROOM, products: PRODUCTS, instances: [placed] }));
+});
+
+// ---- A rug does not stop a chair. Real listings: LOHALS 200 x 300 x 1.0 cm, VINDUM 133 x 180 x 3.0 cm (exactly the line). ----
+
+const item = (id: string) => ({ ...feed.items.find((entry) => entry.id === id), thumb_url: "" }) as Listing;
+const byTitle = (word: string) => item(feed.items.find((entry) => entry.title.startsWith(word))!.id);
+
+test("a rug neither blocks nor is blocked: furniture stands on it, and it goes under furniture already there", () => {
+  const lohals = byTitle("LOHALS"), vindum = byTitle("VINDUM");
+  assert.deepEqual([lohals.dims_mm.h, vindum.dims_mm.h, FLAT_MAX_CM], [10, 30, 3], "VINDUM's 3.0 cm pile is exactly the line, and counts as flat");
+  const rug = instanceFromListing(lohals, "rug-1", { xCm: 300, zCm: 250, yawRad: 0 });
+  const chair = instanceFromListing(poang, "poang-1", { xCm: 300, zCm: 250, yawRad: 0 }); // dead centre of the rug
+
+  // Chair onto a rug that is already down.
+  assert.equal(validatePlacement(ROOM, PRODUCTS, [rug, chair], "poang-1", chair.pose).valid, true);
+  // Rug under a chair that is already there, and a second rug overlapping the first.
+  assert.equal(validatePlacement(ROOM, PRODUCTS, [chair, rug], "rug-1", rug.pose).valid, true);
+  const pile = instanceFromListing(vindum, "rug-2", { xCm: 320, zCm: 260, yawRad: 0 });
+  assert.equal(validatePlacement(ROOM, PRODUCTS, [rug, pile], "rug-2", pile.pose).valid, true);
+  // A rug is still an item in a room: it cannot hang over the wall.
+  assert.equal(validatePlacement(ROOM, PRODUCTS, [rug], "rug-1", { xCm: 50, zCm: 250, yawRad: 0 }).reason, "Outside room");
+
+  // One millimetre over the line and it is furniture again.
+  const slab = { ...rug, instanceId: "slab-1", product: { ...rug.product!, productId: "slab", heightCm: 3.1 }, productId: "slab" };
+  assert.equal(validatePlacement(ROOM, PRODUCTS, [slab, chair], "poang-1", chair.pose).valid, false);
+});
+
+test("the lit floor agrees: a rug takes nothing away from where a chair may go, and the rug's own region ignores the chair", () => {
+  const rug = instanceFromListing(byTitle("LOHALS"), "rug-1", { xCm: 300, zCm: 250, yawRad: 0 });
+  const chair = instanceFromListing(poang, "poang-1", { xCm: 300, zCm: 250, yawRad: 0 });
+  const bare = solve({ room: ROOM, products: PRODUCTS, instances: [] }, { product: chair.product! }, []).legalCounts;
+  const onRug = solve({ room: ROOM, products: PRODUCTS, instances: [rug] }, { product: chair.product! }, []).legalCounts;
+  assert.deepEqual(onRug, bare, "before this rule the rug cut a 2 x 3 m hole in the chair's region");
+  const rugAlone = solve({ room: ROOM, products: PRODUCTS, instances: [] }, { product: rug.product! }, []).legalCounts;
+  const rugWithChair = solve({ room: ROOM, products: PRODUCTS, instances: [chair] }, { product: rug.product! }, []).legalCounts;
+  assert.deepEqual(rugWithChair, rugAlone);
+  assert.ok(rugAlone[0] > 0);
 });
