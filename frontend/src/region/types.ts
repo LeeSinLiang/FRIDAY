@@ -36,7 +36,10 @@ export type Opening = {
   id: string;
   kind: "door" | "window";
   wall: WallSide;
-  startCm: number; // along the wall: +X for n and s, +Z for e and w
+  /** Along the wall, measured from that wall's own low corner (wallBounds), +X for n and s, +Z for
+   *  e and w. Wall-relative, NOT a scene coordinate: in a room whose walls start at the origin the
+   *  two are the same number, in a prepared room they are not. */
+  startCm: number;
   widthCm: number;
   swingCm?: number; // doors: how far the leaf sweeps into the room. Defaults to widthCm.
 };
