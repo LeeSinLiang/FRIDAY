@@ -273,6 +273,486 @@
           "depthCm": 35.28
         }
       ]
+    },
+    {
+      "productId": "abo-B07QC876Z6",
+      "modelUrl": "/models/furniture/abo-B07QC876Z6/model.glb",
+      "widthCm": 100.0,
+      "depthCm": 55.0,
+      "heightCm": 42.0,
+      "modelSha256": "3597df2b8345ee190cf00365b822d636924d406c9def36b4177a126cec96c94f",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 100.0,
+          "heightCm": 42.0,
+          "depthCm": 55.0
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Tabletop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 42.0,
+          "zCm": 0,
+          "widthCm": 80.0,
+          "heightCm": 200,
+          "depthCm": 44.0
+        }
+      ]
+    },
+    {
+      "productId": "abo-B07DBDZ2TG",
+      "modelUrl": "/models/furniture/abo-B07DBDZ2TG/model.glb",
+      "widthCm": 60.0,
+      "depthCm": 56.0,
+      "heightCm": 56.0,
+      "modelSha256": "9aaa2de6c991569ac388fb7f6c2210f1970f54ca330a55f467547d890534e201",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 60.0,
+          "heightCm": 56.0,
+          "depthCm": 56.0
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Tabletop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 56.0,
+          "zCm": 0,
+          "widthCm": 48.0,
+          "heightCm": 200,
+          "depthCm": 44.8
+        }
+      ]
+    },
+    {
+      "productId": "abo-B07QC85TNQ",
+      "modelUrl": "/models/furniture/abo-B07QC85TNQ/model.glb",
+      "widthCm": 48.3,
+      "depthCm": 40.0,
+      "heightCm": 61.0,
+      "modelSha256": "4cdc1969770abc50c26116aff88c5e0e954a2372c3157c13365f5117dacf8756",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 48.3,
+          "heightCm": 61.0,
+          "depthCm": 40.0
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Tabletop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 61.0,
+          "zCm": 0,
+          "widthCm": 38.64,
+          "heightCm": 200,
+          "depthCm": 32.0
+        }
+      ]
+    },
+    {
+      "productId": "abo-B075Z85K2F",
+      "modelUrl": "/models/furniture/abo-B075Z85K2F/model.glb",
+      "widthCm": 140.0,
+      "depthCm": 80.0,
+      "heightCm": 43.9,
+      "modelSha256": "f0c86dc0820fd9d95cd87adb275d5166828c2fb4cf26039f109481a72c879d9c",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 140.0,
+          "heightCm": 43.9,
+          "depthCm": 80.0
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Tabletop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 43.9,
+          "zCm": 0,
+          "widthCm": 112.0,
+          "heightCm": 200,
+          "depthCm": 64.0
+        }
+      ]
+    },
+    {
+      "productId": "abo-B075Z876TX",
+      "modelUrl": "/models/furniture/abo-B075Z876TX/model.glb",
+      "widthCm": 140.0,
+      "depthCm": 45.0,
+      "heightCm": 93.2,
+      "modelSha256": "d363231657764a8a442a77cd2c2ab80ceef2d9876f74fe4efeb8625545dd08c0",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 140.0,
+          "heightCm": 93.2,
+          "depthCm": 45.0
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Tabletop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 93.2,
+          "zCm": 0,
+          "widthCm": 112.0,
+          "heightCm": 200,
+          "depthCm": 36.0
+        }
+      ]
+    },
+    {
+      "productId": "abo-B07QGFZ2B4",
+      "modelUrl": "/models/furniture/abo-B07QGFZ2B4/model.glb",
+      "widthCm": 49.8,
+      "depthCm": 49.8,
+      "heightCm": 55.0,
+      "modelSha256": "5dbd5461234bcb289c5d643ead873f26926ba8e762b15a55042c216d669d8181",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 49.8,
+          "heightCm": 55.0,
+          "depthCm": 49.8
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Tabletop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 55.0,
+          "zCm": 0,
+          "widthCm": 39.84,
+          "heightCm": 200,
+          "depthCm": 39.84
+        }
+      ]
+    },
+    {
+      "productId": "abo-B07QGFS4JC",
+      "modelUrl": "/models/furniture/abo-B07QGFS4JC/model.glb",
+      "widthCm": 106.7,
+      "depthCm": 66.0,
+      "heightCm": 75.4,
+      "modelSha256": "5f14dea10bc7f5a5b588eb7f057e28f4334ff04c23e11d34f412037882734820",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 106.7,
+          "heightCm": 75.4,
+          "depthCm": 66.0
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Desktop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 75.4,
+          "zCm": 0,
+          "widthCm": 85.36,
+          "heightCm": 200,
+          "depthCm": 52.8
+        }
+      ]
+    },
+    {
+      "productId": "abo-B07R7W7ZMP",
+      "modelUrl": "/models/furniture/abo-B07R7W7ZMP/model.glb",
+      "widthCm": 99.1,
+      "depthCm": 49.9,
+      "heightCm": 76.2,
+      "modelSha256": "c719646511be570aad98c4dd99a252a565a51d27cdddb4a758e117807b67570d",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 99.1,
+          "heightCm": 76.2,
+          "depthCm": 49.9
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Desktop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 76.2,
+          "zCm": 0,
+          "widthCm": 79.28,
+          "heightCm": 200,
+          "depthCm": 39.92
+        }
+      ]
+    },
+    {
+      "productId": "abo-B07QC85X9J",
+      "modelUrl": "/models/furniture/abo-B07QC85X9J/model.glb",
+      "widthCm": 137.2,
+      "depthCm": 59.7,
+      "heightCm": 76.2,
+      "modelSha256": "be4c4e390f5871c029053f787470e3b4ca44ec319c77d12605a0c05d7686069e",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 137.2,
+          "heightCm": 76.2,
+          "depthCm": 59.7
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Desktop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 76.2,
+          "zCm": 0,
+          "widthCm": 109.76,
+          "heightCm": 200,
+          "depthCm": 47.76
+        }
+      ]
+    },
+    {
+      "productId": "abo-B07HSCYS4C",
+      "modelUrl": "/models/furniture/abo-B07HSCYS4C/model.glb",
+      "widthCm": 131.8,
+      "depthCm": 60.7,
+      "heightCm": 76.2,
+      "modelSha256": "60acb41f9ce88438ec29ef8f9226c8ac02a34cbfe629ace168b1f758168bf9c9",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 131.8,
+          "heightCm": 76.2,
+          "depthCm": 60.7
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Desktop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 76.2,
+          "zCm": 0,
+          "widthCm": 105.44,
+          "heightCm": 200,
+          "depthCm": 48.56
+        }
+      ]
+    },
+    {
+      "productId": "abo-B07QF9Y6Z9",
+      "modelUrl": "/models/furniture/abo-B07QF9Y6Z9/model.glb",
+      "widthCm": 95.0,
+      "depthCm": 59.0,
+      "heightCm": 76.0,
+      "modelSha256": "674bf57b098f80ca0b039eab9d9b9ce37faf892215e50f5726044f0e957b14dd",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 95.0,
+          "heightCm": 76.0,
+          "depthCm": 59.0
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Desktop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 76.0,
+          "zCm": 0,
+          "widthCm": 76.0,
+          "heightCm": 200,
+          "depthCm": 47.2
+        }
+      ]
+    },
+    {
+      "productId": "abo-B075ZBW1SN",
+      "modelUrl": "/models/furniture/abo-B075ZBW1SN/model.glb",
+      "widthCm": 127.0,
+      "depthCm": 61.0,
+      "heightCm": 76.2,
+      "modelSha256": "6b67a1e64b67a526effd954fd1f3bfbfd167dab496e709c0f31f3780ed56e068",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 127.0,
+          "heightCm": 76.2,
+          "depthCm": 61.0
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Desktop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 76.2,
+          "zCm": 0,
+          "widthCm": 101.6,
+          "heightCm": 200,
+          "depthCm": 48.8
+        }
+      ]
+    },
+    {
+      "productId": "abo-B082JJJKT3",
+      "modelUrl": "/models/furniture/abo-B082JJJKT3/model.glb",
+      "widthCm": 121.9,
+      "depthCm": 50.8,
+      "heightCm": 77.5,
+      "modelSha256": "47b066b6a253017ebf9b4df5c1eb7aa229756bfc8d7c074341a6a4e407111710",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 121.9,
+          "heightCm": 77.5,
+          "depthCm": 50.8
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Desktop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 77.5,
+          "zCm": 0,
+          "widthCm": 97.52,
+          "heightCm": 200,
+          "depthCm": 40.64
+        }
+      ]
+    },
+    {
+      "productId": "abo-B075YQXRJM",
+      "modelUrl": "/models/furniture/abo-B075YQXRJM/model.glb",
+      "widthCm": 134.9,
+      "depthCm": 80.0,
+      "heightCm": 72.4,
+      "modelSha256": "faa2962920a9b71350f991e47623bf1c06f1ec0af4cf55fa8779a11dc089d175",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 134.9,
+          "heightCm": 72.4,
+          "depthCm": 80.0
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Tabletop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 72.4,
+          "zCm": 0,
+          "widthCm": 107.92,
+          "heightCm": 200,
+          "depthCm": 64.0
+        }
+      ]
+    },
+    {
+      "productId": "abo-B07B7BM55W",
+      "modelUrl": "/models/furniture/abo-B07B7BM55W/model.glb",
+      "widthCm": 200.0,
+      "depthCm": 95.0,
+      "heightCm": 75.9,
+      "modelSha256": "c6dd94c797c6ce0c9d0f8a57cb0865395a4f126ccd9efc548b4cdd0051fab6aa",
+      "revision": "1",
+      "solids": [
+        {
+          "xCm": 0,
+          "yCm": 0,
+          "zCm": 0,
+          "widthCm": 200.0,
+          "heightCm": 75.9,
+          "depthCm": 95.0
+        }
+      ],
+      "targets": [
+        {
+          "id": "top",
+          "label": "Tabletop",
+          "kind": "surface",
+          "xCm": 0,
+          "yCm": 75.9,
+          "zCm": 0,
+          "widthCm": 160.0,
+          "heightCm": 200,
+          "depthCm": 76.0
+        }
+      ]
     }
   ]
 }
