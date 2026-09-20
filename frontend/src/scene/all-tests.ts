@@ -1,6 +1,7 @@
 import "./commands.test";
 import "./buildingFloors.test";
 import "./placement.test";
+import "./products.test";
 
 import "./sync.test";
 import "./capture.test";

@@ -1,4 +1,4 @@
-import type { Instance, Product } from "./types";
+import type { Instance, Pose, Product } from "./types";
 
 const KINDS = new Set<Product["kind"]>(["sofa", "table", "chair"]);
 
@@ -26,4 +26,21 @@ export function productsWith(products: Product[], instances: Instance[]): Produc
     extra.push(product);
   }
   return extra.length ? [...products, ...extra] : products;
+}
+
+/**
+ * The instance an "add" sends for a product chosen in the editor's own furniture rail.
+ *
+ * The rail lists every product in the snapshot, and that includes catalogue pieces: once one stands in the
+ * room (placed from the search panel) the server lists its product as well. The server tells the two kinds
+ * apart by id and is strict both ways: a catalogue item MUST carry its product, a shared one MUST NOT
+ * (resolve_product in backend/api/scene_service.py). The client tells them apart the way the snapshot does:
+ * a catalogue piece is one that a standing instance carries inline. Only the fields the server stores are
+ * sent, because it refuses a carried product with any other key.
+ */
+export function instanceToAdd(instanceId: string, productId: string, pose: Pose, instances: Instance[]): Instance {
+  const carried = instances.find((item) => item.productId === productId && item.product)?.product;
+  if (!carried) return { instanceId, productId, pose };
+  const { name, widthCm, depthCm, heightCm, color, kind, modelUrl } = carried;
+  return { instanceId, productId, pose, product: { productId, name, widthCm, depthCm, heightCm, color, kind, ...(modelUrl ? { modelUrl } : {}) } };
 }

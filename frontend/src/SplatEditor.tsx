@@ -6,6 +6,7 @@ import SplatCatalogueLayer from "./catalogue/SplatCatalogueLayer";
 import { useRoomSession, type RoomSnapshot } from "./scene/useRoomSession";
 import { initialRoom } from "./scene/buildingFloors";
 import { validatePlacement } from "./scene/placement";
+import { instanceToAdd } from "./scene/products";
 import { sceneToCm } from "./scene/units";
 import type { CameraMode, FirstPersonCamera, Pose, Product } from "./scene/types";
 import type { InteractionCallbacks, InteractionMode, InteractionState, ModelStatus, PlacementPreview } from "./scene/playcanvas/contracts";
@@ -114,10 +115,11 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   },[snapshot,session.submit]);
   const place=useCallback(async(productId:string,pose:Pose)=>{
     const id=crypto.randomUUID();
-    const accepted=await session.submit({type:"add",instance:{instanceId:id,productId,pose}});
+    // A catalogue piece listed in the rail must carry its product, as the search panel's add does; a shared one must not.
+    const accepted=await session.submit({type:"add",instance:instanceToAdd(id,productId,pose,instances)});
     if(accepted){setPendingProductId(null);setSelectedId(null);setPanel("catalogue");setPanelOpen(false);setMode(view==="perspective"?"walk":"place");setNotice("Furniture placed");captureWalk();}
     return accepted;
-  },[session.submit,view,captureWalk]);
+  },[session.submit,view,captureWalk,instances]);
   const callbacks:InteractionCallbacks=useMemo(()=>({onSelect:select,onCommit:commit,onPlace:place,onCancelPlacement:cancelPlacement,onPreview:setPreview,onActiveChange:setActive,onModelStatus,
     onSurfaceStatus:(status,message)=>setSurfaceNote(status==="error" ? message??"Surface reference could not load" : status==="loading" ? "Loading surface reference…" : message ?? "Surface reference ready"),
   }),[select,commit,place,cancelPlacement,onModelStatus]);
