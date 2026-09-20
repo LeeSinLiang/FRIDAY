@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import cgArch from "../../../shared/rooms/cg-arch-interior/manifest.json";
-import cgArchSpatial from "../../../shared/rooms/cg-arch-interior/spatial.json";
 import fixtures from "../../../shared/scene-fixtures.json";
 import type { PlaceClause } from "../lib/dsl/schema";
 import type { Product, Room } from "../scene/types";
@@ -18,6 +17,8 @@ import { solve } from "./solve";
 import { FREE, YAW_BINS, type Scene, type WallSide } from "./types";
 
 const prepared = cgArch.room as unknown as Room;
+// Historical rectangle stays explicit for arithmetic/portal regressions. The live room is now an L.
+const legacySpatial = { freeAreas: [{ minXcm: 787, maxXcm: 1121, minZcm: 180, maxZcm: 760 }], obstacles: [] };
 const area = (minXcm: number, maxXcm: number, minZcm: number, maxZcm: number) => ({ minXcm, maxXcm, minZcm, maxZcm });
 const withFloor = (widthCm: number, depthCm: number, freeAreas: ReturnType<typeof area>[], obstacles: NonNullable<Room["spatial"]>["obstacles"] = []): Room =>
   ({ ...prepared, widthCm, depthCm, spatial: { freeAreas, obstacles } });
@@ -38,7 +39,7 @@ test("a rectangle has four walls; an L has six, two of them facing south and two
 });
 
 test("coordinates stay exact: a wall at x = 787 is at 787, not at the nearest 5 cm", () => {
-  const room = { ...prepared, spatial: cgArchSpatial as Room["spatial"] };
+  const room = { ...prepared, spatial: legacySpatial };
   assert.deepEqual(floorRegion(room).xs, [787, 1121]);
   assert.deepEqual(floorRegion(room).zs, [180, 760]);
 });
@@ -102,7 +103,7 @@ test("'the east wall' of an L is both east-facing walls", () => {
 const SIDE: Record<string, WallSide> = { "w-n": "n", "w-e": "e", "w-s": "s", "w-w": "w" };
 const BACK_TO: Record<WallSide, number> = { n: 0, w: Math.PI / 2, s: Math.PI, e: (3 * Math.PI) / 2 };
 test("PROPERTY: on rectangular floors, derived walls equal rectangle arithmetic at every grid point", () => {
-  const rooms: Room[] = [fixtures.room as Room, { ...prepared, spatial: cgArchSpatial as Room["spatial"] }];
+  const rooms: Room[] = [fixtures.room as Room, { ...prepared, spatial: legacySpatial }];
   const rng = seeded(20260920);
   let compared = 0, lit = 0;
   for (let round = 0; round < 24; round++) {
@@ -182,14 +183,14 @@ test("a portal through open floor changes no wall: it is a threshold between roo
   assert.equal(floorRegion(fixtures.room as Room, threshold).edges.filter((edge) => edge.portalId).length, 0);
 });
 
-test("DEMO ROOM: no portal is applied, and this is what the measured one would do if it were", () => {
-  const room = { ...prepared, spatial: cgArchSpatial as Room["spatial"] };
+test("a historical rectangular review distinguishes a real wall from a portal", () => {
+  const room = { ...prepared, spatial: legacySpatial };
   const herrakra = listingToProduct((feed as unknown as { items: Listing[] }).items.find((l) => l.id === "ikea-405.355.47")!);
-  assert.deepEqual(portalsFor("cg-arch-interior"), [], "empty on purpose: see portalsNote in the room's openings.json");
+  assert.deepEqual(portalsFor("cg-arch-interior"), [], "the expanded room connects internally without a portal");
   // Measured from the model: the west partition ends at z = 420; from there to z = 760 the x = 787 edge is open.
   const measured: Portal[] = [{ id: "p-west", from: [787, 420], to: [787, 760], leadsTo: "adjoining space" }];
   const counts = (portals: Portal[], place: PlaceClause[]) =>
-    solve({ room, products: [], instances: [], openings: openingsFor("cg-arch-interior"), portals }, { product: herrakra }, place).legalCounts;
+    solve({ room, products: [], instances: [], openings: openingsFor("cg-arch-interior")!.map(o => ({ ...o, startCm: 19.5 })), portals }, { product: herrakra }, place).legalCounts;
   const feet = (mm: number): PlaceClause => ({ k: "distance_min", ref: { kind: "any_wall" }, mm });
   const hero: PlaceClause[] = [{ k: "near", ref: { kind: "window", id: "w1" } }, feet(1219)];
   assert.deepEqual([counts([], [feet(1219)]), counts([], hero), counts([], [feet(1524)])], [[220, 265, 220, 265], [60, 75, 60, 75], [0, 0, 0, 0]]);

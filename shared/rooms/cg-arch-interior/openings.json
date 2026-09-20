@@ -1,19 +1,19 @@
 {
   "roomId": "cg-arch-interior",
   "measuredFrom": "assets/room.glb, node 'Room Glass Windows': world bounds x 8.065..10.865 m, y 0.075..2.125 m, z 1.49..1.51 m. The node and its ancestors carry no rotation, scale or matrix, and the manifest places the model with position 0, rotation 0, scale 1, so scene centimetres are model metres times 100. Re-derive with: python3 scripts/room_openings.py shared/rooms/cg-arch-interior",
-  "convention": "startCm runs along the wall from that wall's own low corner, which for a prepared room is the edge of its free floor (wallBounds): the north wall starts at x = 787 cm, so 806.5 - 787 = 19.5. The glazing itself stands at z = 150 cm, 30 cm behind the free floor's z-min edge at 180 cm.",
-  "notListed": "Three glass doors (nodes 'Room Glass Door', 'Room glass Door', 'Room glass door', x 0.37..5.38 m at z 4.2 m) open onto floor outside the free rectangle, so no placement can reach them.",
+  "convention": "startCm runs along the wall from the low corner of wallBounds. Connected free floor now starts at x = 20 cm, so 806.5 - 20 = 786.5. The same glazing remains at x 806.5..1086.5 cm, z 150 cm, behind the free floor north edge at z = 155 cm.",
+  "notListed": "The three glass doors at z 420 cm are closed in the source. Floor beyond them is disconnected and excluded; they are not walk-through portals.",
   "openings": [
     {
       "id": "w1",
       "kind": "window",
       "wall": "n",
-      "startCm": 19.5,
+      "startCm": 786.5,
       "widthCm": 280,
       "sillCm": 7.5,
       "headCm": 212.5
     }
   ],
   "portals": [],
-  "portalsNote": "EMPTY ON PURPOSE, pending Saketh's decision. Measured from assets/room.glb (tall vertical faces in 'Room Baked fixed architecture'): the partition on the west side has faces at x = 727 and 741 and runs only from z = 0 to z = 420. From z = 420 to z = 760 nothing tall stands near the free floor's x = 787 edge: that stretch is open into the adjoining space. The honest entry is {\"id\": \"p-west\", \"from\": [787, 420], \"to\": [787, 760], \"leadsTo\": \"adjoining space\"}. It is not applied because it changes two rehearsed demo numbers: '4 feet from any wall' alone would leave more than 220 / 265 positions, and '5 feet from any wall' would no longer answer 'needs 371 cm of width, this room has 334 cm', because beside the opening it does fit. The full hero sentence is unaffected (60 / 75 / 60 / 75): its patch lies beside the solid stretch. frontend/src/region/floor.test.ts pins all three consequences."
+  "portalsNote": "The former x = 787 cm cutoff crossed open floor. The living room, corridor and entry now form one connected free-floor union, so that internal connection has no boundary and needs no portal. Closed doors and cabinets remain excluded."
 }

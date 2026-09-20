@@ -39,7 +39,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 | [docs/frontend/room-capture/gaussian-splatting-handoff.md](docs/frontend/room-capture/gaussian-splatting-handoff.md) | Separate task: find a free similar empty-room splat or fully convert the source mesh, with coverage and integration gates |
 | [docs/frontend/room-capture/parallel-visual-tracks.md](docs/frontend/room-capture/parallel-visual-tracks.md) | Mesh versus Gaussian task ownership, separate-session handoff, shared contracts and demo comparison gates |
 | [docs/frontend/room-capture/rendering-alternatives.md](docs/frontend/room-capture/rendering-alternatives.md) | Baked mesh, runtime lightmaps, architectural viewers, browser path tracing and panorama tradeoffs |
-| [docs/frontend/room-capture/cg-arch-interior.md](docs/frontend/room-capture/cg-arch-interior.md) | Selected Blendkit room, local export, texture handling, living-room placement zone and sharing requirements |
+| [docs/frontend/room-capture/cg-arch-interior.md](docs/frontend/room-capture/cg-arch-interior.md) | Selected Blendkit room, local export, texture handling, connected living-room/corridor/entry coverage and sharing requirements |
 | [docs/frontend/room-capture/empty-mesh-room.md](docs/frontend/room-capture/empty-mesh-room.md) | Optional authored empty mesh fixture, reproducible GLB, exact interior bounds and retained Studio 11 route |
 | [docs/frontend/room-capture/playcanvas-implementation.md](docs/frontend/room-capture/playcanvas-implementation.md) | Implemented local Studio 11 editor, preparation, fixed geometry, interaction, captures and integration boundaries |
 | [docs/frontend/editor-implementation.md](docs/frontend/editor-implementation.md) | Historical Three.js editor, available through `?legacy`, with integration and verification notes |
@@ -101,3 +101,5 @@ Add dedicated feature docs here as they are created.
 
 - [Cart choreography](docs/frontend/shopping-cart-animation.md) — The cart preview folded into `/cart`: the shopper's real pieces gather under the checkout button; nothing on sign-in, authenticator or review; reduced motion; the StrictMode trap; the retired standalone preview as history.
 - [Furniture materialization](docs/frontend/furniture-materialization.md) — spatial-agent add animation, preview event, unchanged placement and static captures.
+
+- [Cg Arch boundary fix](docs/tickets/cg-arch-boundaries.md) — connected-floor diagnosis, preservation plan and runtime verification.

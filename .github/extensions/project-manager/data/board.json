@@ -143,6 +143,12 @@
           "title": "Import and verify the supplied Cg Arch living room locally",
           "done": true,
           "owner": "william"
+        },
+        {
+          "id": "dd5ede57-1071-44eb-8fe8-56faa3493797",
+          "title": "Fix Empty Interior Scene 2 walking and placement boundaries",
+          "done": true,
+          "owner": "william"
         }
       ]
     },
