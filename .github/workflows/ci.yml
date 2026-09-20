@@ -1,0 +1,70 @@
+# Runs every suite on every pull request, so a red result is in front of whoever is about to press Merge.
+#
+# Advisory on purpose: it is not a required check, because nothing may stand between the team and an
+# emergency fix. No secrets, ever: every suite passes offline with the keys blank, and a job that needs
+# a key breaks on forks and teaches people to ignore it. If this takes more than a few minutes it will
+# be bypassed, so keep it fast.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (manage.py test, no app labels)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      # Blank, not absent, so a test that reaches for a key fails here the way it does offline.
+      OPENAI_API_KEY: ""
+      DEEPGRAM_API_KEY: ""
+      ELASTIC_URL: ""
+      ELASTIC_API_KEY: ""
+      COMPILE_LIVE_TEST: "0"
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Install from the lock file
+        run: uv sync --frozen
+      - name: Django system check
+        run: uv run --frozen python manage.py check
+      # NO app labels. `manage.py test api catalogue` silently skips accounts, checkout and visa,
+      # and any app added later. That is how 36 tests went unrun for hours.
+      - name: Every backend test
+        run: uv run --frozen python manage.py test
+
+  frontend:
+    name: Frontend (npm test, npm run build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22 # the documented minimum is 22.12; testing on it catches accidental use of newer Node
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install from the lock file
+        run: npm ci
+      - name: Every frontend test
+        run: npm test
+      - name: Production build
+        run: npm run build
