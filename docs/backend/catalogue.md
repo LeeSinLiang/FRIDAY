@@ -179,6 +179,10 @@ count the same. On disagreement it names the listings and fields, for example
 comparison as a test; it is skipped by default because the suite must pass offline. It is not
 possible to store the hash in the index instead, since that would mean changing the mapping.
 
+**There is one shared index, so ingest from `main`, after the merge.** Ingesting from a feature
+branch makes the index match that branch and disagree with everyone running `main`. While a
+listings change sits in an open PR the check on that branch will say DISAGREE, and that is correct.
+
 ## Catalogue size
 
 The catalogue is the hero items in `listings.json` (43 on 2026-09-20) plus `CATALOGUE_SEED_COUNT` seed listings (default 12,000),
