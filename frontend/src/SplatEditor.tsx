@@ -7,6 +7,7 @@ import { useRoomSession, type RoomSnapshot } from "./scene/useRoomSession";
 import { initialRoom } from "./scene/buildingFloors";
 import { validatePlacement } from "./scene/placement";
 import { instanceToAdd } from "./scene/products";
+import { pieceInHand, walkKeyAction } from "./scene/walkKeys";
 import { sceneToCm } from "./scene/units";
 import type { CameraMode, FirstPersonCamera, Pose, Product } from "./scene/types";
 import type { InteractionCallbacks, InteractionMode, InteractionState, ModelStatus, PlacementPreview } from "./scene/playcanvas/contracts";
@@ -143,7 +144,8 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   useEffect(()=>{if(mode!=="walk"&&document.pointerLockElement===runtime.current?.canvas)document.exitPointerLock();},[mode]);
   const stopWalk=useCallback(()=>{setMode("explore");if(document.pointerLockElement===runtime.current?.canvas)document.exitPointerLock();},[]);
   const startWalk=useCallback(()=>{
-    if(!ready||locked||view==="top"||pendingProductId)return;
+    // Read at call time: the search panel's hold lives on the engine, not in React state.
+    if(!ready||locked||view==="top"||pieceInHand(pendingProductId,runtime.current))return;
     const canvas=runtime.current?.canvas;if(!canvas)return;
     canvas.focus({preventScroll:true});
     setSelectedId(null);setPreview(null);setMode("walk");
@@ -165,13 +167,15 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
         else {setSelectedId(null);setPreview(null);setPanel("catalogue");setPanelOpen(false);setMode(view==="perspective"?"walk":"place");}
         return;
       }
-      if(e.key.toLowerCase()==="f" && !e.repeat && !e.metaKey && !e.ctrlKey && !e.altKey && !active){
+      // F and W A S D do nothing with a piece in hand, the rail's OR the search panel's; Esc above still drops it.
+      const walkKey=walkKeyAction(e,{mode,pointerLocked,active,pieceInHand:pieceInHand(pendingProductId,runtime.current)});
+      if(walkKey==="toggle"){
         e.preventDefault();
         if(document.pointerLockElement===runtime.current?.canvas)stopWalk();
         else startWalk();
         return;
       }
-      if(mode==="walk" && !pointerLocked && !e.repeat && /^[wasd]$/i.test(e.key)) {
+      if(walkKey==="capture") {
         const canvas=runtime.current?.canvas;
         if(canvas) void canvas.requestPointerLock().then(()=>setNotice("")).catch(()=>setNotice("Pointer capture is unavailable here · Drag to look"));
       }
