@@ -906,6 +906,27 @@
         "canvas",
         "aluminium"
       ]
+    },
+    {
+      "id": "abo-B072M1WJ8S",
+      "source": "abo",
+      "title": "Rivet Emerly Mid-Century Modern Velvet Metal Leg Sofa Couch, 83.5\"W, Pewter",
+      "category": "sofa",
+      "price_cents": 0,
+      "dims_mm": {
+        "w": 2121,
+        "d": 889,
+        "h": 864
+      },
+      "model_url": "/models/furniture/abo-B072M1WJ8S/model.glb",
+      "colour_hex": [
+        "#5b6770"
+      ],
+      "materials": [
+        "velvet",
+        "hardwood frame",
+        "metal legs"
+      ]
     }
   ]
 }

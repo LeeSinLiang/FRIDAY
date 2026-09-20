@@ -7,17 +7,20 @@ cries wolf over two percent gets switched off, and then it catches nothing.
 """
 import json
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 
+from catalogue.feed import load_listings
 from django.conf import settings
 from django.test import SimpleTestCase
 
 from .catalogue_products import catalogue_product
-from .glb import MAX_ANISOTROPY, anisotropy, capped_factors, fit_root_scale, fit_to_box, fit_to_height, measure
+from .glb import MAX_ANISOTROPY, anisotropy, capped_factors, fit_root_scale, fit_to_box, fit_to_height, measure, read_glb
 from .scene_service import fixtures
 
 ASSETS = Path(settings.BASE_DIR).parent / 'shared' / 'models' / 'furniture'
+SCRIPTS = Path(settings.BASE_DIR).parent / 'scripts'
 TOLERANCE_CM = 2.0
 TOLERANCE_RATIO = 0.03
 FLOOR_TOLERANCE_CM = 1.0
@@ -160,3 +163,98 @@ class FurnitureAssetTests(SimpleTestCase):
             self.assertEqual(first['scale'], second['scale'])
             self.assertLessEqual(first['anisotropy'], MAX_ANISOTROPY)
             self.assertAlmostEqual(measure(copy)['min'][1], 0.0, places=6)
+
+
+def abo_importer():
+    """scripts/ is not a package, and the importer's unit parsing is exactly what needs testing, so load it from there."""
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import abo_import
+    return abo_import
+
+
+def abo_assets():
+    found = []
+    for folder in asset_folders():
+        metadata = json.loads((folder / 'metadata.json').read_text())
+        if str(metadata.get('catalogueListingId', '')).startswith('abo-'):
+            found.append((folder, metadata))
+    return found
+
+
+class NoBundledSceneTests(SimpleTestCase):
+    def test_no_asset_brings_its_own_camera_light_animation_or_skin(self):
+        """The renderer owns those. A camera bundled inside a placed item is picked up by the scene."""
+        for folder in asset_folders():
+            with self.subTest(asset=folder.name):
+                document, _ = read_glb(folder / 'model.glb')
+                for key in ('cameras', 'animations', 'skins'):
+                    self.assertFalse(document.get(key), f'{key} must be stripped before an asset is committed')
+                self.assertNotIn('KHR_lights_punctual', document.get('extensionsUsed', []))
+
+
+class AboAssetTests(SimpleTestCase):
+    """Amazon Berkeley Objects: the model and the measurements come from one record, and neither half is trusted."""
+    SOFA_RECORD = {'width': {'value': 35, 'unit': 'inches'}, 'length': {'value': 83.5, 'unit': 'inches'},
+                   'height': {'value': 34, 'unit': 'inches'}}  # B072M1WJ8S as ABO publishes it: "width" is the depth
+    SOFA_EXTENT_MM = (2120.9, 863.6, 889.0)
+
+    def test_there_is_at_least_one_abo_asset_to_check(self):
+        self.assertTrue(abo_assets(), 'the checks below would pass vacuously')
+
+    def test_every_abo_binding_is_verified_licensed_and_says_where_its_price_came_from(self):
+        listings = {listing.id: listing for listing in load_listings()}
+        for folder, metadata in abo_assets():
+            with self.subTest(asset=folder.name):
+                self.assertEqual(listings[metadata['catalogueListingId']].source, 'abo')
+                self.assertEqual(metadata['matchType'], 'verified', 'an ABO model IS the product; if that cannot be shown, do not take the item')
+                self.assertEqual(metadata['license']['name'], 'CC BY 4.0')
+                self.assertIn('Amazon', metadata['license']['attribution'])
+                self.assertTrue(metadata['license']['changes'], 'CC BY requires saying what was changed')
+                self.assertIn(metadata['priceProvenance'], ('placeholder', 'source'))
+
+    def test_listed_dimensions_are_the_record_read_with_its_unit(self):
+        to_mm = abo_importer().to_mm
+        listings = {listing.id: listing for listing in load_listings()}
+        for folder, metadata in abo_assets():
+            with self.subTest(asset=folder.name):
+                raw, axes = metadata['source']['rawDimensions'], metadata['source']['axisAssignment']
+                dims = listings[metadata['catalogueListingId']].dims_mm
+                for axis, listed in (('w', dims.w), ('d', dims.d), ('h', dims.h)):
+                    self.assertEqual(round(to_mm(raw[axes[axis]])), listed, f'{axis}: the listing is not the record converted by its own unit')
+
+    def test_an_inch_record_misread_as_centimetres_fails_the_asset_check(self):
+        """The 2.6x chair again: prove the size check would catch the unit being assumed instead of parsed."""
+        checked = 0
+        for folder, metadata in abo_assets():
+            raw, axes = metadata['source']['rawDimensions'], metadata['source']['axisAssignment']
+            if raw[axes['w']]['unit'] != 'inches':
+                continue
+            width_cm = 100 * measure(folder / 'model.glb')['size'][0]
+            misread_cm = raw[axes['w']]['value']  # 83.5 inches taken for 83.5 cm
+            self.assertGreater(abs(width_cm - misread_cm), allowed(misread_cm) * 10, folder.name)
+            checked += 1
+        self.assertTrue(checked, 'no inch record to replay the misread on')
+
+    def test_the_unit_parser_converts_and_refuses_to_guess(self):
+        importer = abo_importer()
+        self.assertAlmostEqual(importer.to_mm({'value': 83.5, 'unit': 'inches'}), 2120.9, places=6)
+        self.assertAlmostEqual(importer.to_mm({'value': 212, 'unit': 'centimeters'}), 2120.0, places=6)
+        refused = ({'value': 83.5, 'unit': 'cubits'}, {'value': 83.5}, {'value': 0, 'unit': 'inches'}, {'value': True, 'unit': 'inches'},
+                   {'value': 83.5, 'unit': 'inches', 'normalized_value': {'value': 83.5, 'unit': 'centimeters'}})
+        for entry in refused:
+            with self.subTest(entry=entry), self.assertRaises(importer.Refused):
+                importer.to_mm(entry)
+
+    def test_width_and_depth_follow_the_model_not_the_field_names(self):
+        importer = abo_importer()
+        dims, axes = importer.dims_from_record(self.SOFA_RECORD, self.SOFA_EXTENT_MM)
+        self.assertEqual((dims, axes), ({'w': 2121, 'd': 889, 'h': 864}, {'w': 'length', 'd': 'width', 'h': 'height'}))
+        with self.assertRaises(importer.Refused):  # a model 1 m wide is not this 2.1 m sofa, whatever the record says
+            importer.dims_from_record(self.SOFA_RECORD, (1000.0, 863.6, 889.0))
+
+    def test_a_size_stated_in_the_title_must_agree_with_the_record(self):
+        importer = abo_importer()
+        importer.check_title('Rivet Emerly Mid-Century Modern Velvet Metal Leg Sofa Couch, 83.5"W, Pewter', {'w': 2121, 'd': 889, 'h': 864})
+        with self.assertRaises(importer.Refused):  # a real ABO record: a nightstand whose item_dimensions are a bed's
+            importer.check_title('Rivet Eastport Industrial Wood Nightstand Table, 21.7"W', {'w': 1707, 'd': 2149, 'h': 1041})
