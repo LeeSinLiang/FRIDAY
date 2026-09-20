@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { cartRequest, useCart } from './CartProvider'
 import type { Checkout } from '../checkout/types'
+import CartChoreography from '../checkout/CartChoreography'
 
 export default function CartReady() {
   const {cart, refresh} = useCart()
@@ -20,5 +21,8 @@ export default function CartReady() {
     {error && <p className="error" role="alert">{error}</p>}
     {!claimed && error ? <button onClick={() => {setError(''); setAttempt(n => n + 1)}}>Reconnect your cart</button> : <button disabled={!claimed || busy || !cart?.items.length || !cart.priced_count || cart.items.some(i => !i.available)} onClick={() => void checkout()}>{busy ? 'Preparing your review…' : claimed ? 'Review checkout' : 'Connecting your cart…'}</button>}
     <a className="settings-link" href="/rooms">Keep exploring</a>
+    {/* Under the action, never over it: the pieces gather while the button above is already live. Only on the cart
+        itself: sign-in, the authenticator step and the checkout review never mount this component. */}
+    {location.pathname === '/cart' && !!cart?.items.length && <CartChoreography items={cart.items} itemCount={cart.item_count} pricedCount={cart.priced_count} amount={cart.amount}/>}
   </section>
 }

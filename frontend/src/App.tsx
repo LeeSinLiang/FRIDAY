@@ -3,14 +3,12 @@ import { CartProvider } from './shopping/CartProvider'
 import RoomSelection, {rooms, RoomUnavailable} from './shopping/RoomSelection'
 import { galleryRoomId } from './scene/buildingFloors'
 
-const CartPreview = lazy(() => import('./checkout/CartPreview'))
 const Editor = lazy(() => import('./SplatEditor'))
 const Account = lazy(() => import('./auth/AccountApp'))
 const Legacy = lazy(() => import('./LegacyApp'))
 
 function Route() {
   const query = new URLSearchParams(location.search)
-  if (query.has('cartPreview')) return <CartPreview/>
   if (query.has('legacy') || query.has('testAssets')) return <Legacy/>
   if (location.pathname === '/' && (query.has('roomId') || query.has('room'))) return <Editor/>
   // The gallery is the homepage. Opening a room directly here depended on Haussmann's assets being on the machine.
