@@ -68,6 +68,9 @@ export function createRegionOverlay(runtime: Runtime): RegionOverlay {
       pixels.set(LIT, ((countZ - 1 - iz) * countX + ix) * 4);
     }
     texture.unlock();
+    // A baked interior raises scene.exposure to its Blender value, which multiplies emissive too and
+    // clips this green to white. Read at upload time because the room sets it after it loads.
+    material.emissiveIntensity = 1 / Math.max(runtime.app.scene.exposure, 1e-3);
     material.update();
   };
 
