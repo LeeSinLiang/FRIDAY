@@ -5,6 +5,7 @@ import { AssetCache } from "./assets";
 import { createFurnitureLighting } from "./lighting";
 import { loadSplatRoom } from "./room";
 import { createSkyscraperLighting, isLondonSkyscraper, prepareSkyscraperMaterials } from "./skyscraperLook";
+import { createFurnitureAppearance, type FurnitureAppearance } from "./furnitureAppearance";
 
 export type RuntimeStatus = { phase: "loading" | "ready" | "error"; message: string; progress?: number };
 export type PlayCanvasRuntime = {
@@ -14,6 +15,7 @@ export type PlayCanvasRuntime = {
   roomRoot: Entity;
   contentRoot: Entity;
   assets: AssetCache;
+  furnitureAppearance?: FurnitureAppearance;
   room: Room;
   ready: Promise<void>;
   capturing: boolean;
@@ -104,6 +106,8 @@ export function waitForSplatFrame(runtime: PlayCanvasRuntime, timeoutMs = 15_000
 export function createPlayCanvasRuntime(canvas: HTMLCanvasElement, options: {
   room: Room;
   onStatus?: (status: RuntimeStatus) => void;
+  /** Explicit opt-out for the matched visual regression fixture. No editor UI. */
+  furnitureLighting?: boolean;
 }): PlayCanvasRuntime {
   const { room, onStatus } = options;
   if (!room.scan) throw new Error("The first-person renderer requires a prepared room scan");
@@ -143,9 +147,10 @@ export function createPlayCanvasRuntime(canvas: HTMLCanvasElement, options: {
   const assets = new AssetCache(app);
   const buildingLighting = skyscraper ? createSkyscraperLighting(app, camera, assets) : undefined;
   const disposeLights = buildingLighting ? () => buildingLighting.dispose() : createFurnitureLighting(app, importedInterior);
+  const furnitureAppearance = options.furnitureLighting === false ? undefined : createFurnitureAppearance(app, camera, room);
   const abortController = new AbortController();
   const runtime: PlayCanvasRuntime = {
-    app, canvas, camera, roomRoot, contentRoot, assets, room,
+    app, canvas, camera, roomRoot, contentRoot, assets, room, furnitureAppearance,
     ready: Promise.resolve(), capturing: false, disposed: false, signal: abortController.signal,
     resize: () => {
       if (runtime.disposed) return;
@@ -164,6 +169,7 @@ export function createPlayCanvasRuntime(canvas: HTMLCanvasElement, options: {
       canvas.removeEventListener("webglcontextrestored", contextRestored);
       contentRoot.destroy();
       roomRoot.destroy();
+      furnitureAppearance?.dispose();
       disposeLights();
       assets.dispose();
       app.destroy();
@@ -188,6 +194,7 @@ export function createPlayCanvasRuntime(canvas: HTMLCanvasElement, options: {
     if (!runtime.disposed) onStatus?.({ phase: "loading", message: "Loading the room…", progress: total > 0 ? loaded / total : undefined });
   }, runtime.signal).then(async model => {
     if (runtime.disposed) throw new Error("The renderer has been disposed");
+    furnitureAppearance?.prepareRoom(model);
     if (buildingLighting) {
       prepareSkyscraperMaterials(model, app.graphicsDevice.maxAnisotropy);
       await buildingLighting.ready;

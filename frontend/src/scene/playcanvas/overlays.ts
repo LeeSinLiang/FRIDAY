@@ -78,6 +78,7 @@ export function createPlacementOverlays(runtime: { app: pc.Application; capturin
     const color = new pc.Color().fromString(palette[placementTone(preview)]);
     const corners = footprintCorners(product, preview.pose, 1.2);
     for (let i = 0; i < 4; i++) line(corners[i], corners[(i + 1) % 4], color);
+    if ((preview.pose.yCm ?? 0) > 0) return;
     // Only a local patch receives fine lines; it is a calibrated floor overlay, never painted into the splat.
     const radius = Math.min(200, Math.max(product.widthCm, product.depthCm) / 2 + 35);
     const minX = Math.max(0, Math.floor((preview.pose.xCm - radius) / GRID_STEP_CM) * GRID_STEP_CM);
