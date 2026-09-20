@@ -271,8 +271,8 @@
         },
         {
           "id": "f5b7aa7e-70e7-4b8c-acaa-7c0f30368873",
-          "title": "Collapse furniture panel behind persistent chevron",
-          "done": true,
+          "title": "Keep category rail visible when furniture panel collapses",
+          "done": false,
           "owner": "william"
         }
       ],
