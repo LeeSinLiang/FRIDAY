@@ -3,7 +3,7 @@
 
 import type { PlaceClause } from "../lib/dsl/schema";
 import type { Product, Room } from "../scene/types";
-import { placeToCm, type PlaceCm } from "./boundary";
+import { placeToCm, wallBounds, type PlaceCm } from "./boundary";
 import { wallClearances } from "./clauses";
 import { footprintRect } from "./grid";
 import { YAW_BINS } from "./types";
@@ -16,12 +16,13 @@ const total = (counts: number[]) => counts.reduce((sum, n) => sum + n, 0);
 /** Simple arithmetic first: the item plus the wall clearances asked for, against the room's two dimensions. */
 function spanShortfall(room: Room, product: Product, place: PlaceCm[]): string | null {
   const need = wallClearances(place);
+  const walls = wallBounds(room), acrossCm = walls.maxX - walls.minX, deepCm = walls.maxZ - walls.minZ;
   let best: { axis: string; needs: number; has: number } | null = null;
   for (const yawRad of YAW_BINS.slice(0, 2)) {
     const rect = footprintRect(product, { xCm: 0, zCm: 0, yawRad });
     const width = rect.maxX - rect.minX + need.w + need.e, depth = rect.maxZ - rect.minZ + need.n + need.s;
-    const short = width > room.widthCm + 1e-6 ? { axis: "width", needs: width, has: room.widthCm }
-      : depth > room.depthCm + 1e-6 ? { axis: "depth", needs: depth, has: room.depthCm } : null;
+    const short = width > acrossCm + 1e-6 ? { axis: "width", needs: width, has: acrossCm }
+      : depth > deepCm + 1e-6 ? { axis: "depth", needs: depth, has: deepCm } : null;
     if (!short) return null; // this rotation has the span, so the cause is something else
     if (!best || short.needs - short.has < best.needs - best.has) best = short;
   }
@@ -44,9 +45,9 @@ export function explainNothingFits(room: Room, product: Product, place: PlaceCla
   const openFloor = total(solveWith([]).legalCounts);
   if (openFloor === 0) {
     const [w, d] = [product.widthCm, product.depthCm].map(round);
-    const tooBig = Math.min(w, d) > Math.min(room.widthCm, room.depthCm) || Math.max(w, d) > Math.max(room.widthCm, room.depthCm);
-    if (product.heightCm > room.heightCm) return `it is ${round(product.heightCm)} cm tall and the ceiling is ${round(room.heightCm)} cm`;
-    return tooBig ? `it is ${w} × ${d} cm and the room is ${round(room.widthCm)} × ${round(room.depthCm)} cm`
+    const floor = wallBounds(room), acrossCm = floor.maxX - floor.minX, deepCm = floor.maxZ - floor.minZ;
+    const tooBig = Math.min(w, d) > Math.min(acrossCm, deepCm) || Math.max(w, d) > Math.max(acrossCm, deepCm);
+    return tooBig ? `it is ${w} × ${d} cm and ${room.spatial?.freeAreas.length ? "the usable floor" : "the room"} is ${round(acrossCm)} × ${round(deepCm)} cm`
       : `there is no free floor big enough for its ${w} × ${d} cm footprint`;
   }
   const span = spanShortfall(room, product, placeToCm(place));

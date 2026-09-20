@@ -1,6 +1,7 @@
 // Axis-aligned rectangle helpers, in cm. Pure.
 
 import type { Room } from "../scene/types";
+import { wallBounds } from "./boundary";
 import type { Opening, Rect } from "./types";
 
 export const EPSILON_CM = 1e-6;
@@ -18,9 +19,12 @@ export const overlapsArea = (a: Rect, b: Rect): boolean =>
 
 /** The floor in front of an opening, reaching depthCm into the room. depthCm 0 gives the opening itself. */
 export function openingZone(room: Room, opening: Opening, depthCm: number): Rect {
-  const a = opening.startCm, b = opening.startCm + opening.widthCm;
-  if (opening.wall === "n") return { minX: a, maxX: b, minZ: 0, maxZ: depthCm };
-  if (opening.wall === "s") return { minX: a, maxX: b, minZ: room.depthCm - depthCm, maxZ: room.depthCm };
-  if (opening.wall === "w") return { minX: 0, maxX: depthCm, minZ: a, maxZ: b };
-  return { minX: room.widthCm - depthCm, maxX: room.widthCm, minZ: a, maxZ: b };
+  // startCm runs along the wall from the walls' own corner, so openings move with wallBounds.
+  const walls = wallBounds(room);
+  const alongX = [walls.minX + opening.startCm, walls.minX + opening.startCm + opening.widthCm];
+  const alongZ = [walls.minZ + opening.startCm, walls.minZ + opening.startCm + opening.widthCm];
+  if (opening.wall === "n") return { minX: alongX[0], maxX: alongX[1], minZ: walls.minZ, maxZ: walls.minZ + depthCm };
+  if (opening.wall === "s") return { minX: alongX[0], maxX: alongX[1], minZ: walls.maxZ - depthCm, maxZ: walls.maxZ };
+  if (opening.wall === "w") return { minX: walls.minX, maxX: walls.minX + depthCm, minZ: alongZ[0], maxZ: alongZ[1] };
+  return { minX: walls.maxX - depthCm, maxX: walls.maxX, minZ: alongZ[0], maxZ: alongZ[1] };
 }
