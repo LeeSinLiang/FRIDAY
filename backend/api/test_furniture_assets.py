@@ -221,6 +221,7 @@ class AboAssetTests(SimpleTestCase):
         self.assertTrue(abo_assets(), 'the checks below would pass vacuously')
 
     def test_every_abo_binding_is_verified_licensed_and_says_where_its_price_came_from(self):
+        importer = abo_importer()
         listings = {listing.id: listing for listing in load_listings()}
         for folder, metadata in abo_assets():
             with self.subTest(asset=folder.name):
@@ -233,6 +234,8 @@ class AboAssetTests(SimpleTestCase):
                 if metadata['priceProvenance'] == 'placeholder':  # ABO has no price. 0 means unknown; an invented number is a claim
                     self.assertEqual(listings[metadata['catalogueListingId']].price_cents, 0)
                 self.assertTrue(metadata['source']['titleConfirms'], 'the product title must have confirmed the record: see below')
+                self.assertIn(metadata['source'].get('simplifyError', 'default'), ('default', *importer.SIMPLIFY_ERRORS[1:]),
+                              'a model may only be simplified on the documented ladder of tolerances')
 
     def test_listed_dimensions_are_the_record_read_with_its_unit(self):
         to_mm = abo_importer().to_mm

@@ -1,0 +1,64 @@
+{
+  "productId": "abo-B0824F6HZ4",
+  "modelUrl": "/models/furniture/abo-B0824F6HZ4/model.glb",
+  "widthCm": 17.8,
+  "depthCm": 33.0,
+  "heightCm": 48.9,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "abo-B0824F6HZ4",
+  "matchType": "verified",
+  "priceProvenance": "placeholder",
+  "license": {
+    "name": "CC BY 4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "3D model and product data from Amazon Berkeley Objects (c) Amazon.com, licensed CC BY 4.0. Dataset built by Matthieu Guillaumin, Thomas Dideriksen, Kenan Deng, Himanshu Arora (Amazon.com), Jasmine Collins and Jitendra Malik (UC Berkeley).",
+    "changes": "Textures resized to 512 px, mesh simplified and re-saved with gltf-transform; uniform scale to the listed height. Proportions untouched."
+  },
+  "source": {
+    "dataset": "Amazon Berkeley Objects",
+    "datasetUrl": "https://amazon-berkeley-objects.s3.amazonaws.com/index.html",
+    "itemId": "B0824F6HZ4",
+    "domain": "amazon.com",
+    "productName": "Amazon Brand – Ravenna Home Traditional Metal Downbridge Desk Lamp with Adjustable Shade, LED Bulb Included, 19.25\"H, Brushed Nickel",
+    "modelFile": "3dmodels/original/4/B0824F6HZ4.glb",
+    "rawDimensions": {
+      "width": {
+        "value": 7,
+        "unit": "inches"
+      },
+      "length": {
+        "value": 13,
+        "unit": "inches"
+      },
+      "height": {
+        "value": 19.25,
+        "unit": "inches"
+      }
+    },
+    "axisAssignment": {
+      "w": "width",
+      "d": "length",
+      "h": "height"
+    },
+    "titleConfirms": [
+      "489 mm H"
+    ],
+    "colour": "#a7a090",
+    "colourSource": "base-colour texture median",
+    "processing": "scripts/abo_import.py: strip cameras/lights/animations, @gltf-transform/cli@4 optimize --compress false --texture-compress auto --texture-size 512 --simplify, fit_to_height",
+    "simplifyError": "default"
+  },
+  "residualCm": {
+    "width": -0.64,
+    "height": 0.0,
+    "depth": 0.29
+  },
+  "knownLimitations": [
+    "ABO scaled this model to the record's item_dimensions, so the size check cannot catch a wrong record. The product title, which states a size, is the independent witness: see source.titleConfirms.",
+    "The catalogue colour is the nearest of the 30 seed-palette colours to source.colour, not that colour itself.",
+    "price_cents is 0 because ABO has no price. 0 means unknown, not free."
+  ]
+}

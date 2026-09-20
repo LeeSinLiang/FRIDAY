@@ -1,0 +1,64 @@
+{
+  "productId": "abo-B07QC85X9C",
+  "modelUrl": "/models/furniture/abo-B07QC85X9C/model.glb",
+  "widthCm": 76.2,
+  "depthCm": 34.2,
+  "heightCm": 182.9,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "abo-B07QC85X9C",
+  "matchType": "verified",
+  "priceProvenance": "placeholder",
+  "license": {
+    "name": "CC BY 4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "3D model and product data from Amazon Berkeley Objects (c) Amazon.com, licensed CC BY 4.0. Dataset built by Matthieu Guillaumin, Thomas Dideriksen, Kenan Deng, Himanshu Arora (Amazon.com), Jasmine Collins and Jitendra Malik (UC Berkeley).",
+    "changes": "Textures resized to 512 px, mesh simplified and re-saved with gltf-transform; uniform scale to the listed height. Proportions untouched."
+  },
+  "source": {
+    "dataset": "Amazon Berkeley Objects",
+    "datasetUrl": "https://amazon-berkeley-objects.s3.amazonaws.com/index.html",
+    "itemId": "B07QC85X9C",
+    "domain": "amazon.com",
+    "productName": "Amazon Brand – Ravenna Home Springdale Modern Bookcase with Decorative Open Sides, 30\"W, White",
+    "modelFile": "3dmodels/original/C/B07QC85X9C.glb",
+    "rawDimensions": {
+      "width": {
+        "value": 13.46,
+        "unit": "inches"
+      },
+      "length": {
+        "value": 30,
+        "unit": "inches"
+      },
+      "height": {
+        "value": 72,
+        "unit": "inches"
+      }
+    },
+    "axisAssignment": {
+      "w": "length",
+      "d": "width",
+      "h": "height"
+    },
+    "titleConfirms": [
+      "762 mm W"
+    ],
+    "colour": "#d2d0ce",
+    "colourSource": "color_code",
+    "processing": "scripts/abo_import.py: strip cameras/lights/animations, @gltf-transform/cli@4 optimize --compress false --texture-compress auto --texture-size 512 --simplify --simplify-error 0.0003, fit_to_height",
+    "simplifyError": 0.0003
+  },
+  "residualCm": {
+    "width": -1.7,
+    "height": 0.0,
+    "depth": 1.03
+  },
+  "knownLimitations": [
+    "ABO scaled this model to the record's item_dimensions, so the size check cannot catch a wrong record. The product title, which states a size, is the independent witness: see source.titleConfirms.",
+    "The catalogue colour is the nearest of the 30 seed-palette colours to source.colour, not that colour itself.",
+    "price_cents is 0 because ABO has no price. 0 means unknown, not free."
+  ]
+}

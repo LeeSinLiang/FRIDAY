@@ -51,6 +51,9 @@ TOLERANCE_MM, TOLERANCE_RATIO = 20.0, 0.03  # the same rule as backend/api/test_
 MAX_BYTES, MAX_TRIANGLES = 5 * 1024 * 1024, 30000
 OPTIMIZE = ["npx", "--yes", "@gltf-transform/cli@4", "optimize"]
 OPTIMIZE_FLAGS = ["--compress", "false", "--texture-compress", "auto", "--texture-size", "512", "--simplify"]
+# Simplification error, as a fraction of the mesh extent. None is gltf-transform's default (0.0001). A model over the
+# triangle budget is retried with a looser tolerance; 0.01 is 1 cm on a 1 m chair, and the ladder stops there.
+SIMPLIFY_ERRORS = (None, 0.0003, 0.001, 0.003, 0.01)
 LICENSE = {
     "name": "CC BY 4.0",
     "url": "https://creativecommons.org/licenses/by/4.0/",
@@ -189,11 +192,14 @@ def strip_extras(path: Path) -> list[str]:
     return removed
 
 
-def prepare_model(asin: str, model_row: dict, height_mm: int, work: Path) -> Path:
-    """Download, strip, optimise and stand the model on the floor at its listed height. Returns the finished GLB.
+def prepare_model(asin: str, model_row: dict, height_mm: int, work: Path) -> tuple[Path, float | None]:
+    """Download, strip, optimise and stand the model on the floor at its listed height.
+
+    A model refused ONLY for triangles is simplified again with a looser error tolerance, up the SIMPLIFY_ERRORS
+    ladder. Returns the finished GLB and the tolerance that was needed (None: the default).
 
     Raises:
-        Refused: the optimised model is over the byte or triangle budget.
+        Refused: the optimised model is over the byte budget, or over the triangle budget at every tolerance.
         subprocess.CalledProcessError: gltf-transform failed.
     """
     folder = work / asin
@@ -204,13 +210,18 @@ def prepare_model(asin: str, model_row: dict, height_mm: int, work: Path) -> Pat
             f.write(response.read())
     stripped.write_bytes(original.read_bytes())
     removed = strip_extras(stripped)
-    subprocess.run([*OPTIMIZE, str(stripped), str(final), *OPTIMIZE_FLAGS], check=True, capture_output=True, text=True)
-    fit_to_height(final, height_mm / 1000)
-    box = measure(final)
-    print(f"model: {original.stat().st_size} -> {box['bytes']} bytes, {box['triangles']} triangles, removed {removed or 'nothing'}")
-    if box["bytes"] > MAX_BYTES or box["triangles"] > MAX_TRIANGLES:
-        raise Refused(f"over budget after optimising: {box['bytes']} bytes, {box['triangles']} triangles")
-    return final
+    for error in SIMPLIFY_ERRORS:
+        looser = [] if error is None else ["--simplify-error", str(error)]
+        subprocess.run([*OPTIMIZE, str(stripped), str(final), *OPTIMIZE_FLAGS, *looser], check=True, capture_output=True, text=True)
+        fit_to_height(final, height_mm / 1000)
+        box = measure(final)
+        print(f"model: {original.stat().st_size} -> {box['bytes']} bytes, {box['triangles']} triangles at simplify error "
+              f"{error or 'default'}, removed {removed or 'nothing'}")
+        if box["bytes"] > MAX_BYTES:
+            raise Refused(f"over the byte budget after optimising: {box['bytes']} bytes")
+        if box["triangles"] <= MAX_TRIANGLES:
+            return final, error
+    raise Refused(f"over the triangle budget even at simplify error {SIMPLIFY_ERRORS[-1]}: {box['triangles']} triangles")
 
 
 def check_model(path: Path, dims_mm: dict) -> dict:
@@ -313,7 +324,9 @@ def metadata_for(asin: str, item: dict, model_row: dict, listing: dict, checks: 
             "axisAssignment": axes,
             "titleConfirms": checks["title_confirms"],
             "colour": checks["colour"], "colourSource": checks["colour_source"],
-            "processing": "scripts/abo_import.py: strip cameras/lights/animations, " + " ".join([*OPTIMIZE[2:], *OPTIMIZE_FLAGS]) + ", fit_to_height",
+            "processing": "scripts/abo_import.py: strip cameras/lights/animations, " + " ".join([*OPTIMIZE[2:], *OPTIMIZE_FLAGS])
+                          + (f" --simplify-error {checks['simplify_error']}" if checks["simplify_error"] else "") + ", fit_to_height",
+            "simplifyError": checks["simplify_error"] or "default",
         },
         "residualCm": {"width": residual_cm["w"], "height": residual_cm["h"], "depth": residual_cm["d"]},
         "knownLimitations": [
@@ -361,11 +374,12 @@ def main(argv: list[str]) -> int:
         extent_mm = tuple(1000 * float(model_row[key]) for key in ("extent_x", "extent_y", "extent_z"))
         dims_mm, axes = dims_from_record(item.get("item_dimensions"), extent_mm)
         title_confirms = require_title_size(product_name(item), dims_mm)
-        model = prepare_model(args.asin, model_row, dims_mm["h"], args.work)
+        model, simplify_error = prepare_model(args.asin, model_row, dims_mm["h"], args.work)
         residual_cm = check_model(model, dims_mm)
         colour, colour_source = source_colour(item, model)
         listing = listing_for(args.asin, item, args, dims_mm, colour)
-        checks = {"axes": axes, "residual_cm": residual_cm, "title_confirms": title_confirms, "colour": colour, "colour_source": colour_source}
+        checks = {"axes": axes, "residual_cm": residual_cm, "title_confirms": title_confirms, "colour": colour,
+                  "colour_source": colour_source, "simplify_error": simplify_error}
         if not args.dry_run:
             write_outputs(args.asin, model, listing, metadata_for(args.asin, item, model_row, listing, checks, args))
     except Refused as refusal:
