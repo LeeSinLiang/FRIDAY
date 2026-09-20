@@ -2,7 +2,7 @@ import * as pc from "playcanvas";
 import type { Instance, Pose, Product } from "../types";
 import { cmToScene, meterGlbToSceneScale } from "../units";
 import type { ModelStatus } from "./contracts";
-import { animateMaterialization, MATERIALIZE_DURATION_MS, MATERIALIZE_PREVIEW_EVENT } from "./materialize";
+import { animateMaterialization, MATERIALIZE_DURATION_MS, MATERIALIZE_PREVIEW_EVENT, MATERIALIZE_COMPLETE_EVENT } from "./materialize";
 import type { FurnitureAppearance } from "./furnitureAppearance";
 
 export type FurnitureRuntime = {
@@ -143,7 +143,11 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
         stopAnimation?.();
         runtime.furnitureAppearance?.invalidateShadows(MATERIALIZE_DURATION_MS + 100);
         stopAnimation = animateMaterialization(presentation,
-          () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
+          () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches,
+          undefined, undefined, () => {
+            if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(MATERIALIZE_COMPLETE_EVENT,
+              { detail: { instanceId: instance.instanceId } }));
+          });
       });
     },
     dispose() {

@@ -62,7 +62,7 @@ class ShoppingCookieMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.path.startswith(('/api/cart/', '/api/scene/')):
+        if request.path.startswith(('/api/cart/', '/api/scene/', '/api/checkout/')):
             # Hold the ownership check's row lock through mutation. A guest write
             # cannot race a claim and mutate a cart after it belongs to an account.
             with transaction.atomic():
@@ -72,6 +72,6 @@ class ShoppingCookieMiddleware:
         if hasattr(request, '_shopping_cookie'):
             response.set_cookie(COOKIE, request._shopping_cookie, httponly=True,
                                 secure=not settings.DEBUG, samesite='Lax')
-        if request.path.startswith(('/api/cart/', '/api/scene/', '/api/checkouts/', '/_allauth/')):
+        if request.path.startswith(('/api/cart/', '/api/scene/', '/api/checkout/', '/api/checkouts/', '/_allauth/')):
             response['Cache-Control'] = 'private, no-store'
         return response

@@ -186,7 +186,7 @@ def transcribe_audio(request):
     if len(audio) > speech.MAX_AUDIO_BYTES:
         return Response({"error": "audio_too_large", "detail": "Keep it to a sentence."}, status=413)
     try:
-        result = speech.transcribe(audio, request.content_type)
+        result = speech.transcribe(audio, request.content_type, wake_hint=request.query_params.get('wake') == '1')
     except speech.TranscriptionUnavailable as exc:
         logger.warning("transcription unavailable: %s", exc)
         return Response({"error": "transcription_unavailable", "fallback": "browser"}, status=503)

@@ -1,0 +1,49 @@
+.splat-editor.has-checkout :is(.splat-header,.splat-view-controls,.splat-panel,.splat-panel-toggle,.design-variants,.floor-map,.splat-plan-label) {opacity:0;visibility:hidden;transform:translateY(-12px);pointer-events:none;transition:opacity .24s ease,transform .28s cubic-bezier(.22,1,.36,1),visibility .28s;}
+.splat-editor.has-checkout .splat-bottom-center {z-index:42;left:50%;bottom:18px;}
+.splat-editor.has-checkout .splat-bottom-center>.splat-help,
+.splat-editor.has-checkout .splat-edit-tools>button,
+.splat-editor.has-checkout .splat-edit-tools>span {display:none;}
+.room-checkout-layer {position:absolute;inset:0;z-index:40;display:grid;place-items:center;padding:30px 22px 90px;background:#34291618;color:#3d3225;}
+.room-checkout-panel {width:min(570px,100%);max-height:calc(100dvh - 128px);overflow:auto;overscroll-behavior:contain;padding:28px;border-radius:20px;background:#fbf7edeb;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 28px 70px -30px #36241180;outline:none;scrollbar-width:thin;scrollbar-color:#b29a70 transparent;animation:room-checkout-appear .5s .28s cubic-bezier(.16,1,.3,1) both;}
+.room-checkout-panel header {display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px;}
+.room-checkout-panel h1 {font-size:clamp(23px,3vw,29px);font-weight:500;letter-spacing:-.035em;line-height:1.14;margin:0 0 8px;text-wrap:balance;}
+.room-checkout-panel header p {margin:0;color:#76644b;font-size:12px;line-height:1.6;}
+.room-checkout-close {width:36px;height:36px;display:grid;place-items:center;flex:none;border-radius:50%;background:#ece3d2;color:#5e4b31;}
+.room-checkout-close:hover {background:#dfcfb1;}
+.room-checkout-items {list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0;}
+.room-checkout-items li {display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #cbbba448;animation:room-checkout-gather .7s calc(.34s + var(--item-delay)) cubic-bezier(.22,.7,.2,1) both;}
+.room-checkout-items img,.room-checkout-no-image {width:64px;height:56px;flex:none;object-fit:contain;border-radius:7px;background:#f4eddf;}
+.room-checkout-items li>span:not(.room-checkout-no-image) {flex:1;min-width:0;}
+.room-checkout-items strong {display:block;font-size:13px;line-height:1.4;font-weight:500;}
+.room-checkout-items small {display:block;font-size:10px;color:#76644b;margin-top:4px;}
+.room-checkout-items b {max-width:110px;text-align:right;font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;}
+.room-checkout-total {display:flex;align-items:baseline;justify-content:space-between;gap:18px;padding:20px 0 8px;}
+.room-checkout-total span {font-size:12px;color:#715e44;}
+.room-checkout-total strong {font-size:25px;letter-spacing:-.035em;font-weight:500;font-variant-numeric:tabular-nums;}
+.room-checkout-honesty {font-size:10px;color:#76644b;line-height:1.6;margin:7px 0 18px;}
+.room-checkout-message {font-size:13px;line-height:1.6;color:#55452f;margin:13px 0;}
+.room-checkout-error {font-size:12px;line-height:1.6;color:#873f2c;margin:13px 0;}
+.room-checkout-panel footer {display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:21px;}
+.room-checkout-primary {display:inline-flex;justify-content:center;align-items:center;min-height:44px;padding:12px 18px;border:0;border-radius:10px;background:#51422d;color:#fff8e9;font:inherit;font-size:12px;line-height:1.4;text-decoration:none;cursor:pointer;}
+.room-checkout-primary:hover:not(:disabled) {background:#6b5636;}
+.room-checkout-secondary,.room-checkout-film-error button {min-height:44px;padding:10px 2px;background:none;border:0;color:#685335;font:inherit;font-size:12px;text-underline-offset:4px;cursor:pointer;}
+.room-checkout-secondary:hover,.room-checkout-film-error button:hover {text-decoration:underline;}
+.room-checkout-panel button:disabled {opacity:.5;cursor:not-allowed;}
+.room-checkout-panel :is(button,a,input):focus-visible {outline:2px solid #93723b;outline-offset:4px;}
+.room-checkout-panel ::selection {background:#dac396;color:#382e25;}
+.room-checkout-code {display:flex;align-items:flex-start;flex-direction:column;gap:11px;margin-top:22px;}
+.room-checkout-code label {font-size:13px;color:#50402c;}
+.room-checkout-code input {width:210px;max-width:100%;min-height:52px;border:1px solid #bca780;border-radius:9px;background:#fffcf6;color:#3e3122;caret-color:#93723b;font:inherit;font-size:23px;font-variant-numeric:tabular-nums;letter-spacing:.26em;padding:9px 15px;}
+.room-checkout-code small {font-size:11px;line-height:1.6;color:#76644b;}
+.room-checkout-code .room-checkout-primary {margin-top:6px;}
+.room-checkout-dispatch {position:relative;margin:16px -10px 8px;}
+.room-checkout-dispatch video {display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px;background:#f5efe6;}
+.room-checkout-film-error {padding:10px;font-size:12px;line-height:1.5;color:#6c5332;}
+.room-checkout-settled {min-height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.room-checkout-settled svg {width:48px;height:48px;color:#687149;margin-bottom:13px;}
+.room-checkout-settled p {font-size:21px;letter-spacing:-.025em;margin:0 0 9px;}
+.room-checkout-settled small {font-size:11px;color:#76644b;}
+@keyframes room-checkout-appear {from {opacity:0;transform:translateY(18px);}to {opacity:1;transform:translateY(0);}}
+@keyframes room-checkout-gather {from {opacity:0;transform:translateX(var(--item-origin));}to {opacity:1;transform:none;}}
+@media(max-width:640px) {.room-checkout-layer {padding:16px 12px 90px;}.room-checkout-panel {padding:21px 18px;border-radius:16px;max-height:calc(100dvh - 110px);}.room-checkout-items li {gap:10px;}.room-checkout-items img,.room-checkout-no-image {width:49px;height:48px;}.room-checkout-items b {max-width:86px;font-size:11px;}.room-checkout-panel footer {gap:8px 14px;}}
+@media(prefers-reduced-motion:reduce) {.room-checkout-panel,.room-checkout-items li {animation:none;}.splat-editor.has-checkout :is(.splat-header,.splat-view-controls,.splat-panel,.splat-panel-toggle,.design-variants,.floor-map,.splat-plan-label) {transition:none;transform:none;}}

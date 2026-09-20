@@ -39,7 +39,7 @@ export default function CheckoutReview() {
       <ul className="checkout-items">{checkout.snapshot.items.map(item=><li key={item.product_id}><span>{item.name}<small>{item.vendor ? item.vendor.name + ' · ' : ''}Quantity {item.quantity}</small></span><strong>{isPriced(item) ? money(item.line_amount!) : 'price unavailable'}</strong></li>)}</ul>
       <p className="muted">{billLine(counts.items, counts.priced, checkout.snapshot.amount)}{vendorLine(lines) && <><br/>From {vendorLine(lines)}</>}</p>
       <p className="checkout-total"><span>{counts.priced < counts.items ? 'Total of priced items · USD' : 'Total · USD'}</span><strong>{money(checkout.snapshot.amount)}</strong></p>
-      {checkout.state==='draft' && <ApprovalForm checkout={checkout} onApproved={setCheckout}/>}
+      {checkout.state==='draft' && <ApprovalForm checkout={checkout} onCompleted={setCheckout} onUncertain={load}/>}
       {checkout.state==='approved' && <><p className="notice">MFA approval recorded for this checkout.</p><button disabled={busy || !checkout.visa?.ready} onClick={()=>void submit()}>{busy?'Waiting for Visa…':'Send approved request to Visa sandbox'}</button></>}
       {checkout.state==='superseded' ? <p role="status">Your cart changed. Return to your cart for a new review and approval.</p> : !['draft','approved'].includes(checkout.state) && <SandboxReceipt checkout={checkout}/>}
       {['transport_unknown','submitting'].includes(checkout.state) && <button disabled={busy} onClick={()=>void load().catch(e=>setError(e.message))}>Check stored status</button>}

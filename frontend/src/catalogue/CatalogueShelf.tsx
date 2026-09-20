@@ -10,7 +10,7 @@ import { ROOM_CHOICES, ROOM_ID } from "../scene/fixtures";
 import { compileSentence, searchCatalogue, type Compiled } from "./api";
 import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend, type VoicePhase } from "./transcribe";
 import "./shelf.css";
-import { designerInstruction, isDoItNowCue } from "../scene/designerIntent";
+import type { VoiceCommand } from "./wakeVoice";
 import ListingImage from "./ListingImage";
 import ListingCardCopy from "./ListingCardCopy";
 import { cardCopy } from "./cardCopy";
@@ -38,8 +38,9 @@ type Props = {
   onPick: (listing: Listing | null) => void;
   onPlace: (place: PlaceClause[]) => void;
   onClose?: () => void;
-  onDesign?: (text: string) => Promise<string>;
+  onDesign?: (text: string, signal?:AbortSignal) => Promise<string|null>;
   designMessage?: string;
+  registerVoiceCommand?: (handler:VoiceCommand|null)=>void;
 };
 
 // ?dev=1 shows the raw per-rotation sample counts. A shopper needs "it fits" or "it doesn't, and why";
@@ -80,7 +81,7 @@ function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: 
   );
 }
 
-export default function CatalogueShelf({ roomId, sceneRevision, embedded = false, active = true, voiceRequest = 0, voiceCancelRequest = 0, onVoicePhaseChange, browseCategory = null, region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose, onDesign, designMessage }: Props) {
+export default function CatalogueShelf({ roomId, sceneRevision, embedded = false, active = true, voiceRequest = 0, voiceCancelRequest = 0, onVoicePhaseChange, browseCategory = null, region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose, onDesign, designMessage, registerVoiceCommand }: Props) {
   const currentRevision = useRef(sceneRevision); currentRevision.current=sceneRevision;
   const [sentence, setSentence] = useState("an armchair");
   const [compiled, setCompiled] = useState<Compiled | null>(null);
@@ -122,8 +123,6 @@ export default function CatalogueShelf({ roomId, sceneRevision, embedded = false
     return () => controller.abort();
   }, [browseCategory]);
   const request = useRef<AbortController | null>(null);
-  const lastPrompt = useRef("");
-  const lastExecuted = useRef("");
   const [voice, setVoice] = useState<TranscribeBackend>("browser");
   const [listening, setListening] = useState<Listening | null>(null);
   const voiceSession = useRef<Listening | null>(null);
@@ -134,42 +133,44 @@ export default function CatalogueShelf({ roomId, sceneRevision, embedded = false
   const [heardBy, setHeardBy] = useState<Heard | null>(null);
   useEffect(() => { const controller = new AbortController(); void fetchBackend(controller.signal).then(setVoice); return () => controller.abort(); }, []);
 
-  const run = async (text: string) => {
+  const run = async (text: string, interpret = true):Promise<string> => {
     request.current?.abort();
     const controller = (request.current = new AbortController());
     setBusy(true);
     setDesignerReply("");
     try {
-      const instruction = designerInstruction(text, lastPrompt.current);
-      if (isDoItNowCue(text) && (!instruction || instruction === lastExecuted.current)) {
-        setError(instruction ? "That placement was already requested. Describe the next change." : "Describe what to place, then say ‘do it now’.");
-        return;
-      }
-      if (onDesign && instruction) {
-        onHover(null); onPick(null); onPlace([]); setError(""); setCompiled(null);
-        const reply = await onDesign(instruction);
-        if (reply.startsWith("Layout saved.")) lastExecuted.current = instruction;
-        if (request.current === controller && !controller.signal.aborted) setDesignerReply(reply);
-        return;
+      if (onDesign && interpret) {
+        const reply = await onDesign(text, controller.signal);
+        if (controller.signal.aborted) return "That request was cancelled.";
+        if (reply !== null) {
+          onHover(null); onPick(null); onPlace([]); setError(""); setCompiled(null);
+          if (request.current === controller) setDesignerReply(reply);
+          return reply;
+        }
       }
       // compile() never fails on a bad sentence: at worst it returns a plain text search.
       const result = await compileSentence(text, controller.signal, roomId && sceneRevision !== undefined ? {roomId,sceneRevision} : undefined);
       const found = await searchCatalogue(result.program.find, controller.signal);
       if (result.sceneRevision !== undefined && result.sceneRevision !== currentRevision.current) throw Error("The room changed. Describe the placement again.");
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted) return "That request was cancelled.";
       setCompiled(result); setItems(found.items); setTotal(found.total); setError("");
       setMatches(found.facets ? found.facets.category.reduce((sum, bucket) => sum + bucket.count, 0) : null);
       if (currentCategory.current === null) {
         onHover(null); // the card under the pointer is a different listing now
         onPlace(result.program.place);
       }
+      return found.total ? `I found ${found.total} matching furniture options. You can review them in the catalogue.` : "I couldn't find matching furniture. Try a different description.";
     } catch (caught) {
       if ((caught as Error).name !== "AbortError") setError((caught as Error).message);
+      return (caught as Error).name === "AbortError" ? "That request was cancelled." : (caught as Error).message;
     } finally {
       if (request.current === controller) setBusy(false);
     }
   };
-  useEffect(() => { void run(sentence); return () => request.current?.abort(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const voiceCommand=useRef<VoiceCommand>(run);
+  voiceCommand.current=async text=>{setSentence(text);return run(text);};
+  useEffect(()=>{registerVoiceCommand?.(text=>voiceCommand.current(text));return()=>registerVoiceCommand?.(null);},[registerVoiceCommand]);
+  useEffect(() => { void run(sentence, false); return () => request.current?.abort(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Speak starts recording; finish transcribes and searches, while cancel discards the recording.
   const talk = async () => {
@@ -189,7 +190,7 @@ export default function CatalogueShelf({ roomId, sceneRevision, embedded = false
       setHeardBy(heard);
       const text = heard.text.trim();
       if (text) {
-        if (!isDoItNowCue(text)) { lastPrompt.current = text; setSentence(text); }
+        setSentence(text);
         onPick(null); void run(text);
       }
       else setError("Didn’t catch that. Try again, or type it.");
@@ -257,7 +258,7 @@ export default function CatalogueShelf({ roomId, sceneRevision, embedded = false
         </nav>
       )}
       {!browsing && <><form onSubmit={submit}>
-        <input value={sentence} onChange={(event) => { setSentence(event.target.value); if (!isDoItNowCue(event.target.value)) lastPrompt.current=event.target.value; }} maxLength={300}
+        <input value={sentence} onChange={(event) => setSentence(event.target.value)} maxLength={300}
           aria-label="Describe what you are looking for" placeholder={onDesign ? "Find a chair, or place a chair beside the table" : "a reading chair by the window, under $400"} />
         {!embedded && canListen(voice) && (
           <button type="button" className="mic" onClick={() => void talk()} aria-pressed={listening !== null} disabled={startingVoice}
@@ -271,9 +272,7 @@ export default function CatalogueShelf({ roomId, sceneRevision, embedded = false
       {compiled && compiled.chips.length > 0 && (
         <div className="shelf-chips">{compiled.chips.map((chip) => <span key={chip}>{chip}</span>)}</div>
       )}
-      {DEV && (
-        <p className="shelf-status"><code>voice configured: {voice}{heardBy ? ` · last transcript ANSWERED BY: ${heardBy.answeredBy}${heardBy.note ? ` (${heardBy.note})` : ""}` : " · nothing transcribed yet"}</code></p>
-      )}
+      {heardBy && <p className="shelf-status">Heard: “{heardBy.text || "No speech detected"}”. Edit the text above if needed.</p>}
       </>}
       {shownError && <p className="shelf-status refused" role="alert">{shownError}</p>}
       {/* One fixed-height slot for everything that changes on hover. The panel is bottom-anchored and usually

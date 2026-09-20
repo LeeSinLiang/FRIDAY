@@ -3,6 +3,7 @@ import { createGoldenThreads } from "./goldenThreads";
 
 export const MATERIALIZE_DURATION_MS = 2200;
 export const MATERIALIZE_PREVIEW_EVENT = "friday:preview-furniture-materialize";
+export const MATERIALIZE_COMPLETE_EVENT = "friday:furniture-materialized";
 
 export function materializeFrame(elapsedMs: number) {
   const t = Math.max(0, Math.min(1, elapsedMs / MATERIALIZE_DURATION_MS));
@@ -63,7 +64,7 @@ void getEmission() {
 
 /** Build in place: no entity transform, opacity, scene pose or collision changes. */
 export function animateMaterialization(presentation: pc.Entity, reducedMotion: () => boolean,
-  schedule = requestAnimationFrame, cancel = cancelAnimationFrame) {
+  schedule = requestAnimationFrame, cancel = cancelAnimationFrame, onComplete?: () => void) {
   let frameId = 0;
   let stopped = false;
   let threads: ReturnType<typeof createGoldenThreads> = null;
@@ -77,7 +78,7 @@ export function animateMaterialization(presentation: pc.Entity, reducedMotion: (
       mesh.material = original; mesh.castShadow = castShadow; temporary.destroy();
     }
   };
-  if (reducedMotion()) return restore;
+  if (reducedMotion()) { onComplete?.(); return restore; }
   const meshes = (presentation.findComponents("render") as pc.RenderComponent[]).flatMap(component => component.meshInstances);
   let minY = Infinity, maxY = -Infinity;
   for (const mesh of meshes) {
@@ -85,7 +86,7 @@ export function animateMaterialization(presentation: pc.Entity, reducedMotion: (
     minY = Math.min(minY, mesh.aabb.center.y - mesh.aabb.halfExtents.y);
     maxY = Math.max(maxY, mesh.aabb.center.y + mesh.aabb.halfExtents.y);
   }
-  if (!Number.isFinite(minY) || maxY <= minY) return restore;
+  if (!Number.isFinite(minY) || maxY <= minY) { onComplete?.(); return restore; }
   const height = maxY - minY;
   const band = height * 0.035;
   for (const mesh of meshes) {
@@ -112,7 +113,7 @@ export function animateMaterialization(presentation: pc.Entity, reducedMotion: (
     if (stopped) return;
     start ??= time;
     const value = materializeFrame(time - start);
-    if (reducedMotion() || value.complete) { restore(); return; }
+    if (reducedMotion() || value.complete) { restore(); onComplete?.(); return; }
     threads?.update(value.progress);
     for (const { temporary } of bindings) temporary.setParameter("summonHeight", minY - band * 7 + value.progress * (height + 14 * band));
     frameId = schedule(tick);

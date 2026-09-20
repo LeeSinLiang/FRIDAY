@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 from urllib.error import HTTPError, URLError
+from urllib.parse import parse_qs, urlparse
 
 from django.core.cache import cache
 from django.contrib.auth import get_user_model
@@ -24,7 +25,8 @@ SECRET = "dg-test-secret-0123456789abcdef"
 RECORDED = {"metadata": {"request_id": "r", "duration": 2.4}, "results": {"channels": [{"alternatives": [
     {"transcript": "A reading chair under $400.", "confidence": 0.99}]}]}}
 LOCMEM = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "transcribe-tests"}}
-DEEPGRAM_ON = {"TRANSCRIBE_BACKEND": "deepgram", "DEEPGRAM_API_KEY": SECRET}
+DEEPGRAM_ON = {"STT_PROVIDER": "deepgram", "TRANSCRIBE_BACKEND": "deepgram", "DEEPGRAM_API_KEY": SECRET}
+OPENAI_ON = {"STT_PROVIDER": "openai", "OPENAI_API_KEY": SECRET}
 
 
 def answering(payload):
@@ -54,6 +56,40 @@ class TranscribeEndpointTests(SimpleTestCase):
         self.assertEqual(sent.get_header("Authorization"), f"Token {SECRET}")
         self.assertEqual(sent.get_header("Content-type"), "audio/webm;codecs=opus")
         self.assertEqual(sent.data, WAV)
+        self.assertNotIn('keyterm', parse_qs(urlparse(sent.full_url).query))
+
+    def test_wake_mode_adds_only_the_nova_three_wake_phrase_hint(self):
+        with mock.patch.dict(os.environ, DEEPGRAM_ON), answering(RECORDED) as urlopen:
+            response = APIClient().post('/api/transcribe?wake=1', WAV, content_type='audio/wav')
+        self.assertEqual(response.status_code, 200)
+        query = parse_qs(urlparse(urlopen.call_args.args[0].full_url).query)
+        self.assertEqual(query['model'], ['nova-3'])
+        self.assertEqual(query['keyterm'], ['Hey Friday'])
+        self.assertNotIn('keywords', query)
+
+    def test_openai_provider_sends_a_named_audio_file_and_bounded_domain_hints(self):
+        with mock.patch.dict(os.environ, OPENAI_ON), answering({"text": "Find a brown sofa."}) as urlopen:
+            response = APIClient().post('/api/transcribe?wake=1', WAV, content_type="audio/webm;codecs=opus")
+        self.assertEqual((response.status_code, response.json()["text"], response.json()["backend"]),
+                         (200, "Find a brown sofa.", "openai"))
+        sent = urlopen.call_args.args[0]
+        self.assertEqual(sent.full_url, speech.OPENAI_URL)
+        self.assertEqual(sent.get_header("Authorization"), f"Bearer {SECRET}")
+        self.assertIn("multipart/form-data; boundary=friday-", sent.get_header("Content-type"))
+        self.assertIn(b'name="model"\r\n\r\ngpt-transcribe\r\n', sent.data)
+        self.assertIn(b'name="languages[]"\r\n\r\nen\r\n', sent.data)
+        self.assertIn(b'name="prompt"\r\n\r\n' + speech.OPENAI_WAKE_PROMPT.encode() + b'\r\n', sent.data)
+        self.assertIn(b'name="keywords[]"\r\n\r\nHey Friday\r\n', sent.data)
+        self.assertIn(b'name="keywords[]"\r\n\r\nHaussmann\r\n', sent.data)
+        self.assertIn(b'name="file"; filename="recording.webm"', sent.data)
+        self.assertIn(b"Content-Type: audio/webm\r\n\r\n" + WAV, sent.data)
+        self.assertNotIn(SECRET.encode(), sent.data)
+
+    def test_openai_plain_speak_does_not_add_the_wake_phrase_prompt(self):
+        with mock.patch.dict(os.environ, OPENAI_ON), answering({"text": "Find a brown sofa."}) as urlopen:
+            self.assertEqual(self.post().status_code, 200)
+        self.assertNotIn(b'name="prompt"', urlopen.call_args.args[0].data)
+        self.assertNotIn(b'\r\nHey Friday\r\n', urlopen.call_args.args[0].data)
 
     def test_the_key_never_reaches_the_page_or_the_logs(self):
         failure = HTTPError("https://api.deepgram.com/v1/listen", 401, f"bad key {SECRET}", {}, io.BytesIO(SECRET.encode()))
@@ -69,12 +105,21 @@ class TranscribeEndpointTests(SimpleTestCase):
         self.assertEqual(logs.output, ["WARNING:catalogue.views:transcription unavailable: provider answered HTTP 401"])
 
     def test_browser_is_the_default_and_a_missing_key_falls_back_to_it(self):
-        clean = {k: v for k, v in os.environ.items() if k not in ("TRANSCRIBE_BACKEND", "DEEPGRAM_API_KEY")}
-        for env in (clean, {**clean, "TRANSCRIBE_BACKEND": "deepgram"}, {**clean, "TRANSCRIBE_BACKEND": "browser", "DEEPGRAM_API_KEY": SECRET}):
+        clean = {k: v for k, v in os.environ.items() if k not in
+                 ("STT_PROVIDER", "TRANSCRIBE_BACKEND", "DEEPGRAM_API_KEY", "OPENAI_API_KEY")}
+        for env in (clean, {**clean, "TRANSCRIBE_BACKEND": "deepgram"},
+                    {**clean, "STT_PROVIDER": "openai"},
+                    {**clean, "TRANSCRIBE_BACKEND": "browser", "DEEPGRAM_API_KEY": SECRET, "OPENAI_API_KEY": SECRET}):
             with mock.patch.dict(os.environ, env, clear=True), mock.patch("catalogue.transcribe.urlopen") as urlopen:
                 self.assertEqual(APIClient().get("/api/transcribe").json(), {"backend": "browser"})
                 self.assertEqual(self.post().status_code, 503)
                 urlopen.assert_not_called()
+
+    def test_explicit_provider_selection_does_not_silently_switch_vendors(self):
+        with mock.patch.dict(os.environ, {**DEEPGRAM_ON, **OPENAI_ON}, clear=True):
+            self.assertEqual(speech.backend_name(), "openai")
+        with mock.patch.dict(os.environ, {**DEEPGRAM_ON, "STT_PROVIDER": "deepgram", "OPENAI_API_KEY": SECRET}, clear=True):
+            self.assertEqual(speech.backend_name(), "deepgram")
 
     def test_provider_trouble_is_a_503_that_tells_the_page_to_fall_back(self):
         for failure in (URLError("no route"), TimeoutError()):

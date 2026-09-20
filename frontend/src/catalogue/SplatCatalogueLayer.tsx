@@ -18,6 +18,7 @@ import type { Instance, Product, Room, SceneEdit } from "../scene/types";
 import type { BrowseCategory } from "./browse";
 import CatalogueShelf from "./CatalogueShelf";
 import type { VoicePhase } from "./transcribe";
+import type { VoiceCommand } from "./wakeVoice";
 import { saveQuietly } from "./quietSave";
 import { FREE } from '../region/types';
 
@@ -30,9 +31,11 @@ type Props = {
   instances: Instance[];
   ready: boolean;
   locked: boolean;
+  draftMode?: boolean;
   submit: (edit: SceneEdit) => Promise<boolean>;
-  onDesign?: (text: string) => Promise<string>;
+  onDesign?: (text: string, signal?:AbortSignal) => Promise<string|null>;
   designMessage?: string;
+  registerVoiceCommand?: (handler:VoiceCommand|null)=>void;
   /** The session's own retry and status. A save that fails uncertainly is retried from here, quietly. */
   retry: () => Promise<unknown> | undefined;
   status: string;
@@ -51,11 +54,11 @@ type Props = {
 /** The engine's own drag threshold (interaction.ts): a press that moves this far is a look, not a click. */
 const LOOK_THRESHOLD_PX = 4;
 
-export default function SplatCatalogueLayer({ getRuntime, room, sceneRevision, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, showShelf = true, onCloseShelf, shelfTarget, voiceRequest, voiceCancelRequest, onVoicePhaseChange, browseCategory = null, confirm, onDesign, designMessage }: Props) {
+export default function SplatCatalogueLayer({ getRuntime, room, sceneRevision, products, instances, ready, locked, draftMode = false, submit, retry, status, onNotice, shopping = false, showShelf = true, onCloseShelf, shelfTarget, voiceRequest, voiceCancelRequest, onVoicePhaseChange, browseCategory = null, confirm, onDesign, designMessage, registerVoiceCommand }: Props) {
   const [hovered, setHovered] = useState<Listing | null>(null);
   const [armed, setArmed] = useState<Listing | null>(null);
   useEffect(() => { if (!showShelf) { setHovered(null); setArmed(null); } }, [showShelf]);
-  useEffect(() => { setHovered(null); setArmed(null); }, [browseCategory]);
+  useEffect(() => { setHovered(null); setArmed(null); }, [browseCategory, draftMode]);
   const [place, setPlace] = useState<PlaceClause[]>([]);
   const [yawChoice, setYawChoice] = useState<number | null>(null);
   const overlay = useRef<RegionOverlay | null>(null);
@@ -206,14 +209,19 @@ export default function SplatCatalogueLayer({ getRuntime, room, sceneRevision, p
   }
   const verdict = unconfirmed ? validatePlacement(room,known,[...instances,unconfirmed],unconfirmed.instanceId,unconfirmed.pose) : null;
   const purchasePrice = purchase ? cardPrice(purchase.price_cents) : null;
+  const requestDesign = onDesign ? (text:string,signal?:AbortSignal) => {
+    if (!ready) return Promise.resolve(status === "offline" ? "Room connection interrupted. Retry the connection, then ask again."
+      : status === "conflict" ? "Reload the saved layout before asking the designer." : "Wait for the room to finish loading, then ask again.");
+    if (locked) return Promise.resolve("Wait for the current room operation to finish, then ask again.");
+    if (unconfirmed) return Promise.resolve("Confirm or cancel the current placement before asking the designer.");
+    return onDesign(text,signal);
+  } : undefined;
   return <>
-    {shelfTarget !== undefined ? shelfTarget && createPortal(<CatalogueShelf embedded active={showShelf} browseCategory={browseCategory} voiceRequest={voiceRequest} voiceCancelRequest={voiceCancelRequest} onVoicePhaseChange={onVoicePhaseChange} roomId={room.roomId} sceneRevision={sceneRevision} region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
+    {shelfTarget !== undefined ? shelfTarget && createPortal(<CatalogueShelf embedded active={showShelf} browseCategory={browseCategory} voiceRequest={voiceRequest} voiceCancelRequest={voiceCancelRequest} onVoicePhaseChange={onVoicePhaseChange} roomId={room.roomId} sceneRevision={sceneRevision} region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || draftMode || !!unconfirmed} purchasableOnly={shopping}
       canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} designMessage={designMessage}
-      onDesign={onDesign ? text => !ready || locked || !!unconfirmed
-        ? Promise.resolve("Confirm or cancel the current placement before asking the designer.") : onDesign(text) : undefined}/>, shelfTarget) : showShelf && <CatalogueShelf roomId={room.roomId} sceneRevision={sceneRevision} region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
+      onDesign={requestDesign} registerVoiceCommand={registerVoiceCommand}/>, shelfTarget) : showShelf && <CatalogueShelf roomId={room.roomId} sceneRevision={sceneRevision} region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || draftMode || !!unconfirmed} purchasableOnly={shopping}
       canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} onClose={onCloseShelf} designMessage={designMessage}
-      onDesign={onDesign ? text => !ready || locked || !!unconfirmed
-        ? Promise.resolve("Confirm or cancel the current placement before asking the designer.") : onDesign(text) : undefined}/>}
+      onDesign={requestDesign} registerVoiceCommand={registerVoiceCommand}/>}
     {shopping && armed && <section className="purchase-confirm" aria-label="Preview furniture"><p>Click the lit floor, or use a suggested position.</p><button className="button" disabled={!ready || locked || !fitting.length} onClick={previewSuggested}>Preview a fitting position</button><button className="button" onClick={()=>setArmed(null)}>Cancel</button></section>}
     {shopping && purchase && unconfirmed && <section className="purchase-confirm" aria-label="Confirm furniture placement">
       <p className="eyebrow">Placement preview</p><h2>{purchase.title}</h2><p>{purchasePrice ? `${purchasePrice} USD` : "Price unavailable"} · sandbox</p>

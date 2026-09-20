@@ -52,7 +52,7 @@ function captureSortManager(runtime: PlayCanvasRuntime, camera: unknown, layer: 
 }
 
 /** Resolve after a fresh sort for the frozen camera has been applied and drawn. */
-export function waitForSplatFrame(runtime: PlayCanvasRuntime, timeoutMs = 15_000, signal?: AbortSignal): Promise<void> {
+export function waitForSplatFrame(runtime: PlayCanvasRuntime, timeoutMs = 15_000, signal?: AbortSignal, visibleTimeOnly = false): Promise<void> {
   if (runtime.disposed || signal?.aborted) return Promise.reject(new Error("Rendering was cancelled"));
   const isMesh = runtime.room?.scan?.visualFormat === "glb";
   const system = runtime.app.systems.gsplat;
@@ -61,6 +61,10 @@ export function waitForSplatFrame(runtime: PlayCanvasRuntime, timeoutMs = 15_000
     let readyEvent: EventHandle | undefined;
     let endEvent: EventHandle | undefined;
     let settled = false;
+    const visibility = visibleTimeOnly ? runtime.canvas.ownerDocument : undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let remainingMs = timeoutMs;
+    let startedAt = 0;
     const requestedSorts = new Set<CaptureSortManager>();
     const finish = (error?: Error) => {
       if (settled) return;
@@ -68,13 +72,29 @@ export function waitForSplatFrame(runtime: PlayCanvasRuntime, timeoutMs = 15_000
       clearTimeout(timer);
       readyEvent?.off();
       endEvent?.off();
+      visibility?.removeEventListener("visibilitychange", updateTimer);
       runtime.signal.removeEventListener("abort", abort);
       signal?.removeEventListener("abort", abort);
       if (error) reject(error);
       else resolve();
     };
     const abort = () => finish(new Error("Rendering was cancelled"));
-    const timer = setTimeout(() => finish(new Error("The Gaussian scene did not finish sorting in time")), timeoutMs);
+    const updateTimer = () => {
+      if (timer !== undefined) {
+        clearTimeout(timer);
+        remainingMs -= performance.now() - startedAt;
+        timer = undefined;
+      }
+      if (!visibility?.hidden) {
+        startedAt = performance.now();
+        timer = setTimeout(() => finish(new Error("The Gaussian scene did not finish sorting in time")), Math.max(0, remainingMs));
+        runtime.app.renderNextFrame = true;
+      }
+    };
+    // Browsers pause animation frames in hidden tabs. Initial room loading gets
+    // the same visible-time budget; capture calls retain their wall-clock limit.
+    visibility?.addEventListener("visibilitychange", updateTimer);
+    updateTimer();
     runtime.signal.addEventListener("abort", abort, { once: true });
     signal?.addEventListener("abort", abort, { once: true });
     if (isMesh) endEvent = runtime.app.once("frameend", () => finish());
@@ -209,7 +229,7 @@ export function createPlayCanvasRuntime(canvas: HTMLCanvasElement, options: {
       app.scene.exposure = model.bakedExposureScale ?? 1;
     }
     onStatus?.({ phase: "loading", message: "Preparing the first view…" });
-    await waitForSplatFrame(runtime, 30_000);
+    await waitForSplatFrame(runtime, 30_000, undefined, true);
     if (!runtime.disposed) onStatus?.({ phase: "ready", message: "Room ready" });
   });
   void runtime.ready.catch(error => {

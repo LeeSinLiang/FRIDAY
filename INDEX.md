@@ -114,3 +114,15 @@ Add dedicated feature docs here as they are created.
 - [Furniture materialization](docs/frontend/furniture-materialization.md) — spatial-agent add animation, preview event, unchanged placement and static captures.
 
 - [Cg Arch boundary fix](docs/tickets/cg-arch-boundaries.md) — connected-floor diagnosis, preservation plan and runtime verification.
+
+- [Haussmann autonomous bedroom execution plan](docs/handoffs/haussmann-demo-execution-plan.md) — parallel agent assignments, three full-room variants, active-only refinement, budget gates and MFA/IDX acceptance.
+
+- [Model-agent handoff: all 15 Haussmann demo GLBs](docs/frontend/3d-object/haussmann-demo-catalogue-handoff.md) — answers 1–5, synthetic price sheet, exact import contract, defect decisions and verification.
+
+- [Collaborator guide: producing realistic furniture GLBs](docs/frontend/3d-object/realistic-glb-collaborator-production.md) — assignment priorities, reference prompt, generation/fitting workflow, quality gates and delivery template for asset producers.
+
+- [Haussmann demo rehearsal](docs/handoffs/haussmann-demo-rehearsal.md) — exact design, refinement, lock-in, account/MFA and sandbox receipt steps with recovery and verified limits.
+
+- [FRIDAY system architecture](docs/architecture/system.md) — current browser, API, AI/search/voice, commerce, persistence, asset pipelines and deployment diagrams.
+
+- [Demo merge preparation](docs/handoffs/demo-merge-preparation.md) — active branch overlap, proposed review groups, verified checks and remaining release gates.

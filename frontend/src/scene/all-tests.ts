@@ -15,6 +15,7 @@ import "../shopping/haussmannPreload.test";
 import "./playcanvas/interaction.test";
 import "./useRoomSession.test";
 import "./designerIntent.test";
+import "./designVariants.test";
 
 import "./playcanvas/angelMotion.test";
 
@@ -26,3 +27,6 @@ import "./supports.test";
 
 import "./playcanvas/furnitureFinish.test";
 import "../catalogue/recommendations.test";
+import "../catalogue/wakeVoice.test";
+import "./conversationIntent.test";
+import "../checkout/roomCheckout.test";

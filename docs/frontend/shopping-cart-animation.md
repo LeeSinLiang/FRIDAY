@@ -1,6 +1,22 @@
 # Cart choreography
 
-**Status, 2026-09-20:** the standalone cart preview (`/?cartPreview`) is retired. Its choreography now runs inside the real cart at `/cart`, over the real cart. The original preview is described under [History](#history-the-standalone-preview-retired); its route, page and event no longer exist.
+## Restored live-room checkout overlay · 2026-09-20
+
+The latest user request supersedes the historical restriction on showing checkout over the room. `RoomCheckoutOverlay.tsx` now presents the real selection over the existing live room; it does not mount a second renderer or restore the standalone `?cartPreview` route. The parent room controller owns authentication, immutable checkout creation, explicit readiness, MFA approval and submission.
+
+Room panels fade away first, then the warm ivory overlay and actual furniture lines arrive. Once a checkout exists, names, quantities and amounts come from its immutable snapshot; current cart thumbnails are only decoration. `onBillVisible(id, snapshotHash)` fires after entry motion (immediately with reduced motion) and only while the document is visible, so the controller can bind consent to the displayed bill. Closing and reopening preserves the controller's saved result, without submitting from the presentation component.
+
+The authenticator input is local and clears after submission. Spoken codes are explicitly supported: speech is transcribed online, then the room controller intercepts the code before general intent routing or conversation history. Voice status redacts the code, including when verification changes the stage before the reply arrives. Neither presentation nor voice code logs an authenticator code.
+
+The original six-second `/animations/order-dispatch.mp4` is recovered from the previous preview's local Git history and reused without new generation. It mounts **only** when the saved checkout says `accepted`, HTTP status is 2xx, the transaction ID matches, and an IDX Match Key exists. Approval, pending/unknown transport, failure and malformed evidence never play the film. Copy states that this is a verified sandbox request: no payment was charged and no merchant order was created. The bird is a symbolic demonstration, not fulfillment evidence.
+
+Reduced motion skips travel and film. Playback rejection, media errors and a 15-second watchdog retain the verified result and offer animation replay; replay never submits a payment request. Keyboard focus stays in the overlay; Escape closes it and focus returns to the prior control. The original `/cart` choreography remains intact.
+
+Files: `frontend/src/checkout/RoomCheckoutOverlay.tsx`, `room-checkout-overlay.css`, `roomCheckoutPresentation.ts`; presentation gates and immutable-price regressions live in `frontend/scripts/checkout-bill.test.ts`. Root's browser rehearsal verifies actual motion; unit tests do not establish visual quality or successful MFA/payment behavior.
+
+## Earlier cart-only release (retained)
+
+**Historical status, 2026-09-20:** the standalone cart preview (`/?cartPreview`) is retired. Its choreography now runs inside the real cart at `/cart`, over the real cart. The original preview is described under [History](#history-the-standalone-preview-retired); its route, page and event no longer exist.
 
 ## What ships
 

@@ -126,3 +126,91 @@ test("mesh readiness completes after frame end without waiting for a splat sort"
   await ready;
   assert.equal(settled, true);
 });
+
+function visibilityFixture(runtime: PlayCanvasRuntime) {
+  const listeners = new Set<() => void>();
+  const ownerDocument = {
+    hidden: false,
+    addEventListener: (_type: string, listener: () => void) => { listeners.add(listener); },
+    removeEventListener: (_type: string, listener: () => void) => { listeners.delete(listener); },
+  };
+  runtime.canvas = { ownerDocument } as unknown as HTMLCanvasElement;
+  return { listeners, setHidden(hidden: boolean) {
+    ownerDocument.hidden = hidden;
+    for (const listener of listeners) listener();
+  } };
+}
+
+test("initial room readiness pauses its budget while hidden and still requires a real drawn frame", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const { frames, splats, camera, runtime } = readinessFixture();
+  const visibility = visibilityFixture(runtime);
+  visibility.setHidden(true);
+  let settled = false;
+  const ready = waitForSplatFrame(runtime, 40, undefined, true).then(() => { settled = true; });
+  t.mock.timers.tick(100);
+  await Promise.resolve();
+  assert.equal(settled, false, "a hidden renderer has no opportunity to draw");
+  visibility.setHidden(false);
+  t.mock.timers.tick(10);
+  await Promise.resolve();
+  assert.equal(settled, false, "visibility alone is not renderer readiness");
+  splats.fire("frame:ready", camera, null, true, 0);
+  await Promise.resolve();
+  assert.equal(settled, false, "a matching sort still needs its draw");
+  frames.fire("frameend");
+  await ready;
+  assert.equal(visibility.listeners.size, 0);
+  assert.equal(splats.hasEvent("frame:ready"), false);
+});
+
+test("initial readiness preserves its remaining visible budget across a hidden interval", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  let now = 0;
+  t.mock.method(performance, "now", () => now);
+  const { runtime, splats } = readinessFixture();
+  const visibility = visibilityFixture(runtime);
+  const ready = waitForSplatFrame(runtime, 40, undefined, true);
+  const rejected = assert.rejects(ready, /did not finish sorting/);
+  now = 15;
+  t.mock.timers.tick(15);
+  visibility.setHidden(true);
+  now += 100;
+  t.mock.timers.tick(100);
+  visibility.setHidden(false);
+  now += 24;
+  t.mock.timers.tick(24);
+  assert.equal(splats.hasEvent("frame:ready"), true);
+  now += 1;
+  t.mock.timers.tick(1);
+  await rejected;
+  assert.equal(visibility.listeners.size, 0);
+  assert.equal(splats.hasEvent("frame:ready"), false);
+});
+
+test("capture wall-clock deadline still expires while hidden", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const { runtime } = readinessFixture();
+  const visibility = visibilityFixture(runtime);
+  visibility.setHidden(true);
+  const ready = waitForSplatFrame(runtime, 40);
+  const rejected = assert.rejects(ready, /did not finish sorting/);
+  t.mock.timers.tick(40);
+  await rejected;
+  assert.equal(visibility.listeners.size, 0);
+});
+
+test("cancelling hidden initial loading removes its visibility and renderer listeners", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const { runtime, controller, splats } = readinessFixture();
+  const visibility = visibilityFixture(runtime);
+  visibility.setHidden(true);
+  const ready = waitForSplatFrame(runtime, 40, undefined, true);
+  const rejected = assert.rejects(ready, /cancelled/);
+  controller.abort();
+  await rejected;
+  assert.equal(visibility.listeners.size, 0);
+  assert.equal(splats.hasEvent("frame:ready"), false);
+  visibility.setHidden(false);
+  t.mock.timers.tick(100);
+});

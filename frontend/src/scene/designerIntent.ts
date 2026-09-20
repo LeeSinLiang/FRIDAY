@@ -25,6 +25,8 @@ export function designerInstruction(text: string, priorDraft = ""): string | nul
       : before || after || priorDraft.trim();
   }
   if (!value) return null;
+  // Conversational briefs often begin with a budget before the actual request.
+  if (isBedroomDesignRequest(value) || isDesignLockRequest(value) || /\b(?:change|replace|make)\b.*\b(?:couch|sofa)\b/i.test(value)) return value;
   const action = value.replace(/^(?:(?:please|can you|could you|i want you to)\s+)+/i, "");
   if (hasCue) {
     // The cue makes a short product request an explicit placement. Never turn an
@@ -34,6 +36,18 @@ export function designerInstruction(text: string, priorDraft = ""): string | nul
   if (/^place\s+mats?\b/i.test(action)) return null;
   return /^(?:add|place|put|move|rotate|remove|delete|arrange|rearrange|decorate|furnish|design|build|create|clear|inspect|describe)\b/i.test(action)
     || /^(?:what(?:'s| is| are)|where is)\b.*\b(?:room|scene|selected|chair|table|sofa|lamp)\b/i.test(action) ? value : null;
+}
+
+export function isBedroomDesignRequest(text: string): boolean {
+  return (/\b(?:plan|design|furnish|decorate|arrange)\b[\s\S]*\broom\b/i.test(text)
+      && /\b(?:couch|sofa)\b/i.test(text) && /\bbed\b/i.test(text))
+    || /\b(?:plan|design|furnish|decorate|arrange|create)\b[\s\S]*\bbedroom\b/i.test(text)
+    || /\bbedroom\b[\s\S]*\b(?:design|furnish|decorate|arrange)\b/i.test(text)
+    || (/\bbedroom\b/i.test(text) && /(?:\$\s*\d|\bbudget\b)/i.test(text) && /\b(?:couch|sofa)\b/i.test(text) && /\bbed\b/i.test(text));
+}
+
+export function isDesignLockRequest(text: string): boolean {
+  return /\block\s+(?:it|this|the design)\s+in\b/i.test(text);
 }
 
 /** Ordinary catalogue queries remain searches; explicit layout requests use the scene agent. */

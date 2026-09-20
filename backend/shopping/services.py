@@ -4,7 +4,8 @@ import json
 import re
 from django.utils import timezone
 from accounts.policy import account_status
-from api.scene_service import SceneError, apply_scene_commands, scene_for_session, serialize
+from api.scene_service import (SceneError, apply_scene_commands, scene_for_session,
+                               serialize, store, validate_instances)
 from api.shared_data import shared_root
 from catalogue.feed import load_catalogue
 from catalogue.pricing import has_price
@@ -92,6 +93,101 @@ def changed(shopping):
     shopping.revision += 1
     shopping.save(update_fields=['revision'])
     Checkout.objects.filter(shopping=shopping, state__in=['draft', 'approved']).update(state='superseded')
+
+
+@transaction.atomic
+def lock_design(shopping, data):
+    """Accept one complete designer variant and make that room's cart match it.
+
+    The cart row is locked before the scene row, matching every other scene/cart
+    writer.  One operation receipt covers both changes, so a lost response can be
+    retried without duplicating furniture or advancing either revision twice.
+    """
+    required = {'roomId', 'variantSetId', 'variantId', 'baseRevision', 'requestId'}
+    if not isinstance(data, dict) or set(data) != required:
+        raise SceneError('validation', 'Provide room, variant set, variant, scene revision and request ID.')
+    if any(not isinstance(data[key], str) or not data[key].strip() or len(data[key]) > 128
+           for key in ('roomId', 'variantSetId', 'variantId')) \
+            or not isinstance(data['requestId'], str) or not data['requestId'].strip() \
+            or len(data['requestId']) > 100:
+        raise SceneError('validation', 'Room, variant and request IDs must be nonempty strings.')
+    if type(data['baseRevision']) is not int or data['baseRevision'] < 0:
+        raise SceneError('validation', 'baseRevision must be a nonnegative integer.')
+
+    shopping = ShoppingSession.objects.select_for_update().get(pk=shopping.pk)
+    digest = payload_hash(data)
+    previous = ShoppingOperation.objects.filter(
+        shopping=shopping, operation_id='lock-design:' + data['requestId'],
+    ).first()
+    if previous:
+        if previous.digest != digest:
+            raise SceneError('operation_conflict', 'This request ID was already used for a different design.', 409)
+        return previous.result
+    assert_editable(shopping)
+
+    # Imported lazily because variant orchestration depends on scene/cart models.
+    from api.designer_variants import mark_accepted, selected_variant
+    job, variant = selected_variant(
+        shopping.scene_key, data['roomId'], data['variantSetId'], data['variantId'],
+        data['baseRevision'], for_update=True,
+    )
+    scene_base_revision = job.data['variantSet']['baseRevision']
+    instances = validate_instances(variant['instances'], data['roomId'])
+    desired = {item['instanceId']: item['productId'] for item in instances}
+    if len(desired) != len(instances):
+        raise SceneError('validation', 'The selected design contains duplicate furniture instances.')
+
+    products = [cart_product(product_id) for product_id in desired.values()]
+    if any(not product['priced'] for product in products):
+        raise SceneError('validation', 'Every piece in this design needs a known price before lock-in.')
+    total = sum(product['unit_amount'] for product in products)
+    if not instances:
+        raise SceneError('validation', 'Choose a furnished design before lock-in.')
+    if total > 120000:
+        raise SceneError('validation', 'This design exceeds the $1,200 furniture budget.')
+    if variant.get('totalCents') != total:
+        raise SceneError('price_conflict', 'Furniture prices changed. Refresh the designs before lock-in.', 409)
+    if not variant.get('geometryValidated') or not variant.get('budgetValidated'):
+        raise SceneError('validation', 'This design has not passed geometry and budget validation.')
+
+    scene = scene_for_session(shopping.scene_key, data['roomId'])
+    scene = type(scene).objects.select_for_update().get(pk=scene.pk)
+    if scene.revision != scene_base_revision:
+        raise SceneError('revision_conflict', 'The room changed. Refresh the designs before lock-in.', 409, scene.revision)
+
+    dirty = False
+    existing = {item.instance_id: item for item in shopping.items.filter(room_id=data['roomId'])}
+    for instance_id, item in existing.items():
+        product_id = desired.get(instance_id)
+        selected = product_id is not None
+        item_dirty = False
+        if product_id is not None and item.product_id != product_id:
+            item.product_id = product_id
+            item_dirty = True
+        if item.selected != selected or item.present != selected:
+            item.selected = item.present = selected
+            item_dirty = True
+        if item_dirty:
+            item.save(update_fields=['product_id', 'selected', 'present'])
+            dirty = True
+    for instance_id, product_id in desired.items():
+        if instance_id not in existing:
+            CartItem.objects.create(shopping=shopping, room_id=data['roomId'],
+                                    instance_id=instance_id, product_id=product_id,
+                                    selected=True, present=True)
+            dirty = True
+    if dirty:
+        changed(shopping)
+
+    snapshot = store(scene, scene_base_revision, instances)
+    mark_accepted(job, data['variantId'], snapshot['revision'])
+    result = {'cart': cart(shopping), 'sceneRevision': snapshot['revision'],
+              'variantId': data['variantId'], 'checkoutUrl': '/checkout'}
+    ShoppingOperation.objects.create(
+        shopping=shopping, operation_id='lock-design:' + data['requestId'],
+        digest=digest, result=result,
+    )
+    return result
 
 
 @transaction.atomic

@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from catalogue.views import FailOpenThrottle
-from . import designer_jobs
+from . import designer_jobs, designer_variants
 from .scene_service import SceneError
 from .scene_views import anonymous_csrf, execute, room_id
 from shopping.identity import current
@@ -46,5 +46,36 @@ def scope(request):
 def designer_poll(request, job_id):
     session, authorize = scope(request)
     response = execute(lambda: designer_jobs.poll(session, room_id(request), job_id, authorize))
+    response['Cache-Control'] = 'private, no-store'
+    return response
+
+
+@anonymous_csrf
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@throttle_classes([DesignerThrottle])
+def variants(request):
+    session, authorize = scope(request)
+    response = execute(lambda: designer_variants.begin(session, room_id(request), request.data, authorize))
+    response['Cache-Control'] = 'private, no-store'
+    return response
+
+
+@anonymous_csrf
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def variants_poll(request, job_id):
+    session, authorize = scope(request)
+    response = execute(lambda: designer_variants.poll(session, room_id(request), job_id, authorize))
+    response['Cache-Control'] = 'private, no-store'
+    return response
+
+
+@anonymous_csrf
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def variants_refine(request, job_id):
+    session, authorize = scope(request)
+    response = execute(lambda: designer_variants.refine(session, room_id(request), job_id, request.data, authorize))
     response['Cache-Control'] = 'private, no-store'
     return response

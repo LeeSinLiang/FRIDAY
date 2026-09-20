@@ -1,4 +1,5 @@
 from copy import deepcopy
+from types import SimpleNamespace
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import Client
@@ -196,3 +197,43 @@ class ShoppingTests(AccountTestCase):
         self.assertEqual(response.status_code,400,response.content)
         self.assertIn('nothing to check out',response.json()['error']['message'])
         self.assertEqual(Checkout.objects.count(),0)
+
+    def test_full_design_lock_is_atomic_idempotent_and_preserves_other_rooms(self):
+        first = self.place()
+        CartItem.objects.create(
+            shopping_id=first['cart']['id'], room_id='demo-room', instance_id='other-room-chair',
+            product_id=self.listing.id, selected=True, present=True,
+        )
+        chosen = deepcopy(self.instance)
+        chosen['instanceId'] = 'chosen-chair'
+        chosen['pose']['xCm'] = 320
+        variant = {
+            'id': 'warm-one', 'revision': 4, 'instances': [chosen],
+            'totalCents': self.listing.price_cents,
+            'geometryValidated': True, 'budgetValidated': True,
+        }
+        payload = {
+            'roomId': 'empty-room', 'variantSetId': 'bedroom-set', 'variantId': 'warm-one',
+            'baseRevision': 4, 'requestId': 'lock-one',
+        }
+        job = SimpleNamespace(data={'variantSet': {'baseRevision': first['scene']['revision']}})
+        with patch('api.designer_variants.selected_variant', return_value=(job, variant)), \
+             patch('api.designer_variants.mark_accepted') as accepted:
+            response = self.send('/api/checkout/lock-design/', payload)
+            self.assertEqual(response.status_code, 200, response.content)
+            result = response.json()
+            retry = self.send('/api/checkout/lock-design/', payload)
+            self.assertEqual(retry.status_code, 200, retry.content)
+            self.assertEqual(retry.json(), result)
+            accepted.assert_called_once()
+        self.assertEqual(result['checkoutUrl'], '/checkout')
+        self.assertEqual(result['variantId'], 'warm-one')
+        self.assertEqual(
+            {(item['roomId'], item['instanceId']) for item in result['cart']['items']},
+            {('empty-room', 'chosen-chair'), ('demo-room', 'other-room-chair')},
+        )
+        self.assertEqual(
+            self.client.get('/api/scene/?roomId=empty-room').json()['instances'], [chosen],
+        )
+        self.assertEqual(CartItem.objects.filter(room_id='empty-room', selected=True).count(), 1)
+        self.assertEqual(CartItem.objects.filter(room_id='empty-room').count(), 2)

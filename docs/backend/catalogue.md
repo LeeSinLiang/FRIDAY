@@ -117,14 +117,32 @@ curl -X POST localhost:8000/api/compile -H 'Content-Type: application/json' \
 Voice is an input method, not a feature: whatever is heard lands in the same box, and goes to the same `/api/compile`, as typing.
 
 - `GET /api/transcribe` → `{ "backend": "deepgram" | "browser" }`. The page asks once and uses that.
-- `POST /api/transcribe` with the recording as the raw body and an `audio/*` content type → `{ text, backend, ms }`. The server forwards it to **Deepgram's pre-recorded API** (`nova-3`). **The browser never talks to Deepgram and never sees the key.** Silence is `text: ""`, not an error.
-- `TRANSCRIBE_BACKEND=deepgram|browser`, default `browser`. `deepgram` without `DEEPGRAM_API_KEY` quietly becomes `browser`, so a missing secret degrades the feature instead of breaking it. With `browser` the page uses the Web Speech API: no key, no server, works offline in Chrome.
+- `POST /api/transcribe` with the recording as the raw body and an `audio/*` content type → `{ text, backend, ms }`. The server forwards it to the configured speech provider. **Provider keys remain server-only.** Silence is `text: ""`, not an error.
+- `STT_PROVIDER=deepgram|openai|browser`, default `browser`. The root `.env` configures the entire app; legacy `TRANSCRIBE_BACKEND` is consulted only when STT_PROVIDER is unset. Missing server credentials report browser availability. Browser recognition availability and online processing depend on the browser.
 - **A Deepgram failure costs one press, never the session.** While recording for Deepgram the page also runs the browser's recogniser as a shadow. If the server answers 503 it uses the shadow's transcript *for that press*, and the next press tries Deepgram again. Nothing latches onto the fallback. With `?dev=1` the panel shows the configured backend and **which backend actually answered the last transcript**, including after a fallback, so a silent fallback cannot be mistaken for success.
 - **`search`, `compile_program` and `transcribe_audio` are deliberately anonymous** (`authentication_classes = []`). They are public and stateless. With DRF's default session authentication a signed-in shopper's POSTs were refused for a missing CSRF token before the view ran. It also makes the throttles apply to everyone: `AnonRateThrottle` skips authenticated users, so a signed-in session used to bypass the cap on the two endpoints that cost money. **Throttling is per client address, for signed-in and anonymous callers alike.** Only these three views; scene, account and checkout endpoints keep their authentication. CORS is unchanged (same-origin only).
 - If Deepgram fails or times out (10 s): `503 { error: "transcription_unavailable", fallback: "browser" }`. Logs carry the HTTP status or error type only, never the key or the provider's response body.
 - Refused before any provider call: not audio → 415; over 2 MB → 413. Public, throttled to 20 requests a minute per client, and the throttle fails open like compile's.
 - Frontend: `frontend/src/catalogue/transcribe.ts` (`fetchBackend`, `canListen`, `listen`); the panel's microphone button is press to talk, press to stop, and it releases the microphone at once.
 - Tests are offline with a recorded Deepgram response. `TRANSCRIBE_LIVE_TEST=1` sends `backend/catalogue/voice_fixtures/reading-chair.wav` to the real API.
+
+### Optional “Hey Friday” mode and spoken replies
+
+The room toolbar's **Hey Friday** button explicitly enables microphone access. Say “Hey Friday, design me a warm bedroom” in one utterance, or say the wake phrase, wait for “I’m listening,” and give the request within 12 seconds. **Stop Friday** releases the microphone; leaving the tab or room also stops it. Existing press-to-talk remains available separately.
+
+This mode uses local Web Audio amplitude detection to discard silence, then sends short speech recordings to the configured server transcription endpoint to recognize the wake phrase and request. It is not an offline wake-word model: **while enabled, detected speech is sent to the selected speech provider even if it does not contain the wake phrase**. It sends no requests during silence, limits a recording to 18 seconds and uploads to ten utterances per minute, and stops after ten minutes. Background noise can activate the amplitude detector; use a quiet room or headset. Wake mode requires server transcription and does not silently use browser recognition.
+
+Wake-mode uploads use `/api/transcribe?wake=1`, adding Nova-3's [`keyterm=Hey+Friday` phrase hint](https://developers.deepgram.com/docs/keyterm) at the provider. Ordinary press-to-talk receives no hint. The client still requires “Hey Friday”; it does not reinterpret “Day Friday” or unrelated Friday mentions as commands. An unrecognized wake phrase displays the actual transcript and retry guidance. Keyterm prompting biases recognition toward the phrase but does not guarantee acoustic accuracy or replace a dedicated wake-word model.
+
+Commands run through the same catalogue/designer handler as typed input. Listening pauses during command processing, speech generation and playback, then waits briefly for speaker echoes to finish. Responses come from the actual handler, including search counts and failures; checkout confirmations are bound to the visible bill. At the authenticator step, spoken digits go through STT then local code parsing directly to approval; they bypass design routing and transcript history.
+
+`GET /api/speak` reports internal provider availability. `POST /api/speak` takes `{text}` (1–1,200 characters), returns MP3 with `Cache-Control: no-store`, caps audio at 4 MB, times out after 15 seconds, and applies a ten-request/minute throttle. Errors are sanitized. Provider/model names remain hidden in product UI.
+
+Current release: `STT_PROVIDER=openai|deepgram|browser` selects transcription with legacy `TRANSCRIBE_BACKEND` compatibility. OpenAI uses `gpt-transcribe`; Deepgram uses `nova-3`. TTS remains Deepgram `aura-2-athena-en` with a professional female voice. The newly requested Flux/default-provider upgrade was explicitly deferred to ship the previously tested voice implementation. Restart the API after changing root `.env` speech settings.
+
+
+
+Additive implementation: `frontend/src/catalogue/{wakeVoice.ts,WakeVoiceControl.tsx,wake-voice.css}`, command registration in `CatalogueShelf.tsx`/`SplatCatalogueLayer.tsx`, room toolbar in `SplatEditor.tsx`, and `backend/catalogue/speak.py`. The existing transcription service is unchanged. Unit tests cover wake phrase boundaries, follow-up expiry, provider proxy shape, text bounds and sanitized failures. A passing build does not establish real microphone capture, acoustic detection or speaker playback; those need a physical browser rehearsal after granting permission.
 
 ## Search backends
 

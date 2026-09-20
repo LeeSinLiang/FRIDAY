@@ -59,3 +59,10 @@ def checkout(request):
         ready(request)
         return public(services.checkout(identity.current(request), request.user, revision(request)))
     return execute(action, status=201)
+
+
+@anonymous_csrf
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def lock_design(request):
+    return execute(lambda: services.lock_design(identity.current(request), request.data))

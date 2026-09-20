@@ -40,7 +40,7 @@ def public(job):
 
 
 def active_request(scene):
-    job = SceneDesignJob.objects.filter(scene=scene,created_at__gt=timezone.now()-timedelta(minutes=20)).exclude(phase__in=['done','failed']).order_by('-created_at').first()
+    job = SceneDesignJob.objects.filter(scene=scene,created_at__gt=timezone.now()-timedelta(minutes=20)).exclude(phase__in=['done','failed']).exclude(phase__startswith='variant_').order_by('-created_at').first()
     if not job:
         return None
     return {'payload':job.data['payload'], 'before':job.data.get('beforeInstances',job.data['snapshot']['instances'])}

@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.urls import include, path
+from shopping.views import lock_design
 
 urlpatterns = [
+    path("api/checkout/lock-design/", lock_design),
     path("api/cart/", include("shopping.urls")),
     path("_allauth/", include("allauth.headless.urls")),
     path("accounts/", include("allauth.urls")),

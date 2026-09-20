@@ -1,0 +1,54 @@
+.splat-editor .design-variants {
+  --design-ivory:#fbf7ee;--design-oak:#eee3cc;--design-espresso:#382e25;--design-brass:#93733e;
+  position:absolute;isolation:isolate;z-index:15;top:162px;left:24px;
+  width:min(470px,calc(100vw - 390px));padding:20px;border-radius:16px;
+  color:var(--design-espresso);pointer-events:auto;background:linear-gradient(142deg,#fffdf8 0%,var(--design-ivory) 55%,#f4eadb 100%);
+  border:1px solid #d4c3a8;box-shadow:0 22px 48px -28px #34241280,inset 0 1px 0 #ffffff;
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+  scrollbar-width:thin;scrollbar-color:#b8a381 transparent;
+}
+.splat-editor .design-variants::before {content:"";position:absolute;z-index:-1;inset:0;border-radius:inherit;pointer-events:none;background:url("/artwork/golden-fate-filament.png") right -44px top -7px/390px auto no-repeat;opacity:.17;clip-path:inset(0 round 16px);}
+.design-variants-heading {display:flex;justify-content:space-between;gap:16px;align-items:baseline;}
+.design-variants-heading>strong {font-size:18px;font-weight:600;letter-spacing:-.025em;line-height:1.25;text-wrap:balance;}
+.design-variants-heading>span {flex:none;font-size:11px;color:#624d35;font-variant-numeric:tabular-nums;background:#fffaf0cc;border:1px solid #cdbb9f;padding:4px 7px;border-radius:999px;}
+.design-variants-progress {font-size:12px;line-height:1.5;color:#685744;margin:9px 0 17px;}
+.design-variant-tabs {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}
+.design-variant-tabs button {position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0;padding:12px 10px;border:1px solid #d8cbb5;border-radius:12px;background:#fffdf866;color:inherit;text-align:left;cursor:pointer;transition:background .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease;}
+.design-variant-tabs button:hover:not(:disabled) {background:#f4ecde;border-color:#ab9166;transform:translateY(-1px);}
+.design-variant-tabs button[aria-pressed=true] {border-color:var(--design-brass);background:var(--design-oak);box-shadow:0 8px 18px -16px #4d371b,inset 0 1px 0 #fff9e8;}
+.design-variant-tabs button[aria-pressed=true] .design-variant-number::after {content:"";width:6px;height:6px;display:inline-block;border-radius:50%;margin-left:7px;background:#89672f;vertical-align:1px;}
+.design-variant-number {font-size:10px;letter-spacing:.08em;color:#755a31;}
+.design-variant-tabs strong {font-size:13px;line-height:1.3;font-weight:600;overflow-wrap:anywhere;}
+.design-variant-tabs button>span:last-child {font-size:11px;line-height:1.4;color:#685744;font-variant-numeric:tabular-nums;margin-top:auto;}
+.design-variant-note {font-size:10px;color:#75634f;line-height:1.5;margin:11px 0;}
+.design-refinement {display:flex;gap:7px;margin:16px 0 13px;}
+.design-refinement input {width:100%;min-width:0;min-height:42px;border:1px solid #cdbfa9;border-radius:12px;background:#fffdf8e6;color:inherit;padding:10px 11px;font:inherit;font-size:12px;caret-color:#89672f;}
+.design-refinement input::placeholder {color:#796952;opacity:1;}
+.design-refinement button {min-height:42px;border:1px solid #cdbfa9;border-radius:12px;background:#eee5d5;color:#493a29;padding:9px 12px;cursor:pointer;font:inherit;font-size:12px;}
+.design-refinement button:hover:not(:disabled) {background:#e1d3ba;}
+.design-variant-actions {display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:13px;border-top:1px solid #e1d6c4;}
+.design-variant-actions>.button {min-height:42px;background:#44382a;color:#fffaf0;padding:10px 14px;border:0;border-radius:12px;font-size:12px;line-height:1.4;box-shadow:0 9px 19px -14px #2c1b0b;}
+.design-variant-actions>.button:hover:not(:disabled) {background:#615039;}
+.design-discard {min-height:42px;border:0;background:none;color:#6c5943;font:inherit;font-size:11px;cursor:pointer;}
+.design-discard:hover:not(:disabled) {color:#382e25;text-decoration:underline;text-underline-offset:4px;}
+.design-variants :is(button,input):focus-visible {outline:2px solid #8d6c36;outline-offset:3px;}
+.design-variants :is(button,input):disabled {opacity:.5;cursor:not-allowed;}
+.design-variants ::selection {background:#deca9f;color:#382e25;}
+@media(max-width:1000px) {
+  .splat-editor .design-variants {left:16px;width:min(440px,calc(100vw - 120px));padding:16px;}
+}
+@media(max-width:760px) {
+  .splat-editor .design-variants {top:145px;left:12px;width:calc(100vw - 24px);max-height:calc(100dvh - 265px);overflow:auto;padding:15px;}
+  .splat-editor .design-variants::before {background-size:330px auto;background-position:right -52px top -4px;opacity:.14;}
+  .design-variants-heading>strong {font-size:17px;}
+  .design-variant-tabs {gap:5px;}
+  .design-variant-tabs button {padding:10px 8px;}
+  .splat-editor:has(.design-variants).has-panel .splat-panel.is-catalogue {top:490px;}
+  .splat-editor:has(.design-variants).has-panel .splat-panel-toggle.is-open {top:506px;}
+}
+@media(max-width:390px) {
+  .design-variants-heading {gap:8px;}
+  .design-variants-heading>span {font-size:10px;}
+  .design-variant-actions {flex-wrap:wrap;gap:3px;}
+}
+@media(prefers-reduced-motion:reduce) {.design-variant-tabs button {transition:none;}.design-variant-tabs button:hover:not(:disabled) {transform:none;}}

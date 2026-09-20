@@ -161,6 +161,12 @@
           "title": "Match GLB furniture lighting and support shadows to prepared rooms",
           "done": false,
           "owner": "william"
+        },
+        {
+          "id": "ad9034aa-93ba-4840-bed2-0885776cebcf",
+          "title": "Write collaborator realistic GLB production handoff",
+          "done": true,
+          "owner": "sin"
         }
       ]
     },
@@ -400,6 +406,18 @@
           "title": "Publish a redistributable third room on Vercel",
           "done": true,
           "owner": "william"
+        },
+        {
+          "id": "c91b6711-e174-42aa-b293-5ae87a3e364a",
+          "title": "Add Hey Friday wake detection and spoken replies",
+          "done": false,
+          "owner": "sin"
+        },
+        {
+          "id": "46895741-99e9-46eb-8b51-e085ed458efd",
+          "title": "Polish Japandi room UI and golden threads",
+          "done": false,
+          "owner": "sin"
         }
       ],
       "description": "React app shell, product browsing, constraint chips, and conversation."
@@ -438,6 +456,12 @@
           "title": "Review Visa/auth PR before merge",
           "done": true,
           "owner": "william"
+        },
+        {
+          "id": "672d6b32-d058-4dfb-a997-d66054c93318",
+          "title": "Restore room cart overlay and conversational sandbox checkout",
+          "done": false,
+          "owner": "sin"
         }
       ]
     },
@@ -480,6 +504,30 @@
           "title": "Add Blender MCP-style scene and object context to the agent",
           "done": false,
           "owner": "saketh"
+        },
+        {
+          "id": "9976310c-11c6-4584-834a-c6c01b69b27c",
+          "title": "Scope two-hour autonomous bedroom design and checkout demo",
+          "done": true,
+          "owner": "sin"
+        },
+        {
+          "id": "1b3d570e-d444-43c6-88bf-a3fdbab6202c",
+          "title": "Plan Haussmann demo and realistic GLB catalogue handoff",
+          "done": true,
+          "owner": "sin"
+        },
+        {
+          "id": "ff31eac1-0f9f-4ec7-939e-887dd7e386c9",
+          "title": "Build Haussmann autonomous design variants and checkout",
+          "done": false,
+          "owner": "sin"
+        },
+        {
+          "id": "713a93fe-f3cc-42f7-b914-45f91b5aa64b",
+          "title": "Prepare integrated demo for reviewed merge and push",
+          "done": false,
+          "owner": "sin"
         }
       ],
       "description": "OpenAI API and OpenAI Agents SDK orchestration, room and catalogue tools, and end-to-end agent checks."
@@ -499,6 +547,12 @@
           "title": "Publish integrated FRIDAY test release and record demo",
           "done": true,
           "owner": "william"
+        },
+        {
+          "id": "6631afd5-f8a9-4a86-84f3-3a753a652f63",
+          "title": "Draw the current FRIDAY system architecture",
+          "done": true,
+          "owner": "sin"
         }
       ],
       "description": "Demo journey, presentation, OpenAI API integration, and Codex-assisted development."

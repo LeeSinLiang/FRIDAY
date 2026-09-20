@@ -18,6 +18,14 @@ import type { InteractionCallbacks, InteractionMode, InteractionState, ModelStat
 import type { PlayCanvasRuntime, RuntimeStatus } from "./scene/playcanvas/runtime";
 import "./splat-editor.css";
 import { useCart } from "./shopping/CartProvider";
+import { lockInSelectedDesign } from "./shopping/lockInDesign";
+import { useDesignVariants } from "./scene/useDesignVariants";
+import DesignVariants from "./scene/BedroomDesignPanel";
+import { interpretRoomRequest, type ConversationTurn } from "./scene/conversationIntent";
+import WakeVoiceControl from "./catalogue/WakeVoiceControl";
+import type { VoiceCommand } from "./catalogue/wakeVoice";
+import { useRoomCheckout } from "./checkout/useRoomCheckout";
+import RoomCheckoutOverlay from "./checkout/RoomCheckoutOverlay";
 
 const PlayCanvasScene=lazy(()=>import("./PlayCanvasScene"));
 const VOICE_BARS = [8, 12, 18, 11, 24, 16, 29, 20, 13, 26, 17, 31, 19, 12, 23, 16, 27, 14, 32, 21, 15, 25, 11, 18, 30, 16, 22, 13, 28, 20, 12, 26, 17, 31, 15, 24, 19, 11, 27, 18];
@@ -66,6 +74,7 @@ function PositionField({axis,value,disabled,commit}:{axis:"X"|"Z";value:number;d
 
 export default function SplatEditor({roomId, shopping = false, observation = false, onObservationReady}:{roomId?:string; shopping?:boolean; observation?:boolean; onObservationReady?:(ready:boolean)=>void} = {}) {
   const {cart, refresh} = useCart();
+  const roomCheckout=useRoomCheckout();
   const [active,setActive]=useState(false);
   const [mode,setMode]=useState<InteractionMode>("walk");
   const [pointerLocked,setPointerLocked]=useState(false);
@@ -79,13 +88,23 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   const [voiceRequest,setVoiceRequest]=useState(0);
   const [voiceCancelRequest,setVoiceCancelRequest]=useState(0);
   const [voicePhase,setVoicePhase]=useState<VoicePhase>("idle");
+  useEffect(()=>{if(roomCheckout.open)setVoiceCancelRequest(value=>value+1);},[roomCheckout.open]);
+  const [wakeEnabled,setWakeEnabled]=useState(false);
+  const voiceCommand=useRef<VoiceCommand|null>(null);
+  const registerVoiceCommand=useCallback((handler:VoiceCommand|null)=>{voiceCommand.current=handler;},[]);
   // Search now occupies AI recommends in the existing right panel.
   const [shopSearchOpen,setShopSearchOpen]=useState(true);
   const openRecommendations=useCallback(()=>{
     if(document.pointerLockElement)document.exitPointerLock();
     setPanel("catalogue");setPanelOpen(true);setMode("explore");setShopSearchOpen(true);
   },[]);
-  const requestVoice=useCallback(()=>{openRecommendations();setVoiceRequest(value=>value+1);},[openRecommendations]);
+  const requestVoice=useCallback(()=>{if(wakeEnabled||roomCheckout.open)return;openRecommendations();setVoiceRequest(value=>value+1);},[openRecommendations,wakeEnabled,roomCheckout.open]);
+  const runWakeCommand=useCallback(async(text:string)=>{
+    // Authentication digits bypass catalogue input state and all model/history routing.
+    const checkoutReply=await roomCheckout.handle(text);
+    if(checkoutReply!==null)return checkoutReply;
+    openRecommendations();return voiceCommand.current?voiceCommand.current(text):"Wait for the room to finish loading, then ask again.";
+  },[openRecommendations,roomCheckout.handle]);
   useEffect(()=>{
     if(observation)return;
     const onKey=(event:KeyboardEvent)=>{
@@ -109,6 +128,12 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   const roomParams = new URLSearchParams(window.location.search);
   const requestedRoom = roomId ?? roomParams.get("roomId") ?? roomParams.get("room");
   const [activeRoomId,setActiveRoomId]=useState(()=>initialRoom(requestedRoom,roomParams.get("floor")));
+  const drafts=useDesignVariants(activeRoomId,statuses);
+  const conversation=useRef<ConversationTurn[]>([]);
+  useEffect(()=>{conversation.current=[];},[activeRoomId]);
+  const [lockingDesign,setLockingDesign]=useState(false);
+  const lockAttempt=useRef<{key:string;requestId:string}|null>(null);
+  const lockInFlight=useRef(false);
   const session=useRoomSession(activeRoomId,active || !!pendingProductId);
   useEffect(()=>{ if(session.designerMessage) setNotice(session.designerMessage); },[session.designerMessage]);
   // Keep the building mounted while fetching the next independent floor layout.
@@ -116,13 +141,40 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   if(session.snapshot)previousSnapshot.current=session.snapshot;
   const snapshot=session.snapshot ?? previousSnapshot.current;
   const room=snapshot?.room;
-  const products=snapshot?.products ?? [];
-  const instances=snapshot?.instances ?? [];
+  const products=drafts.activeVariant?.products ?? snapshot?.products ?? [];
+  const instances=drafts.instances ?? snapshot?.instances ?? [];
   const selected=instances.find(i=>i.instanceId===selectedId);
   const product=products.find(p=>p.productId===(pendingProductId ?? selected?.productId));
   const ready=runtimeStatus.phase==="ready" && session.status==="ready" && room?.roomId===activeRoomId;
   useEffect(() => { onObservationReady?.(ready); }, [ready, onObservationReady]);
-  const locked=active || session.status==="saving";
+  const locked=active || session.status==="saving" || drafts.busy || drafts.placing || lockingDesign || roomCheckout.open;
+  const draftsLocked=!!drafts.variantSet || drafts.busy || drafts.placing || lockingDesign || roomCheckout.open;
+  const manualLocked=locked || !!drafts.variantSet;
+  useEffect(()=>{if(drafts.variantSet)setPanelOpen(false);},[drafts.variantSet]);
+  const lockDesign=async()=>{
+    const set=drafts.variantSet,variant=drafts.activeVariant;
+    if(!set||!variant||locked||drafts.revealing||lockInFlight.current)return "Wait for the selected design to finish.";
+    lockInFlight.current=true;setLockingDesign(true);setNotice("Saving your selected design and preparing checkout…");
+    const key=`${set.variantSetId}:${variant.id}:${variant.revision}`;
+    if(lockAttempt.current?.key!==key)lockAttempt.current={key,requestId:crypto.randomUUID()};
+    try {
+      const result=await lockInSelectedDesign({roomId:activeRoomId,variantSetId:set.variantSetId,variantId:variant.id,baseRevision:variant.revision,requestId:lockAttempt.current.requestId});
+      setPanelOpen(false);setMode("explore");
+      if(document.pointerLockElement)document.exitPointerLock();
+      await session.retry();drafts.discard();
+      return await roomCheckout.begin(result.cart);
+    } catch(error) {
+      const message=error instanceof Error?error.message:"Could not lock in the design.";
+      setNotice(message);return message;
+    } finally {lockInFlight.current=false;setLockingDesign(false);}
+  };
+  const openCheckout=async()=>{
+    if(drafts.variantSet)return lockDesign();
+    if(locked||!cart)return "Wait for the room to finish saving, then ask again.";
+    setPanelOpen(false);setMode("explore");setSelectedId(null);setPendingProductId(null);setPreview(null);
+    if(document.pointerLockElement)document.exitPointerLock();
+    return roomCheckout.begin(cart);
+  };
   const changeFloor=(nextRoomId:string)=>{
     const building=room?.scan?.building;
     const next=building?.levels.find(level=>level.roomId===nextRoomId);
@@ -140,37 +192,39 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
     void canvas.requestPointerLock().catch(()=>setNotice("Click the room or press W A S D to capture the pointer"));
   },[view]);
   const select=useCallback((id:string|null)=>{
+    if(draftsLocked)return;
     if(document.pointerLockElement===runtime.current?.canvas){selectingUnderLock.current=true;document.exitPointerLock();}
     setSelectedId(id);setPreview(null);
     if(id){setMode("place");setPanel("inspector");setPanelOpen(true);}
     else {setMode(view==="perspective"?"walk":"place");setPanel("catalogue");setPanelOpen(false);captureWalk();}
-  },[view,captureWalk]);
+  },[view,captureWalk,draftsLocked]);
   const cancelPlacement=useCallback(()=>{setPendingProductId(null);setSelectedId(null);setPreview(null);setPanel("catalogue");setPanelOpen(false);setMode(view==="perspective"?"walk":"place");setNotice("Placement cancelled");},[view]);
   const onStatus=useCallback((status:RuntimeStatus)=>setRuntimeStatus(status),[]);
   const onRuntime=useCallback((handle:PlayCanvasRuntime|null)=>{runtime.current=handle;},[]);
   const getRuntime=useCallback(()=>runtime.current,[]);
   const onModelStatus=useCallback((id:string,status:ModelStatus)=>setStatuses(old=>old[id]===status?old:{...old,[id]:status}),[]);
   const commit=useCallback(async(id:string,pose:Pose,attachment?:Attachment)=>{
-    if(!snapshot)return false;
+    if(!snapshot||draftsLocked)return false;
     const result=validatePlacement(snapshot.room,snapshot.products,snapshot.instances,id,pose,attachment);
     if(!result.valid){setNotice(`${result.reason}. Position unchanged.`);return false;}
     const accepted=await session.submit({type:"setPose",instanceId:id,pose,...(attachment?{attachment}:{})});
     if(accepted)setNotice("Position saved");
     return accepted;
-  },[snapshot,session.submit]);
+  },[snapshot,session.submit,draftsLocked]);
   const place=useCallback(async(productId:string,pose:Pose,attachment?:Attachment)=>{
+    if(draftsLocked)return false;
     const id=crypto.randomUUID();
     // Keep main's catalogue identity handling and add the optional support relationship.
     const instance = {...instanceToAdd(id,productId,pose,instances),...(attachment?{attachment}:{})};
     const accepted=await session.submit({type:"add",instance});
     if(accepted){setPendingProductId(null);setSelectedId(null);setPanel("catalogue");setPanelOpen(false);setMode(view==="perspective"?"walk":"place");setNotice("Furniture placed");captureWalk();}
     return accepted;
-  },[session.submit,view,captureWalk,instances]);
+  },[session.submit,view,captureWalk,instances,draftsLocked]);
   const callbacks:InteractionCallbacks=useMemo(()=>({onSelect:select,onCommit:commit,onPlace:place,onCancelPlacement:cancelPlacement,onPreview:setPreview,onActiveChange:setActive,onModelStatus,
     onSurfaceStatus:(status,message)=>setSurfaceNote(status==="error" ? message??"Surface reference could not load" : status==="loading" ? "Loading surface reference…" : message ?? "Surface reference ready"),
   }),[select,commit,place,cancelPlacement,onModelStatus]);
-  const state:InteractionState|null=useMemo(()=>room?({room,products,instances,selectedId,pendingProductId,editingEnabled:ready && !observation,snap,mode,view,retries,showSurface,agentMotion:snapshot?.agentMotion}):null,
-    [room,products,instances,selectedId,pendingProductId,ready,snap,mode,view,retries,showSurface,snapshot?.agentMotion,observation]);
+  const state:InteractionState|null=useMemo(()=>room?({room,products,instances,selectedId,pendingProductId,editingEnabled:ready && !observation && !draftsLocked,snap,mode,view,retries,showSurface,agentMotion:drafts.variantSet?undefined:snapshot?.agentMotion}):null,
+    [room,products,instances,selectedId,pendingProductId,ready,snap,mode,view,retries,showSurface,snapshot?.agentMotion,observation,draftsLocked,drafts.variantSet]);
   useEffect(()=>{if(selectedId && snapshot && !snapshot.instances.some(i=>i.instanceId===selectedId)){setSelectedId(null);setPreview(null);}},[snapshot,selectedId]);
   useEffect(()=>{if(!notice)return;const timeout=setTimeout(()=>setNotice(""),5500);return()=>clearTimeout(timeout);},[notice]);
   useEffect(()=>{
@@ -201,7 +255,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
       setNotice("Click the room or press W A S D to capture the pointer");
     }
   },[ready,locked,view,pendingProductId]);
-  const remove=useCallback(async()=>{if(!selectedId||!ready||active)return;const ok=await session.submit({type:"remove",instanceId:selectedId});if(ok){setSelectedId(null);setPreview(null);setMode(view==="perspective"?"walk":"place");setPanel("catalogue");setPanelOpen(false);captureWalk();}},[selectedId,ready,active,session.submit,view,captureWalk]);
+  const remove=useCallback(async()=>{if(!selectedId||!ready||manualLocked)return;const ok=await session.submit({type:"remove",instanceId:selectedId});if(ok){setSelectedId(null);setPreview(null);setMode(view==="perspective"?"walk":"place");setPanel("catalogue");setPanelOpen(false);captureWalk();}},[selectedId,ready,manualLocked,session.submit,view,captureWalk]);
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{
       if (observation) return;
@@ -224,17 +278,34 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
         const canvas=runtime.current?.canvas;
         if(canvas) void canvas.requestPointerLock().then(()=>setNotice("")).catch(()=>setNotice("Pointer capture is unavailable here · Drag to look"));
       }
-      if(!ready||active||pendingProductId)return;
+      if(!ready||manualLocked||pendingProductId)return;
       if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="z"){e.preventDefault();e.shiftKey?void session.redo():void session.undo();}
       if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();void remove();}
     };
     window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key);
-  },[ready,active,pendingProductId,mode,pointerLocked,cancelPlacement,startWalk,stopWalk,session.undo,session.redo,remove,view,observation]);
+  },[ready,active,manualLocked,pendingProductId,mode,pointerLocked,cancelPlacement,startWalk,stopWalk,session.undo,session.redo,remove,view,observation]);
   const getCamera=useCallback(():FirstPersonCamera|null=>{
     const handle=runtime.current;if(!handle||view!=="perspective")return room?.scan?.defaultCamera??null;
     const position=handle.camera.getPosition(),forward=handle.camera.forward;
     return {kind:"firstPerson",xCm:sceneToCm(position.x),yCm:sceneToCm(position.y),zCm:sceneToCm(position.z),yawRad:Math.atan2(-forward.x,-forward.z),pitchRad:Math.asin(Math.max(-1,Math.min(1,forward.y))),fovDeg:handle.camera.camera?.fov??60};
   },[view,room]);
+  const routeRoomInstruction=async(text:string,signal?:AbortSignal):Promise<string|null>=>{
+    const checkoutReply=await roomCheckout.handle(text);
+    if(checkoutReply!==null)return checkoutReply;
+    const intent=await interpretRoomRequest(activeRoomId,text,!!drafts.variantSet,conversation.current,signal);
+    if(signal?.aborted)return "That request was cancelled.";
+    conversation.current=[...conversation.current,{text,action:intent.action}].slice(-6);
+    if(intent.action==="search")return null;
+    if(intent.action==="clarify"){setNotice(intent.message);return intent.message;}
+    if(intent.action==="lock_design")return lockDesign();
+    if(intent.action==="checkout")return openCheckout();
+    if(intent.action==="create_designs"||intent.action==="refine_design"){
+      setSelectedId(null);setPendingProductId(null);setPreview(null);setMode("explore");
+      return drafts.run(text,snapshot?.revision??0,getCamera());
+    }
+    if(drafts.variantSet)return "Discard the drafts before editing your saved room.";
+    const result=await session.design(text,selectedId,getCamera());setNotice(result.message);await refresh();return result.message;
+  };
   const updatePose=(patch:Partial<Pose>)=>selected?commit(selected.instanceId,{...selected.pose,...patch}):Promise.resolve(false);
   const validLabel=preview?.valid ? "Fits test geometry" : preview?.reason;
   const tone=preview ? preview.valid?"valid":/unknown|unreviewed|unconfirmed|floor/i.test(preview.reason)?"unknown":"invalid" : "";
@@ -244,10 +315,10 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
     <div className="splat-room">{state && <Suspense fallback={null}><PlayCanvasScene captureEnabled={!observation} state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}</div>
   </div>;
 
-  return <main className={`splat-editor ${panelOpen?"has-panel":""}`}>
+  return <main className={`splat-editor ${panelOpen?"has-panel":""} ${roomCheckout.open?"has-checkout":""}`}>
     <div className="splat-room" aria-label="First-person room editor">
       {state && <Suspense fallback={null}><PlayCanvasScene state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}
-      {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} sceneRevision={snapshot.revision} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={panelOpen&&panel==="catalogue"} browseCategory={shopSearchOpen ? null : browseCategory} shelfTarget={catalogueTarget} voiceRequest={voiceRequest} voiceCancelRequest={voiceCancelRequest} onVoicePhaseChange={setVoicePhase} designMessage={session.designerMessage} onDesign={async text => { const result = await session.design(text, selectedId, getCamera()); setNotice(result.message); await refresh(); return result.message; }} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
+      {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} sceneRevision={snapshot.revision} products={products} instances={instances} ready={ready} locked={locked} draftMode={!!drafts.variantSet} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={panelOpen&&panel==="catalogue"} browseCategory={shopSearchOpen ? null : browseCategory} shelfTarget={catalogueTarget} voiceRequest={voiceRequest} voiceCancelRequest={voiceCancelRequest} onVoicePhaseChange={setVoicePhase} registerVoiceCommand={registerVoiceCommand} designMessage={drafts.message || session.designerMessage} onDesign={routeRoomInstruction} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
       {runtimeStatus.phase!=="ready" && (activeRoomId === "haussmann-apartment" ? <RoomArrival status={runtimeStatus} connectionError={session.status === "offline" ? session.message : undefined} retryConnection={() => void session.retry()}/> : <div className="splat-loading" role="status">
         <div className="glass splat-loading-card"><span className="loading-orbit"/><h1>{runtimeStatus.phase==="error"?"Room unavailable":"Come on in."}</h1><p>{runtimeStatus.message}</p>
           {runtimeStatus.progress!==undefined && <progress max={1} value={runtimeStatus.progress} aria-label="Room loading progress"/>}
@@ -256,12 +327,16 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
         </div>
       </div>)}
     </div>
+    <DesignVariants revealing={drafts.revealing} set={drafts.variantSet} activeId={drafts.activeVariant?.id} busy={locked} message={lockingDesign ? "Saving this design and preparing checkout…" : drafts.message} onSelect={id=>{setSelectedId(null);setMode("explore");drafts.select(id);}} onLock={()=>void lockDesign()} onDiscard={drafts.discard} onInstruction={runWakeCommand}/>
+    {roomCheckout.open&&roomCheckout.cart&&<RoomCheckoutOverlay cart={roomCheckout.cart} checkout={roomCheckout.checkout} phase={roomCheckout.phase} busy={roomCheckout.busy} message={roomCheckout.message} error={roomCheckout.error} authHref={roomCheckout.authHref}
+      onBillVisible={roomCheckout.billVisible} onReady={()=>{if(roomCheckout.checkout)roomCheckout.confirm();else void roomCheckout.begin(roomCheckout.cart!);}}
+      onSubmitCode={async code=>{await roomCheckout.submitCode(code);}} onClose={roomCheckout.close} onRefresh={()=>void roomCheckout.refresh()}/>}
     {mode==="walk"&&pointerLocked&&<span className="splat-crosshair" aria-hidden="true"/>}
     <header className="glass splat-header">
       <a className="wordmark" href="/" aria-label="FRIDAY room editor">FRIDAY<span className="wordmark-dot">.</span></a>
-      <a href="/rooms">Rooms</a><a href="/cart">Cart ({cart?.items.length ?? 0})</a>
+      <a href="/rooms">Rooms</a><a href="/cart" onClick={event=>{event.preventDefault();void openCheckout();}}>Cart ({cart?.items.length ?? 0})</a>
       <span className="splat-title">{room?.scan?.attribution.title ?? "Empty room"}<span>{room?.scan?.visualFormat === "glb" ? "Interior · mesh room" : "Living space"}</span></span>
-      <span className={`splat-save save-${session.status}`} role="status">{session.status==="ready"?"Saved":session.status==="saving"?"Saving…":session.status==="loading"?"Connecting…":session.status==="conflict"?"Layout changed":"Disconnected"}</span>
+      <span className={`splat-save save-${session.status}`} role="status">{drafts.variantSet?"Design draft":session.status==="ready"?"Saved":session.status==="saving"?"Saving…":session.status==="loading"?"Connecting…":session.status==="conflict"?"Layout changed":"Disconnected"}</span>
       {(session.status==="offline"||session.status==="conflict")&&<button className="button" onClick={()=>void(session.status==="conflict"?session.reload():session.retry())}>{session.status==="conflict"?"Reload layout":"Retry"}</button>}
       <button className="splat-reset" disabled={!ready||locked||!!pendingProductId} onClick={()=>setResetKey(k=>k+1)}><Icon name="reset" size={18}/><span>Reset view</span></button>
     </header>
@@ -283,7 +358,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
         <h2 className="splat-product-title">{product.name}</h2><p className="splat-dimensions">{product.widthCm} × {product.depthCm} × {product.heightCm} cm</p>
         {shopping && selected && (cart?.items.some(i=>i.instanceId===selected.instanceId && i.roomId===room?.roomId) ? <p>In your cart · moving this piece does not change quantity.</p> : product.modelUrl?.startsWith("/models/furniture/") && product.catalogueVisible !== false ? <><p>Not in cart</p><button className="button" disabled={!ready||locked} onClick={async()=>{const ok=await session.confirm(selected,cart?.revision??-1); await refresh(); setNotice(ok?"Added to cart":session.message);}}>Add this piece to cart</button></> : <p>Room preview only. Search the catalogue for a piece with a 3D model.</p>)}
         <div className="splat-property-section">
-          {selected ? <><h3>Position <span>(cm)</span></h3><div className="splat-coordinates"><PositionField axis="X" value={selected.pose.xCm} disabled={!ready||locked} commit={xCm=>updatePose({xCm})}/><PositionField axis="Z" value={selected.pose.zCm} disabled={!ready||locked} commit={zCm=>updatePose({zCm})}/></div>
+          {selected ? <><h3>Position <span>(cm)</span></h3><div className="splat-coordinates"><PositionField axis="X" value={selected.pose.xCm} disabled={!ready||manualLocked} commit={xCm=>updatePose({xCm})}/><PositionField axis="Z" value={selected.pose.zCm} disabled={!ready||manualLocked} commit={zCm=>updatePose({zCm})}/></div>
           <div className="splat-rotation"><span>Rotation <b>{Math.round(((selected.pose.yawRad*180/Math.PI)%360+360)%360)}°</b></span><button className="button" disabled={!ready||locked} onClick={()=>void updatePose({yawRad:selected.pose.yawRad+Math.PI/2})}><Icon name="rotate" size={17}/>Rotate 90°</button></div></> : <p className="splat-placement-instruction">Move your pointer over the floor. Click when the footprint turns green.</p>}
           <div className="splat-snap"><span>Snap to grid</span><button role="switch" aria-checked={snap} aria-label="Snap furniture to five centimeter grid" className={`splat-switch ${snap?"enabled":""}`} disabled={locked} onClick={()=>setSnap(v=>!v)}><span/></button><span>5 cm</span></div>
         </div>
@@ -299,14 +374,15 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
     {room&&view==="perspective"&&<FloorMap room={room} getCamera={getCamera} onFloorChange={changeFloor} floorChangeDisabled={!ready||locked||!!pendingProductId}/>}
     {view==="top"&&room?.scan&&<div className="splat-bottom-left"><p className="splat-attribution"><a href={room.scan.attribution.url} target="_blank" rel="noreferrer">{room.scan.attribution.title} · {room.scan.attribution.author}</a><span> · </span><a href={room.scan.attribution.licenseUrl} target="_blank" rel="noreferrer">{room.scan.attribution.license}</a></p></div>}
     <div className="splat-bottom-center"><p className={`glass splat-help${voicePhase!=="idle"?" is-voice-status":""}`} aria-live="polite">{voicePhase==="connecting"?"Connecting microphone…":voicePhase==="listening"?"Listening · cancel or finish and search":voicePhase==="transcribing"?"Transcribing your request…":notice || (session.status!=="ready"&&session.status!=="loading"?session.message:help)}</p><nav className={`glass splat-edit-tools${voicePhase!=="idle"?" is-voicing":""}`} data-voice-phase={voicePhase} aria-label="Furniture tools">
-      <button aria-pressed={mode==="place"} disabled={!ready||locked||!selected||!!pendingProductId} onClick={()=>setMode("place")}><Icon name="move" size={18}/>Move</button>
-      <button disabled={!ready||locked||!selected||!!pendingProductId} onClick={()=>void updatePose({yawRad:selected!.pose.yawRad+Math.PI/2})}><Icon name="rotate" size={18}/>Rotate</button>
+      <button aria-pressed={mode==="place"} disabled={!ready||manualLocked||!selected||!!pendingProductId} onClick={()=>setMode("place")}><Icon name="move" size={18}/>Move</button>
+      <button disabled={!ready||manualLocked||!selected||!!pendingProductId} onClick={()=>void updatePose({yawRad:selected!.pose.yawRad+Math.PI/2})}><Icon name="rotate" size={18}/>Rotate</button>
       <span/>
-      <button aria-label="Undo placement" disabled={!ready||locked||!session.canUndo||!!pendingProductId} onClick={()=>void session.undo()}><Icon name="undo" size={18}/></button>
-      <button aria-label="Redo placement" disabled={!ready||locked||!session.canRedo||!!pendingProductId} onClick={()=>void session.redo()}><Icon name="redo" size={18}/></button>
+      <button aria-label="Undo placement" disabled={!ready||manualLocked||!session.canUndo||!!pendingProductId} onClick={()=>void session.undo()}><Icon name="undo" size={18}/></button>
+      <button aria-label="Redo placement" disabled={!ready||manualLocked||!session.canRedo||!!pendingProductId} onClick={()=>void session.redo()}><Icon name="redo" size={18}/></button>
       <span/>
-      {voicePhase==="idle" ? <button type="button" className="splat-speak" aria-label="Speak to AI" aria-pressed={false} aria-keyshortcuts="Meta+Shift+D Control+Shift+D" disabled={!ready||locked} onClick={requestVoice}><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v4m-4 0h8"/></svg>Speak</button> :
+      {voicePhase==="idle" ? <button type="button" className="splat-speak" aria-label="Speak to AI" aria-pressed={false} aria-keyshortcuts="Meta+Shift+D Control+Shift+D" disabled={!ready||locked||wakeEnabled} onClick={requestVoice}><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v4m-4 0h8"/></svg>Speak</button> :
         <VoiceCapture phase={voicePhase} onCancel={()=>setVoiceCancelRequest(value=>value+1)} onFinish={requestVoice}/>}
+      <WakeVoiceControl onCommand={runWakeCommand} followUp={roomCheckout.open} sensitiveCode={roomCheckout.phase==="mfa"&&roomCheckout.open} available={ready&&(!locked||roomCheckout.open&&!roomCheckout.busy)&&voicePhase==="idle"} onEnabledChange={setWakeEnabled}/>
     </nav></div>
   </main>;
 }

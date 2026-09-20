@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { Entity, StandardMaterial, BoundingBox, Vec3, type MeshInstance, type RenderComponent } from "playcanvas";
 import { animateMaterialization, materializeFrame, MATERIALIZE_DURATION_MS } from "./materialize";
+import { createGoldenThreads } from "./goldenThreads";
 
 function fixture() {
   const root = new Entity(); root.setLocalPosition(30, 0, 60);
@@ -50,4 +51,58 @@ test("cancellation and reduced motion restore immediately and cannot mutate late
   let scheduled = false;
   animateMaterialization(f.child, () => true, () => { scheduled = true; return 0; }, () => {});
   assert.equal(scheduled, false);
+});
+
+test("completion advances a sequence only after the actual reveal settles", () => {
+  const f = fixture(); let completed = 0;
+  animateMaterialization(f.child, () => false, f.schedule, () => {}, () => {
+    assert.equal(f.mesh.material, f.original, "the next item starts after authored material is restored");
+    completed++;
+  });
+  f.tick(100); f.tick(100 + MATERIALIZE_DURATION_MS - 1);
+  assert.equal(completed, 0);
+  f.tick(100 + MATERIALIZE_DURATION_MS);
+  assert.equal(completed, 1);
+  f.tick(100 + MATERIALIZE_DURATION_MS + 1);
+  assert.equal(completed, 1, "late frames cannot advance the sequence twice");
+  const stop = animateMaterialization(f.child, () => false, f.schedule, () => {}, () => completed++);
+  stop(); f.tick(100 + MATERIALIZE_DURATION_MS * 2);
+  assert.equal(completed, 1, "removed or replaced furniture never completes its cancelled reveal");
+});
+
+test("reduced motion completes immediately or on the next active frame", () => {
+  const f = fixture(); let completed = 0; let reduced = false;
+  animateMaterialization(f.child, () => true, f.schedule, () => {}, () => completed++);
+  assert.equal(completed, 1);
+  animateMaterialization(f.child, () => reduced, f.schedule, () => {}, () => completed++);
+  f.tick(10); reduced = true; f.tick(20); f.tick(30);
+  assert.equal(completed, 2);
+  assert.equal(f.mesh.material, f.original);
+});
+
+test("golden silk stays anchored to off-centre furniture, reuses buffers and leaves no settled strands", () => {
+  const mesh = { aabb: new BoundingBox(new Vec3(30, 5, -70), new Vec3(2, 3, 4)) } as MeshInstance;
+  const calls: { points: Vec3[]; colors: { a: number }[]; depthTest: boolean }[] = [];
+  const parent = { findComponent: () => ({ system: { app: {
+    drawLines: (points: Vec3[], colors: { a: number }[], depthTest: boolean) => calls.push({ points, colors, depthTest }),
+  } } }) } as unknown as Entity;
+  const threads = createGoldenThreads(parent, [mesh]);
+  assert.ok(threads);
+  threads.update(0);
+  assert.equal(calls.length, 0);
+  threads.update(0.5);
+  const first = calls[0];
+  assert.equal(first.points.length, 384);
+  assert.equal(first.depthTest, true, "strands must not draw over foreground furniture");
+  assert.ok(first.colors.some(color => color.a > 0.3));
+  assert.ok(first.points.every(point => point.x > 25 && point.x < 35 && point.z > -80 && point.z < -60));
+  assert.ok(first.points.every(point => point.y >= 2 && point.y < 12), "strands rise from this object's floor, not the world origin");
+  threads.update(0.65);
+  assert.equal(calls[1].points, first.points);
+  assert.equal(calls[1].colors, first.colors);
+  threads.update(1);
+  assert.equal(calls.length, 2, "settled furniture has no persistent filament overlay");
+  threads.dispose();
+  threads.update(0.5);
+  assert.equal(calls.length, 2, "disposed effects cannot enqueue more geometry");
 });

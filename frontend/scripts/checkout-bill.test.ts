@@ -4,6 +4,8 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { billLine, isPriced, vendorLine } from "../src/checkout/types.ts";
 import { cartLines, linePrice, stageLines } from "../src/checkout/cartLines.ts";
+import { roomCheckoutLines, sandboxDispatchVerified } from "../src/checkout/roomCheckoutPresentation.ts";
+import { approveAndSubmitCheckout } from "../src/checkout/approveAndSubmit.ts";
 
 const source = (path: string) => readFile(new URL(`../src/${path}`, import.meta.url), "utf8");
 
@@ -45,6 +47,29 @@ test("a building's bill does not flood the stage", () => {
   assert.deepEqual([stageLines(lines.slice(0, 8)).shown.length, stageLines(lines.slice(0, 8)).more], [8, 0]);
 });
 
+test("one explicit approval action sends exactly one sandbox request after MFA succeeds", async () => {
+  const checkout = { id: "checkout-1", state: "draft", snapshot_hash: "hash-1" } as any;
+  const calls: Array<[string, string, unknown]> = [];
+  const send = async (path: string, method: string, body: unknown) => {
+    calls.push([path, method, body]);
+    if (path.endsWith("/approve/")) return { status: 200, data: { ...checkout, state: "approved" } };
+    return { status: 200, data: { ...checkout, state: "accepted" } };
+  };
+  const result = await approveAndSubmitCheckout(checkout, true, "123456", send);
+  assert.equal(result.state, "accepted");
+  assert.deepEqual(calls, [
+    ["/api/checkouts/checkout-1/approve/", "POST", { snapshot_hash: "hash-1", approved: true, code: "123456" }],
+    ["/api/checkouts/checkout-1/submit/", "POST", { snapshot_hash: "hash-1" }],
+  ]);
+
+  let submits = 0;
+  await assert.rejects(approveAndSubmitCheckout(checkout, true, "000000", async path => {
+    if (path.endsWith("/submit/")) submits++;
+    return { status: 400, errors: [{ message: "Invalid authenticator code." }] };
+  }), /Invalid authenticator code/);
+  assert.equal(submits, 0, "a rejected MFA code never reaches Visa");
+});
+
 test("the cart preview is folded into the cart: no separate destination, no sample data, nothing on the sign-in steps", async () => {
   const [app, ready, choreography, account, review, approval] = await Promise.all(
     ["App.tsx", "shopping/CartReady.tsx", "checkout/CartChoreography.tsx", "auth/AccountApp.tsx", "checkout/CheckoutReview.tsx", "checkout/ApprovalForm.tsx"].map(source));
@@ -61,4 +86,25 @@ test("the cart preview is folded into the cart: no separate destination, no samp
   // The hard line: sign-in, the authenticator step and the review step never mount it. Only CartReady does.
   for (const [name, text] of [["AccountApp.tsx", account], ["CheckoutReview.tsx", review], ["ApprovalForm.tsx", approval]] as const)
     assert.doesNotMatch(text, /CartChoreography/, `${name} must not mount the choreography`);
+});
+
+
+test("room checkout film requires an accepted matching sandbox result, never just approval or HTTP success", () => {
+  const accepted = {state:"accepted",evidence:{http_status:200,transaction_id_matches:true,response:{idxMatchKey:"test-match"}}} as any;
+  assert.equal(sandboxDispatchVerified(accepted),true);
+  for(const state of ["draft","approved","submitting","transport_unknown","failed"])
+    assert.equal(sandboxDispatchVerified({...accepted,state}),false,state);
+  assert.equal(sandboxDispatchVerified({...accepted,evidence:{...accepted.evidence,transaction_id_matches:false}}),false);
+  assert.equal(sandboxDispatchVerified({...accepted,evidence:{...accepted.evidence,http_status:500}}),false);
+  assert.equal(sandboxDispatchVerified({...accepted,evidence:{...accepted.evidence,response:{idxMatchKey:""}}}),false);
+  assert.equal(sandboxDispatchVerified(null),false);
+});
+
+test("room approval displays immutable checkout prices even if the current cart has changed", () => {
+  const cart={items:[{product_id:"chair",name:"New chair",thumbnail:"/actual-chair.png",priced:true,unit_amount:9900}],amount:9900} as any;
+  const checkout={snapshot:{items:[{product_id:"chair",name:"Reviewed chair",quantity:2,priced:true,line_amount:12000},{product_id:"lamp",name:"Lamp",quantity:1,priced:false,line_amount:null}]}} as any;
+  assert.deepEqual(roomCheckoutLines(cart,checkout,cartLines(cart.items)),[
+    {id:"chair",name:"Reviewed chair",quantity:2,thumbnail:"/actual-chair.png",amount:12000},
+    {id:"lamp",name:"Lamp",quantity:1,thumbnail:"",amount:null},
+  ]);
 });

@@ -6,7 +6,9 @@
 //
 // The server says which one to use; if it cannot be asked, or the recording fails, it is "browser".
 
-export type TranscribeBackend = "deepgram" | "browser";
+export type TranscribeBackend = "deepgram" | "openai" | "browser";
+export const isServerTranscriber = (value:unknown):value is "deepgram"|"openai" => value === "deepgram" || value === "openai";
+export const transcriberLabel = (backend:TranscribeBackend) => backend === "openai" ? "OpenAI" : backend === "deepgram" ? "Deepgram" : "browser speech recognition";
 export type VoicePhase = "idle" | "connecting" | "listening" | "transcribing";
 /** What was heard, and which backend ACTUALLY produced it (after any fallback), for the dev indicator. */
 export type Heard = { text: string; answeredBy: TranscribeBackend; note?: string };
@@ -27,16 +29,16 @@ export async function fetchBackend(signal?: AbortSignal): Promise<TranscribeBack
   try {
     const response = await fetch("/api/transcribe", { signal });
     const body = await response.json();
-    return response.ok && body.backend === "deepgram" && typeof MediaRecorder !== "undefined" ? "deepgram" : "browser";
+    return response.ok && isServerTranscriber(body.backend) && typeof MediaRecorder !== "undefined" ? body.backend : "browser";
   } catch {
     return "browser";
   }
 }
 
 export const canListen = (backend: TranscribeBackend): boolean =>
-  backend === "deepgram" ? !!navigator.mediaDevices?.getUserMedia : !!speechRecognition();
+  isServerTranscriber(backend) ? !!navigator.mediaDevices?.getUserMedia : !!speechRecognition();
 
-async function listenWithDeepgram(): Promise<Listening> {
+async function listenWithServer(backend:TranscribeBackend): Promise<Listening> {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   const recorder = new MediaRecorder(stream);
   let cancelled = false;
@@ -60,11 +62,11 @@ async function listenWithDeepgram(): Promise<Listening> {
         const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
         const response = await fetch("/api/transcribe", { method: "POST", headers: { "Content-Type": blob.type }, body: blob });
         const body = await response.json();
-        if (response.ok) { resolve({ text: String(body.text ?? ""), answeredBy: "deepgram" }); return; }
+        if (response.ok && isServerTranscriber(body.backend)) { resolve({ text: String(body.text ?? ""), answeredBy: body.backend }); return; }
         if (body.fallback !== "browser") throw new Error(body.detail ?? "Could not transcribe that.");
         const fallback = shadow ? await shadow.result.catch(() => null) : null;
         if (!fallback?.text) throw new Error("Voice is unavailable right now. Try again, or type it.");
-        resolve({ text: fallback.text, answeredBy: "browser", note: "Deepgram was unavailable for this press" });
+        resolve({ text: fallback.text, answeredBy: "browser", note: `${transcriberLabel(backend)} was unavailable for this press` });
       } catch (error) { reject(error); }
     };
   });
@@ -93,4 +95,4 @@ function listenWithBrowser(): Listening {
 
 /** Start listening. Call `stop()` when the speaker is done; `result` resolves to what was heard. */
 export const listen = (backend: TranscribeBackend): Promise<Listening> =>
-  backend === "deepgram" ? listenWithDeepgram() : Promise.resolve(listenWithBrowser());
+  isServerTranscriber(backend) ? listenWithServer(backend) : Promise.resolve(listenWithBrowser());
