@@ -29,3 +29,17 @@ test("the count line keeps the catalogue-wide number on screen when only listing
   assert.equal(countLine(0, 25, 0), "25 matches in the catalogue · none has a 3D model yet");
   assert.equal(countLine(1, null, 1), "1 match");
 });
+
+test("a listing with no known price says so, and never reads $0", async () => {
+  const { hasPrice, priceLabel } = await import("./price");
+  const dollars = (cents: number) => `$${cents / 100}`;
+  assert.deepEqual([hasPrice(0), hasPrice(1), hasPrice(14900)], [false, true, true]);
+  assert.equal(priceLabel(14900, dollars), "$149");
+  assert.equal(priceLabel(0, dollars), "price unavailable");
+  // Both places that print a price go through it.
+  for (const file of ["CatalogueShelf.tsx", "../dev/search.tsx"]) {
+    const text = await source(file);
+    assert.match(text, /priceLabel\((listing|item)\.price_cents, dollars\)/, `${file} prints prices through priceLabel`);
+    assert.doesNotMatch(text, /\{dollars\((listing|item)\.price_cents\)\}/, `${file} must not print a raw price`);
+  }
+});

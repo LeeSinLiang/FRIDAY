@@ -10,6 +10,7 @@ import { ROOM_CHOICES, ROOM_ID } from "../scene/fixtures";
 import { compileSentence, searchCatalogue, type Compiled } from "./api";
 import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend } from "./transcribe";
 import "./shelf.css";
+import { priceLabel } from "./price";
 
 type Props = {
   region: Region | null;
@@ -168,7 +169,7 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
               <img src={listing.thumb_url} alt="" />
               <span>
                 <strong>{listing.title}</strong>
-                <small>{dollars(listing.price_cents)} · {size(listing)}</small>
+                <small>{priceLabel(listing.price_cents, dollars)} · {size(listing)}</small>
               </span>
             </button>
           </li>
