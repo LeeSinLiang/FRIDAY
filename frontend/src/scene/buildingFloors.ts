@@ -1,6 +1,11 @@
 import building from "../../../shared/skyscraper-test-scene.json";
 import type { Room } from "./types";
 
+/** A saved cart's floor ID belongs to the building's single public gallery entry. */
+export function galleryRoomId(roomId: string) {
+  return building.floors.some(floor => floor.roomId === roomId) ? building.buildingId : roomId;
+}
+
 /** Explicit prepared contexts only: a URL cannot manufacture a new floor. */
 export function initialRoom(requested: string | null | undefined, floor: string | null) {
   const level = building.floors.find(item => item.roomId === requested);

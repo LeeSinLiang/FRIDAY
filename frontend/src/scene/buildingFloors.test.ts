@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Entity } from "playcanvas";
-import { initialRoom, buildingFloors, roomVisualKey } from "./buildingFloors";
+import { initialRoom, buildingFloors, roomVisualKey, galleryRoomId } from "./buildingFloors";
 import { switchBuildingFloor } from "./playcanvas/buildingFloor";
 import type { PlayCanvasRuntime } from "./playcanvas/runtime";
 import type { Room, Product } from "./types";
@@ -16,6 +16,10 @@ import empty from "../../../shared/rooms/empty-room/manifest.json";
 const first = lower.room as unknown as Room, last = upper.room as unknown as Room;
 test("floor navigation is bounded and leaves ordinary room selection unchanged", () => {
   assert.equal(initialRoom("empty-room", "C32"), "empty-room");
+  assert.equal(galleryRoomId("empty-room"), "empty-room");
+  assert.equal(galleryRoomId(last.roomId), first.roomId);
+  assert.equal(galleryRoomId("london-skyscraper-c99"), "london-skyscraper-c99");
+  assert.equal(initialRoom(last.roomId, null), last.roomId);
   assert.equal(initialRoom(first.roomId, "C32"), last.roomId);
   assert.equal(initialRoom(first.roomId, "C99"), first.roomId);
   assert.equal(initialRoom("../../private", "C32"), "haussmann-apartment");

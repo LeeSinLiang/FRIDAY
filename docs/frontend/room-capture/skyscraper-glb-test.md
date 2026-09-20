@@ -1,6 +1,6 @@
 # Skyscraper floors in the existing editor
 
-The London skyscraper is a separate public gallery room at `/room/london-skyscraper-test`. The existing editor, catalogue, Floor plan, Walk, furniture tools and map keep their current UI. The map's existing up/down arrows select the adjacent floor. `?floor=C20` opens a particular prepared level; an unknown floor falls back to the requested valid context.
+The London skyscraper is a separate public gallery room at `/room/london-skyscraper-test`. The existing editor, catalogue, Floor plan, Walk, furniture tools and map keep their current UI. The map's existing up/down arrows select the adjacent floor. `?floor=C20` opens a particular prepared level; saved cart links to `/room/london-skyscraper-c20` also reopen that level through the building gallery allowlist. An unknown floor falls back to the requested valid context.
 
 ## Model and preparation
 
