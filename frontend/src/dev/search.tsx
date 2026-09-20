@@ -102,7 +102,7 @@ function DevSearch() {
   const [filters, setFilters] = useState<Filters>(EMPTY)
   const [result, setResult] = useState<SearchResponse | null>(null)
   const [error, setError] = useState('')
-  const [sentence, setSentence] = useState('a reading chair by the window, under $400, 5 feet from any wall')
+  const [sentence, setSentence] = useState('a reading chair by the window, under $400, 4 feet from any wall')
   const [compiled, setCompiled] = useState<CompileResponse | null>(null)
   const [compiling, setCompiling] = useState(false)
   const query = toQueryString(filters)

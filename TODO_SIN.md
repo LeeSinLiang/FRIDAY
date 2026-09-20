@@ -269,3 +269,11 @@ Not urgent, not changed by me. Context in `docs/backend/contracts/scene-api.md`,
 - **What lags, and is yours if you want it:** while a retry is running your header says *Disconnected* with a *Retry* button and shows the raw server message, the Objects list and layout count omit the item, and the editor is locked. For a save that fixes itself in a second or two, a quieter status (the legacy app says nothing until the second failure) would match the team rule that storage may delay a save but never refuse a placement.
 - Drags and removes inside your editor still fail outright on a 5xx. Same fix, your call.
 - Separate, already fixed on my side: the Cg Arch room's baked `scene.exposure` washed my floor overlay out to white; `regionOverlay.ts` now divides its emissive by it. If you change how exposure is applied, that line is the one to look at.
+
+## Note from Saketh's lane — `AGENTS.md`: `main` freezes after the rehearsal (2026-09-20)
+
+Two additions, from Saketh. Please read the new "Merging close to the demo" section.
+
+- **Freeze.** Once the demo has been rehearsed end to end on the presenting machine, `main` takes only fixes to things that break that rehearsed run. No polish, no refactors. If unsure whether the freeze has started, ask before merging.
+- **Chains stop on the first failure, and a status is quoted, not remembered.** `&&` not `;`, no pipe that eats an exit code, do not trust `set -e` blindly, and paste the `Ran N tests … OK` line you actually read. The full backend suite is `manage.py test` with **no app labels** (206 tests); a label list silently skips apps.
+- **Said out loud, because this is what the freeze is for:** tonight #34 went into `main` without the suite being run and left `main` red, seven backend failures, until #37. Nobody was careless in an unusual way; it was a reasonable-looking asset PR late at night. That is exactly the change the freeze rule exists to stop from landing an hour before we present. Whoever merges runs the full suite on fresh `main` at once, and says so with the numbers.

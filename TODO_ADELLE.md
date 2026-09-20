@@ -66,3 +66,13 @@ Appended by Saketh's agent; nothing above was changed except that your two block
 - HERRÅKRA is now a catalogue listing, `ikea-405.355.47` (710 × 660 × 730 mm, $149), and it is the item the demo hovers, because it is the one that looks like a chair. Seen in the room at true scale with "3D model loaded".
 - **Triangle budget: 29,827 is at the very top for one chair. For the sofa and table please target 10–15k.** If we end up with several assets they go through `gltf-transform` before they go in the repo.
 - Your next assets are checked automatically by the backend test suite; the rules are in `docs/frontend/3d-object/collaborator-handoff.md` under "Automated asset check".
+
+## Note from Saketh's lane — `AGENTS.md`: `main` freezes after the rehearsal (2026-09-20)
+
+Two additions, from Saketh. Please read the new "Merging close to the demo" section.
+
+- **Freeze.** Once the demo has been rehearsed end to end on the presenting machine, `main` takes only fixes to things that break that rehearsed run. No polish, no refactors. If unsure whether the freeze has started, ask before merging.
+- **Chains stop on the first failure, and a status is quoted, not remembered.** `&&` not `;`, no pipe that eats an exit code, do not trust `set -e` blindly, and paste the `Ran N tests … OK` line you actually read. The full backend suite is `manage.py test` with **no app labels** (206 tests); a label list silently skips apps.
+- **Said out loud, because this is what the freeze is for:** tonight #34 went into `main` without the suite being run and left `main` red, seven backend failures, until #37. Nobody was careless in an unusual way; it was a reasonable-looking asset PR late at night. That is exactly the change the freeze rule exists to stop from landing an hour before we present. Whoever merges runs the full suite on fresh `main` at once, and says so with the numbers.
+
+- **About #34 specifically:** nothing of yours was lost. Both listings stay in the catalogue. The two models are unlinked for now (`model_url: null`, an `unbound` reason in each `metadata.json`) because they miss their listings by 14 and 18 cm, as your own notes said, and a rendered sofa narrower than the box the fit check uses would be a visible lie. Their colours were moved onto the hero palette (`#30475e`): colour search only matches palette colours. Refit with capped non-uniform scale is on Saketh's list.
