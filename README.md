@@ -46,12 +46,13 @@ The default room editor uses PlayCanvas with the prepared Cg Arch mesh when its 
 
 ```bash
 (cd backend && uv run python manage.py check)
-(cd backend && OPENAI_API_KEY= COMPILE_LIVE_TEST=0 uv run python manage.py test api catalogue visa accounts checkout)
-(cd frontend && npm test)
-(cd frontend && node --experimental-strip-types --test src/auth/api.test.mjs src/auth/flow.test.mjs)
+(cd backend && OPENAI_API_KEY= COMPILE_LIVE_TEST=0 uv run python manage.py test)   # every app: no labels, on purpose
+(cd frontend && npm test)                                                          # every frontend test, auth included
 (cd frontend && npm run build)
 (cd backend && uv run python manage.py createsuperuser)
 ```
+
+These three are what CI runs on every pull request (`.github/workflows/ci.yml`): no secrets, a few minutes, and advisory rather than required, so it never blocks an emergency fix. **Run the backend suite without app labels.** A label list such as `test api catalogue` silently skips every app it does not name. `npm test` is likewise the whole frontend suite: `frontend/scripts/every-test-runs.test.ts` fails if any `*.test.*` file on disk is not reachable from it.
 
 Add backend dependencies with `cd backend && uv add <package>`; frontend dependencies with `cd frontend && npm install <package>`. Keep both lockfiles in Git. React is constrained to 19.2 because the installed React Three Fiber 9 peer range excludes React 19.3.
 
