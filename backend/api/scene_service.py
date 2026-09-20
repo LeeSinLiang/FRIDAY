@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from .catalogue_products import agrees_with_catalogue, catalogue_product, well_formed
 from .models import SceneCommandReceipt, SceneLayout
+from .shared_data import shared_root
 
 EPSILON = 1e-6
 
@@ -26,7 +27,7 @@ ROOM_SEPARATOR = ':'
 
 
 def room_presets():
-    return json.loads((Path(settings.BASE_DIR).parent / 'shared' / 'scene-fixtures.json').read_text()).get('rooms', {})
+    return json.loads((shared_root() / 'scene-fixtures.json').read_text()).get('rooms', {})
 
 
 def layout_key(session_key, room_id=None):
@@ -45,7 +46,7 @@ def room_id_of(key):
 
 
 def fixtures(room_id=None):
-    data = json.loads((Path(settings.BASE_DIR).parent / 'shared' / 'scene-fixtures.json').read_text())
+    data = json.loads((shared_root() / 'scene-fixtures.json').read_text())
     presets = data.pop('rooms', {})
     if room_id:
         data['room'] = presets[room_id]['room']

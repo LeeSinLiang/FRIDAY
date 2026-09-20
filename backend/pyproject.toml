@@ -23,3 +23,6 @@ package = false
 
 [tool.vercel]
 entrypoint = "config.wsgi:application"
+
+[tool.vercel.scripts]
+build = "python build.py"

@@ -5,6 +5,7 @@ import re
 from django.utils import timezone
 from accounts.policy import account_status
 from api.scene_service import SceneError, apply_scene_commands, scene_for_session, serialize
+from api.shared_data import shared_root
 from catalogue.feed import load_catalogue
 from checkout.catalogue import VENDOR
 from checkout.models import Checkout
@@ -19,7 +20,7 @@ def priced_product(product_id):
     # Only packaged furniture can be bought in this demo; remote/unmapped models are excluded.
     if not re.fullmatch(r'/models/furniture/[a-z0-9-]+/model\.glb', listing.model_url):
         raise SceneError('unavailable_product', 'This furniture has no deployed model.', 400)
-    metadata_path = settings.BASE_DIR.parent / 'shared' / listing.model_url.lstrip('/').replace('/model.glb', '/metadata.json')
+    metadata_path = shared_root() / listing.model_url.lstrip('/').replace('/model.glb', '/metadata.json')
     try:
         metadata = json.loads(metadata_path.read_text())
         if metadata.get('catalogueListingId') != listing.id or metadata.get('modelUrl') != listing.model_url:

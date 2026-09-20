@@ -4,7 +4,7 @@
   "functions": {
     "config/wsgi.py": {
       "maxDuration": 60,
-      "includeFiles": "../shared/**/*.json",
+      "includeFiles": "runtime_shared/**/*.json",
       "excludeFiles": "{.venv/**,.runtime/**,*.sqlite3*,../shared/**/*.glb,../shared/**/*.sog,../frontend/**}"
     }
   }

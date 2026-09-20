@@ -31,6 +31,8 @@ Two Vercel projects in `williamxu070s-projects`:
 
 Both projects are configured to include source files outside their root. `.vercelignore` excludes local environments, databases, keys, runtime files and scratch data from uploads. Python function exclusions separately omit large visual assets. Hosted packaging remains to be verified before release.
 
+Vercel flattens the Python project root to `/var/task`. `backend/build.py` copies the room allowlist, scene fixtures, public room manifest/spatial metadata and furniture metadata into generated `runtime_shared/`; `api/shared_data.py` selects that location only on Vercel. No GLB, splat or private runtime data enters that package. Reading `BASE_DIR.parent/shared` on Vercel is incorrect even when monorepo source access is enabled.
+
 Backend variables: `DATABASE_URL`, unique `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=false`, `DJANGO_ALLOWED_HOSTS`, fresh persistent `MFA_ENCRYPTION_KEY`, `FRONTEND_ORIGIN`, exact `CSRF_TRUSTED_ORIGINS`, SMTP settings, and optional `VISA_CREDENTIALS_JSON`. Disable local inbox/tester. Do not move the local account database or its MFA key to hosting. Inline Visa JSON uses the same credential keys as local configuration, but includes PEM text instead of filesystem paths. Sending remains disabled without valid sandbox credentials.
 
 ### Release sequence
