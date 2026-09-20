@@ -9,6 +9,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
+from .catalogue_products import OPTIONAL_PRODUCT_KEYS, PRODUCT_KEYS, agrees_with_catalogue, catalogue_product
 from .models import SceneCommandReceipt, SceneLayout
 
 EPSILON = 1e-6
@@ -56,6 +57,33 @@ def overlaps(a, b):
     return True
 
 
+def resolve_product(item, products):
+    """The product an instance refers to. Fixture products resolve by id exactly as before.
+
+    Any other id must be a catalogue listing. The instance may carry the product inline so clients
+    need no fixture entry, but the server's catalogue is the authority on its dimensions.
+    """
+    product_id = item['productId']
+    if product_id in products:
+        if 'product' in item:
+            raise SceneError('validation', 'Shared products must not carry an inline product.')
+        return products[product_id]
+    authoritative = catalogue_product(product_id)
+    if authoritative is None:
+        raise SceneError('validation', 'Use a known product and finite centimeter position and rotation.')
+    carried = item.get('product')
+    if carried is None:
+        raise SceneError('validation', 'A catalogue item must carry its product.')
+    if (not isinstance(carried, dict) or not PRODUCT_KEYS <= set(carried) or set(carried) - PRODUCT_KEYS - OPTIONAL_PRODUCT_KEYS
+            or carried['productId'] != product_id or any(not number(carried[key]) or carried[key] <= 0 for key in ('widthCm', 'depthCm', 'heightCm'))):
+        raise SceneError('validation', 'The carried product is malformed.')
+    if not agrees_with_catalogue(carried, authoritative):
+        raise SceneError('validation', 'The carried product does not match the catalogue.', details={'issues': [{
+            'code': 'product_mismatch', 'productId': product_id,
+            'catalogueCm': {key: authoritative[key] for key in ('widthCm', 'depthCm', 'heightCm')}}]})
+    return authoritative
+
+
 def validate_instances(instances):
     if not isinstance(instances, list) or len(instances) > 100:
         raise SceneError('validation', 'Provide at most 100 furniture instances.')
@@ -64,15 +92,15 @@ def validate_instances(instances):
     products = {p['productId']: p for p in data['products']}
     seen, boxes = set(), []
     for item in instances:
-        if not isinstance(item, dict) or set(item) != {'instanceId', 'productId', 'pose'}:
+        if not isinstance(item, dict) or not {'instanceId', 'productId', 'pose'} <= set(item) or set(item) - {'instanceId', 'productId', 'pose', 'product'}:
             raise SceneError('validation', 'Each instance needs instanceId, productId, and pose.')
         identifier = item['instanceId']
         if not isinstance(identifier, str) or not identifier.strip() or len(identifier) > 128 or identifier in seen:
             raise SceneError('validation', 'Instance IDs must be unique nonempty strings up to 128 characters.')
         seen.add(identifier)
-        if not isinstance(item['productId'], str) or item['productId'] not in products or not valid_pose(item['pose']):
+        if not isinstance(item['productId'], str) or not valid_pose(item['pose']):
             raise SceneError('validation', 'Use a known product and finite centimeter position and rotation.')
-        product, pose = products[item['productId']], item['pose']
+        product, pose = resolve_product(item, products), item['pose']
         if any(not number(product[key]) or product[key] <= 0 for key in ['widthCm', 'depthCm', 'heightCm']):
             raise SceneError('validation', 'Invalid furniture dimensions.')
         if product['heightCm'] > room['heightCm'] + EPSILON:
@@ -94,7 +122,17 @@ def scene_for_session(session_key):
 
 
 def serialize(scene):
-    return {**fixtures(), 'instances': scene.instances, 'revision': scene.revision}
+    data = fixtures()
+    known = {product['productId'] for product in data['products']}
+    # Catalogue items placed in this scene join the product list, from the server's catalogue rather
+    # than the client's copy, so every consumer that looks products up by id keeps working.
+    for item in scene.instances:
+        if item['productId'] not in known:
+            product = catalogue_product(item['productId'])
+            if product:
+                known.add(item['productId'])
+                data['products'].append(product)
+    return {**data, 'instances': scene.instances, 'revision': scene.revision}
 
 
 def validate_revision(revision):

@@ -6,7 +6,7 @@
 
 import type { Category, Listing } from "../lib/types";
 import type { PlaceClause, Ref } from "../lib/dsl/schema";
-import type { Product, Room } from "../scene/types";
+import type { Instance, Pose, Product, Room } from "../scene/types";
 import type { Rect, WallSide } from "./types";
 
 export const mmToCm = (mm: number): number => mm / 10;
@@ -30,8 +30,8 @@ const KIND_BY_CATEGORY: Record<Category, Product["kind"]> = {
   table: "table", desk: "table", shelf: "table", storage: "table", rug: "table", decor: "table",
 };
 
-/** Catalogue listing -> scene product. NOTE: the scene currently accepts only the products in
- *  shared/scene-fixtures.json, so the result validates here but cannot yet be saved to a scene. */
+/** Catalogue listing -> scene product. The server re-derives this from its own catalogue and rejects
+ *  an instance whose carried dimensions disagree, so the client cannot shrink a sofa to make it fit. */
 export function listingToProduct(listing: Listing): Product {
   return {
     productId: listing.id,
@@ -44,6 +44,10 @@ export function listingToProduct(listing: Listing): Product {
     kind: KIND_BY_CATEGORY[listing.category],
   };
 }
+
+/** A catalogue listing as a placeable instance, carrying its product so the scene needs no fixture entry. */
+export const instanceFromListing = (listing: Listing, instanceId: string, pose: Pose): Instance =>
+  ({ instanceId, productId: listing.id, pose, product: listingToProduct(listing) });
 
 // Wall ids as the DSL emits them. The scene's Room has no named walls, so the mapping lives here:
 // north is z = 0 (the scene's back wall), west is x = 0 (its side wall). Compass words, because
