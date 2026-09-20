@@ -16,6 +16,17 @@ import type { PlayCanvasRuntime } from "./runtime";
 type Point = { x: number; y: number; z: number };
 export type SceneRay = { origin: Point; direction: Point };
 
+/** Use the same camera ray for editor drags and catalogue support picks. */
+export function rayFromScreen(runtime: PlayCanvasRuntime, clientX: number, clientY: number): SceneRay | null {
+  const rect = runtime.canvas.getBoundingClientRect();
+  const camera = runtime.camera.camera;
+  if (!camera || !rect.width || !rect.height) return null;
+  const near = camera.screenToWorld(clientX - rect.left, clientY - rect.top, camera.nearClip);
+  const far = camera.screenToWorld(clientX - rect.left, clientY - rect.top, camera.farClip);
+  const direction = new pc.Vec3().sub2(far, near).normalize();
+  return { origin: { x: sceneToCm(near.x), y: sceneToCm(near.y), z: sceneToCm(near.z) }, direction };
+}
+
 export function intersectFloor(ray: SceneRay, heightCm = 0, maxDistanceCm = 3000): Point | null {
   if (Math.abs(ray.direction.y) < 0.00001) return null;
   const distance = (heightCm - ray.origin.y) / ray.direction.y;
@@ -101,16 +112,7 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
     const item = ghost ?? state.instances.find(instance => instance.instanceId === (value?.instanceId ?? state.selectedId));
     overlays.update(state.room, item ? productFor(item.productId) ?? null : null, value, state.view);
   };
-  const rayAt = (clientX: number, clientY: number): SceneRay | null => {
-    const rect = canvas.getBoundingClientRect();
-    const camera = runtime.camera.camera;
-    if (!camera || !rect.width || !rect.height) return null;
-    const x = clientX - rect.left, y = clientY - rect.top;
-    const near = camera.screenToWorld(x, y, camera.nearClip);
-    const far = camera.screenToWorld(x, y, camera.farClip);
-    const direction = new pc.Vec3().sub2(far, near).normalize();
-    return { origin: { x: sceneToCm(near.x), y: sceneToCm(near.y), z: sceneToCm(near.z) }, direction };
-  };
+  const rayAt = (clientX: number, clientY: number) => rayFromScreen(runtime, clientX, clientY);
   const floorAt = (x: number, y: number, heightCm = 0) => {
     const ray = rayAt(x, y); return ray ? intersectFloor(ray, heightCm, Math.max(3000, Math.hypot(state.room.widthCm, state.room.depthCm) * 2)) : null;
   };

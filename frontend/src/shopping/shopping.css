@@ -5,3 +5,5 @@
 @media(max-width:760px){.purchase-confirm{left:16px;bottom:100px;width:calc(100vw - 32px);max-height:55dvh}.splat-header .splat-title{display:none}.shopping-account .account-header{align-items:flex-start;gap:12px}.shopping-account .account-header nav{gap:14px}}
 .cart-bill{margin:22px 0 0;font-size:14px;color:#795f4b}.cart-bill+.cart-total{margin-top:8px}
 .room-choice-unavailable{cursor:not-allowed}.room-choice-unavailable img{filter:grayscale(1);opacity:.55}.room-choice-unavailable:hover img{transform:none}.room-choice-unavailable .room-choice-image>span{background:#eadbc9;color:#795f4b}
+
+.purchase-details{display:grid;gap:8px;margin:14px 0}.purchase-details>div{display:flex;justify-content:space-between;gap:12px;font-size:13px}.purchase-details dt{color:#795f4b}.purchase-details dd{margin:0;text-align:right;overflow-wrap:anywhere}.purchase-note{color:#795f4b}
