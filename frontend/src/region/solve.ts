@@ -5,6 +5,7 @@ import type { PlaceClause } from "../lib/dsl/schema";
 import { placeToCm } from "./boundary";
 import { doorSwingRule, resolveClause, wallClearances, type Dropped, type Rule } from "./clauses";
 import { explainNothingFits } from "./explain";
+import { floorRegion } from "./floor";
 import { countFree, fillMask, footprintRect, intersect, newMask } from "./grid";
 import { invariantMask, type Candidate } from "./invariants";
 import { BLOCKED, FREE, YAW_BINS, type Mask, type Scene } from "./types";
@@ -41,8 +42,9 @@ export function solve(scene: Scene, candidate: Candidate, place: PlaceClause[]):
 function solveOnce(scene: Scene, candidate: Candidate, place: PlaceClause[]): Pick<Solution, "masks" | "dropped" | "legalCounts"> {
   const rules: Rule[] = [doorSwingRule(scene)], dropped: Dropped[] = [], ignore = [...(candidate.ignoreInstanceIds ?? [])];
   const clauses = placeToCm(place), clearances = wallClearances(clauses);
+  const region = floorRegion(scene.room); // once per solve, not once per clause or per grid point
   for (const clause of clauses) {
-    const resolved = resolveClause(scene, candidate.product, clause, clearances);
+    const resolved = resolveClause(scene, candidate.product, clause, clearances, region);
     if ("dropped" in resolved) { dropped.push({ clause, reason: resolved.dropped }); continue; }
     rules.push(resolved.rule);
     if (resolved.ignoreInstanceId) ignore.push(resolved.ignoreInstanceId);

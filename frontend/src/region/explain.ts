@@ -4,6 +4,7 @@
 import type { PlaceClause } from "../lib/dsl/schema";
 import type { Product, Room } from "../scene/types";
 import { placeToCm, wallBounds, type PlaceCm } from "./boundary";
+import { floorRegion, longestSpans } from "./floor";
 import { wallClearances } from "./clauses";
 import { footprintRect } from "./grid";
 import { YAW_BINS } from "./types";
@@ -13,10 +14,12 @@ export type Solver = (place: PlaceClause[]) => { legalCounts: number[] };
 const round = (cm: number) => Math.round(cm);
 const total = (counts: number[]) => counts.reduce((sum, n) => sum + n, 0);
 
-/** Simple arithmetic first: the item plus the wall clearances asked for, against the room's two dimensions. */
+/** Simple arithmetic first: the item plus the wall clearances asked for, against the longest unbroken
+ *  run of floor each way. For a rectangle that is its width and depth; for any other shape it is the most
+ *  generous reading, so "needs more than this" is always true when it is said. */
 function spanShortfall(room: Room, product: Product, place: PlaceCm[]): string | null {
   const need = wallClearances(place);
-  const walls = wallBounds(room), acrossCm = walls.maxX - walls.minX, deepCm = walls.maxZ - walls.minZ;
+  const { acrossCm, deepCm } = longestSpans(floorRegion(room));
   let best: { axis: string; needs: number; has: number } | null = null;
   for (const yawRad of YAW_BINS.slice(0, 2)) {
     const rect = footprintRect(product, { xCm: 0, zCm: 0, yawRad });

@@ -56,18 +56,13 @@ export const WALL_SIDE_BY_ID: Record<string, WallSide> = { "w-n": "n", "w-e": "e
 export const WALL_SIDES: readonly WallSide[] = ["n", "e", "s", "w"];
 
 /**
- * Where the room's walls are, for every clause that mentions a wall.
+ * The box around the floor furniture may stand on: the room itself for a fixture room, the reviewed
+ * free areas for a prepared room (whose width and depth describe the whole modelled shell, adjoining
+ * spaces included).
  *
- * A fixture room is its own width and depth. A prepared room (one with `spatial`) is not: its width
- * and depth describe the whole modelled shell, adjoining spaces included, while furniture may only
- * stand in the reviewed free areas. Measuring "5 feet from any wall" to the shell would pass for the
- * wrong reason, so the walls are the edges of the free floor instead.
- *
- * DELIBERATE APPROXIMATIONS, for tonight:
- *  - The bounding box of the free areas is used, so an L-shaped floor is treated as its enclosing
- *    rectangle for wall clauses. Placement itself is still exact: that is validatePlacement's job.
- *  - Every edge counts as a wall. In the Cg Arch interior the x = 787 cm edge is really an opening
- *    into the adjoining space, not a wall. spatial.json carries no wall metadata to say so.
+ * This is NOT where the walls are. Walls are the boundary of the floor, whatever its shape, and come
+ * from floorRegion() in floor.ts. The box is used for two things only: addressing an opening along
+ * one of the four compass sides (Opening.startCm), and describing the floor's overall size in words.
  */
 export function wallBounds(room: Room): Rect {
   const areas = room.spatial?.freeAreas ?? [];
@@ -76,13 +71,4 @@ export function wallBounds(room: Room): Rect {
     minX: Math.min(...areas.map((a) => a.minXcm)), maxX: Math.max(...areas.map((a) => a.maxXcm)),
     minZ: Math.min(...areas.map((a) => a.minZcm)), maxZ: Math.max(...areas.map((a) => a.maxZcm)),
   };
-}
-
-/** Zero-thickness rectangle along the inside face of a wall. */
-export function wallRect(room: Room, side: WallSide): Rect {
-  const { minX, maxX, minZ, maxZ } = wallBounds(room);
-  if (side === "n") return { minX, maxX, minZ, maxZ: minZ };
-  if (side === "s") return { minX, maxX, minZ: maxZ, maxZ };
-  if (side === "w") return { minX, maxX: minX, minZ, maxZ };
-  return { minX: maxX, maxX, minZ, maxZ };
 }

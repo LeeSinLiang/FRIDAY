@@ -8,7 +8,8 @@ import { validatePlacement } from "../scene/placement";
 import type { Instance, Product, Room } from "../scene/types";
 import cgArch from "../../../shared/rooms/cg-arch-interior/manifest.json";
 import cgArchSpatial from "../../../shared/rooms/cg-arch-interior/spatial.json";
-import { listingToProduct, wallBounds, wallRect } from "./boundary";
+import { listingToProduct, wallBounds } from "./boundary";
+import { floorRegion, wallEdges } from "./floor";
 import { openingZone } from "./geometry";
 import { openingsFor } from "./roomOpenings";
 import { solve } from "./solve";
@@ -89,7 +90,10 @@ const cgScene: Scene = { room: cgRoom, products: [], instances: [] };
 test("a prepared room's walls are the edges of its free floor, not its modelled shell", () => {
   assert.deepEqual([cgRoom.widthCm, cgRoom.depthCm], [1158.01, 844.01]);
   assert.deepEqual(wallBounds(cgRoom), { minX: 787, maxX: 1121, minZ: 180, maxZ: 760 });
-  assert.deepEqual(wallRect(cgRoom, "w"), { minX: 787, maxX: 787, minZ: 180, maxZ: 760 });
+  assert.deepEqual(wallEdges(floorRegion(cgRoom)).map((edge) => [edge.side, edge.rect]), [
+    ["n", { minX: 787, maxX: 1121, minZ: 180, maxZ: 180 }], ["s", { minX: 787, maxX: 1121, minZ: 760, maxZ: 760 }],
+    ["w", { minX: 787, maxX: 787, minZ: 180, maxZ: 760 }], ["e", { minX: 1121, maxX: 1121, minZ: 180, maxZ: 760 }],
+  ], "one free rectangle has exactly four walls, at its own edges");
   assert.deepEqual(wallBounds(scene.room), { minX: 0, maxX: 260, minZ: 0, maxZ: 200 }); // a fixture room is itself
 });
 
