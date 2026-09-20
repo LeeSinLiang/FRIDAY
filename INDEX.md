@@ -66,6 +66,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Setup and tooling
 
+- [Preserve William's UI while integrating into main](docs/handoffs/ui-main-integration.md) — current branch/remote comparison, specific conflict rules, three-stage PR sequence and visual/runtime acceptance gates.
+
 - [Visa/auth integration handoff and branch-sharing workflow](docs/handoffs/visa-auth-integration.md)
 - [Account signup, SMTP and local email verification, authenticator MFA, recovery, and approved checkout](docs/account-mfa-checkout.md)
 - [Sanitized real IDX response from the MFA-approved checkout](docs/evidence/account-checkout-2026-09-19.json)
