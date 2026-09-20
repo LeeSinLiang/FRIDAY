@@ -26,23 +26,25 @@ def _result(operation):
         return {'ok': False, 'error': {'code': 'unavailable', 'message': 'Scene storage is busy. Please retry.'}}
 
 
-def try_place(session_key, instance, base_revision, command_id, dry_run=False):
+def try_place(session_key, instance, base_revision, command_id, dry_run=False, room_id='demo-room'):
     """Validate or apply one placement; failures are data rather than exceptions."""
     return _result(lambda: attempt_placement(session_key, {
         'instance': instance, 'baseRevision': base_revision,
         'commandId': command_id, 'dryRun': dry_run,
-    }))
+    }, room_id))
 
 
-def request_scene_capture(session_key, base_revision, request_id, view='perspective', camera=None, width=1024, height=768):
+def request_scene_capture(session_key, base_revision, request_id, view='perspective', camera=None, width=1024, height=768, room_id='demo-room', representation=None):
     """Queue a browser-rendered view of the requested persisted scene revision."""
     payload = {'baseRevision': base_revision, 'requestId': request_id, 'view': view, 'width': width, 'height': height}
     if camera is not None:
         payload['camera'] = camera
-    return _result(lambda: {'ok': True, **enqueue_capture(session_key, payload)})
+    if representation is not None:
+        payload['representation'] = representation
+    return _result(lambda: {'ok': True, **enqueue_capture(session_key, payload, room_id)})
 
 
-def read_scene_capture(session_key, capture_id, include_image=False):
+def read_scene_capture(session_key, capture_id, include_image=False, room_id='demo-room'):
     """Poll a capture; optionally supply its PNG directly to an agent image input.
 
     Pending/rendering jobs return ok:true and their status. Failed jobs return
@@ -57,7 +59,7 @@ def read_scene_capture(session_key, capture_id, include_image=False):
             identifier = uuid.UUID(str(capture_id))
         except (ValueError, AttributeError):
             raise SceneError('validation', 'capture_id must be a UUID.')
-        job = get_capture(session_key, identifier)
+        job = get_capture(session_key, identifier, room_id)
         result = {'ok': job.status != 'failed', **metadata(job)}
         if include_image and job.status == 'ready':
             result['imageDataUrl'] = 'data:image/png;base64,' + base64.b64encode(bytes(job.image)).decode('ascii')

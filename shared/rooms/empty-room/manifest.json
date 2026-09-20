@@ -1,0 +1,47 @@
+{
+  "room": {
+    "roomId": "empty-room",
+    "revision": 1,
+    "widthCm": 600,
+    "depthCm": 500,
+    "heightCm": 280,
+    "scan": {
+      "geometryRevision": "empty-room-v1",
+      "visualFormat": "glb",
+      "calibration": {
+        "status": "synthetic_demo",
+        "note": "Authored test mesh with exact 600 × 500 × 280 cm interior; not a measured scan. Doorway is 100 × 220 cm; navigation remains inside the room."
+      },
+      "visualUrl": "/rooms/empty-room/room.glb",
+      "surfaceUrl": "/rooms/empty-room/room.glb",
+      "positionCm": [
+        0,
+        0,
+        0
+      ],
+      "rotationDeg": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "defaultCamera": {
+        "kind": "firstPerson",
+        "xCm": 300,
+        "yCm": 160,
+        "zCm": 430,
+        "yawRad": 0,
+        "pitchRad": -0.16,
+        "fovDeg": 65
+      },
+      "attribution": {
+        "title": "Empty room",
+        "author": "FRIDAY",
+        "url": "/rooms/empty-room/manifest.json",
+        "license": "Project fixture",
+        "licenseUrl": "/rooms/empty-room/license.txt"
+      }
+    }
+  },
+  "spatialFile": "spatial.json"
+}

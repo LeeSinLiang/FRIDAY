@@ -40,7 +40,7 @@ Both servers reload on edits. Ctrl-C stops both, including reload workers. Occup
 
 The API uses SQLite locally. `GET /api/health/` is public and returns `{"status":"ok","service":"friday-api"}`. Other REST views require authentication by default unless explicitly overridden. Call `/api/...` from the frontend; Vite proxies these requests to Django, so no local CORS setup is needed. Production hosting must route `/api` and `/_allauth` to Django; Vite's dev proxy is not bundled into the frontend build.
 
-The room editor starts empty with test furniture available through **Add object**. Root `.env` supports `SCENE_UNIT_CM=5` (centimeters per render unit); restart Vite after changing it. Poses and dimensions remain centimeters. See the [editor implementation and handoff](docs/frontend/editor-implementation.md) for controls, model integration, verification, and current limits.
+The default room editor uses PlayCanvas with the prepared Cg Arch mesh when its local licensed assets are present, otherwise the included empty-room mesh. Add the shared GLB sofa through **Add furniture**. The existing Three.js catalogue and region editor remains available at `/?legacy` (including `&room=studio`). See [mesh provisioning and visual limitations](docs/frontend/room-capture/cg-arch-interior.md). Root `.env` supports `SCENE_UNIT_CM=5` (centimeters per render unit); restart Vite after changing it. Poses and dimensions remain centimeters. See the [editor implementation and handoff](docs/frontend/editor-implementation.md) for controls, model integration, verification, and current limits.
 
 ## Checks and common commands
 

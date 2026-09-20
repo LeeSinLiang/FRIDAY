@@ -102,7 +102,7 @@ function CaptureJobCanvas({ job, complete }: { job: CaptureJob; complete: (id: s
     completed.current = true;
     complete(job.captureId, job.leaseToken, result);
   }, [complete, job.captureId, job.leaseToken]);
-  const camera = useMemo(() => buildCaptureCamera(job.snapshot.room, job.view, job.width, job.height, job.camera ?? undefined), [job]);
+  const camera = useMemo(() => buildCaptureCamera(job.snapshot.room, job.view, job.width, job.height, job.camera && !("kind" in job.camera) ? job.camera : undefined), [job]);
   useEffect(() => {
     const timer = setTimeout(() => finish({ error: { code: "model_timeout", message: "Models or renderer did not become ready within 15 seconds" } }), 15000);
     return () => clearTimeout(timer);

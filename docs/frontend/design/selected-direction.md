@@ -1,4 +1,48 @@
-# Selected direction: Atelier glass + Noir room + Japandi materials
+# Selected direction: Atelier glass + first-person room + Japandi materials
+
+> First-person update, 2026-09-19: the user confirmed keeping Atelier glass panels and Mori while matching Ambic's room view and interactions. The interior camera replaces the elevated Noir box as the primary view. The [active PlayCanvas plan](../room-capture/first-person-playcanvas-plan.md) contains the supplied Ambic reference and interaction decisions. The palette/material/motion guidance below still applies; room-box composition is historical.
+
+## Approved first-person concept
+
+![First-person Atelier room editor with a valid chair placement](images/07-first-person-atelier.png)
+
+Generated on 2026-09-19 with the built-in image-generation tool, using the earlier warm Atelier mockup for UI styling and the supplied Ambic screenshot for interior perspective. The user approved this visual direction. It is a design still, not an implemented renderer. The room fills the viewport; a warm glass inspector and small tool dock overlay it. Green footprint feedback demonstrates a valid chair-placement preview. Invalid and unknown placements will use red/amber plus reasons in the implemented interaction.
+
+Saved asset: `images/07-first-person-atelier.png`. Visually checked for interior framing, warm glass, readable controls and placement feedback. The generated room, dimensions and typography are illustrative; exact Mori glyphs, real scan quality and fluid pane animation require implementation. Controls and precise sizing follow the [active migration plan](../room-capture/first-person-playcanvas-plan.md).
+
+<details>
+<summary>First-person concept generation prompt</summary>
+
+Use case: ui-mockup. Transform the FIRST reference (FRIDAY warm Atelier furniture editor) into its next FIRST-PERSON version. Generate ONE highly polished, believable laptop web-app screenshot, landscape 16:10, high resolution, no laptop bezel/browser chrome, no presentation board.
+
+Reference roles: FIRST image supplies FRIDAY branding, warm ivory/cream/sand glass, dark espresso type, terracotta active controls, luminous rounded glass edges, sculptural furniture, refined contemporary sans-serif inspired by PP Mori. Preserve this visual identity. SECOND image supplies the photographic interior camera feel: standing INSIDE a room, continuous floor and walls, large window daylight, real furniture close to the viewer. Do not copy Ambic's logo, website, surrounding marketing text, or exact furniture arrangement. Crucial change: no dollhouse, no architectural cutaway, no slab, no looking down from outside the room.
+
+Render a premium Japandi / wabi-sabi living room from a natural human viewpoint at approximately 160 cm eye height, slightly tilted down enough to see a chair placement footprint. Full-bleed photographic room scene extends behind every overlay and fills all canvas edges. Beautiful tactile ivory limewash walls, pale natural oak floor, floor-to-ceiling linen-curtained window on the left, diffuse bright daylight, subtle soft shadows, oatmeal curved low sofa in middle-left background, low travertine oval table, one carefully selected ceramic object, restrained greenery. Balanced neutral exposure, realistic close-range fabric/wood/stone. Warm but not orange-tinted. Furniture and floor should feel captured from reality, no visible point-cloud dots or technical diagnostic overlays.
+
+Selected new object: one rich muted rust/terracotta upholstered sculptural lounge chair in open floor space at center-right of the ROOM area, left of the inspector. Entire chair and floor contact remain visible, with no overlap with existing furniture. Add a thin desaturated emerald green floor-aligned rectangle beneath the chair, extremely light translucent green fill, small understated check badge saying "Fits here". This shows a VALID placement preview. No resize handles, wireframe cube, glowing neon, full-floor grid or crossed selection lines. One local small 5 cm grid patch may be barely visible only around the chair.
+
+UI precise composition, scaled for laptop use:
+- Slim floating glass header inset 20 px along top, about 58 px high. Left compact bold wordmark "FRIDAY", thin divider, "Living room". Far right quiet icon + "Reset view". Clean room scene behind it. No oversized headline.
+- Below top-left: compact liquid-glass segmented pill "Explore" and "Floor plan"; Explore is terracotta active. Nearby quiet "Walk" button. Camera controls dim slightly while chair placement is active.
+- ONE floating warm milky-glass inspector at right, width about 300 px of 1440 px composition, inset 20 px from right, top about 105 px, height about 565 px. Visible blurred room color through margins, fine bright optical rim, elegant 24 px corners, soft natural shadow, subtle thickness; stable high-contrast readable text. Avoid excessive nested cards.
+  Inspector top a small back arrow and "Furniture", right close icon.
+  Small polished chair thumbnail, heading "Lounge chair", sublabel "Terracotta bouclé".
+  Read-only dimension "85 × 90 × 78 cm".
+  Fine divider.
+  Heading "Position (cm)", two spacious fields "X" value "260", "Z" value "180".
+  "Rotation" row value "0°", adjacent "Rotate 90°".
+  "Snap to grid" warm terracotta enabled toggle and "5 cm".
+  Compact green check and text "Fits here".
+  Full-width refined terracotta button "Place chair" with white text, quiet "Cancel" below.
+- Bottom-left near 24 px inset, a small rounded glass action "+ Add furniture"; catalog is closed in this selected-object state, no permanent bottom catalog.
+- Bottom-center of room area (exclude inspector width) small glass pill showing "Move" selected terracotta, "Rotate", "Undo", "Redo" with precise simple icons and labels. Just above dock or in discreet lower edge show "Click to place · Esc to cancel" in comfortably readable dark type on a light translucent surface. No second confirm action, no contradictory drag-to-look instruction while placing.
+- All text sharp, short, legible, clean contemporary PP Mori-like sans serif, never serif, no futuristic stencil. Consistent optical spacing, 14–16 px equivalent UI body text, careful alignment and quiet hierarchy.
+
+This is a settled still of liquid glass; show soft optical rim highlights and translucent material, not literal liquid, dripping, splashes or animation trails. The spatial room must dominate; controls are sophisticated restrained overlays, not a dashboard. No charts, fake FPS/status badges, chat, decorative slogans, giant navigation, blue/cyan sci-fi styling, black gamer panels or dark vignette. Output one finished UI design image.
+
+</details>
+
+## Historical room-box reference
 
 2026-09-19 · User-selected design direction. The combined image is an earlier composition reference, not implemented UI; the newer Mori, liquid-glass motion, and Japandi/wabi-sabi requirements below take precedence.
 

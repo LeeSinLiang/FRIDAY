@@ -2,13 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icons";
 import { captureRequest, type CaptureResult, type CaptureView } from "./scene/captureClient";
 import "./capture.css";
+import type { FirstPersonCamera, Room } from "./scene/types";
 
-type Props = { revision: number | null; canCapture: boolean; mode: CaptureView; };
-export default function CapturePanel({ revision, canCapture, mode }: Props) {
+type Props = { revision: number | null; canCapture: boolean; mode: CaptureView; room?: Room; getCamera?:()=>FirstPersonCamera|null; onOpenChange?:(open:boolean)=>void };
+export default function CapturePanel({ revision, canCapture, mode, room, getCamera, onOpenChange }: Props) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<CaptureView>(mode);
   const [azimuth, setAzimuth] = useState("37");
   const [elevation, setElevation] = useState("35");
+  const [interiorCamera,setInteriorCamera]=useState<FirstPersonCamera|null>(null);
+  const scanned=!!room?.scan;
+  const path=(value:string)=>room ? `${value}?roomId=${encodeURIComponent(room.roomId)}` : value;
   const [result, setResult] = useState<CaptureResult | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -17,6 +21,7 @@ export default function CapturePanel({ revision, canCapture, mode }: Props) {
   const generation = useRef(0);
   const pending = result?.status === "pending" || result?.status === "rendering";
   useEffect(() => {
+    onOpenChange?.(open);
     if (open) dialog.current?.showModal();
     else dialog.current?.close();
   }, [open]);
@@ -28,7 +33,7 @@ export default function CapturePanel({ revision, canCapture, mode }: Props) {
     let timer: ReturnType<typeof setTimeout>;
     const poll = async () => {
       try {
-        const next = await captureRequest<CaptureResult>(`/api/scene/captures/${result.captureId}/`, undefined, controller.signal);
+        const next = await captureRequest<CaptureResult>(path(`/api/scene/captures/${result.captureId}/`), undefined, controller.signal);
         if (!cancelled) { setResult(next); setError(""); }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Cannot read the capture. Close and try again.");
@@ -41,16 +46,17 @@ export default function CapturePanel({ revision, canCapture, mode }: Props) {
   async function capture() {
     if (!canCapture || revision === null || submitting || pending) return;
     const az = Number(azimuth), el = Number(elevation);
-    if (view === "perspective" && (!azimuth.trim() || !elevation.trim() || !Number.isFinite(az) || az < -360 || az > 360 || !Number.isFinite(el) || el < 10 || el > 85)) {
-      setError("Use an angle between −360° and 360°, and a height angle between 10° and 85°.");
+    if (view === "perspective" && (!azimuth.trim() || !elevation.trim() || !Number.isFinite(az) || az < -360 || az > 360 || !Number.isFinite(el) || el < (scanned ? -80 : 10) || el > (scanned ? 80 : 85))) {
+      setError(scanned ? "Use a direction between −360° and 360° and a tilt between −80° and 80°." : "Use an angle between −360° and 360°, and a height angle between 10° and 85°.");
       return;
     }
     const current = ++generation.current;
     setSubmitting(true); setError(""); setResult(null);
     try {
-      const next = await captureRequest<CaptureResult>("/api/scene/captures/", {
+      const next = await captureRequest<CaptureResult>(path("/api/scene/captures/"), {
         requestId: crypto.randomUUID(), baseRevision: revision, view,
-        ...(view === "perspective" ? { camera: { azimuthDeg: az, elevationDeg: el } } : {}),
+        ...(scanned ? {representation:view==="top" ? "spatial_plan" : "photographic"} : {}),
+        ...(view === "perspective" ? { camera: scanned ? {...(interiorCamera ?? room!.scan!.defaultCamera),yawRad:az*Math.PI/180,pitchRad:el*Math.PI/180} : { azimuthDeg: az, elevationDeg: el } } : {}),
         width: 1024, height: 768,
       });
       if (generation.current === current) setResult(next);
@@ -59,7 +65,11 @@ export default function CapturePanel({ revision, canCapture, mode }: Props) {
     } finally { if (generation.current === current) setSubmitting(false); }
   }
   return <>
-    <button ref={trigger} className="glass reset-button" onClick={() => { setView(mode); setOpen(true); }} aria-label="Capture room image">
+    <button ref={trigger} className="glass reset-button" disabled={!canCapture} onClick={() => {
+      setView(mode);
+      if(scanned){const camera=getCamera?.() ?? room!.scan!.defaultCamera;setInteriorCamera(camera);setAzimuth(String(Math.round(camera.yawRad*180/Math.PI)));setElevation(String(Math.round(camera.pitchRad*180/Math.PI)));}
+      setOpen(true);
+    }} aria-label="Capture room image">
       <Icon name="camera" /> <span>Capture</span>
     </button>
     <dialog ref={dialog} className="glass capture-dialog" aria-labelledby="capture-heading" onCancel={() => setOpen(false)} onClose={() => { setOpen(false); trigger.current?.focus(); }}>
@@ -69,11 +79,11 @@ export default function CapturePanel({ revision, canCapture, mode }: Props) {
         <fieldset disabled={submitting || pending}>
           <legend>View</legend>
           <label><input type="radio" name="capture-view" checked={view === "perspective"} onChange={() => setView("perspective")} /> 3D view</label>
-          <label><input type="radio" name="capture-view" checked={view === "top"} onChange={() => setView("top")} /> Top view</label>
+          <label><input type="radio" name="capture-view" checked={view === "top"} onChange={() => setView("top")} /> {scanned ? "Floor plan · schematic" : "Top view"}</label>
         </fieldset>
         {view === "perspective" && <div className="capture-angles">
-          <label>Angle around room (°)<input type="number" min={-360} max={360} value={azimuth} disabled={pending || submitting} onChange={e => setAzimuth(e.target.value)} /></label>
-          <label>Height angle (°)<input type="number" min={10} max={85} value={elevation} disabled={pending || submitting} onChange={e => setElevation(e.target.value)} /></label>
+          <label>{scanned ? "Look direction (°)" : "Angle around room (°)"}<input type="number" min={-360} max={360} value={azimuth} disabled={pending || submitting} onChange={e => setAzimuth(e.target.value)} /></label>
+          <label>{scanned ? "Look tilt (°)" : "Height angle (°)"}<input type="number" min={scanned ? -80 : 10} max={scanned ? 80 : 85} value={elevation} disabled={pending || submitting} onChange={e => setElevation(e.target.value)} /></label>
         </div>}
       </div>
       <div className="capture-actions"><button className="button capture-primary" disabled={!canCapture || submitting || pending} onClick={() => void capture()}>{pending || submitting ? "Creating image…" : "Create image"}</button><span>{canCapture ? `Saved revision ${revision}` : "Save your changes before capturing."}</span></div>
@@ -84,7 +94,8 @@ export default function CapturePanel({ revision, canCapture, mode }: Props) {
       </div>
       {result?.status === "ready" && result.imageUrl && <figure className="capture-result">
         <img src={result.imageUrl} alt={`${result.view === "top" ? "Top" : "3D"} view of room revision ${result.revision}`} width={result.width} height={result.height} />
-        <figcaption><span>Revision {result.revision} · {result.width} × {result.height}{!!result.modelWarnings?.length && " · Contains test shapes or model fallbacks"}</span><a href={result.imageUrl} download={`friday-${result.view}-r${result.revision}.png`}>Download PNG</a></figcaption>
+        <figcaption><span>Revision {result.revision} · {result.width} × {result.height}</span><a href={result.imageUrl} download={`friday-${result.view}-r${result.revision}.png`}>Download PNG</a></figcaption>
+        {!!result.modelWarnings?.length && <ul className="capture-notes">{result.modelWarnings.map((warning,index)=><li key={index}>{String(warning)}</li>)}</ul>}
       </figure>}
     </dialog>
   </>;

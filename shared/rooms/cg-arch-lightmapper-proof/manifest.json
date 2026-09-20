@@ -1,0 +1,47 @@
+{
+  "room": {
+    "roomId": "cg-arch-lightmapper-proof",
+    "revision": 1,
+    "widthCm": 1158.01,
+    "depthCm": 844.01,
+    "heightCm": 258,
+    "scan": {
+      "geometryRevision": "cg-arch-lightmapper-cabinet-v1",
+      "visualFormat": "glb",
+      "calibration": {
+        "status": "synthetic_demo",
+        "note": "Isolated Lightmapper-One lighting proof: only Tv Wall.001 shelving/cabinet mesh is present, at the original room coordinate origin. This is not a complete room or collision fixture. All movement and furniture placement are disabled by empty free areas."
+      },
+      "visualUrl": "/rooms/cg-arch-lightmapper-proof/assets/proof-cabinet-v1.glb",
+      "surfaceUrl": "/rooms/cg-arch-lightmapper-proof/assets/proof-cabinet-v1.glb",
+      "positionCm": [
+        0,
+        0,
+        0
+      ],
+      "rotationDeg": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "defaultCamera": {
+        "kind": "firstPerson",
+        "xCm": 1100,
+        "yCm": 121,
+        "zCm": 735,
+        "yawRad": 0.898638,
+        "pitchRad": -0.023463,
+        "fovDeg": 57
+      },
+      "attribution": {
+        "title": "Lightmapper cabinet proof \u2014 Empty Interior Scene 2",
+        "author": "Cg Arch",
+        "url": "https://www.blendkit.com/asset-gallery-detail/e58113ed-e234-4bc9-a75a-8a5bb3d5396e/",
+        "license": "Blendkit Royalty Free",
+        "licenseUrl": "https://www.blendkit.com/docs/licenses/"
+      }
+    }
+  },
+  "spatialFile": "spatial.json"
+}

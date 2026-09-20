@@ -16,7 +16,7 @@
           "id": "68a22eb5-dc7f-4cc5-8ee2-d248bd8369ee",
           "title": "Evaluate Gaussian splats and surface reconstruction",
           "done": false,
-          "owner": "unassigned"
+          "owner": "sin"
         },
         {
           "id": "7312ee22-fa5f-4878-8461-7ab9c27bb8df",
@@ -71,6 +71,12 @@
           "title": "Define composite desk assemblies and mixed-asset collision contract",
           "done": false,
           "owner": "unassigned"
+        },
+        {
+          "id": "d9508714-92ae-42fd-a3f6-770bbf86d792",
+          "title": "Integrate the PlayCanvas mesh editor checkpoint into main",
+          "done": false,
+          "owner": "sin"
         }
       ]
     },

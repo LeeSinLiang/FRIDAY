@@ -1,0 +1,11 @@
+{
+  "freeAreas": [
+    {
+      "minXcm": 0,
+      "maxXcm": 600,
+      "minZcm": 0,
+      "maxZcm": 500
+    }
+  ],
+  "obstacles": []
+}

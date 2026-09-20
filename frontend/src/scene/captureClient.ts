@@ -1,10 +1,12 @@
+import type { FirstPersonCamera } from "./types";
 export type CaptureView = "top" | "perspective";
 export type CaptureResult = {
   captureId: string;
   status: "pending" | "rendering" | "ready" | "failed";
   revision: number;
   view: CaptureView;
-  camera: { azimuthDeg: number; elevationDeg: number } | null;
+  camera: { azimuthDeg: number; elevationDeg: number } | FirstPersonCamera | null;
+  representation?: "photographic" | "spatial_plan";
   width: number;
   height: number;
   imageUrl?: string;

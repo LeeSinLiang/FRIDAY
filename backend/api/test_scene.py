@@ -87,8 +87,22 @@ class SceneTests(TestCase):
             validate_instances([self.item])
 
     def test_command_limits_and_shape(self):
-        for commands in [[], [{}] * 101, [{'type': 'remove', 'instanceId': 'missing'}], [{'type': 'add', 'instance': None}], [{'type': 'explode'}]]:
+        for commands in [[], [{}] * 201, [{'type': 'remove', 'instanceId': 'missing'}], [{'type': 'add', 'instance': None}], [{'type': 'explode'}]]:
             self.assertEqual(self.commands(commands).status_code, 400)
+
+    def test_atomic_restore_can_replace_100_items_without_exceeding_instance_limit(self):
+        data = copy.deepcopy(fixtures())
+        for product in data['products']:
+            product.update(widthCm=1, depthCm=1, heightCm=1)
+        items = [dict(self.item, instanceId=str(index), pose={'xCm': 20 + index * 5, 'zCm': 100, 'yawRad': 0}) for index in range(100)]
+        restored = [dict(item, pose={**item['pose'], 'zCm': 200}) for item in items]
+        with patch('api.scene_service.fixtures', return_value=data):
+            self.assertEqual(self.put(items).status_code, 200)
+            commands = [{'type': 'remove', 'instanceId': item['instanceId']} for item in items] + [{'type': 'add', 'instance': item} for item in restored]
+            response = self.commands(commands, revision=1)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['instances'], restored)
+            self.assertEqual(self.commands(commands + [commands[-1]], revision=2, command_id='oversized').status_code, 400)
 
     def test_sat_does_not_confuse_overlapping_aabbs_with_collision(self):
         data = copy.deepcopy(fixtures())

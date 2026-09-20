@@ -35,6 +35,8 @@ dist/
 build/
 coverage/
 .vite/
+.room-preparation/
+shared/rooms/*/assets/
 .next/
 *.tsbuildinfo
 *.log
