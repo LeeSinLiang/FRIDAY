@@ -159,7 +159,7 @@ class QueryBodyTests(SimpleTestCase):
 class IngestTests(SimpleTestCase):
     def test_actions_use_listing_id_and_only_mapped_fields(self):
         actions = list(to_actions(load_listings(), "listings"))
-        self.assertEqual(len(actions), 41)
+        self.assertEqual(len(actions), len(load_listings()))
         mapped = {"id", "source", "title", "category", "price_cents", "dims_mm",
                   "colour_hex", "materials", "model_url", "thumb_url"}
         for action in actions:

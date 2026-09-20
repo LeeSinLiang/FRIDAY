@@ -223,9 +223,9 @@
         "d": 880,
         "h": 880
       },
-      "model_url": "/models/furniture/ektorp-2-seat-sofa-hillared-dark-blue/model.glb",
+      "model_url": null,
       "colour_hex": [
-        "#39495c"
+        "#30475e"
       ],
       "materials": [
         "cotton",
@@ -244,9 +244,9 @@
         "d": 2120,
         "h": 1000
       },
-      "model_url": "/models/furniture/ramnefjall-bed-frame-kilanda-dark-blue-queen/model.glb",
+      "model_url": null,
       "colour_hex": [
-        "#233047"
+        "#30475e"
       ],
       "materials": [
         "polyester",
