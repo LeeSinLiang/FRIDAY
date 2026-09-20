@@ -198,3 +198,17 @@ For each import, verify expected/actual counts, rejected rows, stable IDs on a s
 - Tell William: search and compile are `AllowAny` (see Phase B). His lanes are unaffected.
 - `OPENAI_API_KEY` is empty in `.env`; needed before Phase D.
 - The Elastic onboarding skill is installed locally only (`.agents/`, `.claude/`, `skills-lock.json` are excluded via `.git/info/exclude`, not committed).
+
+## Kanban: own-lane edits and what is deliberately still open (2026-09-20, 00:50)
+
+Edited through the board's own API (its write lock), two changes, both cards owned by Saketh:
+
+- **Done:** "Search the catalogue using spatial constraints" (`41b8ced7`). `fits_room` / `fits_room_of` as `post_filter` with facets, identical in the memory and Elasticsearch backends; merged since the search phases and re-verified tonight when the index was re-ingested (`12043 listings`, `AGREE`).
+- **Removed, cancelled by Saketh:** "Normalize DummyJSON and WANDS reference products for Elasticsearch" (`5f377efe`). His words on 2026-09-20: "Kenney, WANDS and DummyJSON stay deferred permanently." The board has no cancelled state, and an open card for work nobody will do misleads the other three. The card held only a title, owner and `phase: mvp`; it is recoverable from Git history.
+
+Left open on purpose:
+
+- "Implement spatial constraints and valid placement regions" (`5823c711`): the solver, the lit floor in both editors and the wall fix are merged and verified; it closes when the window PR (#46) merges, because "by the window" is part of what that card means.
+- "Add speech and typed user input" (`3dc03f7b`): typed input and Deepgram are merged and verified with a recorded clip; it closes after Saketh's own real-microphone test, which a headless browser cannot do (its fake microphone delivers silence).
+- "Import CC0 GLB asset metadata…" (`46dd9a0d`) and "Curate product-to-GLB links…" (`1baafdb6`): asset work, which moved to the second agent's lane tonight. Not touched.
+- "Add Blender MCP-style scene and object context to the agent" (`6ae44373`): deferred by Saketh earlier; not touched.
