@@ -111,6 +111,20 @@ curl -X POST localhost:8000/api/compile -H 'Content-Type: application/json' \
 | `backend/catalogue/dsl/fixtures/compile_cases.json` | 9 sentences, expected Programs and chips, recorded model outputs |
 | `backend/catalogue/test_compile.py` | Offline tests. `COMPILE_LIVE_TEST=1` adds a run against the real model |
 
+## Voice: `GET` and `POST /api/transcribe`
+
+Voice is an input method, not a feature: whatever is heard lands in the same box, and goes to the same `/api/compile`, as typing.
+
+- `GET /api/transcribe` → `{ "backend": "deepgram" | "browser" }`. The page asks once and uses that.
+- `POST /api/transcribe` with the recording as the raw body and an `audio/*` content type → `{ text, backend, ms }`. The server forwards it to **Deepgram's pre-recorded API** (`nova-3`). **The browser never talks to Deepgram and never sees the key.** Silence is `text: ""`, not an error.
+- `TRANSCRIBE_BACKEND=deepgram|browser`, default `browser`. `deepgram` without `DEEPGRAM_API_KEY` quietly becomes `browser`, so a missing secret degrades the feature instead of breaking it. With `browser` the page uses the Web Speech API: no key, no server, works offline in Chrome.
+- **A Deepgram failure costs one press, never the session.** While recording for Deepgram the page also runs the browser's recogniser as a shadow. If the server answers 503 it uses the shadow's transcript *for that press*, and the next press tries Deepgram again. Nothing latches onto the fallback. With `?dev=1` the panel shows the configured backend and **which backend actually answered the last transcript**, including after a fallback, so a silent fallback cannot be mistaken for success.
+- **`search`, `compile_program` and `transcribe_audio` are deliberately anonymous** (`authentication_classes = []`). They are public and stateless. With DRF's default session authentication a signed-in shopper's POSTs were refused for a missing CSRF token before the view ran. It also makes the throttles apply to everyone: `AnonRateThrottle` skips authenticated users, so a signed-in session used to bypass the cap on the two endpoints that cost money. **Throttling is per client address, for signed-in and anonymous callers alike.** Only these three views; scene, account and checkout endpoints keep their authentication. CORS is unchanged (same-origin only).
+- If Deepgram fails or times out (10 s): `503 { error: "transcription_unavailable", fallback: "browser" }`. Logs carry the HTTP status or error type only, never the key or the provider's response body.
+- Refused before any provider call: not audio → 415; over 2 MB → 413. Public, throttled to 20 requests a minute per client, and the throttle fails open like compile's.
+- Frontend: `frontend/src/catalogue/transcribe.ts` (`fetchBackend`, `canListen`, `listen`); the panel's microphone button is press to talk, press to stop, and it releases the microphone at once.
+- Tests are offline with a recorded Deepgram response. `TRANSCRIBE_LIVE_TEST=1` sends `backend/catalogue/voice_fixtures/reading-chair.wav` to the real API.
+
 ## Search backends
 
 `SEARCH_BACKEND=memory` (default) or `elastic`, read per request from `.env`. Both return the same
