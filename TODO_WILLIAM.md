@@ -4,7 +4,7 @@ Record all agent work here when working for William. Include status, file paths,
 
 ## In progress
 
-- None in this pull scope; the integration follow-ups below remain open.
+- None in this publication scope; the integration follow-ups below remain open.
 
 ## Next
 
@@ -14,6 +14,9 @@ Record all agent work here when working for William. Include status, file paths,
 - Agree on the shared catalogue/cart contract and replace the explicit two-product fixture adapter. Payment authorization and merchant ordering remain separate integrations. Phone-generated FRIDAY MFA verification is now confirmed; the user's original camera-scan action was not replayed by the agent.
 
 ## Done
+
+- 2026-09-19: **Publish the latest Visa/auth handoff sync** (existing Kanban `836acd1c-7b85-46c7-bc0c-22d80438eb34`). Corrected the missing branch push after the second sync: `git push origin codex/visa-sandbox` advanced GitHub from `e11f450` to `e1a4476`. Verified the exact remote head with `git ls-remote`; `main` remained `e6a046e`. GitHub's PR listing returned no PR for this branch. The documented next delivery step is a PR from `codex/visa-sandbox` into `main`, followed by review and merge; pushing the feature branch alone does not update main. See `AGENTS.md` and `docs/handoffs/visa-auth-integration.md` under Branch sharing and Project Plan.
+- This publication follow-up changes only `TODO_WILLIAM.md`; application source, the existing HTML tester, teammate checkout and runtime remain untouched. Checked the running board: pull/handoff remains done and account/checkout UI integration remains open, so no board mutation is needed. Existing combined-suite cache failures and UI wiring gaps remain as recorded below; no new runtime test was required for a documentation-only publication record.
 
 - 2026-09-19: **Pull latest main and prepare the Visa/auth handoff — second sync** (Kanban `836acd1c-7b85-46c7-bc0c-22d80438eb34`). Fetched `origin/main` at `e6a046e` and merged it into the existing `codex/visa-sandbox` as William requested. This is maintenance of the requested feature branch, not new work branched from an old feature. Included PRs #13/#15/#16/#17: wall-exception fixes, region solver and unit boundary, nothing-fits/near explanations and task-boundary sync instructions. Resolved the only conflict in this TODO by retaining both our handoff and Saketh's appended sync note. Saketh's completed-work history and William-requested Blender MCP TODO were both preserved. Incoming catalogue/editor/region implementation is unchanged from main; the original Visa HTML and all Visa/auth/checkout implementation are unchanged from the prior feature commit.
 - Updated `docs/handoffs/visa-auth-integration.md`, `docs/account-mfa-checkout.md` and `docs/backend/contracts/blender-mcp-agent-handoff.md` to reference the new baseline, reuse the implemented `region/boundary.ts` adapter, and distinguish frontend solver rules from backend enforcement and unfinished overlay/catalogue persistence. Recorded the verified solver foundation on the shared board while keeping broader integration tasks open. Existing INDEX links and new upstream solver-doc index entry were preserved.
