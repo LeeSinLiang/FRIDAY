@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { assertSuccess, request } from '../auth/api'
-import { type Checkout, money } from './types'
+import { type Checkout, isPriced, money } from './types'
 
 export default function ApprovalForm({ checkout, onApproved }: { checkout: Checkout; onApproved: (value: Checkout) => void }) {
   const [confirmed, setConfirmed] = useState(false)
+  const unpriced = checkout.snapshot.items.filter(line => !isPriced(line)).reduce((sum, line) => sum + line.quantity, 0)
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -16,7 +17,7 @@ export default function ApprovalForm({ checkout, onApproved }: { checkout: Check
     finally { setBusy(false) }
   }
   return <form onSubmit={approve}>
-    <label className="approval-checkbox"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} required /><span>I approve these items for {money(checkout.snapshot.amount)} USD at {checkout.snapshot.vendor.name} in the Visa sandbox.</span></label>
+    <label className="approval-checkbox"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} required /><span>{unpriced ? `I approve the priced items for ${money(checkout.snapshot.amount)} USD at ${checkout.snapshot.vendor.name} in the Visa sandbox. The ${unpriced === 1 ? 'one piece' : unpriced + ' pieces'} with no known price ${unpriced === 1 ? 'is' : 'are'} not part of this payment.` : `I approve these items for ${money(checkout.snapshot.amount)} USD at ${checkout.snapshot.vendor.name} in the Visa sandbox.`}</span></label>
     <label>Fresh authenticator code<input autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={code} onChange={e => setCode(e.target.value)} required /></label>
     <p className="muted">Use an unused code. If you just signed in with this code, wait for the next one. Approval expires after five minutes.</p>
     {error && <p role="alert" className="error">{error}</p>}

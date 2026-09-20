@@ -162,11 +162,33 @@ class ShoppingTests(AccountTestCase):
         self.assertEqual(response.status_code,400,response.content)
         self.assertEqual(CartItem.objects.count(),0)
 
-    def test_a_cart_holding_an_unpriced_piece_is_refused_at_checkout_in_plain_words(self):
+    def test_a_partial_bill_lists_every_piece_and_charges_only_what_has_a_price(self):
+        unpriced,data = self.unpriced()
+        first = self.send('/api/cart/confirm-placement/',data).json()
+        self.data['baseRevision'],self.data['cartRevision'] = first['scene']['revision'],first['cart']['revision']
+        cart = self.place()['cart']
+        self.assertEqual((cart['item_count'],cart['priced_count'],cart['amount']),(2,1,self.listing.price_cents))
+        _,secret = self.enrolled(); self.send('/api/cart/claim/',{})
+        draft = self.send('/api/cart/checkout/',{'revision':cart['revision']})
+        self.assertEqual(draft.status_code,201,draft.content)
+        snapshot = draft.json()['snapshot']
+        self.assertEqual((snapshot['item_count'],snapshot['priced_count'],snapshot['amount']),(2,1,self.listing.price_cents))
+        lines = {line['product_id']:line for line in snapshot['items']}
+        self.assertEqual((lines[unpriced.id]['priced'],lines[unpriced.id]['unit_amount'],lines[unpriced.id]['line_amount']),(False,None,None))
+        self.assertEqual((lines[self.listing.id]['priced'],lines[self.listing.id]['line_amount']),(True,self.listing.price_cents))
+        # Visa is asked for the priced amount and nothing else.
+        checkout = draft.json()
+        self.send('/api/checkouts/'+checkout['id']+'/approve/',{'snapshot_hash':checkout['snapshot_hash'],'approved':True,'code':totp(secret)})
+        with patch('checkout.services.load_credentials'), patch('checkout.services.submit_idx',return_value=('accepted',{})) as visa:
+            response = self.send('/api/checkouts/'+checkout['id']+'/submit/',{'snapshot_hash':checkout['snapshot_hash']})
+        self.assertEqual(response.status_code,200,response.content)
+        self.assertEqual(visa.call_args.args[0]['purchaseAmount'],str(self.listing.price_cents))
+
+    def test_a_cart_with_nothing_priced_is_refused_at_checkout_in_plain_words(self):
         _,data = self.unpriced()
         result = self.send('/api/cart/confirm-placement/',data).json()
         self.enrolled(); self.send('/api/cart/claim/',{})
         response = self.send('/api/cart/checkout/',{'revision':result['cart']['revision']})
         self.assertEqual(response.status_code,400,response.content)
-        self.assertIn('no known price',response.json()['error']['message'])
+        self.assertIn('nothing to check out',response.json()['error']['message'])
         self.assertEqual(Checkout.objects.count(),0)
