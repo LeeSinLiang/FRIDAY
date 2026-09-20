@@ -42,7 +42,7 @@ class FindClauseQueryTests(SimpleTestCase):
 
     def test_price_max(self):
         self.assertEqual(bool_for({"k": "price_max", "cents": 40000})["filter"],
-                         [{"range": {"price_cents": {"lte": 40000}}}])
+                         [{"range": {"price_cents": {"gte": 1, "lte": 40000}}}])  # gte 1: a price of 0 means unknown
 
     def test_price_min(self):
         self.assertEqual(bool_for({"k": "price_min", "cents": 10000})["filter"],
@@ -133,7 +133,7 @@ class QueryBodyTests(SimpleTestCase):
         self.assertEqual(aggs["category"], {"terms": {"field": "category", "size": 12}})
         ranges = aggs["price_band"]["range"]["ranges"]
         self.assertEqual([r["key"] for r in ranges], [key for key, _, _ in PRICE_BANDS])
-        self.assertEqual(ranges[0], {"key": "0-10000", "from": 0, "to": 10000})
+        self.assertEqual(ranges[0], {"key": "0-10000", "from": 1, "to": 10000})  # from 1: 0 means unknown, in no band
         self.assertEqual(ranges[-1], {"key": "100000+", "from": 100000})
         self.assertNotIn("fits_room", aggs)
 

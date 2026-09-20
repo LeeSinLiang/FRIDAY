@@ -28,22 +28,36 @@ async function room(root: string, name: string, local: boolean, available: boole
   }
 }
 
-test("fresh checkout omits whole unavailable local rooms and selects tracked fallback", async () => fixture(async root => {
+test("fresh checkout omits unavailable local rooms without changing the Gaussian default", async () => fixture(async root => {
   await room(root, "cg-arch-interior", true, false);
+  await room(root, "haussmann-apartment", true, false);
   await room(root, "studio-11", true, false);
   const result = await inspectRoomPackages(root);
-  assert.equal(result.defaultRoomId, "empty-room");
+  assert.equal(result.defaultRoomId, "haussmann-apartment");
   assert.deepEqual([...result.packages.keys()], ["empty-room"]);
-  assert.equal(result.warnings.length, 2);
-  assert.match(result.warnings[0], /local assets are missing/);
+  assert.equal(result.warnings.length, 3);
+  assert.ok(result.warnings.some(warning => /Room haussmann-apartment is not packaged: local assets are missing/.test(warning)));
 }));
 
-test("complete locally provisioned Cg Arch package becomes the default", async () => fixture(async root => {
+test("provisioned Gaussian room is the default while the mesh package remains available", async () => fixture(async root => {
+  await room(root, "haussmann-apartment", true, true);
   await room(root, "cg-arch-interior", true, true);
   const result = await inspectRoomPackages(root);
-  assert.equal(result.defaultRoomId, "cg-arch-interior");
+  assert.equal(result.defaultRoomId, "haussmann-apartment");
+  assert.equal(result.packages.get("haussmann-apartment")?.size, 4);
   assert.equal(result.packages.get("cg-arch-interior")?.size, 4);
   assert.deepEqual(result.warnings, []);
+}));
+
+test("available mesh assets do not silently replace missing Gaussian assets as the default", async () => fixture(async root => {
+  await room(root, "haussmann-apartment", true, false);
+  await room(root, "cg-arch-interior", true, true);
+  const result = await inspectRoomPackages(root);
+  assert.equal(result.defaultRoomId, "haussmann-apartment");
+  assert.equal(result.packages.has("haussmann-apartment"), false);
+  assert.equal(result.packages.get("cg-arch-interior")?.size, 4);
+  assert.equal(result.warnings.length, 1);
+  assert.match(result.warnings[0], /Room haussmann-apartment is not packaged/);
 }));
 
 test("missing required metadata is not treated as an optional asset", async () => fixture(async root => {

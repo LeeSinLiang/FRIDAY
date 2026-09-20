@@ -4,6 +4,8 @@ from django.db import models
 
 
 class Checkout(models.Model):
+    shopping = models.ForeignKey('shopping.ShoppingSession', null=True, on_delete=models.PROTECT)
+    cart_revision = models.PositiveIntegerField(null=True)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     snapshot = models.JSONField()

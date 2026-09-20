@@ -5,6 +5,11 @@ from allauth.mfa.adapter import DefaultMFAAdapter
 
 
 def cipher():
+    if settings.MFA_ENCRYPTION_KEY:
+        try:
+            return Fernet(settings.MFA_ENCRYPTION_KEY.encode())
+        except ValueError:
+            raise ImproperlyConfigured("Invalid MFA encryption key configuration.") from None
     path = settings.MFA_ENCRYPTION_KEY_FILE
     try:
         if path.stat().st_mode & 0o077:

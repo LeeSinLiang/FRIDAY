@@ -10,6 +10,7 @@ import { ROOM_CHOICES, ROOM_ID } from "../scene/fixtures";
 import { compileSentence, searchCatalogue, type Compiled } from "./api";
 import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend } from "./transcribe";
 import "./shelf.css";
+import { priceLabel } from "./price";
 
 type Props = {
   region: Region | null;
@@ -20,6 +21,7 @@ type Props = {
   canSwitchRooms: boolean;
   /** The room presets belong to the legacy editor. The PlayCanvas editor picks its room with ?room=. */
   showRooms?: boolean;
+  purchasableOnly?: boolean;
   onHover: (listing: Listing | null) => void;
   onPick: (listing: Listing | null) => void;
   onPlace: (place: PlaceClause[]) => void;
@@ -57,7 +59,7 @@ function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: 
   );
 }
 
-export default function CatalogueShelf({ region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, onHover, onPick, onPlace }: Props) {
+export default function CatalogueShelf({ region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace }: Props) {
   const [sentence, setSentence] = useState("an armchair");
   const [compiled, setCompiled] = useState<Compiled | null>(null);
   const [items, setItems] = useState<Listing[]>([]);
@@ -162,13 +164,14 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
       <ul className="shelf-results">
         {items.map((listing) => (
           <li key={listing.id}>
-            <button aria-pressed={armedId === listing.id} disabled={disabled}
+            <button aria-pressed={armedId === listing.id} disabled={disabled || (purchasableOnly && (!listing.model_url?.startsWith('/models/furniture/') || listing.price_cents <= 0))}
               onPointerEnter={() => onHover(listing)} onFocus={() => onHover(listing)}
               onClick={() => onPick(armedId === listing.id ? null : listing)}>
               <img src={listing.thumb_url} alt="" />
               <span>
                 <strong>{listing.title}</strong>
-                <small>{dollars(listing.price_cents)} · {size(listing)}</small>
+                <small>{priceLabel(listing.price_cents, dollars)} · {size(listing)}</small>
+                {purchasableOnly && (!listing.model_url?.startsWith('/models/furniture/') || listing.price_cents <= 0) && <small>Preview model unavailable</small>}
               </span>
             </button>
           </li>
