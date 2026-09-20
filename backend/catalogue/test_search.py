@@ -94,8 +94,10 @@ class ParamTests(SimpleTestCase):
 
 class SearchEndpointTests(SimpleTestCase):
     def setUp(self):
-        # These tests are about shape and backend choice; the results filter has its own tests.
-        flag = mock.patch.dict(os.environ, {"SEARCH_RESULTS_REQUIRE_MODEL": "0"})
+        # These tests are about shape and backend choice; the results filter has its own tests. The backend is pinned
+        # too: a developer's .env may say SEARCH_BACKEND=elastic, and with that cluster reachable the "memory" answers
+        # below came from the live index (1,017 armchairs, not the feed's 17). A test that wants Elasticsearch says so.
+        flag = mock.patch.dict(os.environ, {"SEARCH_RESULTS_REQUIRE_MODEL": "0", "SEARCH_BACKEND": "memory"})
         flag.start()
         self.addCleanup(flag.stop)
         # Hero feed only, so the expected totals stay readable.

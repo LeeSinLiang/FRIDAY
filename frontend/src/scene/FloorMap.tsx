@@ -7,10 +7,13 @@ type Props = {
   getCamera: () => FirstPersonCamera | null;
   onFloorChange?: (roomId: string) => void;
   floorChangeDisabled?: boolean;
+  /** The catalogue search panel is open. It owns this corner (fixed, z-index 30), so the map gives the corner up
+   *  rather than hide under it: it collapses to the floor number and the up/down controls, above the panel. */
+  compact?: boolean;
 };
 
 /** A navigation aid: the room moves around the fixed person marker. */
-export default function FloorMap({ room, getCamera, onFloorChange, floorChangeDisabled }: Props) {
+export default function FloorMap({ room, getCamera, onFloorChange, floorChangeDisabled, compact = false }: Props) {
   const floor = buildingFloors(room);
   const [expanded, setExpanded] = useState(false);
   const world = useRef<SVGGElement>(null);
@@ -39,7 +42,7 @@ export default function FloorMap({ room, getCamera, onFloorChange, floorChangeDi
     return () => cancelAnimationFrame(frame);
   }, [getCamera, markerX, markerY, room]);
 
-  return <aside className={`glass floor-map${expanded ? " is-expanded" : ""}`} aria-label="Room map">
+  return <aside className={`glass floor-map${compact ? " is-compact" : expanded ? " is-expanded" : ""}`} aria-label="Room map">
     <div className="floor-map-heading">
       <span className="floor-map-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/></svg>

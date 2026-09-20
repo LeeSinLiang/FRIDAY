@@ -52,6 +52,19 @@ class CataloguePlacementTests(TestCase):
         self.assertEqual((blocked.status_code, blocked.json()['error']['message']), (400, 'Overlaps POÄNG armchair.'))
         self.assertEqual(self.commands([{'type': 'remove', 'instanceId': 'poang-1'}], 2, 'c4').json()['instances'], [])
 
+    def test_a_second_copy_is_added_the_way_the_furniture_rail_adds_it(self):
+        # Once a catalogue piece stands in the room the snapshot lists its product, so the editor's rail offers it
+        # again. The rail's add carries that listed product (instanceToAdd in frontend/src/scene/products.ts). The
+        # bare add it used to send is still refused: the server's rule did not move.
+        self.assertEqual(self.commands([{'type': 'add', 'instance': self.poang}]).status_code, 200)
+        listed = next(p for p in self.client.get('/api/scene/').json()['products'] if p['productId'] == POANG_ID)
+        second = {'instanceId': 'poang-2', 'productId': POANG_ID, 'pose': {'xCm': 450, 'zCm': 250, 'yawRad': 0}}
+        bare = self.commands([{'type': 'add', 'instance': second}], 1, 'c2')
+        self.assertEqual((bare.status_code, bare.json()['error']['message']), (400, 'A catalogue item must carry its product.'))
+        carried = self.commands([{'type': 'add', 'instance': dict(second, product=listed)}], 1, 'c3')
+        self.assertEqual(carried.status_code, 200, carried.content)
+        self.assertEqual([item['instanceId'] for item in carried.json()['instances']], ['poang-1', 'poang-2'])
+
     def test_full_snapshot_save_round_trips_the_carried_product(self):
         saved = self.client.put('/api/scene/', {'baseRevision': 0, 'instances': [self.poang]}, content_type='application/json', HTTP_X_CSRFTOKEN=self.token)
         self.assertEqual(saved.status_code, 200, saved.content)

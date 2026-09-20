@@ -6,6 +6,8 @@ import SplatCatalogueLayer from "./catalogue/SplatCatalogueLayer";
 import { useRoomSession, type RoomSnapshot } from "./scene/useRoomSession";
 import { initialRoom } from "./scene/buildingFloors";
 import { validatePlacement } from "./scene/placement";
+import { instanceToAdd } from "./scene/products";
+import { pieceInHand, walkKeyAction } from "./scene/walkKeys";
 import { sceneToCm } from "./scene/units";
 import type { CameraMode, FirstPersonCamera, Pose, Product } from "./scene/types";
 import type { InteractionCallbacks, InteractionMode, InteractionState, ModelStatus, PlacementPreview } from "./scene/playcanvas/contracts";
@@ -46,10 +48,10 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   const [pendingProductId,setPendingProductId]=useState<string|null>(null);
   const [panel,setPanel]=useState<"catalogue"|"inspector">("catalogue");
   const [panelOpen,setPanelOpen]=useState(false);
-  // The language search panel (sentence box, microphone, lit floor). In shopping mode it opens from the furniture
-  // catalogue; on the plain editor route (/?room=…) it starts open, because that route IS the search-and-fit demo and
-  // there was otherwise no control on it that could ever open the panel.
-  const [shopSearchOpen,setShopSearchOpen]=useState(!shopping);
+  // The language search panel (sentence box, microphone, lit floor). It starts open on every route: the gallery's
+  // /room/<id> (shopping mode) is the route we demo, and with the panel closed the sentence box was three interactions
+  // deep. Close search closes it and it stays closed; the furniture rail's "Search purchasable catalogue" reopens it.
+  const [shopSearchOpen,setShopSearchOpen]=useState(true);
   const [snap,setSnap]=useState(true);
   const [showSurface,setShowSurface]=useState(false);
   const [surfaceNote,setSurfaceNote]=useState("");
@@ -114,10 +116,11 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   },[snapshot,session.submit]);
   const place=useCallback(async(productId:string,pose:Pose)=>{
     const id=crypto.randomUUID();
-    const accepted=await session.submit({type:"add",instance:{instanceId:id,productId,pose}});
+    // A catalogue piece listed in the rail must carry its product, as the search panel's add does; a shared one must not.
+    const accepted=await session.submit({type:"add",instance:instanceToAdd(id,productId,pose,instances)});
     if(accepted){setPendingProductId(null);setSelectedId(null);setPanel("catalogue");setPanelOpen(false);setMode(view==="perspective"?"walk":"place");setNotice("Furniture placed");captureWalk();}
     return accepted;
-  },[session.submit,view,captureWalk]);
+  },[session.submit,view,captureWalk,instances]);
   const callbacks:InteractionCallbacks=useMemo(()=>({onSelect:select,onCommit:commit,onPlace:place,onCancelPlacement:cancelPlacement,onPreview:setPreview,onActiveChange:setActive,onModelStatus,
     onSurfaceStatus:(status,message)=>setSurfaceNote(status==="error" ? message??"Surface reference could not load" : status==="loading" ? "Loading surface reference…" : message ?? "Surface reference ready"),
   }),[select,commit,place,cancelPlacement,onModelStatus]);
@@ -141,7 +144,8 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   useEffect(()=>{if(mode!=="walk"&&document.pointerLockElement===runtime.current?.canvas)document.exitPointerLock();},[mode]);
   const stopWalk=useCallback(()=>{setMode("explore");if(document.pointerLockElement===runtime.current?.canvas)document.exitPointerLock();},[]);
   const startWalk=useCallback(()=>{
-    if(!ready||locked||view==="top"||pendingProductId)return;
+    // Read at call time: the search panel's hold lives on the engine, not in React state.
+    if(!ready||locked||view==="top"||pieceInHand(pendingProductId,runtime.current))return;
     const canvas=runtime.current?.canvas;if(!canvas)return;
     canvas.focus({preventScroll:true});
     setSelectedId(null);setPreview(null);setMode("walk");
@@ -163,13 +167,15 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
         else {setSelectedId(null);setPreview(null);setPanel("catalogue");setPanelOpen(false);setMode(view==="perspective"?"walk":"place");}
         return;
       }
-      if(e.key.toLowerCase()==="f" && !e.repeat && !e.metaKey && !e.ctrlKey && !e.altKey && !active){
+      // F and W A S D do nothing with a piece in hand, the rail's OR the search panel's; Esc above still drops it.
+      const walkKey=walkKeyAction(e,{mode,pointerLocked,active,pieceInHand:pieceInHand(pendingProductId,runtime.current)});
+      if(walkKey==="toggle"){
         e.preventDefault();
         if(document.pointerLockElement===runtime.current?.canvas)stopWalk();
         else startWalk();
         return;
       }
-      if(mode==="walk" && !pointerLocked && !e.repeat && /^[wasd]$/i.test(e.key)) {
+      if(walkKey==="capture") {
         const canvas=runtime.current?.canvas;
         if(canvas) void canvas.requestPointerLock().then(()=>setNotice("")).catch(()=>setNotice("Pointer capture is unavailable here · Drag to look"));
       }
@@ -217,7 +223,6 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
       <span className="splat-title">{room?.scan?.attribution.title ?? "Empty room"}<span>{room?.scan?.visualFormat === "glb" ? "Interior · mesh room" : "Living space"}</span></span>
       <span className={`splat-save save-${session.status}`} role="status">{session.status==="ready"?"Saved":session.status==="saving"?"Saving…":session.status==="loading"?"Connecting…":session.status==="conflict"?"Layout changed":"Disconnected"}</span>
       {(session.status==="offline"||session.status==="conflict")&&<button className="button" onClick={()=>void(session.status==="conflict"?session.reload():session.retry())}>{session.status==="conflict"?"Reload layout":"Retry"}</button>}
-      <a className="splat-reset" href="/?cartPreview" target="_blank" rel="noreferrer">Cart preview</a>
       <button className="splat-reset" disabled={!ready||locked||!!pendingProductId} onClick={()=>setResetKey(k=>k+1)}><Icon name="reset" size={18}/><span>Reset view</span></button>
     </header>
     <nav className="splat-view-controls" aria-label="Room views">
@@ -251,7 +256,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
       <div className="splat-room-note"><span>{room?.roomId === "cg-arch-lightmapper-proof" ? "Lighting proof · partial room" : room?.roomId === "cg-arch-interior" ? "Living-room placement zone" : room?.scan?.visualFormat === "glb" ? "Authored room · exact dimensions" : "Test room · assumed scale"}</span><label><input type="checkbox" checked={showSurface} onChange={e=>setShowSurface(e.target.checked)} disabled={!ready||locked}/>Surface reference</label>{showSurface&&surfaceNote&&<p>{surfaceNote}</p>}</div>
       </>}
     </aside>
-    {room&&view==="perspective"&&<FloorMap room={room} getCamera={getCamera} onFloorChange={changeFloor} floorChangeDisabled={!ready||locked||!!pendingProductId}/>}
+    {room&&view==="perspective"&&<FloorMap room={room} getCamera={getCamera} onFloorChange={changeFloor} floorChangeDisabled={!ready||locked||!!pendingProductId} compact={shopSearchOpen}/>}
     {view==="top"&&room?.scan&&<div className="splat-bottom-left"><p className="splat-attribution"><a href={room.scan.attribution.url} target="_blank" rel="noreferrer">{room.scan.attribution.title} · {room.scan.attribution.author}</a><span> · </span><a href={room.scan.attribution.licenseUrl} target="_blank" rel="noreferrer">{room.scan.attribution.license}</a></p></div>}
     <div className="splat-bottom-center"><p className="glass splat-help" aria-live="polite">{notice || (session.status!=="ready"&&session.status!=="loading"?session.message:help)}</p><nav className="glass splat-edit-tools" aria-label="Furniture tools">
       <button aria-pressed={mode==="place"} disabled={!ready||locked||!selected||!!pendingProductId} onClick={()=>setMode("place")}><Icon name="move" size={18}/>Move</button>
