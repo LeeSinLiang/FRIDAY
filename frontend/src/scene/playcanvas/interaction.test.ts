@@ -8,6 +8,7 @@ import { createProxyMaterials } from "./furniture";
 import { cmToScene, sceneToCm } from "../units";
 import type { Instance, Product, Room } from "../types";
 import manifest from "../../../../shared/rooms/studio-11/manifest.json";
+import skyscraper from "../../../../shared/skyscraper-test-scene.json";
 import spatial from "../../../../shared/rooms/studio-11/spatial.json";
 
 const room: Room = { roomId: "interaction-test", revision: 1, widthCm: 600, depthCm: 500, heightCm: 280 };
@@ -60,8 +61,8 @@ test("dragging preserves the grabbed surface offset before optional grid snappin
 });
 
 test("walking is bounded after a suspended tab and cannot leave the room", () => {
-  assert.equal(movementDelta(10), 12);
-  assert.equal(movementDelta(0.05, 360), 18);
+  assert.equal(movementDelta(10), 18);
+  assert.equal(movementDelta(0.05, 540), 27);
   assert.equal(movementDelta(-1), 0);
   assert.equal(movementDelta(Number.NaN), 0);
   assert.deepEqual(advanceWalk(room, { xCm: 300, zCm: 430 }, 12, 0), { xCm: 312, zCm: 430 });
@@ -88,6 +89,19 @@ test("jump respects ceiling, cannot land on a taller unreachable object, and cla
   for (let frame = 0; frame < 30; frame++) motion = advanceVertical(motion, 0.05, frame === 0, 60, [90]);
   assert.deepEqual(motion, { feetCm: 0, velocityCmPerSecond: 0, grounded: true });
   assert.ok(advanceVertical(motion, 10, true, 110, []).feetCm < 30);
+});
+
+test("all skyscraper levels permit the full jump arc above the 170 cm eye height", () => {
+  for (const floor of skyscraper.floors) {
+    let motion = { feetCm: 0, velocityCmPerSecond: 0, grounded: true };
+    let peak = 0;
+    for (let frame = 0; frame < 120; frame++) {
+      motion = advanceVertical(motion, 1 / 60, frame === 0, floor.clearanceCm - 170 - 10, []);
+      peak = Math.max(peak, motion.feetCm);
+    }
+    assert.ok(peak > 90 && peak < 95, `${floor.floorId}: full gravity-driven apex ${peak}`);
+    assert.deepEqual(motion, { feetCm: 0, velocityCmPerSecond: 0, grounded: true });
+  }
 });
 
 test("rotated furniture bounds support only points over the placed object", () => {
@@ -124,7 +138,7 @@ test("Walk input jumps onto a placed sofa, stays there, then falls when walking 
   const key = (type: "keydown" | "keyup", code: string) => listeners.get(type)?.({ key: code === "Space" ? " " : "w", code, repeat: false, preventDefault() {}, metaKey: false, ctrlKey: false, altKey: false });
   try {
     key("keydown", "Space"); key("keydown", "KeyW");
-    for (let i = 0; i < 10; i++) frame(0.05);
+    for (let i = 0; i < 9; i++) frame(0.05);
     key("keyup", "KeyW");
     for (let i = 0; i < 20; i++) frame(0.05);
     assert.ok(sceneToCm(camera.getPosition().z) < 300, "the player crossed onto the sofa");

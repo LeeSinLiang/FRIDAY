@@ -4,6 +4,7 @@ import { cmToScene } from "../units";
 import { AssetCache } from "./assets";
 import { createFurnitureLighting } from "./lighting";
 import { loadSplatRoom } from "./room";
+import { createSkyscraperLighting, isLondonSkyscraper, prepareSkyscraperMaterials } from "./skyscraperLook";
 
 export type RuntimeStatus = { phase: "loading" | "ready" | "error"; message: string; progress?: number };
 export type PlayCanvasRuntime = {
@@ -104,6 +105,7 @@ export function createPlayCanvasRuntime(canvas: HTMLCanvasElement, options: {
   const { room, onStatus } = options;
   if (!room.scan) throw new Error("The first-person renderer requires a prepared room scan");
   const importedInterior = room.roomId === "cg-arch-interior" || room.roomId === "cg-arch-lightmapper-proof";
+  const skyscraper = isLondonSkyscraper(room);
   const app = new Application(canvas, {
     graphicsDeviceOptions: { antialias: room.scan.visualFormat === "glb", alpha: false, powerPreference: "high-performance", preserveDrawingBuffer: false },
   });
@@ -115,7 +117,7 @@ export function createPlayCanvasRuntime(canvas: HTMLCanvasElement, options: {
   }
   // The two-million-splat laptop proof sustains motion at this render resolution.
   // Agent captures still render at their independently requested pixel dimensions.
-  app.graphicsDevice.maxPixelRatio = Math.min(window.devicePixelRatio || 1, room.scan.visualFormat === "glb" ? 1.5 : 1);
+  app.graphicsDevice.maxPixelRatio = Math.min(window.devicePixelRatio || 1, skyscraper ? 2 : room.scan.visualFormat === "glb" ? 1.5 : 1);
   app.setCanvasFillMode(FILLMODE_NONE);
   app.setCanvasResolution(RESOLUTION_AUTO);
   const camera = new Entity("Room camera");
@@ -136,7 +138,8 @@ export function createPlayCanvasRuntime(canvas: HTMLCanvasElement, options: {
   app.root.addChild(roomRoot);
   app.root.addChild(contentRoot);
   const assets = new AssetCache(app);
-  const disposeLights = createFurnitureLighting(app, importedInterior);
+  const buildingLighting = skyscraper ? createSkyscraperLighting(app, camera, assets) : undefined;
+  const disposeLights = buildingLighting ? () => buildingLighting.dispose() : createFurnitureLighting(app, importedInterior);
   const abortController = new AbortController();
   const runtime: PlayCanvasRuntime = {
     app, canvas, camera, roomRoot, contentRoot, assets, room,
@@ -182,6 +185,11 @@ export function createPlayCanvasRuntime(canvas: HTMLCanvasElement, options: {
     if (!runtime.disposed) onStatus?.({ phase: "loading", message: "Loading the room…", progress: total > 0 ? loaded / total : undefined });
   }, runtime.signal).then(async model => {
     if (runtime.disposed) throw new Error("The renderer has been disposed");
+    if (buildingLighting) {
+      prepareSkyscraperMaterials(model, app.graphicsDevice.maxAnisotropy);
+      await buildingLighting.ready;
+      if (runtime.disposed) throw new Error("The renderer has been disposed");
+    }
     // The older atlas already contains its display transform. Only the explicit
     // linear RGBM workflow needs tone mapping; ACES2 approximates source AgX.
     if (model.tags.has("friday-linear-lightmap")) {

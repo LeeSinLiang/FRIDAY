@@ -53,12 +53,20 @@ export function createPlacementOverlays(runtime: { app: pc.Application; capturin
     const gridColor = new pc.Color().fromString("#ad9f89");
     const majorColor = new pc.Color().fromString("#d9c1a2");
     if (view === "top") {
-      for (let x = 0; x <= room.widthCm; x += 50)
-        line(new pc.Vec3(cmToScene(x), cmToScene(0.3), 0), new pc.Vec3(cmToScene(x), cmToScene(0.3), cmToScene(room.depthCm)), gridColor);
-      for (let z = 0; z <= room.depthCm; z += 50)
-        line(new pc.Vec3(0, cmToScene(0.3), cmToScene(z)), new pc.Vec3(cmToScene(room.widthCm), cmToScene(0.3), cmToScene(z)), gridColor);
-      const wall = footprintCorners({ widthCm: room.widthCm, depthCm: room.depthCm }, { xCm: room.widthCm / 2, zCm: room.depthCm / 2, yawRad: 0 });
-      for (let i = 0; i < 4; i++) line(wall[i], wall[(i + 1) % 4], gridColor);
+      const outline = room.scan?.floorOutlineCm;
+      if (outline) {
+        for (const polygon of outline) for (const ring of [polygon.outer, ...polygon.holes])
+          for (let i = 0; i < ring.length - 1; i++)
+            line(new pc.Vec3(cmToScene(ring[i][0]), cmToScene(0.3), cmToScene(ring[i][1])),
+              new pc.Vec3(cmToScene(ring[i + 1][0]), cmToScene(0.3), cmToScene(ring[i + 1][1])), gridColor);
+      } else {
+        for (let x = 0; x <= room.widthCm; x += 50)
+          line(new pc.Vec3(cmToScene(x), cmToScene(0.3), 0), new pc.Vec3(cmToScene(x), cmToScene(0.3), cmToScene(room.depthCm)), gridColor);
+        for (let z = 0; z <= room.depthCm; z += 50)
+          line(new pc.Vec3(0, cmToScene(0.3), cmToScene(z)), new pc.Vec3(cmToScene(room.widthCm), cmToScene(0.3), cmToScene(z)), gridColor);
+        const wall = footprintCorners({ widthCm: room.widthCm, depthCm: room.depthCm }, { xCm: room.widthCm / 2, zCm: room.depthCm / 2, yawRad: 0 });
+        for (let i = 0; i < 4; i++) line(wall[i], wall[(i + 1) % 4], gridColor);
+      }
       for (const obstacle of room.spatial?.obstacles ?? []) {
         const corners = footprintCorners(obstacle, obstacle);
         const color = new pc.Color().fromString("#a8836b");
@@ -86,7 +94,7 @@ export function createPlacementOverlays(runtime: { app: pc.Application; capturin
   return {
     update(room: Room, product: Product | null, preview: PlacementPreview | null, view: "perspective" | "top") {
       current = { room, product, preview, view };
-      plan.enabled = view === "top";
+      plan.enabled = view === "top" && !room.scan?.floorOutlineCm;
       regions.enabled = view === "top";
       const nextRegionKey = JSON.stringify(room.spatial ?? null);
       if (regionKey !== nextRegionKey) {

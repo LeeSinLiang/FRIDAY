@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import shapely
 from shapely.geometry import Polygon, box
 from shapely.ops import unary_union
 
@@ -20,6 +21,7 @@ from api.glb import read_glb, node_matrix
 
 SOURCE_HASH = '0d4d516057aa6b8e6a79cdbd0b3446432edd831a151206c2c1879e944dc87de9'
 OWNER = 'london-skyscraper-test'
+BUILDING = 'london-skyscraper'
 SOURCE_URL = 'https://sketchfab.com/3d-models/free-london-skyscraper-52b73f6ea18a440cb42734840d5edc72'
 
 
@@ -35,7 +37,7 @@ def triangles(source):
         return np.ndarray((a['count'], width), dtype, binary,
                           offset=v.get('byteOffset', 0) + a.get('byteOffset', 0),
                           strides=(v.get('byteStride', width * dtype.itemsize), dtype.itemsize)).copy()
-    result = []
+    result, owners = [], []
     def visit(index, parent):
         node = document['nodes'][index]
         world = parent @ np.array(node_matrix(node))
@@ -46,11 +48,12 @@ def triangles(source):
             vertices = (np.c_[vertices, np.ones(len(vertices))] @ world.T)[:, :3]
             indices = accessor(primitive['indices']).ravel() if 'indices' in primitive else np.arange(len(vertices))
             result.append(vertices[indices.reshape(-1, 3)])
+            owners.extend([node.get('name', '')] * (len(indices) // 3))
         for child in node.get('children', []):
             visit(child, world)
     for index in document['scenes'][document.get('scene', 0)]['nodes']:
         visit(index, np.eye(4))
-    return np.concatenate(result), document
+    return np.concatenate(result), document, np.array(owners)
 
 
 def write_json(path, data):
@@ -58,71 +61,140 @@ def write_json(path, data):
     path.write_text(json.dumps(data, indent=2) + '\n')
 
 
+def rectangle_cover(shape, step):
+    """Conservative complete-cell coverage, merged into the existing rectangle contract.
+
+    No sampled cell centers: every corner, edge and interior must be in clear floor.
+    Adjacent rectangles remain a union in the existing backend/frontend validator.
+    """
+    minx, minz, maxx, maxz = shape.bounds
+    xs = np.arange(np.floor(minx / step) * step, np.ceil(maxx / step) * step, step)
+    zs = np.arange(np.floor(minz / step) * step, np.ceil(maxz / step) * step, step)
+    x, z = np.meshgrid(xs, zs)
+    shapely.prepare(shape)
+    mask = shapely.covers(shape, shapely.box(x, z, x + step, z + step))
+    done, active = [], {}
+    for j, row in enumerate(mask):
+        edges = np.diff(np.r_[False, row, False].astype(int))
+        current = {}
+        for left, right in zip(np.flatnonzero(edges == 1), np.flatnonzero(edges == -1)):
+            key = (int(left), int(right))
+            current[key] = active.pop(key, [float(xs[left]), float(zs[j]), float(xs[right-1] + step), 0])
+            current[key][3] = float(zs[j] + step)
+        done.extend(active.values())
+        active = current
+    return done + list(active.values())
+
+
+def polygons(shape):
+    return [shape] if shape.geom_type == 'Polygon' else [p for p in shape.geoms if p.geom_type == 'Polygon']
+
+
+def supported_pose(covered, target, width, depth):
+    # Find a real supported footprint near the intended view, including across cell seams.
+    options = [(x, z) for x in np.arange(covered.bounds[0], covered.bounds[2], .25)
+               for z in np.arange(covered.bounds[1], covered.bounds[3], .25)]
+    for x, z in sorted(options, key=lambda p: (p[0]-target[0])**2 + (p[1]-target[1])**2):
+        if covered.covers(box(x-width/2, z-depth/2, x+width/2, z+depth/2)):
+            return x, z
+    raise ValueError('No supported camera/reference footprint')
+
+
 def prepare(source):
     if hashlib.sha256(source.read_bytes()).hexdigest() != SOURCE_HASH:
         raise ValueError('Source hash differs: review floor geometry before preparing another model')
-    t, document = triangles(source)
+    t, document, owners = triangles(source)
     cross = np.cross(t[:, 1] - t[:, 0], t[:, 2] - t[:, 0])
     lengths = np.linalg.norm(cross, axis=1)
     ny = np.divide(cross[:, 1], lengths, out=np.zeros_like(lengths), where=lengths > 1e-12)
     mean_y = t[:, :, 1].mean(1)
-    zone = box(4, -12, 8, -4)
-    floors = []
     report = json.loads((ROOT / 'docs/evidence/skyscraper-floor-probe.json').read_text())['diagnostic']
     if report['source_sha256'] != SOURCE_HASH:
         raise ValueError('Floor candidates must match the reviewed source')
-    candidates = report['tower_candidates']
-    levels = [{'floorId': row['candidate_id'], 'roomId': OWNER if row['candidate_id'] == 'C01' else f"london-skyscraper-{row['candidate_id'].lower()}"} for row in candidates]
-    for number, row in enumerate(candidates, 1):
-        candidate, label, approximate_y = row['candidate_id'], f'Floor {number}', row['elevation_m']
-        # Exact polygon coverage, not point samples: gaps between samples must also fail.
-        near = (ny > .995) & (abs(mean_y - approximate_y) < .05) & (lengths > .002)
-        support = [q for q in t[near] if Polygon(q[:, [0, 2]]).intersection(zone).area > 1e-8]
+    # The original Interior_Top filter omitted both entrance levels. Named source
+    # meshes distinguish interior floor from the sidewalk at the same elevation.
+    candidates = [
+        {'candidate_id': 'G00', 'elevation_m': -4.21677, 'mesh': 'Lobby_Floor', 'label': 'Entrance lobby'},
+        {'candidate_id': 'M00', 'elevation_m': -.2126, 'mesh': 'Lobby_Floor', 'label': 'Lobby mezzanine'},
+        *[{**r, 'mesh': 'Interior_Top', 'label': f"Tower floor {i}"}
+          for i, r in enumerate(report['tower_candidates'], 1)],
+    ]
+    def room_id(candidate):
+        return BUILDING if candidate == 'G00' else f'london-skyscraper-level-{candidate.lower()}'
+    levels = [{'floorId': r['candidate_id'], 'roomId': room_id(r['candidate_id'])} for r in candidates]
+    # Old contexts are immutable: existing layouts/cart references keep their original
+    # coordinate systems. Full-floor geometry uses new room IDs, as persistence requires.
+    legacy = [OWNER, *[f'london-skyscraper-c{i:02}' for i in range(2, 33)]]
+    floors = []
+    for row in candidates:
+        candidate, approximate_y = row['candidate_id'], row['elevation_m']
+        near = (ny > .995) & (abs(mean_y - approximate_y) < .05) & (lengths > .002) & (owners == row['mesh'])
+        support = t[near]
         coverage = unary_union([Polygon(q[:, [0, 2]]) for q in support])
-        missing = zone.difference(coverage).area
-        low, high = float(np.array(support)[:, :, 1].min()), float(np.array(support)[:, :, 1].max())
-        # Conservative projection of all triangles intersecting the occupied height band.
-        # Buffer also catches zero-area projections of vertical walls. Entire projected
-        # triangles overestimate obstacles rather than approving uncertain space.
-        occupied = (t[:, :, 1].max(1) > high + .005) & (t[:, :, 1].min(1) < high + 2.3)
-        solids = unary_union([Polygon(q[:, [0, 2]]).buffer(.03) for q in t[occupied]])
-        blocked_shape = zone.intersection(solids)
-        blocked = blocked_shape.area
-        parts = list(blocked_shape.geoms) if hasattr(blocked_shape, 'geoms') else [blocked_shape]
-        obstacles = []
-        for part in sorted((p for p in parts if p.area > 1e-8), key=lambda p: p.bounds):
-            x0, z0, x1, z1 = part.bounds
-            obstacles.append({'obstacleId': f'{candidate}:fixed-{len(obstacles)+1}', 'label': 'building wall',
-                              'xCm': ((x0+x1)/2-3.5)*100, 'zCm': ((z0+z1)/2+12.5)*100,
-                              'widthCm': (x1-x0)*100, 'depthCm': (z1-z0)*100, 'yawRad': 0})
-        if missing > 1e-6 or high - low > .005:
-            raise ValueError(f'{candidate}: unsafe zone: missing={missing}, blocked={blocked}, variation={high-low}')
-        room_id = OWNER if candidate == 'C01' else f'london-skyscraper-{candidate.lower()}'
-        floor = {'roomId': room_id, 'floorId': candidate, 'surfaceId': f'{candidate}:reviewed-floor',
-                 'label': label, 'elevationM': high, 'sourceOriginM': [3.5, high, -12.5],
-                 'supportErrorMaxMm': round((high-low)*1000, 4), 'checkedAreaM2': zone.area,
-                 'unsupportedAreaM2': missing, 'blockedAreaM2': blocked, 'clearanceCm': 230}
+        low, high = float(support[:, :, 1].min()), float(support[:, :, 1].max())
+        if high - low > .04:
+            raise ValueError(f'{candidate}: floor is not planar enough: {high-low}')
+        # Use measured overhead distance, allowing a full jump where the source
+        # ceiling permits it. Every accepted cell is then checked through this height.
+        clearance = 300 if candidate == 'G00' else 500 if candidate == 'M00' else int(
+            (row['ceiling_distance_p05_p50_p95_m'][0] - (high-approximate_y))*100) - 1
+        occupied = (t[:, :, 1].max(1) > high + .05) & (t[:, :, 1].min(1) < high + clearance/100)
+        solids = unary_union([Polygon(q[:, [0, 2]]).buffer(.025) for q in t[occupied]])
+        clear = coverage.buffer(-.025).difference(solids)
+        # Preserve the bounded 256-area runtime contract. Adaptive resolution is
+        # recorded, never expanded beyond actual support or through a fixed wall.
+        for step in [.2, .25, .3, .4]:
+            rectangles = rectangle_cover(clear, step)
+            if len(rectangles) <= 256:
+                break
+        if not rectangles or len(rectangles) > 256:
+            raise ValueError(f'{candidate}: cannot encode reviewed floor within runtime limits')
+        covered = unary_union([box(*r) for r in rectangles])
+        missing = covered.difference(coverage).area
+        blocked = covered.intersection(solids).area
+        if missing > 1e-6 or blocked > 1e-6:
+            raise ValueError(f'{candidate}: unsafe floor: unsupported={missing}, blocked={blocked}')
+        minx, minz, maxx, maxz = coverage.bounds
+        ox, oz = np.floor(minx*10)/10, np.floor(minz*10)/10
+        width, depth = np.ceil((maxx-ox)*100), np.ceil((maxz-oz)*100)
+        camera_target = (-3, -7) if candidate == 'G00' else (1, 2) if candidate == 'M00' else (6, -4.3)
+        cx, cz = supported_pose(covered, camera_target, .4, .4)
+        rx, rz = supported_pose(covered, (cx, cz-3), 2, 1)
+        def pose(x, z):
+            return {'xCm': round((x-ox)*100, 5), 'zCm': round((z-oz)*100, 5), 'yawRad': 0}
+        outline = [{'outer': [[round((x-ox)*100, 5), round((z-oz)*100, 5)] for x, z in p.exterior.coords],
+                    'holes': [[[round((x-ox)*100, 5), round((z-oz)*100, 5)] for x, z in ring.coords] for ring in p.interiors]}
+                   for p in polygons(coverage) if p.area > .01]
+        floor = {'roomId': room_id(candidate), 'floorId': candidate, 'surfaceId': f'{candidate}:full-floor-v2',
+                 'label': row['label'], 'elevationM': high, 'sourceOriginM': [float(ox), high, float(oz)],
+                 'supportErrorMaxMm': round((high-low)*1000, 4), 'sourceFloorAreaM2': coverage.area,
+                 'checkedAreaM2': covered.area, 'unsupportedAreaM2': missing, 'blockedAreaM2': blocked,
+                 'clearanceCm': clearance, 'boundaryCellCm': step*100, 'referencePose': pose(rx, rz)}
         floors.append(floor)
-        manifest = {'room': {'roomId': room_id, 'revision': 1, 'widthCm': 600, 'depthCm': 1000, 'heightCm': 230,
-            'scan': {'geometryRevision': f'london-{candidate.lower()}-{SOURCE_HASH[:12]}-v1',
+        manifest = {'room': {'roomId': floor['roomId'], 'revision': 1, 'widthCm': float(width), 'depthCm': float(depth), 'heightCm': clearance,
+            'scan': {'geometryRevision': f'london-{candidate.lower()}-{SOURCE_HASH[:12]}-full-v2',
                 'visualFormat': 'glb', 'visualUrl': f'/rooms/{OWNER}/assets/building.glb',
-                'positionCm': [-350, -100 * high, 1250], 'rotationDeg': [0, 0, 0], 'scale': 1,
-                'calibration': {'status': 'synthetic_demo', 'note': 'Source glTF metres; assumed authored scale, not surveyed dimensions. Only the geometry-checked 4 x 8 metre zone is enabled. Placement height uses this floor surface, not uniform storey spacing.'},
-                'defaultCamera': {'kind': 'firstPerson', 'xCm': 250, 'yCm': 205, 'zCm': 820, 'yawRad': 0, 'pitchRad': -.29, 'fovDeg': 65},
+                'positionCm': [float(-100*ox), -100*high, float(-100*oz)], 'rotationDeg': [0, 0, 0], 'scale': 1,
+                'calibration': {'status': 'synthetic_demo', 'note': 'Source glTF metres; authored scale, not surveyed. Mesh floor outline with conservative clear-floor cells; walls, voids and low overhead geometry excluded. Levels use measured elevations.'},
+                'defaultCamera': {'kind': 'firstPerson', **pose(cx, cz), 'yCm': 170, 'yawRad': float(np.pi) if candidate == 'G00' else 0, 'pitchRad': -.1, 'fovDeg': 65},
+                'floorOutlineCm': outline,
                 'attribution': {'title': 'Free London Skyscraper', 'author': '99.Miles', 'url': SOURCE_URL,
                                 'license': 'CC BY 4.0', 'licenseUrl': 'https://creativecommons.org/licenses/by/4.0/'},
-                'building': {'buildingId': OWNER, 'sourceSha256': SOURCE_HASH, 'levels': levels, **floor}}}, 'spatialFile': 'spatial.json'}
-        if room_id != OWNER:
-            manifest['sharedVisualRoomId'] = OWNER
-        directory = ROOT / 'shared/rooms' / room_id
+                'building': {'buildingId': BUILDING, 'sourceSha256': SOURCE_HASH, 'levels': levels,
+                             'legacyRoomIds': legacy, **floor}}}, 'spatialFile': 'spatial.json', 'sharedVisualRoomId': OWNER}
+        directory = ROOT / 'shared/rooms' / floor['roomId']
         write_json(directory / 'manifest.json', manifest)
-        write_json(directory / 'spatial.json', {'freeAreas': [{'minXcm': 50, 'maxXcm': 450, 'minZcm': 50, 'maxZcm': 850}], 'obstacles': obstacles})
-        (directory / 'license.txt').write_text(f'[FREE] London Skyscraper by 99.Miles\nSource: {SOURCE_URL}\nLicensed under Creative Commons Attribution 4.0: https://creativecommons.org/licenses/by/4.0/\nLicense/creator verified against the public Sketchfab v3 model API on 2026-09-20.\nModified by William Xu: Furniture and Lobby_Furniture removed to make an unfurnished version.\nThe supplied edited GLB is otherwise copied unchanged; FRIDAY does not alter its textures/materials.\n')
-    fixture = {'buildingId': OWNER, 'sourceSha256': SOURCE_HASH, 'sourceBytes': source.stat().st_size,
-               'triangles': len(t), 'meshCount': len(document['meshes']), 'materialCount': len(document.get('materials', [])),
+        write_json(directory / 'spatial.json', {'freeAreas': [
+            {'minXcm': round((x0-ox)*100, 5), 'maxXcm': round((x1-ox)*100, 5),
+             'minZcm': round((z0-oz)*100, 5), 'maxZcm': round((z1-oz)*100, 5)} for x0, z0, x1, z1 in rectangles], 'obstacles': []})
+        (directory / 'license.txt').write_text((ROOT / 'shared/rooms' / OWNER / 'license.txt').read_text())
+        print(candidate, row['label'], 'Y', round(high, 4), 'area', round(covered.area, 2), 'rectangles', len(rectangles), flush=True)
+    fixture = {'buildingId': BUILDING, 'visualRoomId': OWNER, 'legacyRoomIds': legacy, 'sourceSha256': SOURCE_HASH,
+               'sourceBytes': source.stat().st_size, 'triangles': len(t), 'meshCount': len(document['meshes']),
+               'materialCount': len(document.get('materials', [])),
                'boundsM': {'min': t.min(axis=(0, 1)).tolist(), 'max': t.max(axis=(0, 1)).tolist()},
                'reference': {'instanceId': 'skyscraper-scale-reference', 'productId': 'scale-reference',
-                             'pose': {'xCm': 250, 'zCm': 400, 'yawRad': 0}, 'sizeCm': [200, 100, 100]}, 'floors': floors}
+                             'pose': floors[0]['referencePose'], 'sizeCm': [200, 100, 100]}, 'floors': floors}
     write_json(ROOT / 'shared/skyscraper-test-scene.json', fixture)
     destination = ROOT / 'shared/rooms' / OWNER / 'assets/building.glb'
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -130,7 +202,6 @@ def prepare(source):
         raise ValueError('Refusing to replace a different local asset')
     if not destination.exists():
         shutil.copyfile(source, destination)
-    print(json.dumps(fixture, indent=2))
 
 
 if __name__ == '__main__':

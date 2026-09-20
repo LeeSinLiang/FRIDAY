@@ -11,7 +11,7 @@ export class AssetCache {
 
   constructor(private app: Application) {}
 
-  load(url: string, type: "container" | "gsplat", progress?: (value: AssetProgress) => void): Promise<Asset> {
+  load(url: string, type: "container" | "gsplat" | "texture", progress?: (value: AssetProgress) => void): Promise<Asset> {
     if (this.disposed) return Promise.reject(new Error("The renderer has been disposed"));
     const key = `${type}:${url}`;
     const existing = this.pending.get(key);

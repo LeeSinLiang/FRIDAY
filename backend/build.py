@@ -28,6 +28,7 @@ def package_shared(source=None, target=None):
             raise ValueError('Room spatial metadata must remain inside its directory')
         files.extend([manifest, spatial])
         pending.extend(level['roomId'] for level in data['room'].get('scan', {}).get('building', {}).get('levels', []))
+        pending.extend(data['room'].get('scan', {}).get('building', {}).get('legacyRoomIds', []))
     files.extend((source/'models/furniture').glob('*/metadata.json'))
     for path in files:
         destination = target/path.relative_to(source)

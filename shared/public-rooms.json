@@ -6,9 +6,9 @@
     "thumbnail": "/room-previews/empty-room.svg"
   },
   {
-    "id": "london-skyscraper-test",
+    "id": "london-skyscraper",
     "title": "The London skyscraper",
-    "description": "An unfurnished tower. Move between 32 floors and make each space your own.",
+    "description": "Start in the entrance lobby, then explore the mezzanine and 32 tower floors.",
     "thumbnail": "/room-previews/london-skyscraper.svg"
   }
 ]

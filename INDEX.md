@@ -19,7 +19,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Frontend
 
-- [Full skyscraper GLB test](docs/frontend/room-capture/skyscraper-glb-test.md) — preserved complete building, 32 measured floor contexts, existing floor arrows, public gallery/deployment, reference placement and agent context reader.
+- [Full skyscraper GLB test](docs/frontend/room-capture/skyscraper-glb-test.md) — preserved complete building, entrance lobby, mezzanine and 32 tower floors with measured outlines, existing floor arrows, public gallery/deployment, reference placement and agent context reader.
 
 - [Minimal supported placement plan](docs/frontend/3d-object/supported-placement-mvp-plan.md) — full-skyscraper test scene, explicit scale reference, floor-surface dragging, then table/cabinet placement with stable AI target references.
 

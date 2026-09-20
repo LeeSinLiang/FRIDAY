@@ -40,6 +40,18 @@ export function captureSpatialPlan(job: CaptureJob): CaptureResult {
   ctx.save();
   ctx.translate(originX, originY);
   ctx.scale(scale, scale);
+  const boundary = () => {
+    ctx.beginPath();
+    if (room.scan?.floorOutlineCm?.length) {
+      for (const polygon of room.scan.floorOutlineCm) for (const ring of [polygon.outer, ...polygon.holes]) {
+        ring.forEach(([x, z], index) => index ? ctx.lineTo(x, z) : ctx.moveTo(x, z));
+        ctx.closePath();
+      }
+    } else ctx.rect(0, 0, room.widthCm, room.depthCm);
+  };
+  ctx.save();
+  boundary();
+  ctx.clip("evenodd");
   // Unobserved space remains visibly unavailable, even when no obstacle is listed.
   ctx.fillStyle = "#d9d5cf";
   ctx.fillRect(0, 0, room.widthCm, room.depthCm);
@@ -77,9 +89,11 @@ export function captureSpatialPlan(job: CaptureJob): CaptureResult {
     if (!product) throw new CaptureError("invalid_snapshot", "A placed product is missing from the frozen snapshot");
     rect(instance.pose.xCm, instance.pose.zCm, product.widthCm, product.depthCm, instance.pose.yawRad, "#e8b18c", product.name);
   }
+  ctx.restore();
   ctx.strokeStyle = "#615448";
   ctx.lineWidth = 2 / scale;
-  ctx.strokeRect(0, 0, room.widthCm, room.depthCm);
+  boundary();
+  ctx.stroke();
   ctx.restore();
   ctx.font = "11px sans-serif";
   ctx.fillStyle = "#62594f";
