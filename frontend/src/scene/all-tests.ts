@@ -12,3 +12,5 @@ import "./useRoomSession.test";
 import "./playcanvas/angelMotion.test";
 
 import "./agentMotionSnapshot.test";
+
+import "./playcanvas/materialize.test";

@@ -163,3 +163,5 @@
 @supports not (backdrop-filter:blur(1px)){.splat-editor .glass{background:#fcf4e7;}}
 
 .splat-product-photo {width:100%;height:100%;object-fit:contain;border-radius:12px;}
+
+.splat-header a.splat-reset { color: inherit; text-decoration: none; }

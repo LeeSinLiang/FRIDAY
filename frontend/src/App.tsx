@@ -2,12 +2,14 @@ import { lazy, Suspense } from 'react'
 import { CartProvider } from './shopping/CartProvider'
 import RoomSelection, {rooms, RoomUnavailable} from './shopping/RoomSelection'
 
+const CartPreview = lazy(() => import('./checkout/CartPreview'))
 const Editor = lazy(() => import('./SplatEditor'))
 const Account = lazy(() => import('./auth/AccountApp'))
 const Legacy = lazy(() => import('./LegacyApp'))
 
 function Route() {
   const query = new URLSearchParams(location.search)
+  if (query.has('cartPreview')) return <CartPreview/>
   if (query.has('legacy') || query.has('testAssets')) return <Legacy/>
   if (location.pathname === '/' && (query.has('roomId') || query.has('room'))) return <Editor/>
   if (location.pathname === '/') return <Editor roomId="haussmann-apartment" shopping/>

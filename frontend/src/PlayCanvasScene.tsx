@@ -5,7 +5,7 @@ import { createSceneInteraction } from "./scene/playcanvas/interaction";
 import PlayCanvasCapture from "./scene/PlayCanvasCapture";
 import PerformancePanel from "./scene/playcanvas/PerformancePanel";
 
-type Props = {state:InteractionState;callbacks:InteractionCallbacks;resetKey:number;onStatus:(status:RuntimeStatus)=>void;onRuntime:(runtime:PlayCanvasRuntime|null)=>void};
+type Props = {captureEnabled?:boolean;state:InteractionState;callbacks:InteractionCallbacks;resetKey:number;onStatus:(status:RuntimeStatus)=>void;onRuntime:(runtime:PlayCanvasRuntime|null)=>void};
 export default function PlayCanvasScene(props:Props) {
   const canvas=useRef<HTMLCanvasElement>(null);
   const startedAt=useRef(0);
@@ -55,5 +55,5 @@ export default function PlayCanvasScene(props:Props) {
   },[roomKey]);
   useEffect(()=>{controller.current?.update(props.state);},[props.state]);
   useEffect(()=>{controller.current?.resetView();},[props.resetKey]);
-  return <><canvas ref={canvas} className="splat-canvas" aria-label="Interactive room. Click or press F to capture the pointer for Walk; press F or Escape to exit." tabIndex={0}/><PlayCanvasCapture runtime={runtime} enabled={ready}/>{perfEnabled && runtime && <PerformancePanel runtime={runtime} startedAt={startedAt.current}/>}</>;
+  return <><canvas ref={canvas} className="splat-canvas" aria-label="Interactive room. Click or press F to capture the pointer for Walk; press F or Escape to exit." tabIndex={0}/><PlayCanvasCapture runtime={runtime} enabled={ready && props.captureEnabled !== false}/>{perfEnabled && runtime && <PerformancePanel runtime={runtime} startedAt={startedAt.current}/>}</>;
 }

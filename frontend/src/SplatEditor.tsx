@@ -35,7 +35,7 @@ function PositionField({axis,value,disabled,commit}:{axis:"X"|"Z";value:number;d
   }}/>{error && <small>Enter a number</small>}</label>;
 }
 
-export default function SplatEditor({roomId, shopping = false}:{roomId?:string; shopping?:boolean}) {
+export default function SplatEditor({roomId, shopping = false, observation = false, onObservationReady}:{roomId?:string; shopping?:boolean; observation?:boolean; onObservationReady?:(ready:boolean)=>void} = {}) {
   const {cart, refresh} = useCart();
   const [active,setActive]=useState(false);
   const [mode,setMode]=useState<InteractionMode>("walk");
@@ -71,6 +71,7 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
   const selected=instances.find(i=>i.instanceId===selectedId);
   const product=products.find(p=>p.productId===(pendingProductId ?? selected?.productId));
   const ready=runtimeStatus.phase==="ready" && session.status==="ready";
+  useEffect(() => { onObservationReady?.(ready); }, [ready, onObservationReady]);
   const locked=active || session.status==="saving";
   const captureWalk=useCallback((fromFloorPlan=false)=>{
     const canvas=runtime.current?.canvas;
@@ -106,8 +107,8 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
   const callbacks:InteractionCallbacks=useMemo(()=>({onSelect:select,onCommit:commit,onPlace:place,onCancelPlacement:cancelPlacement,onPreview:setPreview,onActiveChange:setActive,onModelStatus,
     onSurfaceStatus:(status,message)=>setSurfaceNote(status==="error" ? message??"Surface reference could not load" : status==="loading" ? "Loading surface reference…" : message ?? "Surface reference ready"),
   }),[select,commit,place,cancelPlacement,onModelStatus]);
-  const state:InteractionState|null=useMemo(()=>room?({room,products,instances,selectedId,pendingProductId,editingEnabled:ready,snap,mode,view,retries,showSurface,agentMotion:snapshot?.agentMotion}):null,
-    [room,products,instances,selectedId,pendingProductId,ready,snap,mode,view,retries,showSurface,snapshot?.agentMotion]);
+  const state:InteractionState|null=useMemo(()=>room?({room,products,instances,selectedId,pendingProductId,editingEnabled:ready && !observation,snap,mode,view,retries,showSurface,agentMotion:snapshot?.agentMotion}):null,
+    [room,products,instances,selectedId,pendingProductId,ready,snap,mode,view,retries,showSurface,snapshot?.agentMotion,observation]);
   useEffect(()=>{if(selectedId && snapshot && !snapshot.instances.some(i=>i.instanceId===selectedId)){setSelectedId(null);setPreview(null);}},[snapshot,selectedId]);
   useEffect(()=>{if(!notice)return;const timeout=setTimeout(()=>setNotice(""),5500);return()=>clearTimeout(timeout);},[notice]);
   useEffect(()=>{
@@ -140,6 +141,7 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
   const remove=useCallback(async()=>{if(!selectedId||!ready||active)return;const ok=await session.submit({type:"remove",instanceId:selectedId});if(ok){setSelectedId(null);setPreview(null);setMode(view==="perspective"?"walk":"place");setPanel("catalogue");setPanelOpen(false);captureWalk();}},[selectedId,ready,active,session.submit,view,captureWalk]);
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{
+      if (observation) return;
       if(e.target instanceof Element && e.target.closest('input,textarea,select,[contenteditable="true"],dialog'))return;
       if(e.key==="Escape" && !e.repeat && !active){
         if(pendingProductId)cancelPlacement();
@@ -162,7 +164,7 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
       if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();void remove();}
     };
     window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key);
-  },[ready,active,pendingProductId,mode,pointerLocked,cancelPlacement,startWalk,stopWalk,session.undo,session.redo,remove,view]);
+  },[ready,active,pendingProductId,mode,pointerLocked,cancelPlacement,startWalk,stopWalk,session.undo,session.redo,remove,view,observation]);
   const choose=(item:Product)=>{
     if(!ready||locked)return;
     setShopSearchOpen(false);
@@ -177,6 +179,10 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
   const validLabel=preview?.valid ? "Fits test geometry" : preview?.reason;
   const tone=preview ? preview.valid?"valid":/unknown|unreviewed|unconfirmed|floor/i.test(preview.reason)?"unknown":"invalid" : "";
   const help=pendingProductId ? "Point at the floor · Click to place · Esc to cancel" : active ? "Release to place · Esc to cancel" : mode==="walk" ? pointerLocked ? "W A S D to walk · Move mouse to look · Click furniture to edit · F or Esc to stop" : "Click room or press F to capture pointer · Esc to stop Walk" : mode==="place"&&selected ? "Drag your furniture · F to walk" : "Drag to look around · F to walk · Choose furniture to begin";
+
+  if (observation) return <div className="splat-editor observation-room" aria-hidden="true" inert>
+    <div className="splat-room">{state && <Suspense fallback={null}><PlayCanvasScene captureEnabled={!observation} state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}</div>
+  </div>;
 
   return <main className={`splat-editor ${panelOpen?"has-panel":""}`}>
     <div className="splat-room" aria-label="First-person room editor">
@@ -197,6 +203,7 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
       <span className="splat-title">{room?.scan?.attribution.title ?? "Empty room"}<span>{room?.scan?.visualFormat === "glb" ? "Interior · mesh room" : "Living space"}</span></span>
       <span className={`splat-save save-${session.status}`} role="status">{session.status==="ready"?"Saved":session.status==="saving"?"Saving…":session.status==="loading"?"Connecting…":session.status==="conflict"?"Layout changed":"Disconnected"}</span>
       {(session.status==="offline"||session.status==="conflict")&&<button className="button" onClick={()=>void(session.status==="conflict"?session.reload():session.retry())}>{session.status==="conflict"?"Reload layout":"Retry"}</button>}
+      <a className="splat-reset" href="/?cartPreview" target="_blank" rel="noreferrer">Cart preview</a>
       <button className="splat-reset" disabled={!ready||locked||!!pendingProductId} onClick={()=>setResetKey(k=>k+1)}><Icon name="reset" size={18}/><span>Reset view</span></button>
     </header>
     <nav className="splat-view-controls" aria-label="Room views">
@@ -223,6 +230,7 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
         </div>
         <div className={`splat-placement-status ${tone}`} role="status"><span/>{validLabel || (pendingProductId?"Point at the floor":"Select Move to reposition")}</div>
         {pendingProductId?<button className="button splat-cancel" disabled={locked} onClick={()=>{cancelPlacement();captureWalk();}}>Cancel placement</button>:<button className="button splat-remove" disabled={!ready||locked} onClick={()=>void remove()}><Icon name="trash" size={17}/>Remove from room</button>}
+        {selectedId && !pendingProductId && <button className="button" disabled={!ready || locked || runtime.current?.capturing || statuses[selectedId] !== "ready"} onClick={() => window.dispatchEvent(new CustomEvent("friday:preview-furniture-materialize", { detail: { instanceId: selectedId } }))}>Preview summon</button>}
         <p className="splat-model-note">{product.modelUrl ? statuses[selectedId??""]==="error"?"Model unavailable · showing dimensions":statuses[selectedId??""]==="loading"?"Loading model…":"Separate, editable GLB" : "Furniture preview · final models coming soon"}</p>
         {selectedId&&statuses[selectedId]==="error"&&<button className="button" onClick={()=>setRetries(old=>({...old,[selectedId]:(old[selectedId]??0)+1}))}>Retry furniture model</button>}
       </> : <div className="splat-empty-properties"><Icon name="chair" size={32}/><p>Select a piece in the room or choose something new.</p><button className="button" onClick={()=>{setPanel("catalogue");setPanelOpen(true);}}>Browse furniture</button></div>}

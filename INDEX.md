@@ -90,3 +90,6 @@ Add dedicated feature docs here as they are created.
 - [Split-screen opening preview](docs/demo/split-screen-preview.md) — one video with wheelchair-user and responder panes, alternating dialogue, editable Higgsedit composition and export QA.
 - [One-shot demo script](docs/demo/twenty-second-treatment.md) — one Higgsfield generation with seamless location transition, unfolding equal panes, speaking iris and room materialization; Mini duration constraint noted.
 - [FRIDAY iris logo concepts](docs/demo/friday-logo-concepts.md) — three icon-only film variations, earlier wordmark explorations, site header mockup, saved PNGs and exact Codex image-generation prompts.
+
+- [Shopping cart dispatch preview](docs/frontend/shopping-cart-animation.md) — Hands-off agent choreography over the Gaussian room, origami dispatch, developer replay and demo-only events.
+- [Furniture materialization](docs/frontend/furniture-materialization.md) — spatial-agent add animation, preview event, unchanged placement and static captures.
