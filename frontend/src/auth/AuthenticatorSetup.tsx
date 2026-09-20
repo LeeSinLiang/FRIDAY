@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { assertSuccess, auth } from './api'
+import { assertSuccess, auth, request } from './api'
 import { useAuth } from './AuthProvider'
 
 export default function AuthenticatorSetup({ onRecovery, onComplete }: { onRecovery: () => void; onComplete: () => void }) {
@@ -53,7 +53,7 @@ export default function AuthenticatorSetup({ onRecovery, onComplete }: { onRecov
       <p>Your authenticator is connected. Keep your recovery codes somewhere private so you can sign in if you lose your phone.</p>
       {codes === null ? <button disabled={busy} onClick={() => run(recoveryCodes)}>Show recovery codes</button> : <>
         {codes.length ? <div className="recovery"><p>Each code works once. Save them before leaving this page.</p><ul>{codes.map(value => <li key={value}><code>{value}</code></li>)}</ul></div> : <p>These codes were already displayed. You can generate replacements from account security after confirming your identity.</p>}
-        <button disabled={busy} onClick={onComplete}>{codes.length ? 'I saved my recovery codes — continue' : 'Continue to my account'}</button>
+        <button disabled={busy} onClick={()=>void run(async()=>{assertSuccess(await request('/api/accounts/recovery/acknowledge/','POST',{acknowledged:true}));await refresh();onComplete();})}>{codes.length ? 'I saved my recovery codes — continue' : 'I have saved my recovery codes — continue'}</button>
       </>}
     </> : secret ? <>
       <p>Open your authenticator app, add an account and scan this QR code. Then enter the current six-digit code from its FRIDAY entry to finish connecting it.</p>

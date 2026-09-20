@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => {
       port: Number(env.FRONTEND_PORT || 5173),
       strictPort: true,
       proxy: {
+        "/_allauth": { target: `http://127.0.0.1:${env.BACKEND_PORT || 8000}`, changeOrigin: false },
         "/api": {
           target: `http://127.0.0.1:${env.BACKEND_PORT || 8000}`,
           // Preserve the browser Host so Django can verify same-origin CSRF.

@@ -188,11 +188,23 @@ listings change sits in an open PR the check on that branch will say DISAGREE, a
 `GET /api/search` **aggregates over the whole catalogue and returns only listings that have a `model_url`.** The facets, `fits_room` and `fits_room_of` are computed over every match, so "524 of 1,006 armchairs fit your room" is a statement about 12,000 listings and does not shrink. Only `items` and `total` are narrowed: `total` is the number of listings that can be returned and paged through, always equal to what paging over `items` yields.
 
 - In Elasticsearch the narrowing is `post_filter`, which runs after aggregation: `{"exists": {"field": "model_url"}}`, combined with the width gap when there is one. `model_url` is mapped `keyword` with `index: false`, but doc values are on, so `exists` works on it. The memory backend filters after faceting, and the two agree.
-- **One line to flip back:** `SEARCH_RESULTS_REQUIRE_MODEL=0` in `.env`. Default is ON; empty counts as ON. Every response says which applied in `X-Search-Results: with-model | all`.
+- **One line in `.env`, three settings:** `SEARCH_RESULTS_REQUIRE_MODEL=1` returns only listings with a model (the default, also when empty or unset); `=boost` returns **everything, with those listings first**, the way a shop puts what is in stock at the top, which is the fallback if too few listings have models to make a list look like a store; `=0` is plain order. Every response says which applied in `X-Search-Results: with-model | model-first | all`. In boost mode the panel reads "1,006 matches · 1 ready in 3D, shown first".
+- Boosting is a `should` clause (`constant_score` on `exists(model_url)`, boost 1000, far above any text score) so text relevance still orders each group. **An empty search needs a `match_all` beside it:** a boolean query with nothing required matches only documents that satisfy an optional clause, whatever `minimum_should_match` says. That was found on the live index (an empty boosted search returned 7 of 12,045) after a unit test had pinned the wrong belief.
 - Every match is still countable from the response without a new field: the category facet sums to it. The catalogue panel uses that to read "392 matches in the catalogue · 1 ready in 3D".
 - The pure functions (`memory.search`, `es.search`, `to_es_query`) take `models_only` and default to `False`; the flag is read once, in `catalogue/views.py`.
 
 On 2026-09-20 five listings have models (mirror, chair, armchair, table, bed), so the hero sentence (an armchair under $400) returns **one** hit. The list reads as a store once there are about ten armchairs with models under $400; that is the asset lane's target, and nothing here needs to change when they land, apart from a re-ingest.
+
+## A price of 0 means unknown, not free
+
+`Listing.price_cents` is a required integer, so a listing whose price nobody knows carries **0** (the Amazon Berkeley Objects listings: real products, real models, no price). Zero is not a price (`catalogue/pricing.py`):
+
+- It **never satisfies a price filter**, in either direction. `price_max` is `1 <= price <= max`; `price_min` is `price >= max(min, 1)`. "Armchairs under $400" is a claim about a price we would have to know.
+- It is **in no price band**. The memory backend skips it when counting bands, and the Elasticsearch range aggregation's first band starts at 1 cent with its key still `0-10000`. It is still counted by category, so with unpriced matches the bands sum to less than the category facet, which is correct.
+- It is **never shown as `$0`**: the catalogue panel and the dev page print "price unavailable" (`frontend/src/catalogue/price.ts`).
+- With no price clause it is found like anything else.
+
+Before this rule a probe with one sofa at `price_cents: 0` was returned by `price_max=40000`, moved the `0-10000` band from 0 to 1, and its card read `$0`; `catalogue/test_unknown_price.py` replays exactly that. After ingesting unpriced listings, `ELASTIC_LIVE_TEST=1 uv run python manage.py test catalogue.test_unknown_price` checks that memory and the live index still agree on six price queries.
 
 ## Catalogue size
 

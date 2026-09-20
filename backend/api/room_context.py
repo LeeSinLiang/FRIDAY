@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 
 from django.conf import settings
+from .shared_data import shared_root
 
 ROOM_ID = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$')
 
@@ -22,7 +23,7 @@ def prepared_room(room_id):
     from .scene_service import SceneError
     if not isinstance(room_id, str) or not ROOM_ID.fullmatch(room_id):
         raise SceneError('unknown_room', 'Use a known prepared room ID.', 404)
-    root = (Path(settings.BASE_DIR).parent / 'shared' / 'rooms').resolve()
+    root = (shared_root() / 'rooms').resolve()
     directory = (root / room_id).resolve()
     if directory.parent != root or not (directory / 'manifest.json').is_file():
         raise SceneError('unknown_room', 'Prepared room not found.', 404)
