@@ -6,7 +6,10 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## In progress
 
-- None. Next, each off fresh `main`: catalogue products placeable in a scene; floor overlay on the Three.js scene; Deepgram transcription.
+- **Floor overlay and catalogue placement in the real app** on `codex/saketh-floor-overlay`, off fresh `main`. Halfway check-in reached: hovering a catalogue item lights the floor in the running app. Placement is wired but not yet verified in a browser.
+  - New: `frontend/src/region/FloorOverlay.tsx` (the only renderer-specific file: one plane, the mask as a single-channel `DataTexture`, a small shader; mask in, pose out), `frontend/src/region/useRegion.ts` (debounced hover → solve, stale results discarded), `frontend/src/catalogue/{api.ts,CatalogueShelf.tsx,shelf.css}` (sentence → `/api/compile` → `/api/search`, results, status, dropped clauses).
+  - Sin's files touched, additively: `frontend/src/Scene.tsx` (optional `overlay` slot, one line rendered), `frontend/src/App.tsx` (shelf, region state, place handler, R to rotate, Esc to cancel). The modal fixture picker is unchanged and remains the offline fallback.
+  - Verified so far: build OK, 57 frontend tests OK; in headless Chrome with software WebGL the app's shelf compiled "an armchair" → chip `armchair` → 1,005 matches, and hovering POÄNG lit 8,961 legal centres on the floor (screenshot taken). First contact between the app UI and `/api/search` + `/api/compile`: the shapes agreed, no adapter needed.
 
 ## Next
 

@@ -30,6 +30,8 @@ type Props = {
   retries: Record<string, number>;
   interactionActive: boolean;
   onPerformanceSample?: (sample: PerformanceSample) => void;
+  /** Extra scene content drawn above the floor, e.g. the placement region. */
+  overlay?: ReactNode;
 };
 class SceneBoundary extends Component<
   { children: ReactNode },
@@ -110,6 +112,7 @@ function Contents(props: Props) {
         onFloorClick={() => props.onSelect(null)}
       />
       <Grid room={ROOM} />
+      {props.overlay}
       {props.instances.map((instance) => {
         const product = props.products.find(
           (p) => p.productId === instance.productId,
