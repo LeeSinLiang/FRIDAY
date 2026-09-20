@@ -154,3 +154,11 @@ Two additions, from Saketh. Please read the new "Merging close to the demo" sect
 - It does not replace running the suite on fresh `main` after you merge. CI tests your PR against the `main` it was cut from.
 - `npm test` is now the whole frontend suite (it used to skip the two auth test files), and the backend suite is `manage.py test` with **no labels** (`test api catalogue` skips three apps). README has the three commands.
 - When you report a result, name the command and quote its output line, e.g. "`python manage.py test` → Ran 217 tests in 6.951s / OK (skipped=3)", not "tests pass".
+
+## Note from Saketh's lane — a rare, real race in the TOTP test helper (2026-09-20, 01:40)
+
+Not changed by me; it is your test code. It matters now because CI runs on every PR and this will show up as an occasional red X that is nobody's fault.
+
+- **Seen:** `manage.py test` → `Ran 221 tests in 13.755s / FAILED (failures=1, skipped=3)` on a docs-only branch: `checkout.tests.CheckoutWorkflowTests.test_expired_approval_and_modified_snapshot_rejected`, failing inside `accounts/tests.py` `enrolled()` with `400 {"message": "Incorrect code.", "code": "incorrect_code"}`. The same code, run again: `Ran 221 tests in 12.344s / OK (skipped=3)`; that test alone: `Ran 1 test in 0.385s / OK`.
+- **Mechanism, from the code:** `totp(secret)` computes `int(time.time()) // 30` when the test calls it; the server checks the code against its own clock a few milliseconds later, and no step tolerance is configured (`MFA_TOTP_TOLERANCE` is not set, so it is 0). If a 30-second boundary falls between those two moments, the test's code is one step old and is refused. Roughly 0.1% per TOTP submission, a few percent per full run; one hit in about twenty-five runs tonight fits.
+- **Suggested fix, test-only, your call:** either `@override_settings(MFA_TOTP_TOLERANCE=1)` on `AccountTestCase` (allauth then accepts the neighbouring step), or have `totp()` wait out the boundary: `if time.time() % 30 > 29: time.sleep(1.1)` before computing. The first is one line and does not slow anything.
