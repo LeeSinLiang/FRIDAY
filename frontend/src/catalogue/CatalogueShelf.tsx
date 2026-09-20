@@ -11,7 +11,7 @@ import { compileSentence, searchCatalogue, type Compiled } from "./api";
 import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend } from "./transcribe";
 import "./shelf.css";
 import { priceLabel } from "./price";
-import { isDesignerRequest } from "../scene/designerIntent";
+import { designerInstruction, isDoItNowCue } from "../scene/designerIntent";
 
 type Props = {
   roomId?: string;
@@ -94,6 +94,8 @@ export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex
     }
   }, [designMessage]);
   const request = useRef<AbortController | null>(null);
+  const lastPrompt = useRef("");
+  const lastExecuted = useRef("");
   const [voice, setVoice] = useState<TranscribeBackend>("browser");
   const [listening, setListening] = useState<Listening | null>(null);
   const [heardBy, setHeardBy] = useState<Heard | null>(null);
@@ -105,9 +107,15 @@ export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex
     setBusy(true);
     setDesignerReply("");
     try {
-      if (onDesign && isDesignerRequest(text)) {
+      const instruction = designerInstruction(text, lastPrompt.current);
+      if (isDoItNowCue(text) && (!instruction || instruction === lastExecuted.current)) {
+        setError(instruction ? "That placement was already requested. Describe the next change." : "Describe what to place, then say ‘do it now’.");
+        return;
+      }
+      if (onDesign && instruction) {
         onHover(null); onPick(null); onPlace([]); setError(""); setCompiled(null);
-        const reply = await onDesign(text);
+        const reply = await onDesign(instruction);
+        if (reply.startsWith("Layout saved.")) lastExecuted.current = instruction;
         if (request.current === controller && !controller.signal.aborted) setDesignerReply(reply);
         return;
       }
@@ -136,7 +144,10 @@ export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex
       const heard = await session.result;
       setHeardBy(heard);
       const text = heard.text.trim();
-      if (text) { setSentence(text); onPick(null); void run(text); }
+      if (text) {
+        if (!isDoItNowCue(text)) { lastPrompt.current = text; setSentence(text); }
+        onPick(null); void run(text);
+      }
       else setError("Didn’t catch that. Try again, or type it.");
     } catch (caught) {
       setError((caught as Error).message);
@@ -166,10 +177,10 @@ export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex
         </nav>
       )}
       <form onSubmit={submit}>
-        <input value={sentence} onChange={(event) => setSentence(event.target.value)} maxLength={300}
+        <input value={sentence} onChange={(event) => { setSentence(event.target.value); if (!isDoItNowCue(event.target.value)) lastPrompt.current=event.target.value; }} maxLength={300}
           aria-label="Describe what you are looking for" placeholder={onDesign ? "Find a chair, or place a chair beside the table" : "a reading chair by the window, under $400"} />
         {canListen(voice) && (
-          <button type="button" className="mic" onClick={() => void talk()} aria-pressed={listening !== null}
+          <button type="button" className="mic" onClick={() => void talk()} disabled={busy && !listening} aria-pressed={listening !== null}
             aria-label={listening ? "Stop listening" : "Say what you are looking for"} title={listening ? "Stop" : "Speak"}>
             {listening ? "■" : "🎙"}
           </button>

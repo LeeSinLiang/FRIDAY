@@ -130,6 +130,7 @@ def remove_object(ctx: RunContextWrapper[DesignState], reference_id: str) -> dic
 
 TOOLS = [inspect_scene, inspect_object, measure_objects, capture_view, search_models, find_floor_positions, place_relative, place_on_floor, place_supported, remove_object]
 INSTRUCTIONS = """You are FRIDAY's scene designer. Perform the user's explicitly requested layout edits in the current room.
+The phrase 'do it now' signals an immediate scene action when paired with a concrete request. It is not a product or object reference. A phrase alone without an actionable object or layout goal calls for clarification and no edit.
 First inspect_scene. Use stable reference IDs, never names as IDs. Inspect dimensions of referenced objects.
 You receive real before-edit perspective and top images. Use capture_view for target-focused views and staged previews, and measure_objects for exact distances. Images carry projected identity boxes, which may be occluded; resolve IDs with structured context rather than guessing from pixels.
 For 'this/that/it', use the verified selection; if several objects match and no selection resolves it, ask a concise question and stage nothing.
