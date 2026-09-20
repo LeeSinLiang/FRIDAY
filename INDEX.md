@@ -99,5 +99,5 @@ Add dedicated feature docs here as they are created.
 - [One-shot demo script](docs/demo/twenty-second-treatment.md) — one Higgsfield generation with seamless location transition, unfolding equal panes, speaking iris and room materialization; Mini duration constraint noted.
 - [FRIDAY iris logo concepts](docs/demo/friday-logo-concepts.md) — three icon-only film variations, earlier wordmark explorations, site header mockup, saved PNGs and exact Codex image-generation prompts.
 
-- [Shopping cart dispatch preview](docs/frontend/shopping-cart-animation.md) — Hands-off agent choreography over the Gaussian room, origami dispatch, developer replay and demo-only events.
+- [Cart choreography](docs/frontend/shopping-cart-animation.md) — The cart preview folded into `/cart`: the shopper's real pieces gather under the checkout button; nothing on sign-in, authenticator or review; reduced motion; the StrictMode trap; the retired standalone preview as history.
 - [Furniture materialization](docs/frontend/furniture-materialization.md) — spatial-agent add animation, preview event, unchanged placement and static captures.
