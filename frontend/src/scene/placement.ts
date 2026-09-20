@@ -25,6 +25,13 @@ function footprint(product: Product, pose: Pose): Footprint {
     extentZ: Math.abs(s) * half[0] + Math.abs(c) * half[1] };
 }
 const dot = (a: Axis, b: Axis) => a[0] * b[0] + a[1] * b[1];
+/** A rug does not stop a chair. An item this low is floor covering, not an obstacle: it neither blocks other
+ *  items nor is blocked by them, so furniture can stand on a rug and a rug can go under furniture that is already
+ *  there. It must still lie inside the room and its verified floor, and clear of fixed obstacles.
+ *  KEEP IN STEP with FLAT_MAX_CM in backend/api/scene_service.py, or the editor accepts what the server refuses. */
+export const FLAT_MAX_CM = 3;
+const isFlat = (product: Product): boolean => product.heightCm <= FLAT_MAX_CM + EPSILON_CM;
+
 function overlaps(a: Footprint, b: Footprint): boolean {
   const delta: Axis = [b.x - a.x, b.z - a.z];
   for (const axis of [...a.axes, ...b.axes]) {
@@ -120,6 +127,7 @@ export function validatePlacement(room: Room, products: Product[], instances: In
     if (other.instanceId === instanceId) continue;
     const otherProduct = productOf(other, products);
     if (!otherProduct || !validProduct(otherProduct) || !validPose(other.pose)) return invalid("Cannot validate an existing object");
+    if (isFlat(product) || isFlat(otherProduct)) continue;
     if (overlaps(target, footprint(otherProduct, other.pose))) {
       collidingIds.push(other.instanceId);
       names.push(otherProduct.name);
