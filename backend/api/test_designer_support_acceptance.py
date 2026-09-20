@@ -141,6 +141,35 @@ class DesignerSupportAcceptanceTests(TestCase):
                     # Float32 exports introduce sub-micrometre edge differences.
                     self.assertAlmostEqual(area, target['widthCm']*target['depthCm'], places=3)
 
+    def test_catalogue_tabletops_are_covered_by_the_packaged_glb(self):
+        profiles = json.loads((ROOT/'placement-profiles.json').read_text())['profiles']
+        catalogue_tops = [profile for profile in profiles if profile['productId'].startswith('abo-')]
+        self.assertGreaterEqual(len(catalogue_tops), 15)
+        for profile in catalogue_tops:
+            with self.subTest(product=profile['productId']):
+                product = catalogue_product(profile['productId'])
+                self.assertEqual(profile_of(product), profile)
+                binary, triangles = glb_triangles(profile['productId'])
+                self.assertEqual(hashlib.sha256(binary).hexdigest(), profile['modelSha256'])
+                target = profile['targets'][0]
+                self.assertEqual(target['yCm'], product['heightCm'])
+                plane = [triangle for triangle in triangles
+                         if all(abs(vertex[1]-target['yCm']) < .0005 for vertex in triangle)]
+                self.assertTrue(plane)
+                self.assertAlmostEqual(sum(clipped_area(triangle, target) for triangle in plane),
+                                       target['widthCm']*target['depthCm'], places=3)
+
+    def test_haussmann_catalogue_table_accepts_a_supported_lamp(self):
+        state = DesignState(serialize(scene_for_session('haussmann-catalogue-top', 'haussmann-apartment')),
+                            'haussmann-catalogue-top')
+        table_id = 'abo-B075YQXRJM'
+        table = state.stage(table_id, state.candidates(table_id)[0])['object']
+        top = next(target for target in state.support_references()
+                   if target['parentInstanceId'] == table['referenceId'])
+        lamp = state.supported('pc-workspace-lamp', top['referenceId'], 'on', top['profileRevision'])['object']
+        self.assertEqual(lamp['parentReferenceId'], table['referenceId'])
+        self.assertEqual(lamp['pose']['yCm'], 72.4)
+
     def test_demo_cabinet_shelves_and_cavity_are_backed_by_exact_authored_panels(self):
         cabinet = next(p for p in room_context()['products'] if p['productId'] == 'support-demo-cabinet')
         profile = profile_of(cabinet)

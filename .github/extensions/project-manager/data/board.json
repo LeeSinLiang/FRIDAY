@@ -167,6 +167,12 @@
           "title": "Write collaborator realistic GLB production handoff",
           "done": true,
           "owner": "sin"
+        },
+        {
+          "id": "902bbf79-7655-4af7-a2ff-534911238f17",
+          "title": "Restore reviewed tabletop placement and purchase review in Haussmann",
+          "done": true,
+          "owner": "william"
         }
       ]
     },

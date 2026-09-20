@@ -65,3 +65,5 @@ Condensed on 2026-09-20. Keep this file to current status, evidence, blockers, a
 - Older design references, research notes, merge details, and repeated test checkpoints were intentionally folded into the linked documentation and repository history to keep this work log operational.
 
 - New Flux/configurable TTS upgrade explicitly deferred by owner to ship the working release. Prior GPT-Transcribe STT and Deepgram Athena TTS retained; no physical microphone test or actual sandbox approval claimed.
+
+- Merge conflict resolution: retained both Sin/William board cards and remote reviewed tabletop/purchase UI while preserving new draft guards and voice command registration in `SplatCatalogueLayer.tsx`. Remote nonconflicting support/interaction updates remain intact. Verification: `npm run build` → `built in 2.58s`; whitespace clean. Full post-merge tests/browser rehearsal deferred per owner. User retains push; no remote operation performed.

@@ -8,10 +8,12 @@ import type { Listing } from "../lib/types";
 import { instanceFromListing } from "../region/boundary";
 import { openingsFor, portalsFor } from "../region/roomOpenings";
 import { useRegion } from "../region/useRegion";
-import { attachmentTarget, attachAt, moveWithAttachments, resolveAttachments } from "../scene/supports";
+import { attachmentTarget, attachAt, resolveAttachments } from "../scene/supports";
 import { validatePlacement } from "../scene/placement";
+import { rayFromScreen } from "../scene/playcanvas/interaction";
+import { pickSupport } from "../scene/playcanvas/supportPicking";
 import { createPendingGhost, type PendingGhost } from "../scene/playcanvas/pendingGhost";
-import { cardPrice } from "./cardCopy";
+import { cardCopy, cardPrice } from "./cardCopy";
 import { createRegionOverlay, type RegionOverlay } from "../scene/playcanvas/regionOverlay";
 import type { PlayCanvasRuntime } from "../scene/playcanvas/runtime";
 import type { Instance, Product, Room, SceneEdit } from "../scene/types";
@@ -20,7 +22,6 @@ import CatalogueShelf from "./CatalogueShelf";
 import type { VoicePhase } from "./transcribe";
 import type { VoiceCommand } from "./wakeVoice";
 import { saveQuietly } from "./quietSave";
-import { FREE } from '../region/types';
 
 type Props = {
   /** The engine handle, once it exists. Read lazily: the editor keeps it in a ref. */
@@ -134,11 +135,20 @@ export default function SplatCatalogueLayer({ getRuntime, room, sceneRevision, p
       const looked = press.current?.looked ?? false;
       press.current = null;
       if (looked) return;
-      const pose = overlay.current?.poseAt(event.clientX, event.clientY);
-      if (!pose) return; // outside the lit region: nothing happens, and that is the message
-      const instance = supportedInstance(armed, crypto.randomUUID(), pose);
-      const verdict = validatePlacement(room, [...known, instance.product!], [...standing, instance], instance.instanceId, pose);
-      if (!verdict.valid) { console.error("region solver lit a pose the editor refuses", pose, verdict.reason); return; }
+      const runtime = getRuntime();
+      const ray = runtime && place.length === 0 ? rayFromScreen(runtime, event.clientX, event.clientY) : null;
+      const picked = ray ? pickSupport(ray, standing, known, region?.solution.masks[yawIndex]?.yawRad ?? 0, true) : null;
+      // Explicit on/inside clauses still use their proven region mask. Ordinary card browsing may target a reviewed
+      // tabletop; an unreviewed piece never gains an invented support just because its silhouette was clicked.
+      const support = picked?.attachment ? picked : null;
+      const pose = support?.pose ?? overlay.current?.poseAt(event.clientX, event.clientY);
+      if (!pose) return;
+      let instance = support
+        ? { ...instanceFromListing(armed, crypto.randomUUID(), pose), attachment: support.attachment }
+        : supportedInstance(armed, crypto.randomUUID(), pose);
+      if (support) instance = resolveAttachments([...standing, instance], [...known, instance.product!]).at(-1)!;
+      const verdict = validatePlacement(room, [...known, instance.product!], [...standing, instance], instance.instanceId, instance.pose);
+      if (!verdict.valid) { onNotice?.(verdict.reason ?? "This item does not fit there"); return; }
       const listing = armed;
       setArmed(null); setHovered(null);
       // On the floor at once, and it stays there through a storage hiccup. Only a definite refusal removes it.
@@ -168,7 +178,7 @@ export default function SplatCatalogueLayer({ getRuntime, room, sceneRevision, p
       canvas.removeEventListener("pointerdown", onDown, true);
       canvas.removeEventListener("pointermove", onMove, true);
     };
-  }, [armed, getRuntime, standing, known, locked, ready, onNotice, room, submit, retry, shopping, region, yawIndex]);
+  }, [armed, getRuntime, standing, known, locked, ready, onNotice, room, submit, retry, shopping, region, yawIndex, place]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -193,19 +203,10 @@ export default function SplatCatalogueLayer({ getRuntime, room, sceneRevision, p
       } else onNotice?.('Placement not confirmed. Check the room status and retry.');
     } finally {setSaving(false);}
   }
-  function previewSuggested() {
-    const mask = region?.solution.masks[yawIndex];
-    if (!armed || !mask) return;
-    const index = mask.data.findIndex(value=>value===FREE);
-    if (index<0) return;
-    const pose = {xCm:mask.originCm[0]+(index%mask.shape[0])*mask.cellSizeCm,zCm:mask.originCm[1]+Math.floor(index/mask.shape[0])*mask.cellSizeCm,yawRad:mask.yawRad};
-    const instance = supportedInstance(armed,crypto.randomUUID(),pose);
-    setUnconfirmed(instance);setPurchase(armed);setArmed(null);setHovered(null);ghost.current?.show(instance.product!,instance.pose);
-  }
-  function adjustPreview(axis:'xCm'|'zCm'|'yawRad',value:number) {
-    if (!unconfirmed || !Number.isFinite(value)) return;
-    const next = moveWithAttachments([...instances,unconfirmed],[...known,unconfirmed.product!],unconfirmed.instanceId,{...unconfirmed.pose,[axis]:value}).at(-1)!;
-    setUnconfirmed(next);ghost.current?.show(next.product!,next.pose);
+  function chooseAnotherSpot() {
+    if (!purchase || saving || locked || status !== 'ready') return;
+    const listing = purchase;
+    ghost.current?.hide(); setUnconfirmed(null); setPurchase(null); setArmed(listing); setHovered(listing);
   }
   const verdict = unconfirmed ? validatePlacement(room,known,[...instances,unconfirmed],unconfirmed.instanceId,unconfirmed.pose) : null;
   const purchasePrice = purchase ? cardPrice(purchase.price_cents) : null;
@@ -222,15 +223,20 @@ export default function SplatCatalogueLayer({ getRuntime, room, sceneRevision, p
       onDesign={requestDesign} registerVoiceCommand={registerVoiceCommand}/>, shelfTarget) : showShelf && <CatalogueShelf roomId={room.roomId} sceneRevision={sceneRevision} region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || draftMode || !!unconfirmed} purchasableOnly={shopping}
       canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} onClose={onCloseShelf} designMessage={designMessage}
       onDesign={requestDesign} registerVoiceCommand={registerVoiceCommand}/>}
-    {shopping && armed && <section className="purchase-confirm" aria-label="Preview furniture"><p>Click the lit floor, or use a suggested position.</p><button className="button" disabled={!ready || locked || !fitting.length} onClick={previewSuggested}>Preview a fitting position</button><button className="button" onClick={()=>setArmed(null)}>Cancel</button></section>}
-    {shopping && purchase && unconfirmed && <section className="purchase-confirm" aria-label="Confirm furniture placement">
-      <p className="eyebrow">Placement preview</p><h2>{purchase.title}</h2><p>{purchasePrice ? `${purchasePrice} USD` : "Price unavailable"} · sandbox</p>
-      <p>{purchase.dims_mm.w/10} × {purchase.dims_mm.d/10} × {purchase.dims_mm.h/10} cm</p>
-      <div className="coordinate-row">{(['xCm','zCm'] as const).map(axis=><label key={axis}>{axis==='xCm'?'X':'Z'} position (cm)<input type="number" step="5" value={unconfirmed.pose[axis]} disabled={saving || locked || status!=='ready'} onChange={e=>adjustPreview(axis,Number(e.target.value))}/></label>)}</div>
-      <button className="button" disabled={saving || locked || status!=='ready'} onClick={()=>adjustPreview('yawRad',unconfirmed.pose.yawRad+Math.PI/2)}>Rotate preview 90°</button>
-      <p role="status">{verdict?.valid?'Fits here. Confirm to save this piece and add it to your cart.':verdict?.reason}</p>
-      <button className="button confirm-primary" disabled={saving || locked || status==='conflict' || !verdict?.valid} onClick={()=>void confirmPurchase()}>{saving?'Confirming…':status==='offline'?'Retry confirmation':'Confirm placement'}</button>
-      <button className="button secondary" disabled={saving || locked || status==='offline'} onClick={()=>{ghost.current?.hide();setUnconfirmed(null);setPurchase(null);}}>Cancel preview</button>
+    {shopping && purchase && unconfirmed && <section className="purchase-confirm" aria-label="Confirm furniture for cart">
+      <p className="eyebrow">Review this item</p><h2>{cardCopy(purchase).name}</h2>
+      <dl className="purchase-details">
+        <div><dt>Item number</dt><dd>{purchase.id}</dd></div>
+        <div><dt>Provider</dt><dd>{cardCopy(purchase).provider}</dd></div>
+        <div><dt>Quantity</dt><dd>1</dd></div>
+        <div><dt>Item price</dt><dd>{purchasePrice ? `${purchasePrice} USD` : "Price unavailable"}</dd></div>
+        <div><dt>Tax</dt><dd>Not calculated in sandbox</dd></div>
+      </dl>
+      <p className="purchase-note">Adding this item saves its location in the room and cart. It does not place an order.</p>
+      {!verdict?.valid && <p role="alert">{verdict?.reason}</p>}
+      <button className="button confirm-primary" disabled={saving || locked || status==='conflict' || !verdict?.valid} onClick={()=>void confirmPurchase()}>{saving?'Confirming…':status==='offline'?'Retry confirmation':'Add to cart'}</button>
+      <button className="button secondary" disabled={saving || locked || status!=='ready'} onClick={chooseAnotherSpot}>Choose another spot</button>
+      <button className="button secondary" disabled={saving || locked || status==='offline'} onClick={()=>{ghost.current?.hide();setUnconfirmed(null);setPurchase(null);}}>Cancel</button>
     </section>}
   </>;
 }
