@@ -178,7 +178,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   const updatePose=(patch:Partial<Pose>)=>selected?commit(selected.instanceId,{...selected.pose,...patch}):Promise.resolve(false);
   const validLabel=preview?.valid ? "Fits test geometry" : preview?.reason;
   const tone=preview ? preview.valid?"valid":/unknown|unreviewed|unconfirmed|floor/i.test(preview.reason)?"unknown":"invalid" : "";
-  const help=pendingProductId ? "Point at the floor · Click to place · Esc to cancel" : active ? "Release to place · Esc to cancel" : mode==="walk" ? pointerLocked ? "W A S D to walk · Move mouse to look · Click furniture to edit · F or Esc to stop" : "Click room or press F to capture pointer · Esc to stop Walk" : mode==="place"&&selected ? "Drag your furniture · F to walk" : "Drag to look around · F to walk · Choose furniture to begin";
+  const help=pendingProductId ? "Point at the floor · Click to place · Esc to cancel" : active ? "Release to place · Esc to cancel" : mode==="walk" ? pointerLocked ? "W A S D to walk · Space to jump · Shift to sprint · F or Esc to stop" : "Click room or press F to capture pointer · Space to jump" : mode==="place"&&selected ? "Drag your furniture · F to walk" : "Drag to look around · F to walk · Choose furniture to begin";
 
   if (observation) return <div className="splat-editor observation-room" aria-hidden="true" inert>
     <div className="splat-room">{state && <Suspense fallback={null}><PlayCanvasScene captureEnabled={!observation} state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}</div>
@@ -214,9 +214,9 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
       <button className={`glass splat-walk ${mode==="walk"?"is-active":""}`} aria-pressed={mode==="walk"} disabled={!ready||locked||view==="top"||!!pendingProductId} onClick={()=>pointerLocked?stopWalk():startWalk()}><Icon name="move" size={17}/>{pointerLocked?"Stop walking":mode==="walk"?"Capture pointer":"Walk"}</button>
     </nav>
     {view==="top"&&<div className="glass splat-plan-label">Schematic floor plan · shaded areas are unreviewed</div>}
-    <button type="button" className={`splat-panel-toggle ${panelOpen?"is-open":"is-collapsed"}`} aria-label={panelOpen?"Collapse furniture panel":"Expand furniture panel"} aria-controls="furniture-panel" aria-expanded={panelOpen} disabled={!ready||locked} onClick={()=>setPanelOpen(open=>!open)}><Icon name="chevron" size={20}/></button>
-    <aside id="furniture-panel" className={`glass splat-panel ${panel==="catalogue"?"is-catalogue":""} ${panelOpen?"":"is-collapsed"}`} aria-label={panel==="catalogue"?"Furniture catalogue":"Furniture properties"} aria-hidden={!panelOpen} inert={!panelOpen}>
-      {panel==="catalogue" ? <FurnitureCatalogue products={products} ready={ready} locked={locked} onChoose={choose} onOpenLiveCatalogue={()=>{setPanelOpen(false);setMode("explore");setShopSearchOpen(true);}}/> : <>
+    <button type="button" className={`splat-panel-toggle ${panelOpen?"is-open":"is-collapsed"}`} aria-label={panelOpen?"Collapse furniture panel":"Expand furniture panel"} aria-controls="furniture-panel" aria-expanded={panelOpen} disabled={!ready||locked} onClick={()=>{if(panelOpen)setPanel("catalogue");setPanelOpen(open=>!open);}}><Icon name="chevron" size={20}/></button>
+    <aside id="furniture-panel" className={`glass splat-panel ${panel==="catalogue"?"is-catalogue":""} ${panelOpen?"":"is-collapsed"}`} aria-label={panel==="catalogue"?"Furniture catalogue":"Furniture properties"}>
+      {panel==="catalogue" ? <FurnitureCatalogue products={products} ready={ready} locked={locked} onChoose={choose} onOpenLiveCatalogue={()=>{setPanelOpen(false);setMode("explore");setShopSearchOpen(true);}} collapsed={!panelOpen} onExpand={()=>setPanelOpen(true)}/> : <>
       <div className="splat-panel-heading"><h1>Your furniture</h1></div>
       {product ? <>
         <button className="splat-back" disabled={locked||!!pendingProductId} onClick={()=>{setPanel("catalogue");setPanelOpen(true);}}><Icon name="chevron" size={14}/>All furniture</button>
