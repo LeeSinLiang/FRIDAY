@@ -2,11 +2,31 @@
 
 Record all agent work here when working for Sin. Include status, file paths, verification, and blockers or handoff notes.
 
-## Shared room test download
+## MUST DO — Shared room test download
 
+- [ ] **Prepare and verify the shared Haussmann room locally** — required for each collaborator.
 - Use [HAUSSMANN APARTMENT](https://superspl.at/scene/4de797f4) as the shared Gaussian room test download. SuperSplat login may be required. Credit Stéphane Agullo (sa3d), CC BY 4.0; retain the downloaded license. This is an authored test scene with assumed scale, not a measured room.
 
+After downloading, keep the ZIP intact and run these commands from the repository root after saving current work. The `&&` chain stops at the first failure:
+
+```bash
+git switch main &&
+git pull --ff-only &&
+./setup.sh &&
+python3 scripts/gaussian_room/prepare_haussmann.py "$HOME/Downloads/HAUSSMANN APARTMENT.zip" &&
+python3 scripts/gaussian_room/review_surface.py &&
+BACKEND_PORT=8222 FRONTEND_PORT=5222 ./run-local.sh
+```
+
+Open **[http://localhost:5222/](http://localhost:5222/)**, or `http://localhost:<FRONTEND_PORT>/` if using another frontend port. **Haussmann is already the default; no `?room` parameter is needed.**
+
+Adjust the ZIP path if needed. Run preparation in a normal terminal for GPU access; the previously reported run took about 2½ minutes. Preparation is a one-time step and refuses to overwrite existing output. If already prepared, skip preparation and run the surface review and stack commands. Generated room assets are ignored by Git, so each collaborator must prepare them locally. Keep the attribution/license. This remains an experimental test room with assumed scale and known downward/ceiling/window artifacts. Stop the stack with Ctrl-C when finished.
+
+Tracking update (2026-09-20): standardized this MUST DO checklist across `TODO_SIN.md`, `TODO_SAKETH.md`, `TODO_WILLIAM.md`, and `TODO_ADELLE.md`; synchronized owner-specific Kanban tasks. Checked the default `/` route in `frontend/src/App.tsx`. Local preparation and room verification remain pending for each collaborator; this documentation update does not claim they ran.
+
 ## In progress
+
+- 2026-09-20: Building isolated cart animation on codex/shopping-cart-animation. User selected an Atelier origami bird and demo fulfillment. Higgsfield job d463f33f-1663-4104-aea3-ce6fee86f1fe completed and bundled (six seconds, approximately 2.4 MB); implemented lazy cart preview, reusable presentation trigger, replay, reduced motion and media failure handling. No payment/backend mutation. Browser playback/replay/skip, zero-item cart, failed-media recovery, programmatic trigger and no-API-call checks passed; desktop/mobile inspected. Subagent implemented automatic PlayCanvas materialization on newly accepted additions plus selected-object Preview summon button, presentation-only transforms and static capture geometry. Real browser GLB placement and summon replay passed. Source paths: frontend/src/checkout/{CartPreview.tsx,cart-preview.css,previewOrderDispatch.ts}, App.tsx, SplatEditor.tsx, scene/playcanvas/{furniture.ts,materialize.ts,materialize.test.ts}; both docs/frontend/{shopping-cart-animation,furniture-materialization}.md indexed. Final checks passed: 127 scene tests + 16 packaging/auth tests, production build (existing engine chunk warning and optional unprovisioned-room warnings), diff whitespace and both documentation index links. No commit or push. User requests cheaper Higgsfield models for any future generation; no further generation submitted.
 
 - 2026-09-20: Resumed Evaluate Gaussian splats and surface reconstruction on codex/haussmann-quality from main1424ac2. Parallel agents inspect capture readiness, performance and explicit metric evidence; root owns shared renderer edits and browser QA. Reproduce matched problem views before changing compression or resolution. Retain assumed-scale label until an independent dimension is established. Existing Sin Kanban card remains incomplete.
 
@@ -21,6 +41,8 @@ Record all agent work here when working for Sin. Include status, file paths, ver
 - Integrate collaborator GLBs/metadata and agreed reconstructed room input. Run a final physical trackpad/reduced-motion/device rehearsal. Full mesh/clearance validation and valid-space overlay follow separately.
 
 ## Done
+
+- 2026-09-20: **Update Kanban wording for OpenAI API and Codex** — updated `.github/extensions/project-manager/{data/board.json,server.mjs,bin.mjs,extension.mjs,README.md}` on main. The existing agent card now says **Connect room, catalogue, and user input to the OpenAI API agent**; Agent Harness and demo descriptions mention OpenAI API/Agents SDK and Codex. Removed old vendor wording from launcher/docs; retained the legacy adapter package import for compatibility. IDs, ownership, order and completion preserved. Verification: `node --test .github/extensions/project-manager/tests/board.test.mjs` → `tests 6 / pass 6 / fail 0`; launcher smoke → `HTTP 200`, both requested names visible, no old vendor wording in rendered board. Syntax and whitespace checks passed. Stopped the launcher; `lsof` confirmed no listener on port 50717. No commit or push.
 
 - 2026-09-19: Prepared standalone Gaussian candidate research for local-main integration from fetched origin/main 68641c1 in an isolated worktree. Added docs/frontend/room-capture/haussmann-apartment.md, its INDEX.md entry and scoped TODO/Kanban ownership; preserved other owners’ entries. Explicitly labeled references to unmerged implementation. Fresh-main setup passed; backend 175 tests OK (one live test skipped), frontend 65 scene and 9 auth tests passed, six board tests passed, production build passed with existing large-chunk warning. Documentation/index links and diff whitespace checked. No runtime/assets included, no servers launched, shared dirty checkout preserved; no push. Candidate delivery remains blocked on authorized download.
 
@@ -350,3 +372,48 @@ Two additions, from Saketh. Please read the new "Merging close to the demo" sect
 - When you report a result, name the command and quote its output line, e.g. "`python manage.py test` → Ran 217 tests in 6.951s / OK (skipped=3)", not "tests pass".
 
 - 2026-09-20 (Evaluate Gaussian splats and surface reconstruction — latest main sync): Resolved the sole TODO_SIN.md conflict by retaining both branch histories while integrating fetched main0f44bc5. Backend manage.py test --noinput: Ran232tests in7.786s / OK(skipped=3). npm test:137+16passed,0failed; npm run build: built in2.48s with existing chunk warning. Browser verification unavailable because owner localhost5173 server is stopped; no servers started. Gaussian board card remains Sin/incomplete for unverified scale. Untracked demo assets preserved; no fetch or push.
+
+## Done — Animate AI furniture moves with halo blobs
+
+- Approved white halo-blob concept; AI placements/moves only. Isolated codex/angel-movers checkout. Build procedural walking/pushing characters, explicit accepted-agent motion metadata, bounded validated visual movement, and lifecycle/capture handling. Preserve authoritative target poses; initial loads and manual edits do not animate. Tests and browser verification pending.
+
+- Implemented backend receipt metadata in backend/api/scene_service.py; validated frontend metadata and integrated procedural halo helpers, checked move paths, capture isolation and reduced-motion handling. Approved concept and behavior docs saved under docs/frontend/angel-movers/ and linked from INDEX.md. Manual drag/commands remain immediate; initial loads and unchanged event revisions do not animate. Camera-look cancellation fixed during review.
+- Verification: backend manage.py test --noinput reported Ran238tests in26.786s / OK(skipped=4); npm test reported146+16passed,0failed; npm run build reported built in8.89s (existing chunk warning). Isolated browser rendered Haussmann, accepted backend AI additions/moves, displayed two procedural helpers, then returned to settled furniture without helpers. Unit regressions cover manual event clearing, invalid metadata, retry identity and blocked transit. No separate full-GPU performance benchmark or exact visual match to generated concept claimed. Preview processes stopped; lsof confirms5233/8233closed. Work isolated on codex/angel-movers, not committed or merged into the active demo branch.
+
+- Angel scope update: user requested helpers for manual additions too. Single-item accepted add commands now emit the same motion metadata; choreography queues until manual placement finishes. Manual moves and multi-command history restores stay immediate. Focused regression and browser verification pending.
+
+- User-add verification: manage.py test api.test_agent_motion --noinput:7tests/OK; npm test:146+16passed,0failed; npm run build:built in7.35s. Preview reopened at127.0.0.1:5233 and left running for the user-requested browser demonstration. Manual UI add choreography is enabled after acceptance; user is currently placing a sofa. Not committed or merged.
+
+- Visibility fix: user reported missing angels. New-add approach candidates now favor the camera-facing side, and choreography lasts longer (0.9s approach, at least2.4s push,1.2s celebration,0.9s departure). Added direction regression; frontend147+16tests pass, build passes. Actual browser screenshot of two halo helpers pushing captured in .scratch/friday-angels-live.png using development-only ?angelScreenshot pause. Temporary5234/8234capture stack stopped; user5233preview remains running.
+
+- Commit verification: final full backend manage.py test --noinput reports Ran239tests in25.994s / OK(skipped=4); frontend147+16passed; final build built in9.53s. User approved live screenshot and requested commit of the angel movers, manual-add support and visibility fix.
+
+- Main integration verification: resolved editor, INDEX and Kanban conflicts while retaining halo-helper motion, incoming shopping UI and both task records. Merged fetched origin/main59d26c1. Root / explicitly opens Haussmann Gaussian; ?roomId retains alternate room access. Full backend: Ran270tests in8.479s / OK(skipped=5). npm test:152scene+16packaging/auth passed,0failed; npm run build:built in2.14s (existing chunk warning). Applied incoming migrations to isolated preview DB and verified actual Haussmann render at127.0.0.1:5233/ after reload. Preparing local main fast-forward; no push. Original dirty demo checkout preserved. User-requested5233preview remains available.
+
+- 2026-09-20: Corrected furniture-demo handoff to the default Haussmann Gaussian room. Verified actual GLB placement on a valid footprint and Preview summon playback in an isolated browser session; inspected final scene. No renderer/default-room change was needed. Updated indexed furniture-materialization.md; empty-room remains a test fixture only.
+
+- 2026-09-20 In progress: Build agent-observation shopping choreography. User rejected the ecommerce cart; replacing with automatic luminous-agent collection and origami dispatch over the real Haussmann Gaussian room. Remove quantity/checkout controls; retain discreet developer replay. Reuse existing generated video with no additional spend. Verification pending.
+
+- Agent-observation shopping choreography: implemented automatic room-ready gather/compose/dispatch over Haussmann, observer-only renderer and hidden developer replay. Reused media; no additional generation. Initial browser review found the editor capture worker still polling; disabled it for observation so watching does not claim agent capture jobs. Isolated run-local.sh stack restored on 5230/8230 with its own database after the previous backend stopped. Final checks in progress.
+
+- 2026-09-20 Done: Build agent-observation shopping choreography. Automatic Haussmann-backed gather/compose/origami dispatch, observer-only scene, hidden developer replay and media failure states implemented in checkout/CartPreview.tsx, cart-preview.css, SplatEditor.tsx and PlayCanvasScene.tsx. Browser checks passed: automatic playback, replay, reduced motion, failure recovery without false success, no horizontal overflow, no page errors and zero POST requests including keyboard shortcuts. Frontend: 127/127 scene + 16/16 packaging/auth tests; production build passed (existing large-engine chunk warning), design detector empty, whitespace passed. Documentation updated and indexed; no additional media generation, no commit/merge/push. Sequence is simulated presentation; live agent event wiring remains separate.
+
+- In progress: Refine furniture summon reveal. User rejected the floating transparent fade. Replace it with an opaque, floor-up shader reveal with a narrow warm leading edge, no position/scale animation, and unchanged authoritative geometry. Verify on Haussmann.
+
+- Done: Refine furniture summon reveal. Replaced float/scale/transparency with a 1.4s bottom-up fragment reveal and thin warm edge in scene/playcanvas/materialize.ts. Preserves textures, opaque depth, authoritative pose and captures; suppresses premature shadow and restores original materials/shadow state. Updated materialize.test.ts and indexed furniture-materialization.md. Real Haussmann GLB placement/replay and mid/final screenshots checked; no shader compile failures observed. Verification: 127 scene + 16 packaging/auth tests pass; build and whitespace pass. No added dependency or generation cost; no commit/merge/push.
+
+- In progress: Refine furniture summon reveal with elegant golden threads. User requested a restrained champagne-gold weave: surface-anchored antialiased filaments lead the opaque reveal, then softly disappear into the original fabric. No additional generation.
+
+- Done: Elegant golden-thread summon refinement. materialize.ts now uses a 2.2s restrained gold reveal; goldenThreads.ts draws three flowing curves with moving highlights using built-in PlayCanvas lines. Verified active and settled Haussmann GLB preview in Chrome; no shader errors. 127 scene + 16 packaging/auth tests pass; production build passes (existing chunk warning). Documentation remains indexed. Decorative threads ignore scene depth; authoritative placement and captures are unchanged. No generation cost, commit, merge or push.
+
+- 2026-09-20 Commit handoff: reviewed cart choreography, bundled courier media, observer-mode safeguards, golden-thread summon, tests and indexed docs for commit on codex/shopping-cart-animation. Verification logs: npm --prefix frontend test → tests 127 / pass 127 / fail 0; tests 16 / pass 16 / fail 0. npm --prefix frontend run build → built in 13.80s (existing chunk warning). User-approved preview remains on the isolated stack; no push or merge requested.
+
+- In progress: merge cart choreography and golden-thread summon into local main using isolated codex/merge-cart-summon. Preserve latest shopping routes, pointer-lock controls, collapsible catalogue and halo-helper motion. Concurrent dirty demo checkout untouched; full merged checks pending.
+
+- Merge handoff: resolved shopping-cart-animation against local main fc507e9, preserving shopping routes, pointer-lock controls, halo helpers and both documentation histories. Backend manage.py test --noinput: Ran 270 tests / OK (skipped=5). Frontend npm test: 155 + 16 tests passed, zero failures; npm run build: built in 1.97s. Browser integration check was interrupted; user explicitly requested immediate merge. No push.
+
+- Push rejection reconciliation: owner pulled origin/main into the checked-out demo branch, leaving local main behind origin/main 2dd8a53. Integrated that fetched main into the isolated merge branch without conflicts, retaining cart/summon and incoming category rail/jump/gravity work. Verification: backend 270 tests / OK (skipped=5); frontend 159 + 16 passed, zero failures; build built in 2.16s. Advance local main only; no fetch, push or edits to dirty demo checkout.
+
+- In progress: resolve fetched skyscraper merge on main, retaining both documentation indexes, floor-bound capture readiness and observer capture suppression. Preserve active-floor readiness and observation notifications. Full verification pending; unrelated demo files remain untouched.
+
+- Merge resolution complete: retained skyscraper floor readiness, keyed captures and observer capture suppression; preserved both documentation indexes and observation callbacks. Backend manage.py test --noinput: 274 tests / OK (skipped=4). Frontend npm test: 165 scene + 18 packaging/auth passed, zero failures; npm run build: built in 2.30s. User will perform run-local verification before pushing; no browser verification claimed, no servers started and no push performed.

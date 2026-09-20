@@ -5,27 +5,28 @@ columns and ordered task cards coloured by owner: William, Sin, Saketh,
 Adelle, or Unassigned. Completion and priority remain separate. Add tasks
 below a column, select their owner, and drag or use the move controls.
 
-Owner-aware schema version 2 is supported by the standalone UI and Copilot
+Owner-aware schema version 2 is supported by the standalone UI and optional
 canvas adapter shipped together here. Migration preserves component names,
 IDs, order, task metadata and historical `phase` values; a phase never
 implies an owner. Legacy phase model operations remain available for
 compatibility, while the UI displays owners rather than misleading phase
 defaults. The two existing phase values from the parent snapshot are retained.
 
-## Two ways to open it
+## Open from Codex or a terminal
 
-**1. Copilot canvas** — `extension.mjs` provides a Copilot-specific adapter
-for hosts supporting the canvas extension API. Ask the agent to open the
-"Project Manager" canvas, or call `open_canvas({ canvasId: "project-manager" })`.
-Host discovery and SDK support depend on your Copilot installation; use
-the standalone mode if that integration is unavailable.
-
-**2. Standalone (no Copilot required)** — run it with plain Node from
-the repository root, including outside Copilot (e.g. from Codex or CI):
+Run the local Kanban from the repository root:
 
 ```bash
 node .github/extensions/project-manager/bin.mjs
 ```
+
+Codex can maintain the board and owner TODOs as part of development. FRIDAY's
+application agent uses the OpenAI API through the OpenAI Agents SDK; the
+Kanban itself is a local task tracker and makes no model API calls.
+
+`extension.mjs` also provides an optional adapter for hosts supporting its
+canvas extension API. The standalone launcher works independently of that
+adapter.
 
 This prints a `http://127.0.0.1:<port>/` URL to open in any browser. Both
 surfaces read/write the same `data/board.json` in this checkout. Each
@@ -66,4 +67,4 @@ initialization, same-process and cross-process writes, atomic read safety,
 fresh reads, migration, failed mutations, invalid JSON recovery, lock
 timeouts, and SSE refresh/cleanup. `PROJECT_MANAGER_BOARD_PATH` can override
 the board file for isolated testing; every process sharing a board must
-use the same path. The Copilot host itself is not exercised by these tests.
+use the same path. The optional canvas host itself is not exercised by these tests.

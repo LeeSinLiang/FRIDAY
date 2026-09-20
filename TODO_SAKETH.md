@@ -4,22 +4,27 @@ Record all agent work here when working for Saketh. Include status, file paths, 
 
 Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`. Feature doc: [docs/backend/catalogue.md](docs/backend/catalogue.md).
 
-## Shared room test download
+## MUST DO — Shared room test download
 
+- [ ] **Prepare and verify the shared Haussmann room locally** — required for each collaborator.
 - Use [HAUSSMANN APARTMENT](https://superspl.at/scene/4de797f4) as the shared Gaussian room test download. SuperSplat login may be required. Credit Stéphane Agullo (sa3d), CC BY 4.0; retain the downloaded license. This is an authored test scene with assumed scale, not a measured room.
 
-After downloading, keep the ZIP intact and run these commands from the repository root after saving current work:
+After downloading, keep the ZIP intact and run these commands from the repository root after saving current work. The `&&` chain stops at the first failure:
 
 ```bash
-git switch main
-git pull --ff-only
-./setup.sh
-python3 scripts/gaussian_room/prepare_haussmann.py "$HOME/Downloads/HAUSSMANN APARTMENT.zip"
-python3 scripts/gaussian_room/review_surface.py
+git switch main &&
+git pull --ff-only &&
+./setup.sh &&
+python3 scripts/gaussian_room/prepare_haussmann.py "$HOME/Downloads/HAUSSMANN APARTMENT.zip" &&
+python3 scripts/gaussian_room/review_surface.py &&
 BACKEND_PORT=8222 FRONTEND_PORT=5222 ./run-local.sh
 ```
 
-Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if needed. Run preparation in a normal terminal for GPU access; our latest run took about 2½ minutes. Preparation is a one-time step and refuses to overwrite existing output. Generated room assets are ignored by Git, so each collaborator must prepare them locally. Keep the attribution/license. This remains an experimental test room with assumed scale and known downward/ceiling/window artifacts. Stop the stack with Ctrl-C when finished.
+Open **[http://localhost:5222/](http://localhost:5222/)**, or `http://localhost:<FRONTEND_PORT>/` if using another frontend port. **Haussmann is already the default; no `?room` parameter is needed.**
+
+Adjust the ZIP path if needed. Run preparation in a normal terminal for GPU access; the previously reported run took about 2½ minutes. Preparation is a one-time step and refuses to overwrite existing output. If already prepared, skip preparation and run the surface review and stack commands. Generated room assets are ignored by Git, so each collaborator must prepare them locally. Keep the attribution/license. This remains an experimental test room with assumed scale and known downward/ceiling/window artifacts. Stop the stack with Ctrl-C when finished.
+
+Tracking update (2026-09-20): standardized this MUST DO checklist across `TODO_SIN.md`, `TODO_SAKETH.md`, `TODO_WILLIAM.md`, and `TODO_ADELLE.md`; synchronized owner-specific Kanban tasks. Checked the default `/` route in `frontend/src/App.tsx`. Local preparation and room verification remain pending for each collaborator; this documentation update does not claim they ran.
 
 ## In progress
 
@@ -42,6 +47,8 @@ Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if
 For each import, verify expected/actual counts, rejected rows, stable IDs on a second run, search results, and one selected GLB through the real browser scene before marking these tasks done. No source data has been imported yet.
 
 ## Done
+
+- 2026-09-20: **Update Kanban wording for OpenAI API and Codex** — updated `.github/extensions/project-manager/{data/board.json,server.mjs,bin.mjs,extension.mjs,README.md}` on main. The existing agent card now says **Connect room, catalogue, and user input to the OpenAI API agent**; Agent Harness and demo descriptions mention OpenAI API/Agents SDK and Codex. Removed old vendor wording from launcher/docs; retained the legacy adapter package import for compatibility. IDs, ownership, order and completion preserved. Verification: `node --test .github/extensions/project-manager/tests/board.test.mjs` → `tests 6 / pass 6 / fail 0`; launcher smoke → `HTTP 200`, both requested names visible, no old vendor wording in rendered board. Syntax and whitespace checks passed. Stopped the launcher; `lsof` confirmed no listener on port 50717. No commit or push.
 
 - **Openings: the Cg Arch room's window is measured and "by the window" works (2026-09-20).** Branch `codex/saketh-openings`. Verified against the model rather than a screenshot: node `Room Glass Windows` x 8.065 to 10.865 m, y 0.075 to 2.125 m, z 1.49 to 1.51 m, no node transform, identity manifest transform, so north wall, `startCm` 19.5, `widthCm` 280, sill 7.5. New `shared/rooms/cg-arch-interior/openings.json`, `frontend/src/region/roomOpenings.ts`, `scripts/room_openings.py`, `backend/api/test_room_openings.py`; `Opening.sillCm?`; `useRegion` takes openings; the PlayCanvas catalogue layer passes them. **Not** in `manifest.json` / `spatial.json`: the room importer compares those byte for byte and would refuse the room for everyone. Hero sentence whole: HERRÅKRA 60 / 75 / 60 / 75 (hand-derived, solver agrees); 3 ft 240 / 255; 5 ft none, "needs 371 cm of width". Seen in the editor: chips correct, small lit patch in front of the glazing, no set-aside clause.
 - **Lane change (2026-09-20, from Saketh):** a second agent now owns the asset work: `shared/models/**`, `backend/catalogue/data/listings.json`, `scripts/fit_glb.py`, `backend/api/test_furniture_assets.py`, and the re-ingest after any listings change. Dropped from this lane and never started: the ABO spike and the Quaternius fallback. Already finished before the change and left as they are for the new owner: PR #45 (bed and table refit) and one re-ingest from `main` `3a96dd6`. I do not push to #45 again.

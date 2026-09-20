@@ -2,27 +2,32 @@
 
 Record all agent work here when working for William. Include status, file paths, verification, and blockers or handoff notes.
 
-## Shared room test download
+## MUST DO — Shared room test download
 
+- [ ] **Prepare and verify the shared Haussmann room locally** — required for each collaborator.
 - Use [HAUSSMANN APARTMENT](https://superspl.at/scene/4de797f4) as the shared Gaussian room test download. SuperSplat login may be required. Credit Stéphane Agullo (sa3d), CC BY 4.0; retain the downloaded license. This is an authored test scene with assumed scale, not a measured room.
 
-After downloading, keep the ZIP intact and run these commands from the repository root after saving current work:
+After downloading, keep the ZIP intact and run these commands from the repository root after saving current work. The `&&` chain stops at the first failure:
 
 ```bash
-git switch main
-git pull --ff-only
-./setup.sh
-python3 scripts/gaussian_room/prepare_haussmann.py "$HOME/Downloads/HAUSSMANN APARTMENT.zip"
-python3 scripts/gaussian_room/review_surface.py
+git switch main &&
+git pull --ff-only &&
+./setup.sh &&
+python3 scripts/gaussian_room/prepare_haussmann.py "$HOME/Downloads/HAUSSMANN APARTMENT.zip" &&
+python3 scripts/gaussian_room/review_surface.py &&
 BACKEND_PORT=8222 FRONTEND_PORT=5222 ./run-local.sh
 ```
 
-Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if needed. Run preparation in a normal terminal for GPU access; our latest run took about 2½ minutes. Preparation is a one-time step and refuses to overwrite existing output. Generated room assets are ignored by Git, so each collaborator must prepare them locally. Keep the attribution/license. This remains an experimental test room with assumed scale and known downward/ceiling/window artifacts. Stop the stack with Ctrl-C when finished.
+Open **[http://localhost:5222/](http://localhost:5222/)**, or `http://localhost:<FRONTEND_PORT>/` if using another frontend port. **Haussmann is already the default; no `?room` parameter is needed.**
+
+Adjust the ZIP path if needed. Run preparation in a normal terminal for GPU access; the previously reported run took about 2½ minutes. Preparation is a one-time step and refuses to overwrite existing output. If already prepared, skip preparation and run the surface review and stack commands. Generated room assets are ignored by Git, so each collaborator must prepare them locally. Keep the attribution/license. This remains an experimental test room with assumed scale and known downward/ceiling/window artifacts. Stop the stack with Ctrl-C when finished.
+
+Tracking update (2026-09-20): standardized this MUST DO checklist across `TODO_SIN.md`, `TODO_SAKETH.md`, `TODO_WILLIAM.md`, and `TODO_ADELLE.md`; synchronized owner-specific Kanban tasks. Checked the default `/` route in `frontend/src/App.tsx`. Local preparation and room verification remain pending for each collaborator; this documentation update does not claim they ran.
 
 ## In progress
 
 - **Connect existing Vercel projects to GitHub main** (Kanban `a4577790-c0d7-49fb-b441-a6cfd0c02db5`, [issue #74](https://github.com/LeeSinLiang/hackmit2026/issues/74)). Manual production is current, but both existing Vercel projects still report `gitRepository: null`. `vercel git connect https://github.com/LeeSinLiang/hackmit2026 --scope williamxu070s-projects --yes` returned `Failed to connect LeeSinLiang/hackmit2026 to project` on both projects. `WilliamXu070` has GitHub write/push permission but no admin permission on the private personal repository. The repository owner must authorize the Vercel GitHub integration for this repository and connect both existing projects to `main`, preserving roots `frontend` and `backend`; then verify a PR Preview and a main Production deploy. The existing `.github/workflows/ci.yml` already runs backend/frontend checks on PRs. Production `FRIDAY_API_ORIGIN` now targets the stable `https://friday-hackmit-api.vercel.app` alias; keep Preview and Production environment/database settings separate. This task remains blocked pending repository-owner integration access; do not describe future pushes as automatically deployed yet.
-  - Current manual production pair after the category rail and jump release: source `68367e8c1efd879e627f7c585dabac1a0876d6a9`, API `dpl_8KMxQysWYwH5cn9pCVahQdp9vBgG`, frontend `dpl_6YBeLyktFyhg6YeBcbzEvkxGiP9Z`. Both returned `READY`; frontend DOM and direct/rewritten API health share `c0de19855603d17b57abc20f8a5ef70fac7743e066171e2d4575d1e361a6f383`. This manual refresh does not establish Git-triggered deployment; owner connection and trigger replay are still needed.
+  - Current manual production pair after the concurrent skyscraper-room merge: source `e2ae0a80575b7f370e21318cba30d3597bfa3edf`, API `dpl_AvfZTu6JmRbtUkUPz1N8XAQ2DU35`, frontend `dpl_4HpXref96fRAM8KVdoWx7JMbATAR`. Both returned `READY`; frontend DOM and direct/rewritten API health share `c0b5858f4ea335ca209a4040d6ec1cb957605ac5434fa2199971ad9b7616f19c`. The hosted empty-room route again showed the compact category rail, Chairs expansion and a visible Space jump. This manual refresh does not establish Git-triggered deployment; owner connection and trigger replay are still needed.
 
 - **Verify skyscraper scale and floor-surface dragging** — reopened after user correction: preserve the current main editor exactly as the supplied screenshot. Remove the test panel, test-only buttons and grid overlay. Wire the existing Floor map up/down controls to independently measured building levels, retaining normal catalogue, movement, placement and persistence. Refresh this feature branch from already-available main `9701b1b` without fetching, preserve prior geometry work, run main baseline and final tests, and verify the unchanged UI plus floor switching in the browser. Owner William; existing card `ea8e4665-bce1-4de3-b90d-71140ad6d8c3`. User additionally authorized adding a separate gallery room, pushing/merging all task changes and production Vercel deployment after verification. Keep main’s concurrent furniture-panel upgrade intact. Fresh-main baseline `9701b1b`: backend `Ran 263 tests in 9.054s / OK (skipped=5)`; frontend `142 + 16 passed`; build `built in 2.66s`.
   - Preserved main's existing editor/catalogue controls and read task `01a0bd7b-e17b-78b2-b24d-7c8315d3b753` (category rail plus upcoming jump/gravity). This branch does not edit navigation, shopping, accounts or checkout logic. Generated 32 independently measured floor manifests, including conservative wall bounds on C20–C29, and kept the original GLB bytes/textures. Added the gallery entry and verified Sketchfab creator 99.Miles / CC BY 4.0 attribution. Existing minimap arrows now change room context; PlayCanvas reuses the immutable GLB after capture restoration. Added deployment metadata closure and regression checks; full-suite/browser verification pending.
@@ -77,6 +82,8 @@ Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if
 - Finish user-driven hosted email receipt, MFA enrollment/login, password reset and explicitly approved sandbox checkout. Production and Preview are published; SMTP/Visa settings and both database migrations are complete. Real payment authorization and merchant ordering remain outside the sandbox contract.
 
 ## Done
+
+- 2026-09-20: **Update Kanban wording for OpenAI API and Codex** — updated `.github/extensions/project-manager/{data/board.json,server.mjs,bin.mjs,extension.mjs,README.md}` on main. The existing agent card now says **Connect room, catalogue, and user input to the OpenAI API agent**; Agent Harness and demo descriptions mention OpenAI API/Agents SDK and Codex. Removed old vendor wording from launcher/docs; retained the legacy adapter package import for compatibility. IDs, ownership, order and completion preserved. Verification: `node --test .github/extensions/project-manager/tests/board.test.mjs` → `tests 6 / pass 6 / fail 0`; launcher smoke → `HTTP 200`, both requested names visible, no old vendor wording in rendered board. Syntax and whitespace checks passed. Stopped the launcher; `lsof` confirmed no listener on port 50717. No commit or push.
 
 - **Add gravity and furniture-top jumping to Walk mode** (Kanban `1de24261-fcb7-4008-8cf5-f65bb81e84c8`). User requests Space to jump, gravity, and standing or walking on placed objects. Current `frontend/src/scene/playcanvas/navigation.ts` is flat 2.5D: fixed camera height and all placed furniture treated as full-height horizontal obstacles; it cannot jump or land. Plan: add a bounded vertical camera velocity with gravity and ceiling/floor limits, use placed product dimensions as conservative solid boxes for horizontal blocking and top support, retain reviewed floor and fixed-room collision boundaries, document controls and proxy limits, and verify physics with targeted tests plus the actual room route. Work starts from fresh `main` after PR #83; the post-merge baseline reported `Ran 263 tests in 9.283s / OK (skipped=5)` and Vite `built in 3.00s`.
   - Implemented `frontend/src/scene/playcanvas/navigation.ts` vertical velocity, Space jump, ceiling clamp, dimensioned furniture-top support and falling off; added regression cases in `frontend/src/scene/playcanvas/interaction.test.ts`, updated `frontend/src/SplatEditor.tsx` help and this indexed editor document. Local `npm test` → `tests 145 / pass 145 / fail 0` and auth `tests 16 / pass 16 / fail 0`; `npm run build` → `built in 2.80s`. Canonical 8211/5211 browser showed the Space jump rising visually, then returning to the original floor view under gravity. Tried a sofa placement probe for live landing, but its hovered location was outside the room, so cancelled it without saving; landing on a furniture top is verified by physics and collision tests, not yet a live 3D landing replay. Fixed room obstacles have no height metadata and remain full-height barriers; placed product boxes are a conservative approximation to their visual mesh.

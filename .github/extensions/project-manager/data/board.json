@@ -1,5 +1,5 @@
 {
-  "title": "FRIDAY · Project Plan",
+  "title": "FRIDAY \u00b7 Project Plan",
   "components": [
     {
       "id": "50b44d3e-94c7-4fed-8d83-969c925957d9",
@@ -62,7 +62,7 @@
         },
         {
           "id": "2133f112-5c47-4325-adcd-545b04e3000c",
-          "title": "Pull Sin’s current 3D editor and review model references",
+          "title": "Pull Sin\u2019s current 3D editor and review model references",
           "done": true,
           "owner": "sin"
         },
@@ -83,6 +83,12 @@
           "title": "Provide verified room bundle import for collaborators",
           "owner": "sin",
           "done": true
+        },
+        {
+          "id": "6deef908-66df-407a-af40-677f43e25ccb",
+          "title": "Animate AI furniture moves with halo blobs",
+          "done": true,
+          "owner": "sin"
         },
         {
           "id": "bfec5726-48a4-4f49-8cfa-275f3b80e031",
@@ -113,6 +119,24 @@
           "title": "Verify skyscraper scale and floor-surface dragging",
           "done": false,
           "owner": "william"
+        },
+        {
+          "id": "249c277a-49db-40be-873b-8016838ccc80",
+          "title": "Prepare and verify the shared Haussmann room locally",
+          "done": false,
+          "owner": "sin"
+        },
+        {
+          "id": "bc6e41b1-9ef8-406d-9ce6-daeac8b8ec6f",
+          "title": "Prepare and verify the shared Haussmann room locally",
+          "done": false,
+          "owner": "saketh"
+        },
+        {
+          "id": "34722434-8cff-41aa-9ebb-297ea475345b",
+          "title": "Prepare and verify the shared Haussmann room locally",
+          "done": false,
+          "owner": "adelle"
         }
       ]
     },
@@ -298,6 +322,18 @@
           "title": "Keep category rail visible when furniture panel collapses",
           "done": true,
           "owner": "william"
+        },
+        {
+          "id": "a1917888-c905-4059-ad6b-04d7b230458b",
+          "title": "Build agent-observation shopping choreography",
+          "done": true,
+          "owner": "sin"
+        },
+        {
+          "id": "2e51d8ea-36e3-4fce-8864-52617b81fdfb",
+          "title": "Refine furniture summon reveal",
+          "done": true,
+          "owner": "sin"
         }
       ],
       "description": "React app shell, product browsing, constraint chips, and conversation."
@@ -345,7 +381,7 @@
       "tasks": [
         {
           "id": "aa3279ee-e155-4920-a5e4-f51eba493418",
-          "title": "Connect room, catalogue, and user input to the agent",
+          "title": "Connect room, catalogue, and user input to the OpenAI API agent",
           "done": false,
           "owner": "unassigned"
         },
@@ -380,7 +416,7 @@
           "owner": "saketh"
         }
       ],
-      "description": "End-to-end checks, deployment, documentation, and the demo journey."
+      "description": "OpenAI API and OpenAI Agents SDK orchestration, room and catalogue tools, and end-to-end agent checks."
     },
     {
       "id": "50f20b5f-745e-4a44-b262-fdad56a9303d",
@@ -392,7 +428,8 @@
           "done": false,
           "owner": "unassigned"
         }
-      ]
+      ],
+      "description": "Demo journey, presentation, OpenAI API integration, and Codex-assisted development."
     }
   ],
   "schemaVersion": 2

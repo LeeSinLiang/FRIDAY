@@ -19,6 +19,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Frontend
 
+- [AI furniture movers](docs/frontend/angel-movers/README.md) — approved halo-blob concept, AI moves, user-add choreography and rendering integration.
 - [Full skyscraper GLB test](docs/frontend/room-capture/skyscraper-glb-test.md) — preserved complete building, entrance lobby, mezzanine and 32 tower floors with measured outlines, existing floor arrows, public gallery/deployment, reference placement and agent context reader.
 
 - [Minimal supported placement plan](docs/frontend/3d-object/supported-placement-mvp-plan.md) — full-skyscraper test scene, explicit scale reference, floor-surface dragging, then table/cabinet placement with stable AI target references.
@@ -97,3 +98,6 @@ Add dedicated feature docs here as they are created.
 - [Split-screen opening preview](docs/demo/split-screen-preview.md) — one video with wheelchair-user and responder panes, alternating dialogue, editable Higgsedit composition and export QA.
 - [One-shot demo script](docs/demo/twenty-second-treatment.md) — one Higgsfield generation with seamless location transition, unfolding equal panes, speaking iris and room materialization; Mini duration constraint noted.
 - [FRIDAY iris logo concepts](docs/demo/friday-logo-concepts.md) — three icon-only film variations, earlier wordmark explorations, site header mockup, saved PNGs and exact Codex image-generation prompts.
+
+- [Shopping cart dispatch preview](docs/frontend/shopping-cart-animation.md) — Hands-off agent choreography over the Gaussian room, origami dispatch, developer replay and demo-only events.
+- [Furniture materialization](docs/frontend/furniture-materialization.md) — spatial-agent add animation, preview event, unchanged placement and static captures.

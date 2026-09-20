@@ -44,7 +44,7 @@ const session = await joinSession({
             id: "project-manager",
             displayName: "Project Manager",
             description:
-                "FRIDAY project Kanban. Columns cover rooms and 3D models, spatial checks, Elasticsearch, agent and voice, frontend, Django API, Visa IDX, and integration. Cards have owners (William, Sin, Saketh, Adelle, or Unassigned) and a completion checkbox. Reorder cards for priority or move them between components. Do not infer owners from component names.",
+                "FRIDAY project Kanban. Columns cover rooms and 3D models, spatial checks, Elasticsearch, OpenAI API agent and voice, frontend, Django API, Visa IDX, and integration. Development and task tracking use Codex. Cards have owners (William, Sin, Saketh, Adelle, or Unassigned) and a completion checkbox. Reorder cards for priority or move them between components. Do not infer owners from component names.",
             inputSchema: { type: "object", properties: {} },
             actions: [
                 {

@@ -7,7 +7,7 @@ import PerformancePanel from "./scene/playcanvas/PerformancePanel";
 import { roomVisualKey } from "./scene/buildingFloors";
 import { switchBuildingFloor } from "./scene/playcanvas/buildingFloor";
 
-type Props = {state:InteractionState;callbacks:InteractionCallbacks;resetKey:number;onStatus:(status:RuntimeStatus)=>void;onRuntime:(runtime:PlayCanvasRuntime|null)=>void};
+type Props = {captureEnabled?:boolean;state:InteractionState;callbacks:InteractionCallbacks;resetKey:number;onStatus:(status:RuntimeStatus)=>void;onRuntime:(runtime:PlayCanvasRuntime|null)=>void};
 export default function PlayCanvasScene(props:Props) {
   const canvas=useRef<HTMLCanvasElement>(null);
   const startedAt=useRef(0);
@@ -76,5 +76,5 @@ export default function PlayCanvasScene(props:Props) {
   },[ready,runtime,roomKey]);
   useEffect(()=>{if(runtime?.room.roomId===props.state.room.roomId)controller.current?.update(props.state);},[props.state,runtime,boundRoomKey]);
   useEffect(()=>{controller.current?.resetView();},[props.resetKey]);
-  return <><canvas ref={canvas} className="splat-canvas" aria-label="Interactive room. Click or press F to capture the pointer for Walk; press F or Escape to exit." tabIndex={0}/><PlayCanvasCapture key={roomKey} runtime={runtime} enabled={ready&&boundRoomKey===roomKey}/>{perfEnabled && runtime && <PerformancePanel runtime={runtime} startedAt={startedAt.current}/>}</>;
+  return <><canvas ref={canvas} className="splat-canvas" aria-label="Interactive room. Click or press F to capture the pointer for Walk; press F or Escape to exit." tabIndex={0}/><PlayCanvasCapture key={roomKey} runtime={runtime} enabled={ready&&boundRoomKey===roomKey&&props.captureEnabled!==false}/>{perfEnabled && runtime && <PerformancePanel runtime={runtime} startedAt={startedAt.current}/>}</>;
 }
