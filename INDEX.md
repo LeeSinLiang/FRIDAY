@@ -76,6 +76,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Demo
 
+- [Public test release](docs/demo/public-test-release.md) — integrated release scope, tester workflow, checks and recording evidence.
+
 - [Demo run of show](docs/demo/run-of-show.md) — what to click, in order, what each beat proves, and what happens when a dependency fails.
 
 ### Setup and tooling
