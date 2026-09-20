@@ -1,0 +1,23 @@
+{
+  "productId": "herrakra-armchair-diseroed-dark-yellow",
+  "modelUrl": "/models/furniture/herrakra-armchair-diseroed-dark-yellow/model.glb",
+  "thumbnailUrl": "/models/furniture/herrakra-armchair-diseroed-dark-yellow/thumbnail.png",
+  "widthCm": 71,
+  "depthCm": 66,
+  "heightCm": 73,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "source": {
+    "product": "IKEA HERRÅKRA armchair, Diseröd dark yellow (40535547)",
+    "dimensionsVerifiedAt": "https://www.ikea.com/us/en/p/herrakra-armchair-diseroed-dark-yellow-40535547/",
+    "generation": "Higgsfield image_to_3d (Meshy), single reference image, should_texture=true, enable_pbr=false"
+  },
+  "knownLimitations": [
+    "No PBR maps — plain baked texture only, not yet meeting the collaborator-handoff PBR requirement",
+    "Generated from a single 160x160px thumbnail image (no additional angles) — geometry on the underside/back is inferred, not verified",
+    "Pivot/axis/orientation are declared per convention but not verified in Blender — raw Higgsfield/Meshy output has not been inspected or corrected",
+    "Out of the agreed build order: collaborator-handoff.md specifies sofa + table before the chair"
+  ]
+}
