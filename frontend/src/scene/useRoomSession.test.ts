@@ -10,6 +10,17 @@ const item: Instance = { instanceId: "one", productId: PRODUCTS[0].productId, po
 const payload = (revision = 0, instances: Instance[] = []): RoomSnapshot => ({ room: ROOM, products: PRODUCTS, revision, instances, geometryRevision: String(ROOM.revision) });
 const flush = () => new Promise<void>(resolve => setImmediate(resolve));
 
+test('shopping confirmation retries its operation and participates in undo history',async t=>{
+  const h=harness();t.after(h.session.dispose);await h.ready();
+  const task=h.session.confirm(item,3);
+  assert.equal(h.requests[1].url,`/api/cart/confirm-placement/?roomId=${ROOM.roomId}`);
+  const original=h.body(1);assert.equal(original.cartRevision,3);
+  h.requests[1].reject(new Error('lost response'));assert.equal(await task,false);
+  const retry=h.session.retry();assert.deepEqual(h.body(2),original);
+  h.respond(2,{scene:payload(1,[item]),cart:{revision:4}});assert.equal(await retry,true);
+  assert.equal(h.state().canUndo,true);
+});
+
 function harness() {
   let id = 0;
   const requests: { url: string; init: RequestInit; resolve: (response: Response) => void; reject: (error: Error) => void }[] = [];

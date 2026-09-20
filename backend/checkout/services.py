@@ -14,6 +14,8 @@ class CheckoutError(Exception):
 
 
 def validate_snapshot(checkout, digest):
+    if checkout.shopping_id and checkout.shopping.revision != checkout.cart_revision:
+        raise CheckoutError("Your cart changed. Review and approve a new checkout.")
     if checkout.snapshot_hash != digest or payload_hash(checkout.snapshot) != digest:
         raise CheckoutError("Checkout details changed. Create and approve a new checkout.")
     if checkout.expires_at <= timezone.now():
@@ -30,6 +32,7 @@ def approve(request, checkout, data):
         raise CheckoutError(" ".join(error for errors in form.errors.values() for error in errors), 400)
     form.save()
     with transaction.atomic():
+        lock_cart_snapshot(checkout, data["snapshot_hash"])
         claimed = Checkout.objects.filter(pk=checkout.pk, state="draft", snapshot_hash=data["snapshot_hash"],
                                            expires_at__gt=timezone.now()).update(state="approved")
         if not claimed:
@@ -52,6 +55,7 @@ def submit(request, checkout, digest):
     serializer = IdxSampleSerializer(data=payload)
     serializer.is_valid(raise_exception=True)
     with transaction.atomic():
+        lock_cart_snapshot(checkout, digest)
         claimed = Checkout.objects.filter(pk=checkout.pk, state="approved", snapshot_hash=digest,
                                           expires_at__gt=timezone.now()).update(state="submitting")
         if not claimed:
@@ -68,3 +72,11 @@ def submit(request, checkout, digest):
             "payment_authorization": "not_attempted", "vendor_order": "not_attempted"}
     checkout.state, checkout.evidence, checkout.finished_at = state, evidence, timezone.now()
     checkout.save(update_fields=["state", "evidence", "finished_at"])
+
+
+def lock_cart_snapshot(checkout, digest):
+    # Same lock order as cart mutation: shopping identity, then checkout row.
+    if checkout.shopping_id:
+        from shopping.models import ShoppingSession
+        checkout.shopping = ShoppingSession.objects.select_for_update().get(pk=checkout.shopping_id)
+    validate_snapshot(checkout, digest)
