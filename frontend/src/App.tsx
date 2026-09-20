@@ -688,6 +688,7 @@ export default function App() {
         yawIndex={yawIndex}
         armedId={armedListing?.id ?? null}
         disabled={!sync.ready}
+        canSwitchRooms={sync.status === "saved" && !dragging}
         onHover={setHoveredListing}
         onPick={setArmedListing}
         onPlace={setPlaceClauses}

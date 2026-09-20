@@ -15,6 +15,8 @@ type Props = {
   yawIndex: number;
   armedId: string | null;
   disabled: boolean;
+  /** False while the scene has unsaved edits: switching rooms reloads the page and would discard them. */
+  canSwitchRooms: boolean;
   onHover: (listing: Listing | null) => void;
   onPick: (listing: Listing | null) => void;
   onPlace: (place: PlaceClause[]) => void;
@@ -44,7 +46,7 @@ function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: 
   );
 }
 
-export default function CatalogueShelf({ region, yawIndex, armedId, disabled, onHover, onPick, onPlace }: Props) {
+export default function CatalogueShelf({ region, yawIndex, armedId, disabled, canSwitchRooms, onHover, onPick, onPlace }: Props) {
   const [sentence, setSentence] = useState("an armchair");
   const [compiled, setCompiled] = useState<Compiled | null>(null);
   const [items, setItems] = useState<Listing[]>([]);
@@ -81,7 +83,12 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, on
         {ROOM_CHOICES.map((choice) => {
           const params = new URLSearchParams(window.location.search);
           if (choice.id) params.set("room", choice.id); else params.delete("room");
-          return <a key={choice.label} href={`?${params}`} aria-current={choice.id === ROOM_ID ? "page" : undefined}>{choice.label}</a>;
+          const current = choice.id === ROOM_ID;
+          // Switching is a full navigation, which tears down the sync layer mid-save. Until the scene
+          // is saved the other room is shown but inert, so an edit is never lost to a room switch.
+          return current || canSwitchRooms
+            ? <a key={choice.label} href={`?${params}`} aria-current={current ? "page" : undefined}>{choice.label}</a>
+            : <span key={choice.label} aria-disabled="true" title="Saving your room first…">{choice.label}</span>;
         })}
       </nav>
       <form onSubmit={submit}>

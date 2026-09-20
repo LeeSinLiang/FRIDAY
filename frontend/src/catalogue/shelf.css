@@ -21,5 +21,6 @@
 .shelf form, .shelf-chips, .shelf-dropped { flex-shrink: 0; }
 .shelf-results { min-height: 0; }
 .shelf-rooms { display: flex; gap: 6px; flex-shrink: 0; font-size: 12px; }
-.shelf-rooms a { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); text-decoration: none; }
+.shelf-rooms a, .shelf-rooms span { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); text-decoration: none; }
 .shelf-rooms a[aria-current=page] { background: var(--ink); color: #fff9f0; border-color: var(--ink); }
+.shelf-rooms span { opacity: 0.45; cursor: progress; }
