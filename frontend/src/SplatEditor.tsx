@@ -217,7 +217,6 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
       <span className="splat-title">{room?.scan?.attribution.title ?? "Empty room"}<span>{room?.scan?.visualFormat === "glb" ? "Interior · mesh room" : "Living space"}</span></span>
       <span className={`splat-save save-${session.status}`} role="status">{session.status==="ready"?"Saved":session.status==="saving"?"Saving…":session.status==="loading"?"Connecting…":session.status==="conflict"?"Layout changed":"Disconnected"}</span>
       {(session.status==="offline"||session.status==="conflict")&&<button className="button" onClick={()=>void(session.status==="conflict"?session.reload():session.retry())}>{session.status==="conflict"?"Reload layout":"Retry"}</button>}
-      <a className="splat-reset" href="/?cartPreview" target="_blank" rel="noreferrer">Cart preview</a>
       <button className="splat-reset" disabled={!ready||locked||!!pendingProductId} onClick={()=>setResetKey(k=>k+1)}><Icon name="reset" size={18}/><span>Reset view</span></button>
     </header>
     <nav className="splat-view-controls" aria-label="Room views">
