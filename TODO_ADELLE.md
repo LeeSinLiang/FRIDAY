@@ -6,6 +6,19 @@ Record all agent work here when working for Adelle. Include status, file paths, 
 
 - Use [HAUSSMANN APARTMENT](https://superspl.at/scene/4de797f4) as the shared Gaussian room test download. SuperSplat login may be required. Credit Stéphane Agullo (sa3d), CC BY 4.0; retain the downloaded license. This is an authored test scene with assumed scale, not a measured room.
 
+After downloading, keep the ZIP intact and run these commands from the repository root after saving current work:
+
+```bash
+git switch main
+git pull --ff-only
+./setup.sh
+python3 scripts/gaussian_room/prepare_haussmann.py "$HOME/Downloads/HAUSSMANN APARTMENT.zip"
+python3 scripts/gaussian_room/review_surface.py
+BACKEND_PORT=8222 FRONTEND_PORT=5222 ./run-local.sh
+```
+
+Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if needed. Run preparation in a normal terminal for GPU access; our latest run took about 2½ minutes. Preparation is a one-time step and refuses to overwrite existing output. Generated room assets are ignored by Git, so each collaborator must prepare them locally. Keep the attribution/license. This remains an experimental test room with assumed scale and known downward/ceiling/window artifacts. Stop the stack with Ctrl-C when finished.
+
 ## In progress
 
 - Nightstand/side table, rug, and dresser (HEMNES-style) still not started — image file paths were unreliable this session (didn't save to disk more than once); dresser is on hold pending a usable path.

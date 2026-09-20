@@ -8,9 +8,23 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 - Use [HAUSSMANN APARTMENT](https://superspl.at/scene/4de797f4) as the shared Gaussian room test download. SuperSplat login may be required. Credit Stéphane Agullo (sa3d), CC BY 4.0; retain the downloaded license. This is an authored test scene with assumed scale, not a measured room.
 
+After downloading, keep the ZIP intact and run these commands from the repository root after saving current work:
+
+```bash
+git switch main
+git pull --ff-only
+./setup.sh
+python3 scripts/gaussian_room/prepare_haussmann.py "$HOME/Downloads/HAUSSMANN APARTMENT.zip"
+python3 scripts/gaussian_room/review_surface.py
+BACKEND_PORT=8222 FRONTEND_PORT=5222 ./run-local.sh
+```
+
+Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if needed. Run preparation in a normal terminal for GPU access; our latest run took about 2½ minutes. Preparation is a one-time step and refuses to overwrite existing output. Generated room assets are ignored by Git, so each collaborator must prepare them locally. Keep the attribution/license. This remains an experimental test room with assumed scale and known downward/ceiling/window artifacts. Stop the stack with Ctrl-C when finished.
+
 ## In progress
 
-- None. Storage work is in review. Next, in order: the merge-discipline block for `AGENTS.md` (requested mid-task, to apply at this boundary), Deepgram transcription, then wiring Adele's chair if its scale and pivot are fixed.
+- **Add speech and typed user input** (Kanban `3dc03f7b`, owner Saketh, not done). Typed input and the server path are verified. **Waiting on one thing: Saketh presses the microphone on the demo laptop.** Real speech through a real microphone in a browser is unverified; headless Chrome's fake microphone delivered silence. The card stays open until then.
+- Next after the Deepgram PR merges: read through Sin's updated engine (contract surface, `validatePlacement` property test, the four item C bindings), reconcile his how-to against the source, then the room bundle.
 
 ## Next
 
@@ -28,6 +42,13 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 For each import, verify expected/actual counts, rejected rows, stable IDs on a second run, search results, and one selected GLB through the real browser scene before marking these tasks done. No source data has been imported yet.
 
 ## Done
+
+- **Deepgram voice input, built (2026-09-20); card still open, see In progress.** Branch `codex/saketh-deepgram`, off fresh `main` after merging PR #28 and PR #29 (suite run on fresh `main` after each: 179 backend, 73 frontend, build OK). Both PRs first got review fixes: room links open only when the layout is really parked and the parked copy follows later edits (#28); catalogue doc counts and the asset regression pinned to its fixture (#29).
+  - **The project calls a Deepgram API**: pre-recorded `v1/listen`, `nova-3`, from the server. `backend/catalogue/transcribe.py` (`transcribe()`, `TRANSCRIBE_BACKEND=deepgram|browser`, stdlib HTTP so no new dependency), `GET`/`POST /api/transcribe` in `views.py`/`urls.py`, a raw-audio parser, `TranscribeThrottle` at 20/min. `CompileThrottle` and it now share `FailOpenThrottle`. Frontend `frontend/src/catalogue/transcribe.ts` and a press-to-talk button in the shelf; Web Speech is the fallback. Key set in the ignored `.env`; names only in `.env.example`.
+  - Verification: backend 187 tests offline with both API keys blanked (8 new, recorded Deepgram response); live test behind `TRANSCRIBE_LIVE_TEST=1` passed. Through the app's proxy the fixture recording came back as "A reading chair under $400." in 540 ms and compiled to `armchair`, `under $400`. 415 and 413 refusals confirmed. The key appears in no log or response. In headless Chrome the button recorded with `MediaRecorder`, uploaded and got a 200, but Chrome's fake microphone delivered silence, so **real speech through a real microphone in the browser is not yet verified by me** and needs one human try.
+  - Saketh checked the challenge wording: it requires calling a Deepgram API; pre-recorded qualifies.
+  - Review follow-ups in the same PR: a Deepgram 503 now falls back **for that press only**, using a shadow browser recogniser that ran alongside the recording, and never latches; `?dev=1` shows which backend actually answered; `search`, `compile_program` and `transcribe_audio` are explicitly anonymous (a signed-in shopper's POSTs were being refused for a missing CSRF token), which also closed a hole where signing in bypassed the throttle on the paid endpoints, now per client address for everyone; noted in `TODO_WILLIAM.md`. Kanban: I had missed that the board rule reached `AGENTS.md`; from here I update my own cards only, minimally.
+  - Also at this boundary: item C re-verified on merged `main` (overlay and `discard`, raycast, GLB load, footprint). **No new renderer or GLB dataset from William is on `main`, any remote branch or any PR**; issue #30 asks him to push it. Saketh's later instruction replaces the window question there: openings are to be extracted from the room model when it lands.
 
 - **First real 3D asset: HERRÅKRA armchair fixed, listed and wired (2026-09-20).** Branch `codex/saketh-herrakra-chair`, off fresh `main`.
   - Adele had not pushed a fix or replied, so per Saketh the transform was baked here. Her commit was cherry-picked with her authorship; the `TODO_ADELLE.md` conflict was resolved keeping both sides.
