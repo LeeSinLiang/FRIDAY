@@ -40,10 +40,11 @@ test("frontend and backend agree on supported catalogue placements", () => {
       assert.equal(supportHeightCm(room, [table, vase], instances, candidate.instanceId, vasePose), 74);
     return valid;
   });
-  const backend = spawnSync("uv", ["run", "python", "-m", "api.stacking_probe"], {
+  const backend = spawnSync("uv", ["run", "--frozen", "python", "-m", "api.stacking_probe"], {
     cwd: resolve(process.cwd(), "../backend"), input: JSON.stringify(cases), encoding: "utf8",
     env: { ...process.env, OPENAI_API_KEY: "", SEARCH_BACKEND: "memory" },
   });
+  assert.ifError(backend.error); // Report a missing runner directly instead of null !== 0.
   assert.equal(backend.status, 0, backend.stderr);
   assert.deepEqual(JSON.parse(backend.stdout), front);
   assert.deepEqual(front, [true, true, false, true, false, true, false, true, false, true]);
