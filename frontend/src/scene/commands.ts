@@ -1,3 +1,4 @@
+import { validInlineProduct } from "./products";
 import type { Instance, Pose, Product, SceneEdit } from "./types";
 
 export type EditorHistory = {
@@ -37,11 +38,11 @@ export function applyEdit(
       return instances;
     if (instances.some((i) => i.instanceId === item.instanceId))
       return instances;
-    if (
-      !products.some((p) => p.productId === item.productId && validProduct(p))
-    )
-      return instances;
-    return [...instances, { ...item, pose: { ...item.pose } }];
+    const shared = products.some((p) => p.productId === item.productId && validProduct(p));
+    // A shared product always wins; an inline one is only consulted for ids the shared list lacks.
+    if (!shared && !validInlineProduct(item.product, item.productId)) return instances;
+    const { product, ...rest } = item;
+    return [...instances, { ...rest, pose: { ...item.pose }, ...(shared || !product ? {} : { product: { ...product } }) }];
   }
   const index = instances.findIndex((i) => i.instanceId === command.instanceId);
   if (index < 0) return instances;

@@ -13,6 +13,14 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## Done
 
+- **Catalogue items placeable in a scene (2026-09-19).** Branch `codex/saketh-catalogue-placement`, off fresh `main` after merging PRs #16 and #17 (`main`: 123 backend tests, 54 frontend tests, build OK).
+  - Sin gave blanket permission to work in his lane; this PR touches his files and says so.
+  - Frontend: optional `product` on `Instance`; `frontend/src/scene/products.ts` (`validInlineProduct`, `productOf`, `productsWith`); `placement.ts`, `commands.ts`, `useSceneSync.ts`, `App.tsx` resolve through it; `instanceFromListing` in `frontend/src/region/boundary.ts`.
+  - Backend: `backend/api/catalogue_products.py` (catalogue listing → scene product, the backend's only mm→cm crossing) and `resolve_product` in `backend/api/scene_service.py`. Non-fixture ids must be catalogue listings, must carry their product, and the carried dimensions must match the catalogue within 0.05 cm. Snapshots list placed catalogue products.
+  - Docs: new section in `docs/backend/contracts/scene-api.md`; `docs/frontend/region-solver.md` and `TODO_SIN.md` notes updated.
+  - Verification: backend 131 tests (8 new), frontend 57 tests (3 new), build OK; all pre-existing tests unchanged and passing. End to end by real id `ikea-193.025.39`: backend test adds, reads back, moves, collides with and removes a POÄNG; frontend test takes the real feed entry through reducer, placement check, solver and snapshot round trip. Live on a private port: `/api/search?q=poäng` → `POST /api/scene/commands/` → read back; the same id with width shrunk to 30 cm is refused with "The carried product does not match the catalogue."
+  - Noticed: the dev stack running in Saketh's own terminal is stale (its Django knows only health, search and compile; autoreload missed the branch switches). Left alone; it needs a restart.
+
 - **Shared convention: sync before work (2026-09-19).** Branch `codex/saketh-sync-convention`. Added a "Sync before starting work" section to `AGENTS.md` (pull, `./setup.sh`, tests and build on fresh `main`, branch off `main`, re-read `AGENTS.md` and `INDEX.md`; stop if clean `main` is red; retarget a stacked PR before deleting its base). Scoped per Saketh: pull at task boundaries (task start, after a merge), never mid-task, so Sin's no-mid-task-fetch rule and the sync both stand. Appended a note about the change to `TODO_SIN.md` and `TODO_WILLIAM.md`. `CLAUDE.md` is a symlink, so it follows. Documentation only; links checked.
 
 - **Solver follow-up: fixture room, "nothing fits" reasons, near semantics (2026-09-19).** Branch `codex/saketh-nothing-fits`, off fresh `main` after merging PR #15 (`main`: 123 backend tests, 51 frontend tests, build OK; `AGENTS.md` unchanged).

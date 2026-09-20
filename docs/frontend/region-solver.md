@@ -75,7 +75,7 @@ The catalogue and the DSL are integer millimetres; the scene is centimetres. Nei
 
 **Walls.** The scene's `Room` has no named walls; the DSL says `w-n`, `w-e`, `w-s`, `w-w`. Mapping: north is z = 0 (the editor's back wall), east is x = `widthCm`, south is z = `depthCm`, west is x = 0 (its side wall). Compass words, because "left" means nothing in first person.
 
-**Catalogue → scene.** `listingToProduct` converts `dims_mm / 10` and folds the 12 categories onto the scene's 3 `kind`s, which only pick a stand-in shape: sofa, bed → `sofa`; armchair, chair, lamp, plant → `chair`; table, desk, shelf, storage, rug, decor → `table`.
+**Catalogue → scene.** `instanceFromListing` builds a placeable instance that carries its product; the scene accepts it and the server checks it against its own catalogue (see [scene API](../backend/contracts/scene-api.md#catalogue-products-added-by-sakeths-lane-2026-09-19)). `listingToProduct` converts `dims_mm / 10` and folds the 12 categories onto the scene's 3 `kind`s, which only pick a stand-in shape: sofa, bed → `sofa`; armchair, chair, lamp, plant → `chair`; table, desk, shelf, storage, rug, decor → `table`.
 
 ## Proposed: `Room.openings`
 

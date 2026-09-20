@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PRODUCTS, ROOM } from "./fixtures";
+import { validInlineProduct } from "./products";
 import type { Instance } from "./types";
 
 export type SyncStatus = "loading" | "saved" | "saving" | "unsaved" | "offline" | "conflict";
@@ -8,8 +9,10 @@ type SyncState = { ready: boolean; status: SyncStatus; message: string; revision
 type Options = { instances: Instance[]; replace: (instances: Instance[]) => void; interactionActive: boolean };
 
 export function sceneFingerprint(instances: Instance[]): string {
-  return JSON.stringify(instances.map(({ instanceId, productId, pose }) => ({
+  return JSON.stringify(instances.map(({ instanceId, productId, pose, product }) => ({
     instanceId, productId, pose: { xCm: pose.xCm, zCm: pose.zCm, yawRad: pose.yawRad },
+    // Carried products are part of what gets saved; fixture instances serialize exactly as before.
+    ...(product ? { product } : {}),
   })));
 }
 
@@ -33,12 +36,15 @@ export function parseSceneSnapshot(value: unknown): Snapshot {
     const instance = item as Record<string, unknown>;
     const pose = instance.pose as Record<string, unknown> | undefined;
     if (typeof instance.instanceId !== "string" || !instance.instanceId.trim() || ids.has(instance.instanceId) ||
-      typeof instance.productId !== "string" || !known.has(instance.productId) || !serverProducts.has(instance.productId) ||
+      typeof instance.productId !== "string" || !serverProducts.has(instance.productId) ||
+      !(known.has(instance.productId) || validInlineProduct(instance.product, instance.productId)) ||
       !pose || ![pose.xCm, pose.zCm, pose.yawRad].every((number) => typeof number === "number" && Number.isFinite(number)))
       throw Error("Invalid scene object");
     ids.add(instance.instanceId);
+    const carried = !known.has(instance.productId) && validInlineProduct(instance.product, instance.productId) ? instance.product : undefined;
     return { instanceId: instance.instanceId, productId: instance.productId,
-      pose: { xCm: pose.xCm as number, zCm: pose.zCm as number, yawRad: pose.yawRad as number } };
+      pose: { xCm: pose.xCm as number, zCm: pose.zCm as number, yawRad: pose.yawRad as number },
+      ...(carried ? { product: carried } : {}) };
   });
   return { revision: data.revision as number, instances };
 }

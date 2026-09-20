@@ -1,3 +1,4 @@
+import { productOf } from "./products";
 import type { Instance, Pose, Product, Room } from "./types";
 
 export type PlacementResult = {
@@ -38,7 +39,7 @@ export function validatePlacement(room: Room, products: Product[], instances: In
   if (!validPose(pose)) return invalid("Enter a finite position and rotation");
   const candidates = instances.filter(i => i.instanceId === instanceId);
   if (candidates.length !== 1) return invalid("Object is missing or duplicated");
-  const product = products.find(p => p.productId === candidates[0].productId);
+  const product = productOf(candidates[0], products);
   if (!product || !validProduct(product)) return invalid("Invalid furniture dimensions");
   if (product.heightCm > room.heightCm + EPSILON_CM) return invalid("Too tall for this room");
   const target = footprint(product, pose);
@@ -48,7 +49,7 @@ export function validatePlacement(room: Room, products: Product[], instances: In
   const names: string[] = [];
   for (const other of instances) {
     if (other.instanceId === instanceId) continue;
-    const otherProduct = products.find(p => p.productId === other.productId);
+    const otherProduct = productOf(other, products);
     if (!otherProduct || !validProduct(otherProduct) || !validPose(other.pose)) return invalid("Cannot validate an existing object");
     if (overlaps(target, footprint(otherProduct, other.pose))) {
       collidingIds.push(other.instanceId);
