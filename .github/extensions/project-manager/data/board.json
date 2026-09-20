@@ -334,6 +334,12 @@
           "title": "Refine furniture summon reveal",
           "done": true,
           "owner": "sin"
+        },
+        {
+          "id": "b7f3d2a4-6c1e-4f58-9a3b-2e8d5c7f9a10",
+          "title": "Look around while a piece is in hand (drag looks, click places)",
+          "done": true,
+          "owner": "saketh"
         }
       ],
       "description": "React app shell, product browsing, constraint chips, and conversation."
