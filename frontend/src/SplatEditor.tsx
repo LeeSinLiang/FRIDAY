@@ -48,10 +48,10 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   const [pendingProductId,setPendingProductId]=useState<string|null>(null);
   const [panel,setPanel]=useState<"catalogue"|"inspector">("catalogue");
   const [panelOpen,setPanelOpen]=useState(false);
-  // The language search panel (sentence box, microphone, lit floor). In shopping mode it opens from the furniture
-  // catalogue; on the plain editor route (/?room=…) it starts open, because that route IS the search-and-fit demo and
-  // there was otherwise no control on it that could ever open the panel.
-  const [shopSearchOpen,setShopSearchOpen]=useState(!shopping);
+  // The language search panel (sentence box, microphone, lit floor). It starts open on every route: the gallery's
+  // /room/<id> (shopping mode) is the route we demo, and with the panel closed the sentence box was three interactions
+  // deep. Close search closes it and it stays closed; the furniture rail's "Search purchasable catalogue" reopens it.
+  const [shopSearchOpen,setShopSearchOpen]=useState(true);
   const [snap,setSnap]=useState(true);
   const [showSurface,setShowSurface]=useState(false);
   const [surfaceNote,setSurfaceNote]=useState("");
