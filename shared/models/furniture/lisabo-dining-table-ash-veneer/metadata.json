@@ -9,7 +9,6 @@
   "upAxis": "+Y",
   "frontAxis": "+Z",
   "pivot": "floor-footprint-center",
-  "unbound": "As generated the model is 149.6 x 79.9 cm against the listing's 140 x 78 cm, outside the asset check. It needs 6.8% non-uniform scale, inside the 10% cap, so it is unlinked only until it is refitted.",
   "catalogueListingId": "ikea-702.211.42",
   "source": {
     "product": "IKEA LISABO table, ash veneer (702.211.42), matches the pre-existing stub catalogue entry",
@@ -17,8 +16,23 @@
     "generation": "Higgsfield image_to_3d (Meshy), single reference image, should_texture=true, enable_pbr=true, then gltf-transform optimize (--compress false, --texture-compress auto --texture-size 1024, --simplify --simplify-ratio 0.4)"
   },
   "knownLimitations": [
-    "FAILS the automated check in backend/api/test_furniture_assets.py as pushed. After fitting to the correct 74cm height, measured box is 149.6 x 74.0 x 79.9 cm against the real 140 x 74 x 78 cm: width off by 9.6cm (tolerance ~4.2cm), depth passes (1.9cm off, tolerance ~2.3cm). Same single-photo proportion class already flagged/accepted this session; pushed anyway under the same standing direction.",
+    "SUPERSEDED 2026-09-20: refitted per axis (6.83% anisotropy, inside the 10% cap), see \"fit\"; it now matches the listing exactly. Original note: FAILS the automated check in backend/api/test_furniture_assets.py as pushed. After fitting to the correct 74cm height, measured box is 149.6 x 74.0 x 79.9 cm against the real 140 x 74 x 78 cm: width off by 9.6cm (tolerance ~4.2cm), depth passes (1.9cm off, tolerance ~2.3cm). Same single-photo proportion class already flagged/accepted this session; pushed anyway under the same standing direction.",
     "Generated from a single product photo, no additional angles",
     "No manual Blender inspection/correction pass has been done"
-  ]
+  ],
+  "fit": {
+    "appliedBy": "scripts/fit_glb.py <model> 140 78 74",
+    "scale": [
+      0.7371,
+      0.7874,
+      0.7686
+    ],
+    "anisotropyPercent": 6.83,
+    "residualCm": {
+      "width": 0.0,
+      "height": 0.0,
+      "depth": 0.0
+    },
+    "note": "As generated the model was 149.6 x 79.9 x 74.0 cm against the listing's 140 x 78 x 74 cm. A per-axis root scale of 6.83% anisotropy, inside the 10% cap, brings it to the listing exactly. Lossless; re-run after any re-export."
+  }
 }
