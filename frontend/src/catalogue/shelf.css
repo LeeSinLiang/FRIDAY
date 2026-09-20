@@ -38,7 +38,6 @@
 .shelf-embedded form {gap:6px;}
 .shelf-embedded input {font-size:12px;padding:10px;}
 .shelf-embedded button.go {font-size:12px;padding:9px 11px;}
-.shelf-embedded button.mic {width:36px;flex:none;display:grid;place-items:center;}
 .shelf-embedded .shelf-voice-hint {margin:0;font-size:10px;color:#756351;}
 .shelf-embedded .shelf-chips {gap:4px;max-height:64px;overflow-y:auto;}
 .shelf-embedded .shelf-chips span {font-size:10px;padding:3px 7px;}

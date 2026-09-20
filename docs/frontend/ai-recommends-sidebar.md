@@ -4,9 +4,10 @@ Owner: William. Branch: `codex/ai-recommends-sidebar`, based on available main `
 
 ## Interaction
 
-AI recommends is the first category and opens by default in the existing right furniture panel.
-The existing panel toggle collapses it to the category rail, which includes a microphone button.
-Command+Shift+D (Control+Shift+D on other keyboards) opens AI recommends and starts dictation;
+AI is the first category and opens by default in the existing right furniture panel.
+The existing panel toggle collapses it to the category rail. Speak is in the bottom editor toolbar,
+outside the open search form and category rail.
+Command+Shift+D (Control+Shift+D on other keyboards) opens AI and starts dictation;
 press it again to stop and search the transcript. Plain D still belongs to walking/typing.
 Switching categories or closing the panel releases microphone capture and discards late transcripts.
 Typed requests, chips, result counts, fit highlights, rotation, placement confirmation and cart
@@ -63,8 +64,9 @@ memory fallback. No Elastic credential is sent to the browser. Runtime must conf
 - `npm run build`: `built in 6.05s`.
 - Live catalogue response: `X-Search-Backend: elastic`, `X-Search-Results: model-first`, 1,017 armchair matches.
 - Live Deepgram endpoint: repository WAV transcribed as `A reading chair under $400.` in 572 ms.
-- Browser: AI-first rail, matching cards, category/query preservation, collapse/expand, microphone shortcut
-  from collapsed rail and focused input, start/stop/cancel, no-results state, fit preview and placement confirmation.
+- Browser check before the bottom-toolbar correction: AI-first rail, matching cards, category/query preservation,
+  collapse/expand, microphone shortcut from the earlier rail location and focused input, start/stop/cancel,
+  no-results state, fit preview and placement confirmation.
   Deterministic voice fixture reported two starts and two stream stops; it was removed by reloading.
   Physical microphone recording was not required for this test.
 - Browser placement confirmation reached Cart (1), but reloading the in-app browser returned Cart (0)
@@ -93,3 +95,47 @@ normal browser. Parent-thread scene-agent work remains separate.
 - Screenshots: `.scratch/category-lighting.png`, `.scratch/category-tables-scroll.png`, `.scratch/category-lamp-preview.png`.
 - Cleanup: temporary test tab closed; stack stopped; no listeners on 8279/5279. Other task runtimes were preserved.
 - [Issue #101](https://github.com/LeeSinLiang/hackmit2026/issues/101) remains open for delivery. No push, merge, or Vercel update; the existing sidebar task's browser guest-session persistence limitation remains separate.
+
+## Bottom Speak control correction
+
+The category and open heading read `AI`. Speak appears once in the bottom editor toolbar, including while
+the panel is collapsed. The embedded search form and category rail have no microphone button. At narrow
+widths, the open panel ends above the bottom Speak control so touch users can finish dictation. The
+Command+Shift+D shortcut remains active; the standalone legacy catalogue keeps its own microphone.
+
+- Running preview: `http://127.0.0.1:5279/room/empty-room`, served from this worktree. Browser checks at
+  1280 × 720 and 390 × 844 showed `AI`, one bottom Speak button, and no mic in the open form or rail.
+  The collapsed rail retained the category controls. The desktop toolbar clears the panel by 9 px.
+- `npm test`: `tests 187 / pass 187 / fail 0`, then `tests 25 / pass 25 / fail 0`.
+- `OPENAI_API_KEY= ELASTIC_API_KEY= SEARCH_BACKEND=memory TRANSCRIBE_BACKEND=browser COMPILE_LIVE_TEST=0 .venv/bin/python manage.py test`:
+  `Ran 284 tests in 13.972s`, `OK (skipped=5)`.
+- `npm run build`: `built in 4.23s`. Optional local room assets and bundle-size warnings remain.
+- `git diff --check` passed. The existing local preview remains available for user testing.
+
+## Bottom voice recording state
+
+Selecting Speak opens a dark recording strip in the existing bottom toolbar. Its waveform pulses while
+the browser or Deepgram microphone session is listening and stays still while connecting or transcribing.
+The square cancels and discards the capture; the arrow finishes recording and submits a successful
+transcript through the same compile/search path as typed input. The browser's reduced-motion setting
+disables the pulse. On a narrow screen the strip sits below the panel; the embedded search form and
+category rail keep their single AI entry and no microphone control. The existing keyboard shortcut
+uses the same start/finish flow.
+
+Cancelling a Deepgram capture stops microphone tracks without posting the audio blob. Closing the shelf
+or switching categories cancels the active capture as well. The standalone legacy shelf keeps its own
+voice button and backend selection.
+
+The running worktree preview at `http://127.0.0.1:5279/room/empty-room` was checked in the in-app
+browser at 1280 × 720 and 390 × 844. Both screenshots show the active waveform, cancel square and
+finish arrow clear of the AI panel (`.scratch/voice-recording-desktop.jpg` and
+`.scratch/voice-recording-mobile.jpg`). Cancel restored the single Speak button without a query;
+finishing a silent recording restored Speak and showed the existing retry message. The waveform's
+computed animation was active during listening. A controlled Deepgram adapter check observed zero
+uploads on cancel and one on finish, with both microphone tracks released.
+
+The isolated staged snapshot, excluding the concurrent product-card draft, passed `npm test` with
+`187 passed, 0 failed` plus `25 passed, 0 failed`, and `npm run build` with `built in 2.54s`.
+The full backend suite reported `Ran 284 tests in 13.653s / OK (skipped=5)` in the live worktree;
+no backend files changed in this follow-up. `git diff --cached --check` passed. The preview remains
+local to this worktree; the existing sidebar task stays active for delivery/persistence work.

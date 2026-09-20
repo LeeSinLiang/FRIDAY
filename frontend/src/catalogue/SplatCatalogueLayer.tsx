@@ -16,6 +16,7 @@ import type { PlayCanvasRuntime } from "../scene/playcanvas/runtime";
 import type { Instance, Product, Room, SceneEdit } from "../scene/types";
 import type { BrowseCategory } from "./browse";
 import CatalogueShelf from "./CatalogueShelf";
+import type { VoicePhase } from "./transcribe";
 import { saveQuietly } from "./quietSave";
 import { FREE } from '../region/types';
 
@@ -37,6 +38,8 @@ type Props = {
   onCloseShelf?: () => void;
   shelfTarget?: HTMLElement | null;
   voiceRequest?: number;
+  voiceCancelRequest?: number;
+  onVoicePhaseChange?: (phase: VoicePhase) => void;
   browseCategory?: BrowseCategory | null;
   confirm?: (instance:Instance) => Promise<boolean>;
 };
@@ -44,7 +47,7 @@ type Props = {
 /** The engine's own drag threshold (interaction.ts): a press that moves this far is a look, not a click. */
 const LOOK_THRESHOLD_PX = 4;
 
-export default function SplatCatalogueLayer({ getRuntime, room, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, showShelf = true, onCloseShelf, shelfTarget, voiceRequest, browseCategory = null, confirm }: Props) {
+export default function SplatCatalogueLayer({ getRuntime, room, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, showShelf = true, onCloseShelf, shelfTarget, voiceRequest, voiceCancelRequest, onVoicePhaseChange, browseCategory = null, confirm }: Props) {
   const [hovered, setHovered] = useState<Listing | null>(null);
   const [armed, setArmed] = useState<Listing | null>(null);
   useEffect(() => { if (!showShelf) { setHovered(null); setArmed(null); } }, [showShelf]);
@@ -189,7 +192,7 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
   }
   const verdict = unconfirmed ? validatePlacement(room,known,[...instances,unconfirmed],unconfirmed.instanceId,unconfirmed.pose) : null;
   return <>
-    {shelfTarget !== undefined ? shelfTarget && createPortal(<CatalogueShelf embedded active={showShelf} browseCategory={browseCategory} voiceRequest={voiceRequest} region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
+    {shelfTarget !== undefined ? shelfTarget && createPortal(<CatalogueShelf embedded active={showShelf} browseCategory={browseCategory} voiceRequest={voiceRequest} voiceCancelRequest={voiceCancelRequest} onVoicePhaseChange={onVoicePhaseChange} region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
       canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace}/>, shelfTarget) : showShelf && <CatalogueShelf region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
       canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} onClose={onCloseShelf}/>}
 

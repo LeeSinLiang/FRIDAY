@@ -8,7 +8,7 @@ import type { Listing } from "../lib/types";
 import type { Region } from "../region/useRegion";
 import { ROOM_CHOICES, ROOM_ID } from "../scene/fixtures";
 import { compileSentence, searchCatalogue, type Compiled } from "./api";
-import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend } from "./transcribe";
+import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend, type VoicePhase } from "./transcribe";
 import "./shelf.css";
 import { priceLabel } from "./price";
 import ListingImage from "./ListingImage";
@@ -18,6 +18,8 @@ type Props = {
   embedded?: boolean;
   active?: boolean;
   voiceRequest?: number;
+  voiceCancelRequest?: number;
+  onVoicePhaseChange?: (phase: VoicePhase) => void;
   browseCategory?: BrowseCategory | null;
   region: Region | null;
   yawIndex: number;
@@ -75,7 +77,7 @@ function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: 
   );
 }
 
-export default function CatalogueShelf({ embedded = false, active = true, voiceRequest = 0, browseCategory = null, region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose }: Props) {
+export default function CatalogueShelf({ embedded = false, active = true, voiceRequest = 0, voiceCancelRequest = 0, onVoicePhaseChange, browseCategory = null, region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose }: Props) {
   const [sentence, setSentence] = useState("an armchair");
   const [compiled, setCompiled] = useState<Compiled | null>(null);
   const [items, setItems] = useState<Listing[]>([]);
@@ -114,6 +116,7 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
   const voiceEpoch = useRef(0);
   const voiceStarting = useRef(false);
   const [startingVoice, setStartingVoice] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [heardBy, setHeardBy] = useState<Heard | null>(null);
   useEffect(() => { const controller = new AbortController(); void fetchBackend(controller.signal).then(setVoice); return () => controller.abort(); }, []);
 
@@ -140,9 +143,9 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
   };
   useEffect(() => { void run(sentence); return () => request.current?.abort(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Press to talk, press again to stop. What was heard lands in the box and is searched like typed text.
+  // Speak starts recording; finish transcribes and searches, while cancel discards the recording.
   const talk = async () => {
-    if (voiceSession.current) { voiceSession.current.stop(); return; }
+    if (voiceSession.current) { voiceSession.current.stop(); setListening(null); setTranscribing(true); return; }
     if (voiceStarting.current) return;
     if (!canListen(voice)) { setError("Voice is unavailable in this browser. You can still type your request."); return; }
     voiceStarting.current = true; setStartingVoice(true); setError("");
@@ -150,7 +153,7 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
     try {
       const session = await listen(voice);
       // Closing or switching floors while permission is pending must release the new stream.
-      if (epoch !== voiceEpoch.current) { session.stop(); void session.result.catch(() => undefined); return; }
+      if (epoch !== voiceEpoch.current) { session.cancel(); void session.result.catch(() => undefined); return; }
       voiceSession.current = session; setListening(session);
       voiceStarting.current = false; setStartingVoice(false);
       const heard = await session.result;
@@ -164,15 +167,24 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
     } finally {
       if (epoch === voiceEpoch.current) {
         voiceSession.current = null; voiceStarting.current = false;
-        setListening(null); setStartingVoice(false);
+        setListening(null); setStartingVoice(false); setTranscribing(false);
       }
     }
   };
+  const cancelVoice = () => {
+    voiceEpoch.current++;
+    voiceStarting.current = false;
+    const session = voiceSession.current;
+    voiceSession.current = null;
+    session?.cancel();
+    void session?.result.catch(() => undefined);
+    setListening(null); setStartingVoice(false); setTranscribing(false);
+  };
   useEffect(() => {
-    if (!active || browsing) { setListening(null); setStartingVoice(false); }
+    if (!active || browsing) { setListening(null); setStartingVoice(false); setTranscribing(false); }
     return () => {
       voiceEpoch.current++; voiceStarting.current = false;
-      voiceSession.current?.stop(); voiceSession.current = null;
+      voiceSession.current?.cancel(); voiceSession.current = null;
     };
   }, [active, browsing]);
   const handledVoiceRequest = useRef(0);
@@ -181,6 +193,17 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
     handledVoiceRequest.current = voiceRequest;
     void talk();
   }, [voiceRequest, active, browsing]); // Explicit button/chord only, never on mount or backend changes.
+  const handledCancelRequest = useRef(0);
+  useEffect(() => {
+    if (voiceCancelRequest === 0 || handledCancelRequest.current === voiceCancelRequest) return;
+    handledCancelRequest.current = voiceCancelRequest;
+    cancelVoice();
+  }, [voiceCancelRequest]);
+  useEffect(() => {
+    if (!embedded) return;
+    onVoicePhaseChange?.(!active || browsing ? "idle" : startingVoice ? "connecting" : listening ? "listening" : transcribing ? "transcribing" : "idle");
+  }, [active, browsing, embedded, startingVoice, listening, transcribing, onVoicePhaseChange]);
+  useEffect(() => () => onVoicePhaseChange?.("idle"), [onVoicePhaseChange]);
 
   const submit = (event: FormEvent) => { event.preventDefault(); onPick(null); void run(sentence); };
   const dropped = region?.solution.dropped ?? [];
@@ -205,7 +228,7 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
       {!browsing && <><form onSubmit={submit}>
         <input value={sentence} onChange={(event) => setSentence(event.target.value)} maxLength={300}
           aria-label="Describe what you are looking for" placeholder="a reading chair by the window, under $400" />
-        {(embedded || canListen(voice)) && (
+        {!embedded && canListen(voice) && (
           <button type="button" className="mic" onClick={() => void talk()} aria-pressed={listening !== null} disabled={startingVoice}
             aria-keyshortcuts="Meta+Shift+D Control+Shift+D"
             aria-label={listening ? "Stop listening" : "Say what you are looking for"} title={listening ? "Stop listening (⌘⇧D)" : "Speak (⌘⇧D)"}>
@@ -214,7 +237,6 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
         )}
         <button className="go" disabled={busy}>{busy ? "…" : "Find"}</button>
       </form>
-      {embedded && <p className="shelf-voice-hint" role="status">{startingVoice ? "Connecting microphone…" : listening ? "Listening… press ⌘⇧D to finish" : "Describe a piece, or speak with ⌘⇧D"}</p>}
       {compiled && compiled.chips.length > 0 && (
         <div className="shelf-chips">{compiled.chips.map((chip) => <span key={chip}>{chip}</span>)}</div>
       )}
