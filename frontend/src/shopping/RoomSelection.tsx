@@ -15,7 +15,7 @@ export default function RoomSelection() {
     <main className="room-gallery"><div className="gallery-intro"><p className="shop-kicker">A space to make your own</p><h1>Start with a room.</h1><p>Find your furniture. Try it in place. Bring it all together.</p></div>
       <div className="room-choices">{rooms.map((room, i) => {
         const card = <>
-          <div className="room-choice-image"><img src={room.thumbnail} alt={room.title + ' illustration'} loading={i ? 'lazy' : 'eager'}/><span>{room.packaged ? 'Explore room ↗' : 'Not on this machine'}</span></div>
+          <div className="room-choice-image"><img src={room.thumbnail} alt={room.title + ' preview'} loading={i ? 'lazy' : 'eager'}/><span>{room.packaged ? 'Explore room ↗' : 'Not on this machine'}</span></div>
           <div className="room-choice-caption"><div><h2>{room.title}</h2><p>{room.packaged ? room.description : 'This room’s licensed model has not been imported here, so it cannot be opened. Import it, then restart the app.'}</p></div><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span></div>
         </>
         // A room that cannot load its geometry is listed, and says so, rather than opening into nothing.

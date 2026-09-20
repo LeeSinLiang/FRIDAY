@@ -137,6 +137,12 @@
           "title": "Prepare and verify the shared Haussmann room locally",
           "done": false,
           "owner": "adelle"
+        },
+        {
+          "id": "7e82963e-80af-4fd4-a9a8-6c1f34a30fdd",
+          "title": "Import and verify the supplied Cg Arch living room locally",
+          "done": true,
+          "owner": "william"
         }
       ]
     },

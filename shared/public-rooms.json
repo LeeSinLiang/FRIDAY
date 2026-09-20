@@ -3,18 +3,18 @@
     "id": "empty-room",
     "title": "The light-filled studio",
     "description": "An open room, ready for your first arrangement.",
-    "thumbnail": "/room-previews/empty-room.svg"
+    "thumbnail": "/room-previews/empty-room.png"
   },
   {
     "id": "london-skyscraper",
     "title": "The London skyscraper",
     "description": "Start in the entrance lobby, then explore the mezzanine and 32 tower floors.",
-    "thumbnail": "/room-previews/london-skyscraper.svg"
+    "thumbnail": "/room-previews/london-skyscraper.jpg"
   },
   {
     "id": "cg-arch-interior",
     "title": "The Cg Arch living room",
     "description": "A finished interior with a wide north window. Furnish it piece by piece.",
-    "thumbnail": "/room-previews/cg-arch-interior.svg"
+    "thumbnail": "/room-previews/cg-arch-interior.jpg"
   }
 ]
