@@ -129,3 +129,8 @@ The corrected lobby, mezzanine, 32 tower floor metadata and current editor UI ar
 | [Production rooms](https://friday-hackmit.vercel.app/rooms) | `dpl_Ah54qmfa7SriM8VvJrYgUQMn3GUn` | `dpl_3Q5aTaKrdvJQ4HfCEqL5WZJynh4f` | `96c81e343127e74219a3223af6d33e56a3753961499b5ceec6897f849ab72d64` |
 
 `vercel inspect` reported the frontend `READY`. Direct and rewritten `/api/health/` returned HTTP 200 with the identity above in `X-Friday-Build`; the live frontend `data-build` matched. The public browser showed screenshot cards and loaded the actual entrance, mezzanine and first tower floor as Floors 1, 2 and 3 of 34. The lobby floor plan showed its full irregular footprint. In the 5173 checkout, `manage.py test` ran 281 tests with `OK (skipped=4)`, `npm test` passed 181 scene and 25 account tests, the Vite build finished in 4.30 seconds, and board tests passed 6. The public Cg Arch card displays its captured preview but cannot be opened: its Blendkit licensed GLB is kept local and excluded from Vercel. This manual release does not resolve Git-triggered deployment issue #74. A fresh small off-centre public placement boundary replay remains open on the skyscraper task.
+
+
+## Scene designer test release — 2026-09-20
+
+PR #103 (`5afe392`) is published as the matching pair recorded in [public test release](../demo/public-test-release.md). The live source identity is `778d7e434fa26ce392a6a4179af5ed496bac83053f345e6cd119173e9664b1bd`. Hosted AI support placement, manual parent movement/rotation and undo/redo passed; the original test floor was restored. The later lighting merge `46930f6` is not included in this deployed snapshot.
