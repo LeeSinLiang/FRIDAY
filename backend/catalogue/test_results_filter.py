@@ -73,17 +73,21 @@ class EndpointTests(SimpleTestCase):
         with mock.patch.dict(os.environ, {**env, **({} if flag is None else {"SEARCH_RESULTS_REQUIRE_MODEL": flag})}, clear=True):
             return APIClient().get(self.URL)
 
-    def test_on_by_default_and_one_line_turns_it_off(self):
-        default, off = self.get(None), self.get("0")
-        self.assertEqual((default["X-Search-Results"], off["X-Search-Results"]), ("with-model", "all"))
-        self.assertTrue(all(item["model_url"] for item in default.json()["items"]))
-        self.assertEqual(default.json()["total"], len(default.json()["items"]))
-        self.assertGreater(off.json()["total"], default.json()["total"])
-        self.assertEqual(default.json()["facets"], off.json()["facets"], "the Elastic story does not shrink")
-        self.assertEqual(self.get("")["X-Search-Results"], "with-model", "an empty value in .env means the default, ON")
+    def test_models_first_by_default_and_one_line_selects_another_mode(self):
+        default, only, off = self.get(None), self.get("1"), self.get("0")
+        self.assertEqual([r["X-Search-Results"] for r in (default, only, off)], ["model-first", "with-model", "all"])
+        self.assertEqual(self.get("")["X-Search-Results"], "model-first", "an empty value in .env means the default")
+        self.assertEqual(self.get("boost").json(), default.json(), "spelling the default out changes nothing")
+        # Only-mode: just the listings with a model, and total is what can be paged.
+        self.assertTrue(all(item["model_url"] for item in only.json()["items"]))
+        self.assertEqual(only.json()["total"], len(only.json()["items"]))
+        self.assertGreater(off.json()["total"], only.json()["total"])
+        # Counting never depends on the mode: the Elastic story does not shrink.
+        self.assertEqual(default.json()["facets"], off.json()["facets"])
+        self.assertEqual(only.json()["facets"], off.json()["facets"])
 
     def test_boost_returns_everything_with_models_first_and_is_one_word_in_env(self):
-        boosted, only, plain = self.get("boost"), self.get(None), self.get("0")
+        boosted, only, plain = self.get(None), self.get("1"), self.get("0")
         self.assertEqual(boosted["X-Search-Results"], "model-first")
         self.assertEqual(boosted.json()["total"], plain.json()["total"], "nothing is excluded")
         self.assertEqual(boosted.json()["facets"], only.json()["facets"])
