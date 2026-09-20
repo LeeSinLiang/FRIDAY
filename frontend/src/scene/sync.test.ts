@@ -46,7 +46,8 @@ function harness(options: { storage?: ReturnType<typeof memoryStore>; roomId?: s
   const requests: { init: RequestInit; resolve: (response: Response) => void; reject: (error: Error) => void }[] = [];
   const replacements: Instance[][] = [];
   const latest = { current: { instances: [] as Instance[], interactionActive: false, replace: (instances: Instance[]) => replacements.push(instances) } };
-  let state = { ready: false, status: "loading" as SyncStatus, message: "", revision: null as number | null };
+  let state: { ready: boolean; status: SyncStatus; message: string; revision: number | null; saveFailures?: number; safeToLeave?: boolean } =
+    { ready: false, status: "loading", message: "", revision: null };
   const controller = createSceneSyncController(latest, (next) => { state = next; }, {
     csrfToken: () => "test-csrf-token",
     storage: options.storage ?? memoryStore(), roomId: options.roomId ?? "default",
@@ -373,4 +374,53 @@ test("the server dying AFTER load blocks nothing: polls fail quietly, a new edit
   await flush();
   assert.equal(h.state().status, "saved");
   assert.equal(storage.items.size, 0);
+});
+
+test("the parked copy follows later edits, and an undo back to the saved layout clears it", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const storage = memoryStore();
+  const h = harness({ storage });
+  t.after(() => h.controller.dispose());
+  h.respond(0, 3, 150);
+  await flush();
+  h.edit(155);
+  t.mock.timers.tick(400);
+  for (const wait of [500, 1000]) { h.requests[h.requests.length - 1].resolve(busy()); await flush(); t.mock.timers.tick(wait); }
+  const parkedX = () => JSON.parse(storage.items.get("friday:pending-scene:default") ?? "null")?.instances[0].pose.xCm;
+  assert.equal(parkedX(), 155);
+  h.edit(170); // moved again after the failures, before any further save fails
+  assert.equal(parkedX(), 170, "leaving now must not lose the latest move");
+  assert.equal(canLeaveRoom(h.state(), false), true);
+  h.edit(150); // undone back to what the server has
+  assert.equal(storage.items.size, 0, "nothing stale is left to resurrect on the next visit");
+});
+
+test("the way out opens only when the layout really is in browser storage", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const full = { ...memoryStore(), setItem: () => { throw new DOMException("quota", "QuotaExceededError"); } };
+  const h = harness({ storage: full });
+  t.after(() => h.controller.dispose());
+  h.respond(0, 3, 150);
+  await flush();
+  h.edit(155);
+  t.mock.timers.tick(400);
+  for (const wait of [500, 1000, 2000, 4000]) { h.requests[h.requests.length - 1].resolve(busy()); await flush(); t.mock.timers.tick(wait); }
+  assert.equal(h.state().saveFailures! >= LEAVE_AFTER_FAILURES, true);
+  assert.equal(canLeaveRoom(h.state(), false), false, "storage refused the copy, so leaving would lose the edit");
+});
+
+test("a refused save parks the layout before the room can be left", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const storage = memoryStore();
+  const h = harness({ storage });
+  t.after(() => h.controller.dispose());
+  h.respond(0, 3, 150);
+  await flush();
+  h.edit(155);
+  t.mock.timers.tick(400);
+  h.requests[1].resolve(Response.json({ error: { code: "csrf", message: "CSRF failed." } }, { status: 403 }));
+  await flush();
+  assert.equal(h.state().status, "offline");
+  assert.equal(JSON.parse(storage.items.get("friday:pending-scene:default")!).instances[0].pose.xCm, 155);
+  assert.equal(canLeaveRoom(h.state(), false), true);
 });
