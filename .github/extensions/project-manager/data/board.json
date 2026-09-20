@@ -155,6 +155,12 @@
           "title": "Fix Empty Interior Scene 2 walking and placement boundaries",
           "done": true,
           "owner": "william"
+        },
+        {
+          "id": "7424b217-243e-4f36-8ab4-19d407b83f0a",
+          "title": "Match GLB furniture lighting and support shadows to prepared rooms",
+          "done": false,
+          "owner": "william"
         }
       ]
     },

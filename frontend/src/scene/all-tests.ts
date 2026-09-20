@@ -21,3 +21,5 @@ import "./agentMotionSnapshot.test";
 import "./playcanvas/materialize.test";
 
 import "./supports.test";
+
+import "./playcanvas/furnitureFinish.test";
