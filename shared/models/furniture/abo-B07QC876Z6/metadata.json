@@ -1,0 +1,63 @@
+{
+  "productId": "abo-B07QC876Z6",
+  "modelUrl": "/models/furniture/abo-B07QC876Z6/model.glb",
+  "widthCm": 100.0,
+  "depthCm": 55.0,
+  "heightCm": 42.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "abo-B07QC876Z6",
+  "matchType": "verified",
+  "priceProvenance": "placeholder",
+  "license": {
+    "name": "CC BY 4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "3D model and product data from Amazon Berkeley Objects (c) Amazon.com, licensed CC BY 4.0. Dataset built by Matthieu Guillaumin, Thomas Dideriksen, Kenan Deng, Himanshu Arora (Amazon.com), Jasmine Collins and Jitendra Malik (UC Berkeley).",
+    "changes": "Textures resized to 512 px, mesh simplified and re-saved with gltf-transform; uniform scale to the listed height. Proportions untouched."
+  },
+  "source": {
+    "dataset": "Amazon Berkeley Objects",
+    "datasetUrl": "https://amazon-berkeley-objects.s3.amazonaws.com/index.html",
+    "itemId": "B07QC876Z6",
+    "domain": "amazon.com",
+    "productName": "Amazon Brand – Rivet Modern Coffee Table, 39.37\"W, Pine Veneer and Natural Wood",
+    "modelFile": "3dmodels/original/6/B07QC876Z6.glb",
+    "rawDimensions": {
+      "width": {
+        "value": 21.65,
+        "unit": "inches"
+      },
+      "length": {
+        "value": 39.37,
+        "unit": "inches"
+      },
+      "height": {
+        "value": 16.54,
+        "unit": "inches"
+      }
+    },
+    "axisAssignment": {
+      "w": "length",
+      "d": "width",
+      "h": "height"
+    },
+    "titleConfirms": [
+      "1000 mm W"
+    ],
+    "colour": "#6d4d2c",
+    "colourSource": "color_code",
+    "processing": "scripts/abo_import.py: strip cameras/lights/animations, @gltf-transform/cli@4 optimize --compress false --texture-compress auto --texture-size 512 --simplify, fit_to_height"
+  },
+  "residualCm": {
+    "width": 0.12,
+    "height": 0.0,
+    "depth": -0.03
+  },
+  "knownLimitations": [
+    "ABO scaled this model to the record's item_dimensions, so the size check cannot catch a wrong record. The product title, which states a size, is the independent witness: see source.titleConfirms.",
+    "The catalogue colour is the nearest of the 30 seed-palette colours to source.colour, not that colour itself.",
+    "price_cents is 0 because ABO has no price. 0 means unknown, not free."
+  ]
+}
