@@ -9,7 +9,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from .catalogue_products import OPTIONAL_PRODUCT_KEYS, PRODUCT_KEYS, agrees_with_catalogue, catalogue_product
+from .catalogue_products import agrees_with_catalogue, catalogue_product, well_formed
 from .models import SceneCommandReceipt, SceneLayout
 
 EPSILON = 1e-6
@@ -74,8 +74,7 @@ def resolve_product(item, products):
     carried = item.get('product')
     if carried is None:
         raise SceneError('validation', 'A catalogue item must carry its product.')
-    if (not isinstance(carried, dict) or not PRODUCT_KEYS <= set(carried) or set(carried) - PRODUCT_KEYS - OPTIONAL_PRODUCT_KEYS
-            or carried['productId'] != product_id or any(not number(carried[key]) or carried[key] <= 0 for key in ('widthCm', 'depthCm', 'heightCm'))):
+    if not well_formed(carried, product_id):
         raise SceneError('validation', 'The carried product is malformed.')
     if not agrees_with_catalogue(carried, authoritative):
         raise SceneError('validation', 'The carried product does not match the catalogue.', details={'issues': [{
@@ -112,7 +111,13 @@ def validate_instances(instances):
             if overlaps(box, previous):
                 raise SceneError('placement', f"Overlaps {previous_product['name']}.", details={'issues': [{'code': 'overlap', 'instanceId': identifier, 'conflictingInstanceIds': [previous_id]}]})
         boxes.append((box, product, identifier))
-    return copy.deepcopy(instances)
+    stored = copy.deepcopy(instances)
+    # Persist the server's copy of a carried product, never the client's: name, colour, kind and model
+    # come from the catalogue too, so what is saved is always something the editor can load back.
+    for item in stored:
+        if 'product' in item:
+            item['product'] = catalogue_product(item['productId'])
+    return stored
 
 
 def scene_for_session(session_key):

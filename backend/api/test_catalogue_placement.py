@@ -75,6 +75,12 @@ class CataloguePlacementTests(TestCase):
             'missing field': dict(self.poang, product={k: v for k, v in POANG.items() if k != 'kind'}),
             'extra field': dict(self.poang, product=dict(POANG, priceCents=1)),
             'non-finite': dict(self.poang, product=dict(POANG, depthCm=True)),
+            'kind the editor cannot load': dict(self.poang, product=dict(POANG, kind='bed')),
+            'blank name': dict(self.poang, product=dict(POANG, name='  ')),
+            'name not text': dict(self.poang, product=dict(POANG, name=7)),
+            'colour not text': dict(self.poang, product=dict(POANG, color=None)),
+            'model url not text': dict(self.poang, product=dict(POANG, modelUrl=5)),
+            'oversized name': dict(self.poang, product=dict(POANG, name='x' * 513)),
             'fixture product carrying one': {'instanceId': 'x', 'productId': 'test-chair', 'product': POANG, 'pose': self.poang['pose']},
             'unknown instance key': dict(self.poang, note='hi'),
         }
@@ -83,6 +89,14 @@ class CataloguePlacementTests(TestCase):
                 validate_instances([instance])
             self.assertEqual(self.commands([{'type': 'add', 'instance': instance}], command_id=name[:20]).status_code, 400, name)
         self.assertEqual(self.client.get('/api/scene/').json()['revision'], 0)
+
+    def test_what_is_stored_is_the_servers_copy_so_the_editor_can_always_load_it_back(self):
+        # Right dimensions, but the client renamed and recoloured it. Accepted, and normalised.
+        relabelled = dict(self.poang, product=dict(POANG, name='Free chair!!', color='#000000', kind='sofa'))
+        response = self.commands([{'type': 'add', 'instance': relabelled}])
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()['instances'][0]['product'], POANG)
+        self.assertEqual(self.client.get('/api/scene/').json()['instances'][0]['product'], POANG)
 
     def test_fixture_products_are_untouched(self):
         chair = {'instanceId': 'chair-1', 'productId': 'test-chair', 'pose': {'xCm': 100, 'zCm': 100, 'yawRad': 0}}
