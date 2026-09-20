@@ -26,7 +26,9 @@ def load_script(name):
 class RoomOpeningsTests(SimpleTestCase):
     def setUp(self):
         self.openings = json.loads((ROOM / 'openings.json').read_text())
-        self.free = json.loads((ROOM / 'spatial.json').read_text())['freeAreas'][0]
+        areas = json.loads((ROOM / 'spatial.json').read_text())['freeAreas']
+        self.free = {key: (min if key.startswith('min') else max)(area[key] for area in areas)
+                     for key in ('minXcm', 'maxXcm', 'minZcm', 'maxZcm')}
 
     def test_the_window_lies_within_its_wall(self):
         [window] = self.openings['openings']
@@ -45,10 +47,9 @@ class RoomOpeningsTests(SimpleTestCase):
                 self.assertNotIn(key, json.loads((ROOM / name).read_text()).get('room', {}))
                 self.assertNotIn(key, json.loads((ROOM / name).read_text()))
 
-    def test_portals_are_axis_aligned_and_the_demo_room_applies_none_yet(self):
-        # Applying the measured west portal changes two rehearsed demo numbers; that is Saketh's decision, not a default.
+    def test_internal_corridor_connection_needs_no_portal(self):
         self.assertEqual(self.openings['portals'], [])
-        self.assertIn('p-west', self.openings['portalsNote'])
+        self.assertIn('no boundary', self.openings['portalsNote'])
 
     @unittest.skipUnless(MODEL.is_file(), 'the licensed room model is not imported on this machine')
     def test_the_window_is_where_the_model_has_its_glass(self):

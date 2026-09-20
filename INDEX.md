@@ -101,3 +101,5 @@ Add dedicated feature docs here as they are created.
 
 - [Cart choreography](docs/frontend/shopping-cart-animation.md) — The cart preview folded into `/cart`: the shopper's real pieces gather under the checkout button; nothing on sign-in, authenticator or review; reduced motion; the StrictMode trap; the retired standalone preview as history.
 - [Furniture materialization](docs/frontend/furniture-materialization.md) — spatial-agent add animation, preview event, unchanged placement and static captures.
+
+- [Cg Arch boundary fix](docs/tickets/cg-arch-boundaries.md) — connected-floor diagnosis, preservation plan and runtime verification.

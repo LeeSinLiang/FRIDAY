@@ -1,0 +1,17 @@
+{
+  "sourceSha256": "f5f5ab5566ee040c400faeb8ae66ff00e8d3d12a4db1836aa312e9feb903a59c",
+  "triangles": 560458,
+  "cellSizeCm": 5,
+  "bodyHeightRangeCm": [
+    5,
+    240
+  ],
+  "barrierMarginCm": 1,
+  "freeAreaM2": 36.73,
+  "legacyAreaM2": 19.372,
+  "rectangles": 21,
+  "unsupportedM2": 0,
+  "blockedM2": 0,
+  "legacyLostM2": 0,
+  "entryReachableWith40CmBody": true
+}

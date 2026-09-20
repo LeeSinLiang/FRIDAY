@@ -137,6 +137,12 @@
           "title": "Prepare and verify the shared Haussmann room locally",
           "done": false,
           "owner": "adelle"
+        },
+        {
+          "id": "dd5ede57-1071-44eb-8fe8-56faa3493797",
+          "title": "Fix Empty Interior Scene 2 walking and placement boundaries",
+          "done": false,
+          "owner": "william"
         }
       ]
     },
