@@ -17,6 +17,8 @@ test('do it now routes a spoken or typed placement to the same scene agent instr
   assert.equal(designerInstruction('Do it now', ''), null);
   assert.equal(designerInstruction("Okay. I don't wanna be stuck. No worries. Place a desk here. Do it now. Well, those just"), 'Place a desk here');
   assert.equal(designerInstruction('Place a desk here. Do it now. Thanks'), 'Place a desk here');
+  const workstation = 'Design a complete workstation here: place a desk, then put a display monitor, keyboard, mouse, and desk lamp on its desktop. Add a chair in front of the desk. Keep every item inside the room and avoid overlaps.';
+  assert.equal(designerInstruction(`${workstation} Do it now.`), workstation.slice(0, -1));
   assert.equal(isDoItNowCue('Do it now!'), true);
   assert.equal(isDesignerRequest('Place the lamp on the table, do it now'), true);
   assert.equal(isDesignerRequest('Do it now'), false);
