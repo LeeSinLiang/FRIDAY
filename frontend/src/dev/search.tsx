@@ -9,6 +9,7 @@ import { listingToProduct } from '../region/boundary'
 import { DEV_SCENE } from '../region/devScene'
 import { solve } from '../region/solve'
 import { toSvg } from '../region/svg'
+import { priceLabel } from '../catalogue/price'
 
 const CATEGORIES: Category[] = [
   'sofa', 'armchair', 'chair', 'table', 'desk', 'bed',
@@ -204,7 +205,7 @@ function DevSearch() {
           <li key={item.id} style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 8 }}>
             <img src={item.thumb_url} alt="" width={48} height={48} />
             <span>
-              <strong>{item.title}</strong> · {item.category} · {dollars(item.price_cents)} · {dims(item.dims_mm)}
+              <strong>{item.title}</strong> · {item.category} · {priceLabel(item.price_cents, dollars)} · {dims(item.dims_mm)}
               <br />
               {item.id} · {item.materials.join(', ')} · {item.colour_hex.join(' ')}
             </span>

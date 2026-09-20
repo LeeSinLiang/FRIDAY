@@ -4,6 +4,7 @@ from collections.abc import Callable, Sequence
 
 from catalogue.colour import is_near
 from catalogue.facets import memory_facets, without_fit
+from catalogue.pricing import has_price
 from catalogue.text import title_words, tokenize
 from catalogue.types import Listing, SearchResponse
 
@@ -24,8 +25,9 @@ def _matches_text(listing: Listing, clause) -> bool:
 MATCHERS: dict[str, Callable[[Listing, object], bool]] = {
     "text": _matches_text,
     "category": lambda listing, clause: listing.category == clause.value,
-    "price_max": lambda listing, clause: listing.price_cents <= clause.cents,
-    "price_min": lambda listing, clause: listing.price_cents >= clause.cents,
+    # An unknown price (0) satisfies neither: "under $400" is a claim about a price we would have to know.
+    "price_max": lambda listing, clause: has_price(listing) and listing.price_cents <= clause.cents,
+    "price_min": lambda listing, clause: has_price(listing) and listing.price_cents >= clause.cents,
     "colour": lambda listing, clause: any(is_near(clause.hex, c) for c in listing.colour_hex),
     "material": lambda listing, clause: any(
         clause.value.lower() in material.lower() for material in listing.materials
