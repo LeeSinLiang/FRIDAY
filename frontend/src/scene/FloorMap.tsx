@@ -18,10 +18,18 @@ export default function FloorMap({ room, getCamera, onFloorChange, floorChangeDi
   const [expanded, setExpanded] = useState(false);
   const world = useRef<SVGGElement>(null);
   const north = useRef<SVGGElement>(null);
-  const extent = Math.max(room.widthCm, room.depthCm) * 1.2;
+  const outline = room.scan?.floorOutlineCm;
+  const cameraStart = room.scan?.defaultCamera;
+  // Keep the entire measured footprint visible when it rotates around the person.
+  const extent = outline && cameraStart ? 2.3 * Math.max(...outline.flatMap(polygon => polygon.outer
+    .map(([x, z]) => Math.hypot(x - cameraStart.xCm, z - cameraStart.zCm))))
+    : Math.max(room.widthCm, room.depthCm) * 1.2;
   const center = extent / 2;
-  const markerX = center + (room.scan?.defaultCamera.xCm ?? room.widthCm / 2) - room.widthCm / 2;
-  const markerY = center + (room.scan?.defaultCamera.zCm ?? room.depthCm / 2) - room.depthCm / 2;
+  const markerX = outline ? center : center + (room.scan?.defaultCamera.xCm ?? room.widthCm / 2) - room.widthCm / 2;
+  const markerY = outline ? center : center + (room.scan?.defaultCamera.zCm ?? room.depthCm / 2) - room.depthCm / 2;
+  const outlinePath = outline?.map(polygon => [polygon.outer, ...polygon.holes]
+    .map(ring => `M${ring.map(point => point.join(" ")).join("L")}Z`).join("")).join("");
+  const markerScale = outline ? extent / 1200 : 1;
 
   useLayoutEffect(() => {
     let frame = 0;
@@ -57,10 +65,15 @@ export default function FloorMap({ room, getCamera, onFloorChange, floorChangeDi
         <svg viewBox={`0 0 ${extent} ${extent}`} role="img" aria-label={`Floor ${floor.number} room outline aligned with your view and rotating around your position`}>
           <defs><pattern id="floor-map-grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 H 0 V 50" fill="none" stroke="#aa9d8d" strokeOpacity=".2" strokeWidth="2"/></pattern></defs>
           <g ref={world}>
-            <rect x="0" y="0" width={room.widthCm} height={room.depthCm} fill="#f8f6f1" stroke="#8d8070" strokeWidth="10"/>
-            <rect x="0" y="0" width={room.widthCm} height={room.depthCm} fill="url(#floor-map-grid)"/>
+            {outlinePath ? <>
+              <path d={outlinePath} fill="#f8f6f1" fillRule="evenodd" stroke="#8d8070" strokeWidth={10 * markerScale}/>
+              <path d={outlinePath} fill="url(#floor-map-grid)" fillRule="evenodd"/>
+            </> : <>
+              <rect x="0" y="0" width={room.widthCm} height={room.depthCm} fill="#f8f6f1" stroke="#8d8070" strokeWidth="10"/>
+              <rect x="0" y="0" width={room.widthCm} height={room.depthCm} fill="url(#floor-map-grid)"/>
+            </>}
           </g>
-          <g transform={`translate(${markerX} ${markerY})`} aria-hidden="true">
+          <g transform={`translate(${markerX} ${markerY}) scale(${markerScale})`} aria-hidden="true">
             <circle r="31" fill="#fffaf3" stroke="#a8462a" strokeWidth="5"/>
             <path d="M 0 -23 17 18 0 9 -17 18Z" fill="#a8462a"/>
           </g>

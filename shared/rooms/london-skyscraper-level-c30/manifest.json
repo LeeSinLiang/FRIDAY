@@ -1,0 +1,432 @@
+{
+  "room": {
+    "roomId": "london-skyscraper-level-c30",
+    "revision": 1,
+    "widthCm": 2474.0,
+    "depthCm": 3592.0,
+    "heightCm": 365,
+    "scan": {
+      "geometryRevision": "london-c30-0d4d516057aa-full-v2",
+      "visualFormat": "glb",
+      "visualUrl": "/rooms/london-skyscraper-test/assets/building.glb",
+      "positionCm": [
+        1140.0,
+        -13639.871215820312,
+        2210.0
+      ],
+      "rotationDeg": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "calibration": {
+        "status": "synthetic_demo",
+        "note": "Source glTF metres; authored scale, not surveyed. Mesh floor outline with conservative clear-floor cells; walls, voids and low overhead geometry excluded. Levels use measured elevations."
+      },
+      "defaultCamera": {
+        "kind": "firstPerson",
+        "xCm": 1745.0,
+        "zCm": 1785.0,
+        "yawRad": 0,
+        "yCm": 170,
+        "pitchRad": -0.1,
+        "fovDeg": 65
+      },
+      "floorOutlineCm": [
+        {
+          "outer": [
+            [
+              18.19515,
+              862.80991
+            ],
+            [
+              8.60043,
+              893.12149
+            ],
+            [
+              3.65658,
+              922.08191
+            ],
+            [
+              3.36361,
+              953.9621
+            ],
+            [
+              7.55062,
+              991.6185
+            ],
+            [
+              456.391,
+              2816.44755
+            ],
+            [
+              562.25038,
+              3094.44514
+            ],
+            [
+              633.09999,
+              3230.19343
+            ],
+            [
+              673.12684,
+              3292.02357
+            ],
+            [
+              753.80311,
+              3387.22468
+            ],
+            [
+              805.57313,
+              3435.93226
+            ],
+            [
+              860.94423,
+              3478.81709
+            ],
+            [
+              918.82997,
+              3514.78511
+            ],
+            [
+              1029.54774,
+              3559.09663
+            ],
+            [
+              1097.65076,
+              3576.49928
+            ],
+            [
+              1167.79236,
+              3587.2491
+            ],
+            [
+              1238.19031,
+              3591.27131
+            ],
+            [
+              1360.08972,
+              3579.72957
+            ],
+            [
+              1428.98621,
+              3564.54402
+            ],
+            [
+              1495.38026,
+              3542.73463
+            ],
+            [
+              1557.56288,
+              3514.78511
+            ],
+            [
+              1656.24452,
+              3447.71358
+            ],
+            [
+              1709.19862,
+              3400.93776
+            ],
+            [
+              1803.2538,
+              3292.02357
+            ],
+            [
+              1870.50233,
+              3181.97719
+            ],
+            [
+              1966.91346,
+              2968.78596
+            ],
+            [
+              2038.04384,
+              2759.82982
+            ],
+            [
+              2468.82992,
+              991.61621
+            ],
+            [
+              2473.01693,
+              953.96057
+            ],
+            [
+              2472.73617,
+              922.07962
+            ],
+            [
+              2467.79232,
+              893.1192
+            ],
+            [
+              2458.1976,
+              862.80838
+            ],
+            [
+              2062.09164,
+              48.12327
+            ],
+            [
+              2050.53158,
+              30.18352
+            ],
+            [
+              2040.60731,
+              20.02421
+            ],
+            [
+              2027.82655,
+              12.77629
+            ],
+            [
+              2001.39833,
+              6.1288
+            ],
+            [
+              1958.60048,
+              2.36903
+            ],
+            [
+              517.80458,
+              2.36903
+            ],
+            [
+              474.99452,
+              6.1288
+            ],
+            [
+              448.5663,
+              12.77629
+            ],
+            [
+              435.78549,
+              20.02421
+            ],
+            [
+              425.86117,
+              30.18352
+            ],
+            [
+              414.30111,
+              48.12404
+            ],
+            [
+              18.19515,
+              862.80991
+            ]
+          ],
+          "holes": []
+        }
+      ],
+      "attribution": {
+        "title": "Free London Skyscraper",
+        "author": "99.Miles",
+        "url": "https://sketchfab.com/3d-models/free-london-skyscraper-52b73f6ea18a440cb42734840d5edc72",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "building": {
+        "buildingId": "london-skyscraper",
+        "sourceSha256": "0d4d516057aa6b8e6a79cdbd0b3446432edd831a151206c2c1879e944dc87de9",
+        "levels": [
+          {
+            "floorId": "G00",
+            "roomId": "london-skyscraper"
+          },
+          {
+            "floorId": "M00",
+            "roomId": "london-skyscraper-level-m00"
+          },
+          {
+            "floorId": "C01",
+            "roomId": "london-skyscraper-level-c01"
+          },
+          {
+            "floorId": "C02",
+            "roomId": "london-skyscraper-level-c02"
+          },
+          {
+            "floorId": "C03",
+            "roomId": "london-skyscraper-level-c03"
+          },
+          {
+            "floorId": "C04",
+            "roomId": "london-skyscraper-level-c04"
+          },
+          {
+            "floorId": "C05",
+            "roomId": "london-skyscraper-level-c05"
+          },
+          {
+            "floorId": "C06",
+            "roomId": "london-skyscraper-level-c06"
+          },
+          {
+            "floorId": "C07",
+            "roomId": "london-skyscraper-level-c07"
+          },
+          {
+            "floorId": "C08",
+            "roomId": "london-skyscraper-level-c08"
+          },
+          {
+            "floorId": "C09",
+            "roomId": "london-skyscraper-level-c09"
+          },
+          {
+            "floorId": "C10",
+            "roomId": "london-skyscraper-level-c10"
+          },
+          {
+            "floorId": "C11",
+            "roomId": "london-skyscraper-level-c11"
+          },
+          {
+            "floorId": "C12",
+            "roomId": "london-skyscraper-level-c12"
+          },
+          {
+            "floorId": "C13",
+            "roomId": "london-skyscraper-level-c13"
+          },
+          {
+            "floorId": "C14",
+            "roomId": "london-skyscraper-level-c14"
+          },
+          {
+            "floorId": "C15",
+            "roomId": "london-skyscraper-level-c15"
+          },
+          {
+            "floorId": "C16",
+            "roomId": "london-skyscraper-level-c16"
+          },
+          {
+            "floorId": "C17",
+            "roomId": "london-skyscraper-level-c17"
+          },
+          {
+            "floorId": "C18",
+            "roomId": "london-skyscraper-level-c18"
+          },
+          {
+            "floorId": "C19",
+            "roomId": "london-skyscraper-level-c19"
+          },
+          {
+            "floorId": "C20",
+            "roomId": "london-skyscraper-level-c20"
+          },
+          {
+            "floorId": "C21",
+            "roomId": "london-skyscraper-level-c21"
+          },
+          {
+            "floorId": "C22",
+            "roomId": "london-skyscraper-level-c22"
+          },
+          {
+            "floorId": "C23",
+            "roomId": "london-skyscraper-level-c23"
+          },
+          {
+            "floorId": "C24",
+            "roomId": "london-skyscraper-level-c24"
+          },
+          {
+            "floorId": "C25",
+            "roomId": "london-skyscraper-level-c25"
+          },
+          {
+            "floorId": "C26",
+            "roomId": "london-skyscraper-level-c26"
+          },
+          {
+            "floorId": "C27",
+            "roomId": "london-skyscraper-level-c27"
+          },
+          {
+            "floorId": "C28",
+            "roomId": "london-skyscraper-level-c28"
+          },
+          {
+            "floorId": "C29",
+            "roomId": "london-skyscraper-level-c29"
+          },
+          {
+            "floorId": "C30",
+            "roomId": "london-skyscraper-level-c30"
+          },
+          {
+            "floorId": "C31",
+            "roomId": "london-skyscraper-level-c31"
+          },
+          {
+            "floorId": "C32",
+            "roomId": "london-skyscraper-level-c32"
+          }
+        ],
+        "legacyRoomIds": [
+          "london-skyscraper-test",
+          "london-skyscraper-c02",
+          "london-skyscraper-c03",
+          "london-skyscraper-c04",
+          "london-skyscraper-c05",
+          "london-skyscraper-c06",
+          "london-skyscraper-c07",
+          "london-skyscraper-c08",
+          "london-skyscraper-c09",
+          "london-skyscraper-c10",
+          "london-skyscraper-c11",
+          "london-skyscraper-c12",
+          "london-skyscraper-c13",
+          "london-skyscraper-c14",
+          "london-skyscraper-c15",
+          "london-skyscraper-c16",
+          "london-skyscraper-c17",
+          "london-skyscraper-c18",
+          "london-skyscraper-c19",
+          "london-skyscraper-c20",
+          "london-skyscraper-c21",
+          "london-skyscraper-c22",
+          "london-skyscraper-c23",
+          "london-skyscraper-c24",
+          "london-skyscraper-c25",
+          "london-skyscraper-c26",
+          "london-skyscraper-c27",
+          "london-skyscraper-c28",
+          "london-skyscraper-c29",
+          "london-skyscraper-c30",
+          "london-skyscraper-c31",
+          "london-skyscraper-c32"
+        ],
+        "roomId": "london-skyscraper-level-c30",
+        "floorId": "C30",
+        "surfaceId": "C30:full-floor-v2",
+        "label": "Tower floor 30",
+        "elevationM": 136.39871215820312,
+        "sourceOriginM": [
+          -11.4,
+          136.39871215820312,
+          -22.1
+        ],
+        "supportErrorMaxMm": 0.0,
+        "sourceFloorAreaM2": 661.9431623106175,
+        "checkedAreaM2": 596.0399999999952,
+        "unsupportedAreaM2": 0.0,
+        "blockedAreaM2": 0.0,
+        "clearanceCm": 365,
+        "boundaryCellCm": 20.0,
+        "referencePose": {
+          "xCm": 1745.0,
+          "zCm": 1485.0,
+          "yawRad": 0
+        }
+      }
+    }
+  },
+  "spatialFile": "spatial.json",
+  "sharedVisualRoomId": "london-skyscraper-test"
+}

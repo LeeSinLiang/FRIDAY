@@ -1,0 +1,1433 @@
+{
+  "freeAreas": [
+    {
+      "minXcm": 685.0,
+      "maxXcm": 835.0,
+      "minZcm": 20.0,
+      "maxZcm": 45.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 1935.0,
+      "minZcm": 20.0,
+      "maxZcm": 45.0
+    },
+    {
+      "minXcm": 735.0,
+      "maxXcm": 960.0,
+      "minZcm": 45.0,
+      "maxZcm": 70.0
+    },
+    {
+      "minXcm": 1660.0,
+      "maxXcm": 1885.0,
+      "minZcm": 45.0,
+      "maxZcm": 70.0
+    },
+    {
+      "minXcm": 1060.0,
+      "maxXcm": 1085.0,
+      "minZcm": 70.0,
+      "maxZcm": 95.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 1560.0,
+      "minZcm": 70.0,
+      "maxZcm": 95.0
+    },
+    {
+      "minXcm": 1660.0,
+      "maxXcm": 1860.0,
+      "minZcm": 70.0,
+      "maxZcm": 95.0
+    },
+    {
+      "minXcm": 660.0,
+      "maxXcm": 710.0,
+      "minZcm": 95.0,
+      "maxZcm": 120.0
+    },
+    {
+      "minXcm": 985.0,
+      "maxXcm": 1035.0,
+      "minZcm": 95.0,
+      "maxZcm": 120.0
+    },
+    {
+      "minXcm": 1085.0,
+      "maxXcm": 1210.0,
+      "minZcm": 95.0,
+      "maxZcm": 120.0
+    },
+    {
+      "minXcm": 1410.0,
+      "maxXcm": 1535.0,
+      "minZcm": 95.0,
+      "maxZcm": 120.0
+    },
+    {
+      "minXcm": 1685.0,
+      "maxXcm": 1860.0,
+      "minZcm": 95.0,
+      "maxZcm": 120.0
+    },
+    {
+      "minXcm": 1910.0,
+      "maxXcm": 1960.0,
+      "minZcm": 95.0,
+      "maxZcm": 120.0
+    },
+    {
+      "minXcm": 660.0,
+      "maxXcm": 735.0,
+      "minZcm": 120.0,
+      "maxZcm": 145.0
+    },
+    {
+      "minXcm": 960.0,
+      "maxXcm": 1035.0,
+      "minZcm": 120.0,
+      "maxZcm": 145.0
+    },
+    {
+      "minXcm": 1085.0,
+      "maxXcm": 1535.0,
+      "minZcm": 120.0,
+      "maxZcm": 145.0
+    },
+    {
+      "minXcm": 1885.0,
+      "maxXcm": 1960.0,
+      "minZcm": 120.0,
+      "maxZcm": 145.0
+    },
+    {
+      "minXcm": 585.0,
+      "maxXcm": 610.0,
+      "minZcm": 145.0,
+      "maxZcm": 170.0
+    },
+    {
+      "minXcm": 660.0,
+      "maxXcm": 710.0,
+      "minZcm": 145.0,
+      "maxZcm": 170.0
+    },
+    {
+      "minXcm": 760.0,
+      "maxXcm": 935.0,
+      "minZcm": 70.0,
+      "maxZcm": 170.0
+    },
+    {
+      "minXcm": 985.0,
+      "maxXcm": 1035.0,
+      "minZcm": 145.0,
+      "maxZcm": 170.0
+    },
+    {
+      "minXcm": 1060.0,
+      "maxXcm": 1535.0,
+      "minZcm": 145.0,
+      "maxZcm": 170.0
+    },
+    {
+      "minXcm": 1585.0,
+      "maxXcm": 1635.0,
+      "minZcm": 95.0,
+      "maxZcm": 170.0
+    },
+    {
+      "minXcm": 1685.0,
+      "maxXcm": 1785.0,
+      "minZcm": 120.0,
+      "maxZcm": 170.0
+    },
+    {
+      "minXcm": 1910.0,
+      "maxXcm": 1960.0,
+      "minZcm": 145.0,
+      "maxZcm": 170.0
+    },
+    {
+      "minXcm": 1985.0,
+      "maxXcm": 2035.0,
+      "minZcm": 145.0,
+      "maxZcm": 170.0
+    },
+    {
+      "minXcm": 560.0,
+      "maxXcm": 635.0,
+      "minZcm": 170.0,
+      "maxZcm": 195.0
+    },
+    {
+      "minXcm": 735.0,
+      "maxXcm": 960.0,
+      "minZcm": 170.0,
+      "maxZcm": 195.0
+    },
+    {
+      "minXcm": 1060.0,
+      "maxXcm": 1560.0,
+      "minZcm": 170.0,
+      "maxZcm": 195.0
+    },
+    {
+      "minXcm": 1660.0,
+      "maxXcm": 1785.0,
+      "minZcm": 170.0,
+      "maxZcm": 195.0
+    },
+    {
+      "minXcm": 1860.0,
+      "maxXcm": 1885.0,
+      "minZcm": 170.0,
+      "maxZcm": 195.0
+    },
+    {
+      "minXcm": 1985.0,
+      "maxXcm": 2060.0,
+      "minZcm": 170.0,
+      "maxZcm": 195.0
+    },
+    {
+      "minXcm": 560.0,
+      "maxXcm": 1785.0,
+      "minZcm": 195.0,
+      "maxZcm": 220.0
+    },
+    {
+      "minXcm": 1860.0,
+      "maxXcm": 2060.0,
+      "minZcm": 195.0,
+      "maxZcm": 220.0
+    },
+    {
+      "minXcm": 535.0,
+      "maxXcm": 610.0,
+      "minZcm": 220.0,
+      "maxZcm": 245.0
+    },
+    {
+      "minXcm": 1860.0,
+      "maxXcm": 2085.0,
+      "minZcm": 220.0,
+      "maxZcm": 245.0
+    },
+    {
+      "minXcm": 510.0,
+      "maxXcm": 610.0,
+      "minZcm": 245.0,
+      "maxZcm": 270.0
+    },
+    {
+      "minXcm": 1860.0,
+      "maxXcm": 2110.0,
+      "minZcm": 245.0,
+      "maxZcm": 270.0
+    },
+    {
+      "minXcm": 485.0,
+      "maxXcm": 610.0,
+      "minZcm": 270.0,
+      "maxZcm": 320.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 1785.0,
+      "minZcm": 220.0,
+      "maxZcm": 320.0
+    },
+    {
+      "minXcm": 1860.0,
+      "maxXcm": 2135.0,
+      "minZcm": 270.0,
+      "maxZcm": 320.0
+    },
+    {
+      "minXcm": 460.0,
+      "maxXcm": 535.0,
+      "minZcm": 320.0,
+      "maxZcm": 345.0
+    },
+    {
+      "minXcm": 635.0,
+      "maxXcm": 660.0,
+      "minZcm": 245.0,
+      "maxZcm": 345.0
+    },
+    {
+      "minXcm": 1810.0,
+      "maxXcm": 1835.0,
+      "minZcm": 145.0,
+      "maxZcm": 345.0
+    },
+    {
+      "minXcm": 1860.0,
+      "maxXcm": 2160.0,
+      "minZcm": 320.0,
+      "maxZcm": 345.0
+    },
+    {
+      "minXcm": 435.0,
+      "maxXcm": 535.0,
+      "minZcm": 345.0,
+      "maxZcm": 370.0
+    },
+    {
+      "minXcm": 585.0,
+      "maxXcm": 660.0,
+      "minZcm": 345.0,
+      "maxZcm": 370.0
+    },
+    {
+      "minXcm": 1335.0,
+      "maxXcm": 1835.0,
+      "minZcm": 345.0,
+      "maxZcm": 370.0
+    },
+    {
+      "minXcm": 410.0,
+      "maxXcm": 535.0,
+      "minZcm": 370.0,
+      "maxZcm": 395.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 1310.0,
+      "minZcm": 320.0,
+      "maxZcm": 395.0
+    },
+    {
+      "minXcm": 1860.0,
+      "maxXcm": 2185.0,
+      "minZcm": 345.0,
+      "maxZcm": 395.0
+    },
+    {
+      "minXcm": 410.0,
+      "maxXcm": 610.0,
+      "minZcm": 395.0,
+      "maxZcm": 420.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2210.0,
+      "minZcm": 395.0,
+      "maxZcm": 420.0
+    },
+    {
+      "minXcm": 385.0,
+      "maxXcm": 610.0,
+      "minZcm": 420.0,
+      "maxZcm": 445.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2235.0,
+      "minZcm": 420.0,
+      "maxZcm": 445.0
+    },
+    {
+      "minXcm": 360.0,
+      "maxXcm": 610.0,
+      "minZcm": 445.0,
+      "maxZcm": 470.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2260.0,
+      "minZcm": 445.0,
+      "maxZcm": 495.0
+    },
+    {
+      "minXcm": 335.0,
+      "maxXcm": 610.0,
+      "minZcm": 470.0,
+      "maxZcm": 520.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2285.0,
+      "minZcm": 495.0,
+      "maxZcm": 520.0
+    },
+    {
+      "minXcm": 310.0,
+      "maxXcm": 610.0,
+      "minZcm": 520.0,
+      "maxZcm": 545.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2310.0,
+      "minZcm": 520.0,
+      "maxZcm": 545.0
+    },
+    {
+      "minXcm": 285.0,
+      "maxXcm": 610.0,
+      "minZcm": 545.0,
+      "maxZcm": 570.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2335.0,
+      "minZcm": 545.0,
+      "maxZcm": 570.0
+    },
+    {
+      "minXcm": 360.0,
+      "maxXcm": 610.0,
+      "minZcm": 570.0,
+      "maxZcm": 595.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2260.0,
+      "minZcm": 570.0,
+      "maxZcm": 595.0
+    },
+    {
+      "minXcm": 2285.0,
+      "maxXcm": 2310.0,
+      "minZcm": 595.0,
+      "maxZcm": 620.0
+    },
+    {
+      "minXcm": 2260.0,
+      "maxXcm": 2335.0,
+      "minZcm": 620.0,
+      "maxZcm": 670.0
+    },
+    {
+      "minXcm": 2385.0,
+      "maxXcm": 2410.0,
+      "minZcm": 645.0,
+      "maxZcm": 670.0
+    },
+    {
+      "minXcm": 210.0,
+      "maxXcm": 235.0,
+      "minZcm": 645.0,
+      "maxZcm": 695.0
+    },
+    {
+      "minXcm": 285.0,
+      "maxXcm": 335.0,
+      "minZcm": 595.0,
+      "maxZcm": 695.0
+    },
+    {
+      "minXcm": 385.0,
+      "maxXcm": 610.0,
+      "minZcm": 595.0,
+      "maxZcm": 695.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2235.0,
+      "minZcm": 595.0,
+      "maxZcm": 695.0
+    },
+    {
+      "minXcm": 2285.0,
+      "maxXcm": 2335.0,
+      "minZcm": 670.0,
+      "maxZcm": 695.0
+    },
+    {
+      "minXcm": 2360.0,
+      "maxXcm": 2410.0,
+      "minZcm": 670.0,
+      "maxZcm": 695.0
+    },
+    {
+      "minXcm": 185.0,
+      "maxXcm": 260.0,
+      "minZcm": 695.0,
+      "maxZcm": 720.0
+    },
+    {
+      "minXcm": 360.0,
+      "maxXcm": 610.0,
+      "minZcm": 695.0,
+      "maxZcm": 720.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2260.0,
+      "minZcm": 695.0,
+      "maxZcm": 720.0
+    },
+    {
+      "minXcm": 2360.0,
+      "maxXcm": 2435.0,
+      "minZcm": 695.0,
+      "maxZcm": 720.0
+    },
+    {
+      "minXcm": 160.0,
+      "maxXcm": 610.0,
+      "minZcm": 720.0,
+      "maxZcm": 745.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2460.0,
+      "minZcm": 720.0,
+      "maxZcm": 770.0
+    },
+    {
+      "minXcm": 135.0,
+      "maxXcm": 610.0,
+      "minZcm": 745.0,
+      "maxZcm": 795.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2485.0,
+      "minZcm": 770.0,
+      "maxZcm": 795.0
+    },
+    {
+      "minXcm": 110.0,
+      "maxXcm": 610.0,
+      "minZcm": 795.0,
+      "maxZcm": 820.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2510.0,
+      "minZcm": 795.0,
+      "maxZcm": 820.0
+    },
+    {
+      "minXcm": 85.0,
+      "maxXcm": 610.0,
+      "minZcm": 820.0,
+      "maxZcm": 845.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 2535.0,
+      "minZcm": 820.0,
+      "maxZcm": 845.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2535.0,
+      "minZcm": 845.0,
+      "maxZcm": 870.0
+    },
+    {
+      "minXcm": 60.0,
+      "maxXcm": 610.0,
+      "minZcm": 845.0,
+      "maxZcm": 895.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2560.0,
+      "minZcm": 870.0,
+      "maxZcm": 895.0
+    },
+    {
+      "minXcm": 35.0,
+      "maxXcm": 610.0,
+      "minZcm": 895.0,
+      "maxZcm": 920.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2585.0,
+      "minZcm": 895.0,
+      "maxZcm": 920.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2560.0,
+      "minZcm": 920.0,
+      "maxZcm": 995.0
+    },
+    {
+      "minXcm": 60.0,
+      "maxXcm": 610.0,
+      "minZcm": 920.0,
+      "maxZcm": 1020.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2535.0,
+      "minZcm": 995.0,
+      "maxZcm": 1045.0
+    },
+    {
+      "minXcm": 635.0,
+      "maxXcm": 660.0,
+      "minZcm": 370.0,
+      "maxZcm": 1070.0
+    },
+    {
+      "minXcm": 85.0,
+      "maxXcm": 610.0,
+      "minZcm": 1020.0,
+      "maxZcm": 1095.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 1085.0,
+      "minZcm": 845.0,
+      "maxZcm": 1095.0
+    },
+    {
+      "minXcm": 2135.0,
+      "maxXcm": 2535.0,
+      "minZcm": 1045.0,
+      "maxZcm": 1095.0
+    },
+    {
+      "minXcm": 2535.0,
+      "maxXcm": 2560.0,
+      "minZcm": 1120.0,
+      "maxZcm": 1145.0
+    },
+    {
+      "minXcm": 2135.0,
+      "maxXcm": 2510.0,
+      "minZcm": 1095.0,
+      "maxZcm": 1170.0
+    },
+    {
+      "minXcm": 110.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1095.0,
+      "maxZcm": 1195.0
+    },
+    {
+      "minXcm": 85.0,
+      "maxXcm": 110.0,
+      "minZcm": 1220.0,
+      "maxZcm": 1245.0
+    },
+    {
+      "minXcm": 2135.0,
+      "maxXcm": 2485.0,
+      "minZcm": 1170.0,
+      "maxZcm": 1245.0
+    },
+    {
+      "minXcm": 135.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1195.0,
+      "maxZcm": 1270.0
+    },
+    {
+      "minXcm": 2085.0,
+      "maxXcm": 2110.0,
+      "minZcm": 1070.0,
+      "maxZcm": 1270.0
+    },
+    {
+      "minXcm": 2410.0,
+      "maxXcm": 2485.0,
+      "minZcm": 1245.0,
+      "maxZcm": 1270.0
+    },
+    {
+      "minXcm": 2085.0,
+      "maxXcm": 2385.0,
+      "minZcm": 1270.0,
+      "maxZcm": 1295.0
+    },
+    {
+      "minXcm": 2410.0,
+      "maxXcm": 2460.0,
+      "minZcm": 1270.0,
+      "maxZcm": 1320.0
+    },
+    {
+      "minXcm": 2485.0,
+      "maxXcm": 2510.0,
+      "minZcm": 1295.0,
+      "maxZcm": 1320.0
+    },
+    {
+      "minXcm": 2135.0,
+      "maxXcm": 2460.0,
+      "minZcm": 1320.0,
+      "maxZcm": 1345.0
+    },
+    {
+      "minXcm": 160.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1270.0,
+      "maxZcm": 1370.0
+    },
+    {
+      "minXcm": 135.0,
+      "maxXcm": 160.0,
+      "minZcm": 1395.0,
+      "maxZcm": 1420.0
+    },
+    {
+      "minXcm": 185.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1370.0,
+      "maxZcm": 1445.0
+    },
+    {
+      "minXcm": 2135.0,
+      "maxXcm": 2435.0,
+      "minZcm": 1345.0,
+      "maxZcm": 1445.0
+    },
+    {
+      "minXcm": 2085.0,
+      "maxXcm": 2110.0,
+      "minZcm": 1295.0,
+      "maxZcm": 1470.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2060.0,
+      "minZcm": 1045.0,
+      "maxZcm": 1495.0
+    },
+    {
+      "minXcm": 2135.0,
+      "maxXcm": 2410.0,
+      "minZcm": 1445.0,
+      "maxZcm": 1495.0
+    },
+    {
+      "minXcm": 2435.0,
+      "maxXcm": 2460.0,
+      "minZcm": 1470.0,
+      "maxZcm": 1495.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2410.0,
+      "minZcm": 1495.0,
+      "maxZcm": 1520.0
+    },
+    {
+      "minXcm": 210.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1445.0,
+      "maxZcm": 1545.0
+    },
+    {
+      "minXcm": 185.0,
+      "maxXcm": 210.0,
+      "minZcm": 1570.0,
+      "maxZcm": 1595.0
+    },
+    {
+      "minXcm": 2410.0,
+      "maxXcm": 2435.0,
+      "minZcm": 1570.0,
+      "maxZcm": 1595.0
+    },
+    {
+      "minXcm": 235.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1545.0,
+      "maxZcm": 1620.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2385.0,
+      "minZcm": 1520.0,
+      "maxZcm": 1620.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2360.0,
+      "minZcm": 1620.0,
+      "maxZcm": 1695.0
+    },
+    {
+      "minXcm": 260.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1620.0,
+      "maxZcm": 1720.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2335.0,
+      "minZcm": 1695.0,
+      "maxZcm": 1720.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2210.0,
+      "minZcm": 1720.0,
+      "maxZcm": 1745.0
+    },
+    {
+      "minXcm": 2310.0,
+      "maxXcm": 2335.0,
+      "minZcm": 1720.0,
+      "maxZcm": 1745.0
+    },
+    {
+      "minXcm": 335.0,
+      "maxXcm": 385.0,
+      "minZcm": 1745.0,
+      "maxZcm": 1770.0
+    },
+    {
+      "minXcm": 410.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1720.0,
+      "maxZcm": 1770.0
+    },
+    {
+      "minXcm": 2235.0,
+      "maxXcm": 2285.0,
+      "minZcm": 1745.0,
+      "maxZcm": 1770.0
+    },
+    {
+      "minXcm": 2360.0,
+      "maxXcm": 2385.0,
+      "minZcm": 1745.0,
+      "maxZcm": 1770.0
+    },
+    {
+      "minXcm": 310.0,
+      "maxXcm": 385.0,
+      "minZcm": 1770.0,
+      "maxZcm": 1795.0
+    },
+    {
+      "minXcm": 2235.0,
+      "maxXcm": 2310.0,
+      "minZcm": 1770.0,
+      "maxZcm": 1795.0
+    },
+    {
+      "minXcm": 335.0,
+      "maxXcm": 385.0,
+      "minZcm": 1795.0,
+      "maxZcm": 1820.0
+    },
+    {
+      "minXcm": 435.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1770.0,
+      "maxZcm": 1820.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2185.0,
+      "minZcm": 1745.0,
+      "maxZcm": 1820.0
+    },
+    {
+      "minXcm": 2235.0,
+      "maxXcm": 2285.0,
+      "minZcm": 1795.0,
+      "maxZcm": 1820.0
+    },
+    {
+      "minXcm": 410.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1820.0,
+      "maxZcm": 1845.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2210.0,
+      "minZcm": 1820.0,
+      "maxZcm": 1845.0
+    },
+    {
+      "minXcm": 260.0,
+      "maxXcm": 285.0,
+      "minZcm": 1845.0,
+      "maxZcm": 1870.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2310.0,
+      "minZcm": 1845.0,
+      "maxZcm": 1870.0
+    },
+    {
+      "minXcm": 310.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1845.0,
+      "maxZcm": 1895.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 2285.0,
+      "minZcm": 1870.0,
+      "maxZcm": 1945.0
+    },
+    {
+      "minXcm": 2310.0,
+      "maxXcm": 2335.0,
+      "minZcm": 1920.0,
+      "maxZcm": 1945.0
+    },
+    {
+      "minXcm": 335.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1895.0,
+      "maxZcm": 1970.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 2285.0,
+      "minZcm": 1945.0,
+      "maxZcm": 1970.0
+    },
+    {
+      "minXcm": 310.0,
+      "maxXcm": 335.0,
+      "minZcm": 2020.0,
+      "maxZcm": 2045.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 2260.0,
+      "minZcm": 1970.0,
+      "maxZcm": 2045.0
+    },
+    {
+      "minXcm": 360.0,
+      "maxXcm": 1085.0,
+      "minZcm": 1970.0,
+      "maxZcm": 2070.0
+    },
+    {
+      "minXcm": 2260.0,
+      "maxXcm": 2285.0,
+      "minZcm": 2095.0,
+      "maxZcm": 2120.0
+    },
+    {
+      "minXcm": 385.0,
+      "maxXcm": 1085.0,
+      "minZcm": 2070.0,
+      "maxZcm": 2145.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 2235.0,
+      "minZcm": 2045.0,
+      "maxZcm": 2145.0
+    },
+    {
+      "minXcm": 360.0,
+      "maxXcm": 385.0,
+      "minZcm": 2195.0,
+      "maxZcm": 2220.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 2210.0,
+      "minZcm": 2145.0,
+      "maxZcm": 2220.0
+    },
+    {
+      "minXcm": 2235.0,
+      "maxXcm": 2260.0,
+      "minZcm": 2195.0,
+      "maxZcm": 2220.0
+    },
+    {
+      "minXcm": 410.0,
+      "maxXcm": 1085.0,
+      "minZcm": 2145.0,
+      "maxZcm": 2245.0
+    },
+    {
+      "minXcm": 2210.0,
+      "maxXcm": 2235.0,
+      "minZcm": 2270.0,
+      "maxZcm": 2295.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 2185.0,
+      "minZcm": 2220.0,
+      "maxZcm": 2320.0
+    },
+    {
+      "minXcm": 435.0,
+      "maxXcm": 1085.0,
+      "minZcm": 2245.0,
+      "maxZcm": 2345.0
+    },
+    {
+      "minXcm": 410.0,
+      "maxXcm": 435.0,
+      "minZcm": 2370.0,
+      "maxZcm": 2395.0
+    },
+    {
+      "minXcm": 2185.0,
+      "maxXcm": 2210.0,
+      "minZcm": 2370.0,
+      "maxZcm": 2395.0
+    },
+    {
+      "minXcm": 460.0,
+      "maxXcm": 1085.0,
+      "minZcm": 2345.0,
+      "maxZcm": 2420.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 2160.0,
+      "minZcm": 2320.0,
+      "maxZcm": 2420.0
+    },
+    {
+      "minXcm": 1110.0,
+      "maxXcm": 1510.0,
+      "minZcm": 870.0,
+      "maxZcm": 2445.0
+    },
+    {
+      "minXcm": 485.0,
+      "maxXcm": 1085.0,
+      "minZcm": 2420.0,
+      "maxZcm": 2470.0
+    },
+    {
+      "minXcm": 1535.0,
+      "maxXcm": 1710.0,
+      "minZcm": 1945.0,
+      "maxZcm": 2470.0
+    },
+    {
+      "minXcm": 2160.0,
+      "maxXcm": 2185.0,
+      "minZcm": 2445.0,
+      "maxZcm": 2470.0
+    },
+    {
+      "minXcm": 435.0,
+      "maxXcm": 460.0,
+      "minZcm": 2470.0,
+      "maxZcm": 2495.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 2135.0,
+      "minZcm": 2420.0,
+      "maxZcm": 2495.0
+    },
+    {
+      "minXcm": 485.0,
+      "maxXcm": 1710.0,
+      "minZcm": 2470.0,
+      "maxZcm": 2520.0
+    },
+    {
+      "minXcm": 460.0,
+      "maxXcm": 485.0,
+      "minZcm": 2545.0,
+      "maxZcm": 2570.0
+    },
+    {
+      "minXcm": 2135.0,
+      "maxXcm": 2160.0,
+      "minZcm": 2545.0,
+      "maxZcm": 2570.0
+    },
+    {
+      "minXcm": 510.0,
+      "maxXcm": 1710.0,
+      "minZcm": 2520.0,
+      "maxZcm": 2595.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 2110.0,
+      "minZcm": 2495.0,
+      "maxZcm": 2595.0
+    },
+    {
+      "minXcm": 485.0,
+      "maxXcm": 510.0,
+      "minZcm": 2645.0,
+      "maxZcm": 2670.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 2085.0,
+      "minZcm": 2595.0,
+      "maxZcm": 2670.0
+    },
+    {
+      "minXcm": 2110.0,
+      "maxXcm": 2135.0,
+      "minZcm": 2620.0,
+      "maxZcm": 2670.0
+    },
+    {
+      "minXcm": 535.0,
+      "maxXcm": 1710.0,
+      "minZcm": 2595.0,
+      "maxZcm": 2695.0
+    },
+    {
+      "minXcm": 510.0,
+      "maxXcm": 535.0,
+      "minZcm": 2720.0,
+      "maxZcm": 2745.0
+    },
+    {
+      "minXcm": 2085.0,
+      "maxXcm": 2110.0,
+      "minZcm": 2720.0,
+      "maxZcm": 2745.0
+    },
+    {
+      "minXcm": 560.0,
+      "maxXcm": 1710.0,
+      "minZcm": 2695.0,
+      "maxZcm": 2770.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 2060.0,
+      "minZcm": 2670.0,
+      "maxZcm": 2770.0
+    },
+    {
+      "minXcm": 2060.0,
+      "maxXcm": 2085.0,
+      "minZcm": 2795.0,
+      "maxZcm": 2820.0
+    },
+    {
+      "minXcm": 585.0,
+      "maxXcm": 1710.0,
+      "minZcm": 2770.0,
+      "maxZcm": 2845.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 2035.0,
+      "minZcm": 2770.0,
+      "maxZcm": 2845.0
+    },
+    {
+      "minXcm": 585.0,
+      "maxXcm": 635.0,
+      "minZcm": 2845.0,
+      "maxZcm": 2870.0
+    },
+    {
+      "minXcm": 735.0,
+      "maxXcm": 1710.0,
+      "minZcm": 2845.0,
+      "maxZcm": 2870.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 1885.0,
+      "minZcm": 2845.0,
+      "maxZcm": 2870.0
+    },
+    {
+      "minXcm": 1985.0,
+      "maxXcm": 2010.0,
+      "minZcm": 2845.0,
+      "maxZcm": 2870.0
+    },
+    {
+      "minXcm": 1910.0,
+      "maxXcm": 1960.0,
+      "minZcm": 2870.0,
+      "maxZcm": 2895.0
+    },
+    {
+      "minXcm": 1885.0,
+      "maxXcm": 1960.0,
+      "minZcm": 2895.0,
+      "maxZcm": 2920.0
+    },
+    {
+      "minXcm": 660.0,
+      "maxXcm": 710.0,
+      "minZcm": 2870.0,
+      "maxZcm": 2945.0
+    },
+    {
+      "minXcm": 760.0,
+      "maxXcm": 1710.0,
+      "minZcm": 2870.0,
+      "maxZcm": 2945.0
+    },
+    {
+      "minXcm": 1910.0,
+      "maxXcm": 1960.0,
+      "minZcm": 2920.0,
+      "maxZcm": 2945.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 1860.0,
+      "minZcm": 2870.0,
+      "maxZcm": 2970.0
+    },
+    {
+      "minXcm": 735.0,
+      "maxXcm": 1710.0,
+      "minZcm": 2945.0,
+      "maxZcm": 2995.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 1885.0,
+      "minZcm": 2970.0,
+      "maxZcm": 2995.0
+    },
+    {
+      "minXcm": 660.0,
+      "maxXcm": 885.0,
+      "minZcm": 2995.0,
+      "maxZcm": 3045.0
+    },
+    {
+      "minXcm": 910.0,
+      "maxXcm": 1310.0,
+      "minZcm": 3020.0,
+      "maxZcm": 3045.0
+    },
+    {
+      "minXcm": 1785.0,
+      "maxXcm": 1960.0,
+      "minZcm": 2995.0,
+      "maxZcm": 3045.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 885.0,
+      "minZcm": 3045.0,
+      "maxZcm": 3070.0
+    },
+    {
+      "minXcm": 1335.0,
+      "maxXcm": 1710.0,
+      "minZcm": 2995.0,
+      "maxZcm": 3070.0
+    },
+    {
+      "minXcm": 1735.0,
+      "maxXcm": 1760.0,
+      "minZcm": 1970.0,
+      "maxZcm": 3070.0
+    },
+    {
+      "minXcm": 1735.0,
+      "maxXcm": 1835.0,
+      "minZcm": 3070.0,
+      "maxZcm": 3095.0
+    },
+    {
+      "minXcm": 1860.0,
+      "maxXcm": 1935.0,
+      "minZcm": 3045.0,
+      "maxZcm": 3095.0
+    },
+    {
+      "minXcm": 685.0,
+      "maxXcm": 1060.0,
+      "minZcm": 3070.0,
+      "maxZcm": 3120.0
+    },
+    {
+      "minXcm": 1135.0,
+      "maxXcm": 1710.0,
+      "minZcm": 3070.0,
+      "maxZcm": 3120.0
+    },
+    {
+      "minXcm": 1860.0,
+      "maxXcm": 1910.0,
+      "minZcm": 3095.0,
+      "maxZcm": 3120.0
+    },
+    {
+      "minXcm": 710.0,
+      "maxXcm": 1060.0,
+      "minZcm": 3120.0,
+      "maxZcm": 3145.0
+    },
+    {
+      "minXcm": 1135.0,
+      "maxXcm": 1910.0,
+      "minZcm": 3120.0,
+      "maxZcm": 3145.0
+    },
+    {
+      "minXcm": 735.0,
+      "maxXcm": 1060.0,
+      "minZcm": 3145.0,
+      "maxZcm": 3195.0
+    },
+    {
+      "minXcm": 1135.0,
+      "maxXcm": 1885.0,
+      "minZcm": 3145.0,
+      "maxZcm": 3195.0
+    },
+    {
+      "minXcm": 1135.0,
+      "maxXcm": 1860.0,
+      "minZcm": 3195.0,
+      "maxZcm": 3220.0
+    },
+    {
+      "minXcm": 760.0,
+      "maxXcm": 1060.0,
+      "minZcm": 3195.0,
+      "maxZcm": 3245.0
+    },
+    {
+      "minXcm": 785.0,
+      "maxXcm": 1060.0,
+      "minZcm": 3245.0,
+      "maxZcm": 3270.0
+    },
+    {
+      "minXcm": 1135.0,
+      "maxXcm": 1835.0,
+      "minZcm": 3220.0,
+      "maxZcm": 3270.0
+    },
+    {
+      "minXcm": 810.0,
+      "maxXcm": 1060.0,
+      "minZcm": 3270.0,
+      "maxZcm": 3295.0
+    },
+    {
+      "minXcm": 1135.0,
+      "maxXcm": 1810.0,
+      "minZcm": 3270.0,
+      "maxZcm": 3295.0
+    },
+    {
+      "minXcm": 835.0,
+      "maxXcm": 1060.0,
+      "minZcm": 3295.0,
+      "maxZcm": 3320.0
+    },
+    {
+      "minXcm": 1085.0,
+      "maxXcm": 1110.0,
+      "minZcm": 3045.0,
+      "maxZcm": 3320.0
+    },
+    {
+      "minXcm": 1135.0,
+      "maxXcm": 1785.0,
+      "minZcm": 3295.0,
+      "maxZcm": 3320.0
+    },
+    {
+      "minXcm": 860.0,
+      "maxXcm": 1060.0,
+      "minZcm": 3320.0,
+      "maxZcm": 3345.0
+    },
+    {
+      "minXcm": 1135.0,
+      "maxXcm": 1760.0,
+      "minZcm": 3320.0,
+      "maxZcm": 3345.0
+    },
+    {
+      "minXcm": 885.0,
+      "maxXcm": 1260.0,
+      "minZcm": 3345.0,
+      "maxZcm": 3370.0
+    },
+    {
+      "minXcm": 1385.0,
+      "maxXcm": 1735.0,
+      "minZcm": 3345.0,
+      "maxZcm": 3370.0
+    },
+    {
+      "minXcm": 935.0,
+      "maxXcm": 1260.0,
+      "minZcm": 3370.0,
+      "maxZcm": 3395.0
+    },
+    {
+      "minXcm": 1310.0,
+      "maxXcm": 1360.0,
+      "minZcm": 3370.0,
+      "maxZcm": 3395.0
+    },
+    {
+      "minXcm": 1385.0,
+      "maxXcm": 1685.0,
+      "minZcm": 3370.0,
+      "maxZcm": 3395.0
+    },
+    {
+      "minXcm": 985.0,
+      "maxXcm": 1260.0,
+      "minZcm": 3395.0,
+      "maxZcm": 3420.0
+    },
+    {
+      "minXcm": 1285.0,
+      "maxXcm": 1360.0,
+      "minZcm": 3395.0,
+      "maxZcm": 3420.0
+    },
+    {
+      "minXcm": 1410.0,
+      "maxXcm": 1635.0,
+      "minZcm": 3395.0,
+      "maxZcm": 3420.0
+    },
+    {
+      "minXcm": 1035.0,
+      "maxXcm": 1260.0,
+      "minZcm": 3420.0,
+      "maxZcm": 3445.0
+    },
+    {
+      "minXcm": 1310.0,
+      "maxXcm": 1360.0,
+      "minZcm": 3420.0,
+      "maxZcm": 3445.0
+    },
+    {
+      "minXcm": 1410.0,
+      "maxXcm": 1585.0,
+      "minZcm": 3420.0,
+      "maxZcm": 3445.0
+    },
+    {
+      "minXcm": 1110.0,
+      "maxXcm": 1260.0,
+      "minZcm": 3445.0,
+      "maxZcm": 3470.0
+    },
+    {
+      "minXcm": 1385.0,
+      "maxXcm": 1510.0,
+      "minZcm": 3445.0,
+      "maxZcm": 3470.0
+    }
+  ],
+  "obstacles": []
+}

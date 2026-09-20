@@ -2,7 +2,7 @@
 
 ## Implemented flow
 
-`/` redirects to `/rooms`; `/room/:roomId` opens the guest editor. Existing query-based room and `?legacy` URLs remain available. `shared/public-rooms.json` is the gallery/deployment allowlist; the tracked empty room and licensed London skyscraper are public-ready. Their gallery images are illustrations. The skyscraper uses the existing floor arrows for its 32 prepared contexts; see [floor support](room-capture/skyscraper-glb-test.md). The renderer is lazy-loaded after selecting a room.
+`/` redirects to `/rooms`; `/room/:roomId` opens the guest editor. Existing query-based room and `?legacy` URLs remain available. `shared/public-rooms.json` is the gallery/deployment allowlist; the tracked empty room and licensed London skyscraper are public-ready. Their gallery images are illustrations. The skyscraper uses the existing floor arrows for the entrance lobby, mezzanine and 32 tower floor contexts; see [floor support](room-capture/skyscraper-glb-test.md). The renderer is lazy-loaded after selecting a room.
 
 Catalogue selection previews furniture. Click legal floor or use **Preview a fitting position**, adjust X/Z/rotation, then **Confirm placement**. No account is required. Unmapped or unpriced products are disabled. The fixture-only product buttons remain available only in legacy editor mode.
 

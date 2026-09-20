@@ -9,6 +9,8 @@ export type RoomSpatial = {
   obstacles: { obstacleId: string; label: string; xCm: number; zCm: number; widthCm: number; depthCm: number; yawRad: number }[];
 };
 export type RoomScan = {
+  /** Measured mesh footprint, in the same local centimetres as placement. */
+  floorOutlineCm?: { outer: [number, number][]; holes: [number, number][][] }[];
   building?: {
     buildingId: string;
     sourceSha256: string;

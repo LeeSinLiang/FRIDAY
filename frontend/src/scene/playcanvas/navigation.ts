@@ -16,8 +16,8 @@ export type NavigationRuntime = {
 export const isTextEntry = (target: EventTarget | null) => target instanceof HTMLElement &&
   (!!target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false']), [role='textbox']"));
 
-const WALK_SPEED_CM_PER_SECOND = 240;
-const FAST_WALK_SPEED_CM_PER_SECOND = 360;
+const WALK_SPEED_CM_PER_SECOND = 360;
+const FAST_WALK_SPEED_CM_PER_SECOND = 540;
 const GRAVITY_CM_PER_SECOND_SQUARED = 980;
 const JUMP_SPEED_CM_PER_SECOND = 430;
 const CEILING_CLEARANCE_CM = 10;

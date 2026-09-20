@@ -7,10 +7,11 @@ import type { PlayCanvasRuntime } from "./playcanvas/runtime";
 import type { Room, Product } from "./types";
 import { validatePlacement } from "./placement";
 import { cmToScene } from "./units";
-import lower from "../../../shared/rooms/london-skyscraper-test/manifest.json";
-import upper from "../../../shared/rooms/london-skyscraper-c32/manifest.json";
+import lower from "../../../shared/rooms/london-skyscraper/manifest.json";
+import upper from "../../../shared/rooms/london-skyscraper-level-c32/manifest.json";
 import obstructed from "../../../shared/rooms/london-skyscraper-c20/manifest.json";
 import spatial from "../../../shared/rooms/london-skyscraper-c20/spatial.json";
+import lobbySpatial from "../../../shared/rooms/london-skyscraper/spatial.json";
 import empty from "../../../shared/rooms/empty-room/manifest.json";
 
 const first = lower.room as unknown as Room, last = upper.room as unknown as Room;
@@ -25,8 +26,8 @@ test("floor navigation is bounded and leaves ordinary room selection unchanged",
   assert.equal(initialRoom("../../private", "C32"), "haussmann-apartment");
   assert.deepEqual(buildingFloors(empty.room as unknown as Room), {number:1,count:1,previous:undefined,next:undefined});
   assert.equal(buildingFloors(first).previous, undefined);
-  assert.equal(buildingFloors(first).next?.floorId, "C02");
-  assert.equal(buildingFloors(last).number, 32);
+  assert.equal(buildingFloors(first).next?.floorId, "M00");
+  assert.equal(buildingFloors(last).number, 34);
   assert.equal(buildingFloors(last).next, undefined);
 });
 
@@ -58,4 +59,24 @@ test("off-centre upper-floor wall rejects its footprint but accepts the adjacent
   assert.equal(validatePlacement(room,[product],[instance],instance.instanceId,instance.pose).code,"fixed_obstacle");
   assert.equal(validatePlacement(room,[product],[instance],instance.instanceId,{...instance.pose,xCm:280}).valid,true);
   assert.equal(validatePlacement(room,[product],[instance],instance.instanceId,{...instance.pose,zCm:300}).valid,true);
+});
+
+test("the lobby outline and asymmetric slanted edge match the real building", () => {
+  // Compared to the actual entrance mesh and browser floor-plan in issue #89.
+  assert.equal(first.scan!.building!.floorId, "G00");
+  assert.ok(first.scan!.building!.elevationM < -4);
+  assert.ok(first.scan!.floorOutlineCm![0].outer.length > 4);
+  const room = { ...first, spatial: lobbySpatial } as Room;
+  const product: Product = { productId:"edge-chair", name:"Boundary chair", widthCm:70, depthCm:75, heightCm:75, kind:"chair", color:"#888" };
+  const instance = { instanceId:"edge-chair", productId:product.productId, pose:{xCm:1670,zCm:500,yawRad:0} };
+  assert.equal(validatePlacement(room,[product],[instance],instance.instanceId,instance.pose).valid,true);
+  assert.equal(validatePlacement(room,[product],[instance],instance.instanceId,{...instance.pose,xCm:1870}).code,"unknown_area");
+});
+
+test("previous saved floor routes retain their own coordinate contexts", () => {
+  assert.equal(initialRoom("london-skyscraper-test", "C20"), "london-skyscraper-c20");
+  for (const id of ["london-skyscraper-test", "london-skyscraper-c20"]) {
+    assert.equal(galleryRoomId(id), first.roomId);
+    assert.equal(initialRoom(id, null), id);
+  }
 });

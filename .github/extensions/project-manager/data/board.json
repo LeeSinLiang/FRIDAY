@@ -1,5 +1,5 @@
 {
-  "title": "FRIDAY \u00b7 Project Plan",
+  "title": "FRIDAY · Project Plan",
   "components": [
     {
       "id": "50b44d3e-94c7-4fed-8d83-969c925957d9",
@@ -62,7 +62,7 @@
         },
         {
           "id": "2133f112-5c47-4325-adcd-545b04e3000c",
-          "title": "Pull Sin\u2019s current 3D editor and review model references",
+          "title": "Pull Sin’s current 3D editor and review model references",
           "done": true,
           "owner": "sin"
         },
