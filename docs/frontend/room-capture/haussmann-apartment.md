@@ -4,7 +4,7 @@
 
 ## Decision
 
-**Go for an optional shared test download; no-go for the completed photographic room or default replacement.** The full asset is available and the local integration works, but final downward/ceiling captures still have visible smearing and window artifacts. Keep the mesh fallback. The evaluation card remains incomplete until these views are resolved and retested. No original Blender conversion is claimed.
+**Go for the optional authored demo; metric scale remains unverified.** The 2026-09-20 quality fix resolves stale-sort smearing in the tested downward, ceiling and close-window captures. Final motion measured 53.5 FPS at full 1280 × 720. Keep the assumed-scale label and mesh fallback; no original Blender conversion or measured real-world fit is claimed. The evaluation card remains incomplete for the outstanding scale evidence.
 
 All four owner TODO files point to [HAUSSMANN APARTMENT](https://superspl.at/scene/4de797f4). SuperSplat download may require login. The user supplied `~/Downloads/HAUSSMANN APARTMENT.zip`; its bundled license credits **Stéphane Agullo (sa3d)** under **CC BY 4.0**, including commercial reuse with attribution. Preserve `shared/rooms/haussmann-apartment/license.txt` and the runtime credit.
 
@@ -59,4 +59,20 @@ The creator-linked public 2.6 GB dataset was inspected via bounded ZIP ranges: 1
 
 ## Automated integration checks
 
-Combined frontend: 110 scene tests and five packaging tests passed; auth: nine passed; production build passed with the existing large-chunk warning. The standalone room-mesh suite (11 tests) and room-bundle suite (four tests) passed. Post-merge verification on main passed 195 backend tests (one opt-in live skip), all frontend/auth tests, migration consistency and production build; see TODO_SIN.md. All room documentation is indexed. The Kanban evaluation remains Sin/incomplete because photographic quality is not accepted.
+Combined frontend: 110 scene tests and five packaging tests passed; auth: nine passed; production build passed with the existing large-chunk warning. The standalone room-mesh suite (11 tests) and room-bundle suite (four tests) passed. Post-merge verification on main passed 195 backend tests (one opt-in live skip), all frontend/auth tests, migration consistency and production build; see TODO_SIN.md. All room documentation is indexed. The Kanban evaluation remains Sin/incomplete for metric scale; the quality follow-up below supersedes the earlier photographic defects.
+
+## 2026-09-20 quality follow-up
+
+PlayCanvas 2.22.2 `frame:ready` does not wait for camera-only CPU sorting. Captures could read the previous camera's order, and an in-flight sort could swallow a newer camera request. The small pinned adapter now drains old work, forces one fresh sort, waits until its result is applied, and then waits for the drawn frame. Tests distinguish CameraComponent from the internal Camera used by the engine map, and cover stale jobs, unapplied results, cancellation and missing-manager timeout. Mesh readiness is unchanged.
+
+Haussmann also enables the engine's radial sorting: looking around reuses the order, while translation still triggers sorting. No Gaussians were removed, no resolution was reduced, and full-precision storage remains enabled. This avoids redundant rotation sorts; it is not a claim that this switch alone explains the difference from the older benchmark.
+
+Final evidence under `.scratch/gaussian/quality/` supersedes the earlier defective captures:
+
+- `radial2-floor.png`, `radial2-ceiling.png`, `radial2-window.png`: visually checked clean contract captures at 896 × 672, with sofa dimensions unchanged. Tiny source edge softness remains; the severe smear is gone. The detailed 1024 × 768 floor PNG exceeded the existing 1.5 MiB capture limit, so it was explicitly requested smaller rather than relaxing the API limit.
+- `source-floor.webp`, `source-window.webp`: matched standalone source renders confirming that broad smearing was a browser sorting issue. Source exterior is absent, so the browser clear color appears beyond the windows.
+- `final-performance.txt` and `.png`: 53.5 frame-event FPS, p95 26.2 ms, 1,604 samples / 30.0 seconds, full 1280 × 720 backing canvas; warm-ready 569 ms. Actual drags and W/S input, no capture jobs or heavy conversions/tests during the run. The earlier 23.7 FPS is historical; system load and run variation prevent attributing the entire change to this patch. A preceding run measured 59.6 FPS but overlapped development reload/test timing and is not the final benchmark.
+
+The [author page](https://superspl.at/scene/4de797f4) was checked again, including its description/comments and three linked workflow images. It says “Z-Depth (10m)”: that is a depth-guidance range, not a wall length or a guarantee of exported Gaussian units. The PLY has no unit metadata. Keep `synthetic_demo`; verification needs one author-provided dimension mapped to identifiable points, or source scene units plus export/alignment scale. No typical-door estimate was substituted for a measurement.
+
+Verification: 112 frontend scene tests, five asset-packaging tests and TypeScript/Vite build passed. QA stack stopped; ports 5222/8222 checked without listeners. Quality changes are recorded on `codex/haussmann-quality`; scale remains unverified.
