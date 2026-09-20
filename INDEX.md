@@ -45,6 +45,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 | [docs/frontend/rendering-and-furniture-workflow.md](docs/frontend/rendering-and-furniture-workflow.md) | Rendering-engine comparison and furniture asset workflow research |
 | [docs/frontend/3d-object/collaborator-handoff.md](docs/frontend/3d-object/collaborator-handoff.md) | Furniture collaborator instructions, GLB deliverables, dimensions, and acceptance checks |
 | [docs/frontend/3d-object/herrakra-chair-asset-notes.md](docs/frontend/3d-object/herrakra-chair-asset-notes.md) | HERRÅKRA armchair asset delivery notes, sourcing, and known limitations vs. the handoff spec |
+| [docs/frontend/3d-object/bookshelf-stockholm-table-asset-notes.md](docs/frontend/3d-object/bookshelf-stockholm-table-asset-notes.md) | Generic bookshelf (passes) + STOCKHOLM coffee table (fails dimension check, same class as the sofa/bed) — read before merging |
 | [docs/frontend/design/visual-directions.md](docs/frontend/design/visual-directions.md) | Three futuristic furniture-editor concepts, saved images, and generation prompts |
 
 ### Backend
