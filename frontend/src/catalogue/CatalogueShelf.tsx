@@ -8,7 +8,7 @@ import type { Listing } from "../lib/types";
 import type { Region } from "../region/useRegion";
 import { ROOM_CHOICES, ROOM_ID } from "../scene/fixtures";
 import { compileSentence, searchCatalogue, type Compiled } from "./api";
-import { canListen, fetchBackend, listen, type Listening, type TranscribeBackend } from "./transcribe";
+import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend } from "./transcribe";
 import "./shelf.css";
 
 type Props = {
@@ -57,6 +57,7 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
   const request = useRef<AbortController | null>(null);
   const [voice, setVoice] = useState<TranscribeBackend>("browser");
   const [listening, setListening] = useState<Listening | null>(null);
+  const [heardBy, setHeardBy] = useState<Heard | null>(null);
   useEffect(() => { const controller = new AbortController(); void fetchBackend(controller.signal).then(setVoice); return () => controller.abort(); }, []);
 
   const run = async (text: string) => {
@@ -84,8 +85,10 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
     try {
       const session = await listen(voice);
       setListening(session);
-      const heard = (await session.result).trim();
-      if (heard) { setSentence(heard); onPick(null); void run(heard); }
+      const heard = await session.result;
+      setHeardBy(heard);
+      const text = heard.text.trim();
+      if (text) { setSentence(text); onPick(null); void run(text); }
       else setError("Didn’t catch that. Try again, or type it.");
     } catch (caught) {
       setError((caught as Error).message);
@@ -124,6 +127,9 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
       </form>
       {compiled && compiled.chips.length > 0 && (
         <div className="shelf-chips">{compiled.chips.map((chip) => <span key={chip}>{chip}</span>)}</div>
+      )}
+      {DEV && (
+        <p className="shelf-status"><code>voice configured: {voice}{heardBy ? ` · last transcript ANSWERED BY: ${heardBy.answeredBy}${heardBy.note ? ` (${heardBy.note})` : ""}` : " · nothing transcribed yet"}</code></p>
       )}
       {error && <p className="shelf-status refused" role="alert">{error}</p>}
       <Status region={region} yawIndex={yawIndex} armed={armedId !== null} />

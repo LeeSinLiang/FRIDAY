@@ -3,7 +3,7 @@ import os
 
 from django.db import DatabaseError
 from elasticsearch import ApiError, TransportError
-from rest_framework.decorators import api_view, parser_classes, permission_classes, throttle_classes
+from rest_framework.decorators import api_view, authentication_classes, parser_classes, permission_classes, throttle_classes
 from rest_framework.parsers import BaseParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -20,6 +20,15 @@ from catalogue.params import SearchQuery, parse_search_params
 from catalogue.types import SearchResponse, to_wire
 
 logger = logging.getLogger(__name__)
+
+# search, compile_program and transcribe_audio are DELIBERATELY ANONYMOUS. Do not "fix" this back.
+# They are public and stateless: the catalogue, a sentence turned into a Program, audio turned into
+# text. None needs to know who is asking. With DRF's default SessionAuthentication a shopper who had
+# signed in got every POST here refused for a missing CSRF token before the view ran. Being anonymous
+# also makes the throttles below apply to everyone: AnonRateThrottle skips authenticated users
+# entirely, so a signed-in session used to bypass the cap on the two endpoints that cost money.
+# Only these three views. Scene, account and checkout endpoints keep their authentication.
+PUBLIC: list = []
 
 BACKEND_HEADER = "X-Search-Backend"
 
@@ -39,6 +48,7 @@ def run_search(query: SearchQuery) -> tuple[SearchResponse, str]:
 
 # Browsing the catalogue is public, like any storefront. Cart and checkout auth are decided elsewhere.
 @api_view(["GET"])
+@authentication_classes(PUBLIC)
 @permission_classes([AllowAny])
 def search(request):
     try:
@@ -92,6 +102,7 @@ class AudioParser(BaseParser):
 # Public for the same reason as search. Each request is bounded (length cap, one retry, small output)
 # and the throttle bounds the total, so an anonymous caller cannot run up the model bill.
 @api_view(["POST"])
+@authentication_classes(PUBLIC)
 @permission_classes([AllowAny])
 @throttle_classes([CompileThrottle])
 def compile_program(request):
@@ -111,6 +122,7 @@ def compile_program(request):
 
 
 @api_view(["GET", "POST"])
+@authentication_classes(PUBLIC)
 @permission_classes([AllowAny])
 @throttle_classes([TranscribeThrottle])
 @parser_classes([AudioParser])

@@ -11,7 +11,8 @@ from unittest import mock
 from urllib.error import HTTPError, URLError
 
 from django.core.cache import cache
-from django.test import SimpleTestCase, override_settings
+from django.contrib.auth import get_user_model
+from django.test import SimpleTestCase, TestCase, override_settings
 from rest_framework.test import APIClient
 
 from catalogue import transcribe as speech
@@ -104,6 +105,42 @@ class TranscribeEndpointTests(SimpleTestCase):
                 self.assertLogs("catalogue.views", level="WARNING") as logs:
             self.assertEqual(self.post().status_code, 200)
         self.assertEqual(logs.output, ["WARNING:catalogue.views:transcribe throttle unavailable, allowing the request: ConnectionRefusedError"])
+
+
+@override_settings(CACHES=LOCMEM)
+class SignedInBrowserTests(TestCase):
+    """A shopper who has signed in must still be able to search, compile and speak. With DRF's default
+    session authentication their POSTs were refused for a missing CSRF token before the view ran."""
+
+    def setUp(self):
+        cache.clear()
+        self.client = APIClient(enforce_csrf_checks=True)
+        self.client.force_login(get_user_model().objects.create_user("shopper", "s@example.com", "a-long-password-1"))
+
+    def test_public_endpoints_work_for_a_signed_in_session_without_a_csrf_token(self):
+        with mock.patch.dict(os.environ, DEEPGRAM_ON), answering(RECORDED):
+            self.assertEqual(self.client.post("/api/transcribe", WAV, content_type="audio/wav").status_code, 200)
+        with mock.patch("catalogue.views.compile_text") as compile_text:
+            from catalogue.dsl.compile import CompileResult
+            from catalogue.dsl.schema import Program
+            compile_text.return_value = CompileResult(Program(find=[], place=[]), "model", 1)
+            self.assertEqual(self.client.post("/api/compile", {"text": "a chair"}, format="json").status_code, 200)
+        self.assertEqual(self.client.get("/api/search?limit=1").status_code, 200)
+
+    def test_signing_in_does_not_lift_the_cap_on_the_endpoints_that_cost_money(self):
+        # AnonRateThrottle ignores authenticated users. Anonymous views are throttled by client address
+        # whoever is signed in, so an account is not a way around the limit.
+        with mock.patch.dict(os.environ, DEEPGRAM_ON), answering(RECORDED), mock.patch.object(TranscribeThrottle, "rate", "2/min"):
+            statuses = [self.client.post("/api/transcribe", WAV, content_type="audio/wav").status_code for _ in range(3)]
+        self.assertEqual(statuses, [200, 200, 429])
+
+    def test_only_the_three_public_views_are_anonymous(self):
+        from catalogue import views
+        for view in (views.search, views.compile_program, views.transcribe_audio):
+            self.assertEqual(view.cls.authentication_classes, [], view.__name__)
+        # Everything else keeps its authentication: a signed-in scene write without a CSRF token is still refused.
+        refused = self.client.put("/api/scene/", {"baseRevision": 0, "instances": []}, format="json")
+        self.assertEqual(refused.status_code, 403)
 
 
 @unittest.skipUnless(os.getenv("TRANSCRIBE_LIVE_TEST") == "1", "live Deepgram test; set TRANSCRIBE_LIVE_TEST=1")
