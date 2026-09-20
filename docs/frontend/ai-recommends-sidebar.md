@@ -114,11 +114,12 @@ Command+Shift+D shortcut remains active; the standalone legacy catalogue keeps i
 
 ## Bottom voice recording state
 
-Selecting Speak opens a dark recording strip in the existing bottom toolbar. Its waveform pulses while
-the browser or Deepgram microphone session is listening and stays still while connecting or transcribing.
+Selecting Speak opens a dark recording strip in the existing bottom toolbar. Its elapsed-time waveform
+fills from left to right, then scrolls as recording continues. Only the newest segment animates while
+the browser or Deepgram microphone session is listening; it stays still while transcribing.
 The square cancels and discards the capture; the arrow finishes recording and submits a successful
 transcript through the same compile/search path as typed input. The browser's reduced-motion setting
-disables the pulse. On a narrow screen the strip sits below the panel; the embedded search form and
+disables the segment animation. On a narrow screen the strip sits below the panel; the embedded search form and
 category rail keep their single AI entry and no microphone control. The existing keyboard shortcut
 uses the same start/finish flow.
 
@@ -139,3 +140,18 @@ The isolated staged snapshot, excluding the concurrent product-card draft, passe
 The full backend suite reported `Ran 284 tests in 13.653s / OK (skipped=5)` in the live worktree;
 no backend files changed in this follow-up. `git diff --cached --check` passed. The preview remains
 local to this worktree; the existing sidebar task stays active for delivery/persistence work.
+
+## Progressive timeline correction
+
+The 40-segment recording timeline starts at `0:00`, fills with elapsed time, and scrolls after its
+visible history is full. The timer runs inside `VoiceCapture`, so the editor and 3D scene do not
+rerender on every 180 ms update. The old instruction bubble is visually hidden during recording;
+its live status remains readable to assistive technology. Cancel restores the single Speak button,
+and a new recording starts its timeline at zero.
+
+The running 5279 preview was checked at 1280 × 720 and 390 × 844. Desktop progress advanced from
+2 to 34 filled segments, and the mobile strip stayed at x=16–374 below the panel bottom y=766.
+Screenshots: `.scratch/progressive-voice-desktop.jpg` and `.scratch/progressive-voice-mobile.jpg`.
+`npm test` reported `187 passed / 0 failed` plus `25 passed / 0 failed`; full backend
+`manage.py test` reported `Ran 284 tests in 11.123s / OK (skipped=5)`; `npm run build` reported
+`built in 3.83s`. No catalogue, placement, cart, or floor code changed for this correction.

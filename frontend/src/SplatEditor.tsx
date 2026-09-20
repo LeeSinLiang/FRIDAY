@@ -19,7 +19,28 @@ import "./splat-editor.css";
 import { useCart } from "./shopping/CartProvider";
 
 const PlayCanvasScene=lazy(()=>import("./PlayCanvasScene"));
-const VOICE_BARS = [13, 20, 30, 17, 26, 34, 22, 31, 37, 19, 29, 23, 35, 18, 28, 16, 21];
+const VOICE_BARS = [8, 12, 18, 11, 24, 16, 29, 20, 13, 26, 17, 31, 19, 12, 23, 16, 27, 14, 32, 21, 15, 25, 11, 18, 30, 16, 22, 13, 28, 20, 12, 26, 17, 31, 15, 24, 19, 11, 27, 18];
+const VOICE_STEP_MS = 180;
+function VoiceCapture({phase,onCancel,onFinish}:{phase:VoicePhase;onCancel:()=>void;onFinish:()=>void}) {
+  const [step,setStep]=useState(0);
+  useEffect(()=>{
+    if(phase!=="listening")return;
+    const started=performance.now();
+    setStep(0);
+    const timer=window.setInterval(()=>setStep(Math.floor((performance.now()-started)/VOICE_STEP_MS)),VOICE_STEP_MS);
+    return ()=>window.clearInterval(timer);
+  },[phase]);
+  const filledCount=phase==="connecting"?0:Math.min(VOICE_BARS.length,step+1);
+  const firstSample=Math.max(0,step-VOICE_BARS.length+1);
+  return <div className="splat-voice-capture" role="group" aria-label={phase==="listening"?"Recording your request":phase==="connecting"?"Connecting microphone":"Transcribing request"}>
+    <span className="splat-voice-time" aria-hidden="true">{Math.floor(step*VOICE_STEP_MS/60000)}:{String(Math.floor(step*VOICE_STEP_MS/1000)%60).padStart(2,"0")}</span>
+    <div className="splat-voice-wave" aria-hidden="true" style={{"--voice-progress":`${filledCount/VOICE_BARS.length*100}%`} as React.CSSProperties}>
+      {VOICE_BARS.map((_,slot)=>{const sample=firstSample+slot;const filled=slot<filledCount;return <i key={filled?`sample-${sample}`:`empty-${slot}`} className={filled?sample===step&&phase==="listening"?"is-recorded is-newest":"is-recorded":""} style={{height:filled?VOICE_BARS[sample%VOICE_BARS.length]:3}}/>;})}
+    </div>
+    {phase!=="transcribing" && <button type="button" className="splat-voice-action cancel" aria-label="Cancel recording" title="Cancel recording" onClick={onCancel}><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/></svg></button>}
+    {phase==="listening" && <button type="button" className="splat-voice-action send" aria-label="Finish and search" title="Finish and search" onClick={onFinish}><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20V4M5 11l7-7 7 7"/></svg></button>}
+  </div>;
+}
 function ProductPreview({product}:{product:Product}) {
   if(product.thumbnailUrl)return <img className="splat-product-photo" src={product.thumbnailUrl} alt=""/>;
   return <span className={`furniture-preview preview-${product.kind}`} style={{"--product-color":product.color} as React.CSSProperties} aria-hidden="true"><i/><b/><em/></span>;
@@ -274,7 +295,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
     </aside>
     {room&&view==="perspective"&&<FloorMap room={room} getCamera={getCamera} onFloorChange={changeFloor} floorChangeDisabled={!ready||locked||!!pendingProductId}/>}
     {view==="top"&&room?.scan&&<div className="splat-bottom-left"><p className="splat-attribution"><a href={room.scan.attribution.url} target="_blank" rel="noreferrer">{room.scan.attribution.title} · {room.scan.attribution.author}</a><span> · </span><a href={room.scan.attribution.licenseUrl} target="_blank" rel="noreferrer">{room.scan.attribution.license}</a></p></div>}
-    <div className="splat-bottom-center"><p className="glass splat-help" aria-live="polite">{voicePhase==="connecting"?"Connecting microphone…":voicePhase==="listening"?"Listening · cancel or finish and search":voicePhase==="transcribing"?"Transcribing your request…":notice || (session.status!=="ready"&&session.status!=="loading"?session.message:help)}</p><nav className={`glass splat-edit-tools${voicePhase!=="idle"?" is-voicing":""}`} data-voice-phase={voicePhase} aria-label="Furniture tools">
+    <div className="splat-bottom-center"><p className={`glass splat-help${voicePhase!=="idle"?" is-voice-status":""}`} aria-live="polite">{voicePhase==="connecting"?"Connecting microphone…":voicePhase==="listening"?"Listening · cancel or finish and search":voicePhase==="transcribing"?"Transcribing your request…":notice || (session.status!=="ready"&&session.status!=="loading"?session.message:help)}</p><nav className={`glass splat-edit-tools${voicePhase!=="idle"?" is-voicing":""}`} data-voice-phase={voicePhase} aria-label="Furniture tools">
       <button aria-pressed={mode==="place"} disabled={!ready||locked||!selected||!!pendingProductId} onClick={()=>setMode("place")}><Icon name="move" size={18}/>Move</button>
       <button disabled={!ready||locked||!selected||!!pendingProductId} onClick={()=>void updatePose({yawRad:selected!.pose.yawRad+Math.PI/2})}><Icon name="rotate" size={18}/>Rotate</button>
       <span/>
@@ -282,11 +303,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
       <button aria-label="Redo placement" disabled={!ready||locked||!session.canRedo||!!pendingProductId} onClick={()=>void session.redo()}><Icon name="redo" size={18}/></button>
       <span/>
       {voicePhase==="idle" ? <button type="button" className="splat-speak" aria-label="Speak to AI" aria-pressed={false} aria-keyshortcuts="Meta+Shift+D Control+Shift+D" disabled={!ready||locked} onClick={requestVoice}><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v4m-4 0h8"/></svg>Speak</button> :
-        <div className="splat-voice-capture" role="group" aria-label={voicePhase==="listening"?"Recording your request":voicePhase==="connecting"?"Connecting microphone":"Transcribing request"}>
-          <div className="splat-voice-wave" aria-hidden="true">{VOICE_BARS.map((height,index)=><i key={index} style={{height,animationDelay:`-${index*.11}s`}}/>)}</div>
-          {voicePhase!=="transcribing" && <button type="button" className="splat-voice-action cancel" aria-label="Cancel recording" title="Cancel recording" onClick={()=>setVoiceCancelRequest(value=>value+1)}><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/></svg></button>}
-          {voicePhase==="listening" && <button type="button" className="splat-voice-action send" aria-label="Finish and search" title="Finish and search" onClick={requestVoice}><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20V4M5 11l7-7 7 7"/></svg></button>}
-        </div>}
+        <VoiceCapture phase={voicePhase} onCancel={()=>setVoiceCancelRequest(value=>value+1)} onFinish={requestVoice}/>}
     </nav></div>
   </main>;
 }

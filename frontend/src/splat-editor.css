@@ -119,6 +119,7 @@
 .has-panel .splat-bottom-center {left:calc((100% - var(--panel-width) - 24px)/2);}
 .has-panel:has(.floor-map) .splat-bottom-center {left:calc((100% - var(--panel-width) + 282px)/2);}
 .splat-help {padding:9px 14px;border-radius:12px;font-size:12px;max-width:390px;text-align:center;line-height:1.4;}
+.splat-help.is-voice-status {position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;clip-path:inset(50%);overflow:hidden;white-space:nowrap;}
 .splat-edit-tools {display:flex;align-items:center;gap:4px;padding:6px;border-radius:18px;}
 .splat-edit-tools button {display:flex;align-items:center;gap:7px;padding:12px;border-radius:12px;font-size:12px;}
 .splat-edit-tools button[aria-pressed=true]:not(:disabled) {background:#a94321;color:#fff6e8;}
@@ -126,12 +127,16 @@
 .splat-edit-tools .splat-speak:hover:not(:disabled),.splat-edit-tools .splat-speak:focus-visible {background:#efe3d7;color:#923f24;}
 .splat-edit-tools.is-voicing {width:min(420px,calc(100vw - 32px));padding:6px 8px;box-sizing:border-box;background:#343436;color:#f7f7f7;}
 .splat-edit-tools.is-voicing>button,.splat-edit-tools.is-voicing>span {display:none;}
-.splat-voice-capture {display:flex;align-items:center;gap:10px;width:100%;min-width:0;}
-.splat-voice-wave {height:38px;min-width:0;flex:1;display:flex;align-items:center;justify-content:center;gap:3px;overflow:hidden;}
-.splat-voice-wave::before,.splat-voice-wave::after {content:"";height:4px;min-width:16px;flex:1;max-width:48px;background:radial-gradient(circle,#aaa 1.5px,transparent 1.7px) left center / 14px 4px repeat-x;opacity:.8;}
-.splat-voice-wave i {width:4px;flex:0 0 4px;border-radius:4px;background:#c7c7c9;transform:scaleY(.56);transform-origin:center;}
-.splat-edit-tools[data-voice-phase="listening"] .splat-voice-wave i {animation:splat-voice-pulse .9s ease-in-out infinite;}
-@keyframes splat-voice-pulse {0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+.splat-voice-capture {display:flex;align-items:center;gap:9px;width:100%;min-width:0;}
+.splat-voice-time {min-width:30px;color:#d2d2d4;font-size:11px;font-variant-numeric:tabular-nums;text-align:center;}
+.splat-voice-wave {position:relative;height:38px;min-width:0;flex:1;display:grid;grid-template-columns:repeat(40,minmax(0,1fr));align-items:center;gap:2px;overflow:hidden;}
+.splat-voice-wave::before,.splat-voice-wave::after {content:"";position:absolute;left:0;bottom:0;height:2px;border-radius:2px;}
+.splat-voice-wave::before {right:0;background:#66666a;}
+.splat-voice-wave::after {width:var(--voice-progress);background:#f5f5f6;transition:width .18s linear;}
+.splat-voice-wave i {min-width:0;border-radius:5px;background:#77777a;transition:height .16s ease,background .16s ease;}
+.splat-voice-wave i.is-recorded {background:#d1d1d4;}
+.splat-edit-tools[data-voice-phase="listening"] .splat-voice-wave i.is-newest {background:#fff;animation:splat-voice-arrive .24s ease-out;}
+@keyframes splat-voice-arrive {from{transform:scaleY(.25)}to{transform:scaleY(1)}}
 .splat-edit-tools .splat-voice-action {width:38px;height:38px;flex:0 0 38px;padding:0;display:grid;place-items:center;border-radius:50%;background:#454548;color:white;}
 .splat-edit-tools .splat-voice-action.send {background:#fff;color:#242424;}
 .splat-edit-tools .splat-voice-action:hover,.splat-edit-tools .splat-voice-action:focus-visible {outline:2px solid #fff;outline-offset:2px;}
@@ -196,7 +201,7 @@
   .splat-editor.has-panel:has(.splat-panel.is-catalogue) .splat-edit-tools>button:not(.splat-speak) {display:none;}
   .splat-editor.has-panel:has(.splat-panel.is-catalogue) .splat-bottom-center:has(.is-voicing) {left:50%;}
 }
-@media(prefers-reduced-motion:reduce){.splat-edit-tools[data-voice-phase="listening"] .splat-voice-wave i{animation:none;transform:none;}}
+@media(prefers-reduced-motion:reduce){.splat-edit-tools[data-voice-phase="listening"] .splat-voice-wave i.is-newest{animation:none;}.splat-voice-wave i,.splat-voice-wave::after{transition:none;}}
 @media(prefers-reduced-motion:reduce){.splat-panel,.splat-panel-toggle,.splat-bottom-center,.splat-switch span{transition:none;}}
 @supports not (backdrop-filter:blur(1px)){.splat-editor .glass{background:#fcf4e7;}}
 
