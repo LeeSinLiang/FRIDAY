@@ -83,6 +83,12 @@
           "title": "Provide verified room bundle import for collaborators",
           "owner": "sin",
           "done": true
+        },
+        {
+          "id": "bfec5726-48a4-4f49-8cfa-275f3b80e031",
+          "title": "Prepare and verify the shared Haussmann room locally",
+          "done": false,
+          "owner": "william"
         }
       ]
     },
