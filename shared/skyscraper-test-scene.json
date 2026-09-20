@@ -1,0 +1,580 @@
+{
+  "buildingId": "london-skyscraper-test",
+  "sourceSha256": "0d4d516057aa6b8e6a79cdbd0b3446432edd831a151206c2c1879e944dc87de9",
+  "sourceBytes": 38784232,
+  "triangles": 141583,
+  "meshCount": 58,
+  "materialCount": 18,
+  "boundsM": {
+    "min": [
+      -17.64146077632904,
+      -4.79586997628212,
+      -34.46595764160156
+    ],
+    "max": [
+      20.36939013004303,
+      165.59251403808594,
+      17.52129364013672
+    ]
+  },
+  "reference": {
+    "instanceId": "skyscraper-scale-reference",
+    "productId": "scale-reference",
+    "pose": {
+      "xCm": 250,
+      "zCm": 400,
+      "yawRad": 0
+    },
+    "sizeCm": [
+      200,
+      100,
+      100
+    ]
+  },
+  "floors": [
+    {
+      "roomId": "london-skyscraper-test",
+      "floorId": "C01",
+      "surfaceId": "C01:reviewed-floor",
+      "label": "Floor 1",
+      "elevationM": 7.180015563964844,
+      "sourceOriginM": [
+        3.5,
+        7.180015563964844,
+        -12.5
+      ],
+      "supportErrorMaxMm": 2.533,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c02",
+      "floorId": "C02",
+      "surfaceId": "C02:reviewed-floor",
+      "label": "Floor 2",
+      "elevationM": 11.627754211425781,
+      "sourceOriginM": [
+        3.5,
+        11.627754211425781,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c03",
+      "floorId": "C03",
+      "surfaceId": "C03:reviewed-floor",
+      "label": "Floor 3",
+      "elevationM": 16.12139129638672,
+      "sourceOriginM": [
+        3.5,
+        16.12139129638672,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c04",
+      "floorId": "C04",
+      "surfaceId": "C04:reviewed-floor",
+      "label": "Floor 4",
+      "elevationM": 20.592967987060547,
+      "sourceOriginM": [
+        3.5,
+        20.592967987060547,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c05",
+      "floorId": "C05",
+      "surfaceId": "C05:reviewed-floor",
+      "label": "Floor 5",
+      "elevationM": 25.065261840820312,
+      "sourceOriginM": [
+        3.5,
+        25.065261840820312,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c06",
+      "floorId": "C06",
+      "surfaceId": "C06:reviewed-floor",
+      "label": "Floor 6",
+      "elevationM": 29.538341522216797,
+      "sourceOriginM": [
+        3.5,
+        29.538341522216797,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c07",
+      "floorId": "C07",
+      "surfaceId": "C07:reviewed-floor",
+      "label": "Floor 7",
+      "elevationM": 34.01444625854492,
+      "sourceOriginM": [
+        3.5,
+        34.01444625854492,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c08",
+      "floorId": "C08",
+      "surfaceId": "C08:reviewed-floor",
+      "label": "Floor 8",
+      "elevationM": 38.48959732055664,
+      "sourceOriginM": [
+        3.5,
+        38.48959732055664,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c09",
+      "floorId": "C09",
+      "surfaceId": "C09:reviewed-floor",
+      "label": "Floor 9",
+      "elevationM": 42.96543502807617,
+      "sourceOriginM": [
+        3.5,
+        42.96543502807617,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c10",
+      "floorId": "C10",
+      "surfaceId": "C10:reviewed-floor",
+      "label": "Floor 10",
+      "elevationM": 47.441898345947266,
+      "sourceOriginM": [
+        3.5,
+        47.441898345947266,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c11",
+      "floorId": "C11",
+      "surfaceId": "C11:reviewed-floor",
+      "label": "Floor 11",
+      "elevationM": 51.91887283325195,
+      "sourceOriginM": [
+        3.5,
+        51.91887283325195,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c12",
+      "floorId": "C12",
+      "surfaceId": "C12:reviewed-floor",
+      "label": "Floor 12",
+      "elevationM": 56.39612579345703,
+      "sourceOriginM": [
+        3.5,
+        56.39612579345703,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c13",
+      "floorId": "C13",
+      "surfaceId": "C13:reviewed-floor",
+      "label": "Floor 13",
+      "elevationM": 60.873538970947266,
+      "sourceOriginM": [
+        3.5,
+        60.873538970947266,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c14",
+      "floorId": "C14",
+      "surfaceId": "C14:reviewed-floor",
+      "label": "Floor 14",
+      "elevationM": 65.35115051269531,
+      "sourceOriginM": [
+        3.5,
+        65.35115051269531,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c15",
+      "floorId": "C15",
+      "surfaceId": "C15:reviewed-floor",
+      "label": "Floor 15",
+      "elevationM": 69.82894897460938,
+      "sourceOriginM": [
+        3.5,
+        69.82894897460938,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c16",
+      "floorId": "C16",
+      "surfaceId": "C16:reviewed-floor",
+      "label": "Floor 16",
+      "elevationM": 74.30691528320312,
+      "sourceOriginM": [
+        3.5,
+        74.30691528320312,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c17",
+      "floorId": "C17",
+      "surfaceId": "C17:reviewed-floor",
+      "label": "Floor 17",
+      "elevationM": 78.78501892089844,
+      "sourceOriginM": [
+        3.5,
+        78.78501892089844,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c18",
+      "floorId": "C18",
+      "surfaceId": "C18:reviewed-floor",
+      "label": "Floor 18",
+      "elevationM": 83.26360321044922,
+      "sourceOriginM": [
+        3.5,
+        83.26360321044922,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c19",
+      "floorId": "C19",
+      "surfaceId": "C19:reviewed-floor",
+      "label": "Floor 19",
+      "elevationM": 87.74314880371094,
+      "sourceOriginM": [
+        3.5,
+        87.74314880371094,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c20",
+      "floorId": "C20",
+      "surfaceId": "C20:reviewed-floor",
+      "label": "Floor 20",
+      "elevationM": 92.2154541015625,
+      "sourceOriginM": [
+        3.5,
+        92.2154541015625,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.44751397367621804,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c21",
+      "floorId": "C21",
+      "surfaceId": "C21:reviewed-floor",
+      "label": "Floor 21",
+      "elevationM": 96.69743347167969,
+      "sourceOriginM": [
+        3.5,
+        96.69743347167969,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.44751397367621804,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c22",
+      "floorId": "C22",
+      "surfaceId": "C22:reviewed-floor",
+      "label": "Floor 22",
+      "elevationM": 101.18550109863281,
+      "sourceOriginM": [
+        3.5,
+        101.18550109863281,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.44751397367621804,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c23",
+      "floorId": "C23",
+      "surfaceId": "C23:reviewed-floor",
+      "label": "Floor 23",
+      "elevationM": 105.65922546386719,
+      "sourceOriginM": [
+        3.5,
+        105.65922546386719,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.44751397367621804,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c24",
+      "floorId": "C24",
+      "surfaceId": "C24:reviewed-floor",
+      "label": "Floor 24",
+      "elevationM": 110.09878540039062,
+      "sourceOriginM": [
+        3.5,
+        110.09878540039062,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.44751397367621804,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c25",
+      "floorId": "C25",
+      "surfaceId": "C25:reviewed-floor",
+      "label": "Floor 25",
+      "elevationM": 114.49679565429688,
+      "sourceOriginM": [
+        3.5,
+        114.49679565429688,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.44751397367621804,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c26",
+      "floorId": "C26",
+      "surfaceId": "C26:reviewed-floor",
+      "label": "Floor 26",
+      "elevationM": 118.89393615722656,
+      "sourceOriginM": [
+        3.5,
+        118.89393615722656,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.44751397367621804,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c27",
+      "floorId": "C27",
+      "surfaceId": "C27:reviewed-floor",
+      "label": "Floor 27",
+      "elevationM": 123.27729797363281,
+      "sourceOriginM": [
+        3.5,
+        123.27729797363281,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.44751397367621804,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c28",
+      "floorId": "C28",
+      "surfaceId": "C28:reviewed-floor",
+      "label": "Floor 28",
+      "elevationM": 127.65557861328125,
+      "sourceOriginM": [
+        3.5,
+        127.65557861328125,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.44751397367621804,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c29",
+      "floorId": "C29",
+      "surfaceId": "C29:reviewed-floor",
+      "label": "Floor 29",
+      "elevationM": 132.0234375,
+      "sourceOriginM": [
+        3.5,
+        132.0234375,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.44751397367621804,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c30",
+      "floorId": "C30",
+      "surfaceId": "C30:reviewed-floor",
+      "label": "Floor 30",
+      "elevationM": 136.39871215820312,
+      "sourceOriginM": [
+        3.5,
+        136.39871215820312,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c31",
+      "floorId": "C31",
+      "surfaceId": "C31:reviewed-floor",
+      "label": "Floor 31",
+      "elevationM": 140.76687622070312,
+      "sourceOriginM": [
+        3.5,
+        140.76687622070312,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    },
+    {
+      "roomId": "london-skyscraper-c32",
+      "floorId": "C32",
+      "surfaceId": "C32:reviewed-floor",
+      "label": "Floor 32",
+      "elevationM": 145.23117065429688,
+      "sourceOriginM": [
+        3.5,
+        145.23117065429688,
+        -12.5
+      ],
+      "supportErrorMaxMm": 0.0,
+      "checkedAreaM2": 32.0,
+      "unsupportedAreaM2": 0.0,
+      "blockedAreaM2": 0.0,
+      "clearanceCm": 230
+    }
+  ]
+}

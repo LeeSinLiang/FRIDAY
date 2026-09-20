@@ -9,6 +9,14 @@ export type RoomSpatial = {
   obstacles: { obstacleId: string; label: string; xCm: number; zCm: number; widthCm: number; depthCm: number; yawRad: number }[];
 };
 export type RoomScan = {
+  building?: {
+    buildingId: string;
+    sourceSha256: string;
+    floorId: string;
+    surfaceId: string;
+    elevationM: number;
+    levels: { roomId: string; floorId: string }[];
+  };
   geometryRevision: string;
   calibration: { status: "synthetic_demo" | "confirmed" | "unconfirmed"; note: string };
   visualUrl: string;

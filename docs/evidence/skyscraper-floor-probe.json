@@ -1,0 +1,1199 @@
+{
+  "reviewed_main": "13297be8c637f0669660a434282f20af1b3d2b97",
+  "status": "research_only_not_integrated",
+  "model": {
+    "source": "/Users/williamxu/Downloads/free-london-skyscraper/edited/London_Skyscraper_Unfurnished.glb",
+    "sha256": "0d4d516057aa6b8e6a79cdbd0b3446432edd831a151206c2c1879e944dc87de9",
+    "bytes": 38784232,
+    "gltf_asset": {
+      "generator": "Khronos glTF Blender I/O v5.2.39",
+      "version": "2.0"
+    },
+    "extensions": [
+      "KHR_materials_emissive_strength",
+      "KHR_materials_specular",
+      "KHR_materials_ior"
+    ],
+    "nodes": 58,
+    "mesh_nodes": 58,
+    "meshes": 58,
+    "materials": 18,
+    "images": 45,
+    "images_embedded": true,
+    "triangles": 141583,
+    "bounds_m": {
+      "min": [
+        -17.64146077632904,
+        -4.79586997628212,
+        -34.46595764160156
+      ],
+      "max": [
+        20.36939013004303,
+        165.59251403808594,
+        17.52129364013672
+      ]
+    }
+  },
+  "diagnostic": {
+    "method": "Read-only geometry diagnostic. Horizontal triangle area clustering, 4 cm elevation band, >100 m2 candidate threshold, Interior_Top provenance filter for tower subset; 50 cm sample centers for overlap with downward horizontal surfaces. Not a walkability mask, room segmentation, or certified floor count.",
+    "floor_candidates": [
+      {
+        "elevation_m": -4.2168,
+        "triangle_area_m2": 1624.14,
+        "dominant_nodes": [
+          [
+            "Sidewalk_02",
+            935.3956604136592
+          ],
+          [
+            "Lobby_Floor",
+            386.7049262938465
+          ],
+          [
+            "Sidewalk_01",
+            302.03961054864794
+          ]
+        ]
+      },
+      {
+        "elevation_m": 7.1749,
+        "triangle_area_m2": 651.0,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            651.0025801460417
+          ]
+        ]
+      },
+      {
+        "elevation_m": 11.6278,
+        "triangle_area_m2": 678.23,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            678.2347488392742
+          ]
+        ]
+      },
+      {
+        "elevation_m": 16.1214,
+        "triangle_area_m2": 708.21,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            708.2057990959065
+          ]
+        ]
+      },
+      {
+        "elevation_m": 20.593,
+        "triangle_area_m2": 734.2,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            734.1971527681444
+          ],
+          [
+            "Building_Facade.007",
+            0.0020173256850033426
+          ]
+        ]
+      },
+      {
+        "elevation_m": 25.0653,
+        "triangle_area_m2": 760.29,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            760.2821400519761
+          ],
+          [
+            "Building_Facade.007",
+            0.004163778449340567
+          ]
+        ]
+      },
+      {
+        "elevation_m": 29.5383,
+        "triangle_area_m2": 786.36,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            786.3560469201084
+          ],
+          [
+            "Building_Facade.007",
+            0.0042863306718053055
+          ]
+        ]
+      },
+      {
+        "elevation_m": 34.0145,
+        "triangle_area_m2": 813.35,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            812.4073005331402
+          ],
+          [
+            "Building_Facade.003",
+            0.9379528430122728
+          ],
+          [
+            "Building_Facade.007",
+            0.004420104435585107
+          ]
+        ]
+      },
+      {
+        "elevation_m": 38.4896,
+        "triangle_area_m2": 839.93,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            838.3828447504947
+          ],
+          [
+            "Building_Facade.003",
+            1.5438548270719135
+          ],
+          [
+            "Building_Facade.007",
+            0.002277866447913927
+          ]
+        ]
+      },
+      {
+        "elevation_m": 42.9654,
+        "triangle_area_m2": 865.6,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            864.2810003515169
+          ],
+          [
+            "Building_Facade.003",
+            1.3165622421288106
+          ]
+        ]
+      },
+      {
+        "elevation_m": 47.4419,
+        "triangle_area_m2": 891.78,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            890.0506567119146
+          ],
+          [
+            "Building_Facade.003",
+            1.7283013608854583
+          ]
+        ]
+      },
+      {
+        "elevation_m": 51.9189,
+        "triangle_area_m2": 916.63,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            915.6237053985506
+          ],
+          [
+            "Building_Facade.003",
+            1.0018713989121264
+          ]
+        ]
+      },
+      {
+        "elevation_m": 56.3961,
+        "triangle_area_m2": 942.17,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            941.1467861585688
+          ],
+          [
+            "Building_Facade.003",
+            1.0181876464190305
+          ],
+          [
+            "Building_Facade.007",
+            0.002557926312802549
+          ]
+        ]
+      },
+      {
+        "elevation_m": 60.8735,
+        "triangle_area_m2": 967.07,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            966.7266997847855
+          ],
+          [
+            "Building_Facade.003",
+            0.3445771041868473
+          ],
+          [
+            "Building_Facade.007",
+            0.0026300154106978263
+          ]
+        ]
+      },
+      {
+        "elevation_m": 65.3511,
+        "triangle_area_m2": 992.32,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            992.1964029858727
+          ],
+          [
+            "Building_Facade.003",
+            0.11643651025582734
+          ],
+          [
+            "Building_Facade.007",
+            0.005407943470877362
+          ]
+        ]
+      },
+      {
+        "elevation_m": 69.8289,
+        "triangle_area_m2": 1017.61,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            1017.604381948141
+          ],
+          [
+            "Building_Facade.007",
+            0.005555303904690903
+          ]
+        ]
+      },
+      {
+        "elevation_m": 74.3069,
+        "triangle_area_m2": 1042.97,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            1042.9633236291265
+          ],
+          [
+            "Building_Facade.007",
+            0.005705244318338177
+          ]
+        ]
+      },
+      {
+        "elevation_m": 78.785,
+        "triangle_area_m2": 1068.32,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            1068.3217686252747
+          ],
+          [
+            "Building_Facade.007",
+            0.0029269217864057017
+          ]
+        ]
+      },
+      {
+        "elevation_m": 83.2636,
+        "triangle_area_m2": 1093.56,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            1093.4120291792897
+          ],
+          [
+            "Building_Facade.011",
+            0.07359853376692627
+          ],
+          [
+            "Building_Facade.018",
+            0.07359758684469853
+          ]
+        ]
+      },
+      {
+        "elevation_m": 87.7431,
+        "triangle_area_m2": 1117.65,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            1117.6481153703007
+          ],
+          [
+            "Building_Facade.007",
+            0.003070917180084543
+          ]
+        ]
+      },
+      {
+        "elevation_m": 92.2155,
+        "triangle_area_m2": 1141.88,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            1141.882532520499
+          ]
+        ]
+      },
+      {
+        "elevation_m": 96.6974,
+        "triangle_area_m2": 1163.14,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            1163.1427040093386
+          ]
+        ]
+      },
+      {
+        "elevation_m": 101.1855,
+        "triangle_area_m2": 1168.86,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            1168.8626879255125
+          ]
+        ]
+      },
+      {
+        "elevation_m": 105.6592,
+        "triangle_area_m2": 1145.47,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            1145.4704199895023
+          ]
+        ]
+      },
+      {
+        "elevation_m": 110.0988,
+        "triangle_area_m2": 1091.83,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            1091.831645464441
+          ]
+        ]
+      },
+      {
+        "elevation_m": 114.4968,
+        "triangle_area_m2": 1021.23,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            1021.2283912358662
+          ]
+        ]
+      },
+      {
+        "elevation_m": 118.8939,
+        "triangle_area_m2": 946.09,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            946.0903162756822
+          ]
+        ]
+      },
+      {
+        "elevation_m": 123.2773,
+        "triangle_area_m2": 871.05,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            871.0463481247225
+          ]
+        ]
+      },
+      {
+        "elevation_m": 127.6556,
+        "triangle_area_m2": 797.61,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            797.413085565333
+          ],
+          [
+            "Building_Facade.003",
+            0.1965046953413907
+          ]
+        ]
+      },
+      {
+        "elevation_m": 132.0234,
+        "triangle_area_m2": 726.81,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            725.8826968027861
+          ],
+          [
+            "Building_Facade.003",
+            0.925469979681345
+          ]
+        ]
+      },
+      {
+        "elevation_m": 136.3988,
+        "triangle_area_m2": 664.51,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            661.9431623106175
+          ],
+          [
+            "Building_Facade.003",
+            2.565341367483608
+          ]
+        ]
+      },
+      {
+        "elevation_m": 140.7669,
+        "triangle_area_m2": 595.19,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            595.1891976119059
+          ]
+        ]
+      },
+      {
+        "elevation_m": 145.2312,
+        "triangle_area_m2": 517.12,
+        "dominant_nodes": [
+          [
+            "Interior_Top",
+            517.1156873003929
+          ]
+        ]
+      },
+      {
+        "elevation_m": 149.505,
+        "triangle_area_m2": 458.49,
+        "dominant_nodes": [
+          [
+            "Top_Piece",
+            458.4909781169408
+          ]
+        ]
+      },
+      {
+        "elevation_m": 153.7466,
+        "triangle_area_m2": 105.85,
+        "dominant_nodes": [
+          [
+            "Top_Piece",
+            105.85494206098606
+          ]
+        ]
+      }
+    ],
+    "tower_candidates": [
+      {
+        "candidate_id": "C01",
+        "elevation_m": 7.1749,
+        "horizontal_triangle_area_m2": 651.0,
+        "sampled_support_m2_50cm": 650.0,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7482,
+          3.7499,
+          3.7704
+        ],
+        "slab_pair_distance_median_m": 0.7975
+      },
+      {
+        "candidate_id": "C02",
+        "elevation_m": 11.6278,
+        "horizontal_triangle_area_m2": 678.23,
+        "sampled_support_m2_50cm": 678.5,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7938,
+          3.7938,
+          3.7938
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C03",
+        "elevation_m": 16.1214,
+        "horizontal_triangle_area_m2": 708.21,
+        "sampled_support_m2_50cm": 708.0,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7718,
+          3.7718,
+          3.7718
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C04",
+        "elevation_m": 20.593,
+        "horizontal_triangle_area_m2": 734.2,
+        "sampled_support_m2_50cm": 734.0,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7725,
+          3.7725,
+          3.7725
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C05",
+        "elevation_m": 25.0653,
+        "horizontal_triangle_area_m2": 760.29,
+        "sampled_support_m2_50cm": 760.5,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7733,
+          3.7733,
+          3.7733
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C06",
+        "elevation_m": 29.5383,
+        "horizontal_triangle_area_m2": 786.36,
+        "sampled_support_m2_50cm": 786.0,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7763,
+          3.7763,
+          3.7763
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C07",
+        "elevation_m": 34.0145,
+        "horizontal_triangle_area_m2": 813.35,
+        "sampled_support_m2_50cm": 813.5,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7753,
+          3.7753,
+          3.7753
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C08",
+        "elevation_m": 38.4896,
+        "horizontal_triangle_area_m2": 839.93,
+        "sampled_support_m2_50cm": 839.75,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.776,
+          3.776,
+          3.776
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C09",
+        "elevation_m": 42.9654,
+        "horizontal_triangle_area_m2": 865.6,
+        "sampled_support_m2_50cm": 866.5,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7766,
+          3.7766,
+          3.7766
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C10",
+        "elevation_m": 47.4419,
+        "horizontal_triangle_area_m2": 891.78,
+        "sampled_support_m2_50cm": 891.25,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7772,
+          3.7772,
+          3.7772
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C11",
+        "elevation_m": 51.9189,
+        "horizontal_triangle_area_m2": 916.63,
+        "sampled_support_m2_50cm": 917.0,
+        "overhead_coverage_fraction": 0.999,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7774,
+          3.7774,
+          3.7774
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C12",
+        "elevation_m": 56.3961,
+        "horizontal_triangle_area_m2": 942.17,
+        "sampled_support_m2_50cm": 942.0,
+        "overhead_coverage_fraction": 0.999,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7776,
+          3.7776,
+          3.7776
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C13",
+        "elevation_m": 60.8735,
+        "horizontal_triangle_area_m2": 967.07,
+        "sampled_support_m2_50cm": 965.75,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7778,
+          3.7778,
+          3.7778
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C14",
+        "elevation_m": 65.3511,
+        "horizontal_triangle_area_m2": 992.32,
+        "sampled_support_m2_50cm": 992.75,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.778,
+          3.778,
+          3.778
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C15",
+        "elevation_m": 69.8289,
+        "horizontal_triangle_area_m2": 1017.61,
+        "sampled_support_m2_50cm": 1017.0,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7781,
+          3.7781,
+          3.7781
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C16",
+        "elevation_m": 74.3069,
+        "horizontal_triangle_area_m2": 1042.97,
+        "sampled_support_m2_50cm": 1043.5,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7783,
+          3.7783,
+          3.7783
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C17",
+        "elevation_m": 78.785,
+        "horizontal_triangle_area_m2": 1068.32,
+        "sampled_support_m2_50cm": 1068.0,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7788,
+          3.7788,
+          3.7788
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C18",
+        "elevation_m": 83.2636,
+        "horizontal_triangle_area_m2": 1093.56,
+        "sampled_support_m2_50cm": 1092.75,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7797,
+          3.7797,
+          3.7797
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C19",
+        "elevation_m": 87.7431,
+        "horizontal_triangle_area_m2": 1117.65,
+        "sampled_support_m2_50cm": 1114.5,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7725,
+          3.7725,
+          3.7725
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C20",
+        "elevation_m": 92.2155,
+        "horizontal_triangle_area_m2": 1141.88,
+        "sampled_support_m2_50cm": 1143.75,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7822,
+          3.7822,
+          3.7822
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C21",
+        "elevation_m": 96.6974,
+        "horizontal_triangle_area_m2": 1163.14,
+        "sampled_support_m2_50cm": 1163.5,
+        "overhead_coverage_fraction": 1.0,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7882,
+          3.7882,
+          3.7882
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C22",
+        "elevation_m": 101.1855,
+        "horizontal_triangle_area_m2": 1168.86,
+        "sampled_support_m2_50cm": 1168.0,
+        "overhead_coverage_fraction": 0.982,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7739,
+          3.7739,
+          3.7739
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C23",
+        "elevation_m": 105.6592,
+        "horizontal_triangle_area_m2": 1145.47,
+        "sampled_support_m2_50cm": 1145.75,
+        "overhead_coverage_fraction": 0.953,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7397,
+          3.7397,
+          3.7397
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C24",
+        "elevation_m": 110.0988,
+        "horizontal_triangle_area_m2": 1091.83,
+        "sampled_support_m2_50cm": 1091.25,
+        "overhead_coverage_fraction": 0.936,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.6982,
+          3.6982,
+          3.6982
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C25",
+        "elevation_m": 114.4968,
+        "horizontal_triangle_area_m2": 1021.23,
+        "sampled_support_m2_50cm": 1020.25,
+        "overhead_coverage_fraction": 0.925,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.6973,
+          3.6973,
+          3.6973
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C26",
+        "elevation_m": 118.8939,
+        "horizontal_triangle_area_m2": 946.09,
+        "sampled_support_m2_50cm": 943.75,
+        "overhead_coverage_fraction": 0.924,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.6835,
+          3.6835,
+          3.6835
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C27",
+        "elevation_m": 123.2773,
+        "horizontal_triangle_area_m2": 871.05,
+        "sampled_support_m2_50cm": 872.25,
+        "overhead_coverage_fraction": 0.916,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.6784,
+          3.6785,
+          3.6785
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C28",
+        "elevation_m": 127.6556,
+        "horizontal_triangle_area_m2": 797.61,
+        "sampled_support_m2_50cm": 799.0,
+        "overhead_coverage_fraction": 0.907,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.668,
+          3.668,
+          3.668
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C29",
+        "elevation_m": 132.0234,
+        "horizontal_triangle_area_m2": 726.81,
+        "sampled_support_m2_50cm": 726.0,
+        "overhead_coverage_fraction": 0.909,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.6755,
+          3.6755,
+          3.6755
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C30",
+        "elevation_m": 136.3988,
+        "horizontal_triangle_area_m2": 664.51,
+        "sampled_support_m2_50cm": 660.75,
+        "overhead_coverage_fraction": 0.904,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.6684,
+          3.6684,
+          3.6684
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C31",
+        "elevation_m": 140.7669,
+        "horizontal_triangle_area_m2": 595.19,
+        "sampled_support_m2_50cm": 597.0,
+        "overhead_coverage_fraction": 0.869,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.7644,
+          3.7644,
+          3.7644
+        ],
+        "slab_pair_distance_median_m": 0.6998
+      },
+      {
+        "candidate_id": "C32",
+        "elevation_m": 145.2312,
+        "horizontal_triangle_area_m2": 517.12,
+        "sampled_support_m2_50cm": 518.5,
+        "overhead_coverage_fraction": 0.879,
+        "ceiling_distance_p05_p50_p95_m": [
+          3.5738,
+          3.5738,
+          3.5738
+        ],
+        "slab_pair_distance_median_m": 0.6999
+      }
+    ],
+    "adjacent_tower_rise_range_m": [
+      4.367800000000003,
+      4.493600000000001
+    ],
+    "source_sha256": "0d4d516057aa6b8e6a79cdbd0b3446432edd831a151206c2c1879e944dc87de9"
+  },
+  "texture_estimate": {
+    "primitives": 58,
+    "image_sizes": [
+      {
+        "name": "Building_Elements_Trim_Normal",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 257374
+      },
+      {
+        "name": "Building_Elements_Trim_Diffuse",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 242360
+      },
+      {
+        "name": "Building_Elements_Trim_Roughness",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 384819
+      },
+      {
+        "name": "FACADE_NORMAL",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 1314624
+      },
+      {
+        "name": "FACADE_DIFFUSE-FACADE_OPACITY",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 2235549
+      },
+      {
+        "name": "FACADE_MET-FACADE_ROUGHNESS",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 1947255
+      },
+      {
+        "name": "Building_Maintenance_Unit_Normal",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 569185
+      },
+      {
+        "name": "Building_Maintenance_Unit_Diffuse",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 855320
+      },
+      {
+        "name": "Building_Maintenance_Unit_Met-Building_Maintenance_Unit_Roughness",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 342885
+      },
+      {
+        "name": "Texture_Pallete_Emmisive",
+        "width": 256,
+        "height": 128,
+        "encoded_bytes": 1491
+      },
+      {
+        "name": "Texture_Pallete_Diffuse",
+        "width": 256,
+        "height": 128,
+        "encoded_bytes": 852
+      },
+      {
+        "name": "Texture_Pallete_Met-Texture_Pallete_Roughness",
+        "width": 256,
+        "height": 128,
+        "encoded_bytes": 2137
+      },
+      {
+        "name": "Concrete_Pillar_01_Normal",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 411488
+      },
+      {
+        "name": "Concrete_Pillar_01_Diffuse",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 1552077
+      },
+      {
+        "name": "Concrete_Pillar_01__Roughness",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 720954
+      },
+      {
+        "name": "Flare_Red_Diffuse",
+        "width": 256,
+        "height": 256,
+        "encoded_bytes": 23249
+      },
+      {
+        "name": "Flare_Red_Diffuse-Flare_Red_Opacity",
+        "width": 256,
+        "height": 256,
+        "encoded_bytes": 40066
+      },
+      {
+        "name": "Glass_Normal",
+        "width": 256,
+        "height": 256,
+        "encoded_bytes": 69808
+      },
+      {
+        "name": "Glass_Diffuse",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 98226
+      },
+      {
+        "name": "Glass_Roughness",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 648634
+      },
+      {
+        "name": "Blinds_Trimsheet_Normal",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 50307
+      },
+      {
+        "name": "Blinds_Trimsheet_Diffuse_V2",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 236720
+      },
+      {
+        "name": "Blinds_Trimsheet_Roughness",
+        "width": 256,
+        "height": 256,
+        "encoded_bytes": 1501
+      },
+      {
+        "name": "Interior_Top_Emmisive_Baked",
+        "width": 4096,
+        "height": 4096,
+        "encoded_bytes": 1459408
+      },
+      {
+        "name": "Interior_Top_Diffuse",
+        "width": 4096,
+        "height": 4096,
+        "encoded_bytes": 1531876
+      },
+      {
+        "name": "Curtain_Lobby_Translucency_BAKED",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 684720
+      },
+      {
+        "name": "Curtain_Lobby_Normal",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 442324
+      },
+      {
+        "name": "Curtain_Lobby_Diffuse-Curtain_Lobby_Opacity",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 962782
+      },
+      {
+        "name": "Lobby_Floors_Emmisive",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 302660
+      },
+      {
+        "name": "Lobby_Floors_Normal",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 127574
+      },
+      {
+        "name": "Lobby_Floors_Diffuse",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 43571
+      },
+      {
+        "name": "Lobby_Floors_Roughness",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 582079
+      },
+      {
+        "name": "Lobby_Interior_01_Emmisive_BAKED",
+        "width": 4096,
+        "height": 4096,
+        "encoded_bytes": 1297350
+      },
+      {
+        "name": "Lobby_Interior_01_Normal",
+        "width": 4096,
+        "height": 4096,
+        "encoded_bytes": 1648478
+      },
+      {
+        "name": "Lobby_Interior_01_Diffuse",
+        "width": 4096,
+        "height": 4096,
+        "encoded_bytes": 2229519
+      },
+      {
+        "name": "Lobby_Interior_01_Met-Lobby_Interior_01_Roughness",
+        "width": 4096,
+        "height": 4096,
+        "encoded_bytes": 4858193
+      },
+      {
+        "name": "Sidewalk_01_Normal",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 113735
+      },
+      {
+        "name": "Sidewalk_01_Diffuse",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 245154
+      },
+      {
+        "name": "Sidewalk_01_Roughness",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 620834
+      },
+      {
+        "name": "Sidewalk_02_Normal",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 224721
+      },
+      {
+        "name": "Sidewalk_02_Diffuse",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 177895
+      },
+      {
+        "name": "Sidewalk_02_Roughness",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 262063
+      },
+      {
+        "name": "Top_Piece_Normal",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 619876
+      },
+      {
+        "name": "Top_Piece_Diffuse",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 1415634
+      },
+      {
+        "name": "Top_Piece_Roughness",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 528823
+      }
+    ],
+    "decoded_rgba8_with_full_mips_MiB_estimate": 728.5
+  }
+}

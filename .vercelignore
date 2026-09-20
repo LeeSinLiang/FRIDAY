@@ -16,4 +16,7 @@
 **/dist
 docs
 shared/rooms/*/assets
+!shared/rooms/london-skyscraper-test/assets
+shared/rooms/london-skyscraper-test/assets/*
+!shared/rooms/london-skyscraper-test/assets/building.glb
 backend/runtime_shared

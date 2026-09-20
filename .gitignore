@@ -67,3 +67,8 @@ Thumbs.db
 .scratch/
 .vercel
 backend/runtime_shared/
+
+# Licensed public skyscraper room: one shared GLB for all floor contexts.
+!shared/rooms/london-skyscraper-test/assets/
+shared/rooms/london-skyscraper-test/assets/*
+!shared/rooms/london-skyscraper-test/assets/building.glb

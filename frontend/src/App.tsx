@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { CartProvider } from './shopping/CartProvider'
 import RoomSelection, {rooms, RoomUnavailable} from './shopping/RoomSelection'
+import { galleryRoomId } from './scene/buildingFloors'
 
 const Editor = lazy(() => import('./SplatEditor'))
 const Account = lazy(() => import('./auth/AccountApp'))
@@ -14,7 +15,7 @@ function Route() {
   if (location.pathname === '/rooms') return <RoomSelection/>
   if (location.pathname === '/cart' || location.pathname === '/checkout' || location.pathname.startsWith('/account')) return <Account/>
   const match = /^\/room\/([a-zA-Z0-9_-]+)\/?$/.exec(location.pathname)
-  if (match && rooms.some(room => room.id === match[1])) return <Editor roomId={match[1]} shopping/>
+  if (match && rooms.some(room => room.id === galleryRoomId(match[1]))) return <Editor roomId={match[1]} shopping/>
   return <RoomUnavailable/>
 }
 

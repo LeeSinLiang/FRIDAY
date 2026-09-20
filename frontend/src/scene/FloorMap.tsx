@@ -1,13 +1,17 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { FirstPersonCamera, Room } from "./types";
+import { buildingFloors } from "./buildingFloors";
 
 type Props = {
   room: Room;
   getCamera: () => FirstPersonCamera | null;
+  onFloorChange?: (roomId: string) => void;
+  floorChangeDisabled?: boolean;
 };
 
 /** A navigation aid: the room moves around the fixed person marker. */
-export default function FloorMap({ room, getCamera }: Props) {
+export default function FloorMap({ room, getCamera, onFloorChange, floorChangeDisabled }: Props) {
+  const floor = buildingFloors(room);
   const [expanded, setExpanded] = useState(false);
   const world = useRef<SVGGElement>(null);
   const north = useRef<SVGGElement>(null);
@@ -39,7 +43,7 @@ export default function FloorMap({ room, getCamera }: Props) {
     <div className="floor-map-heading">
       <span className="floor-map-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/></svg>
-        <span>Floor 1 / 1</span>
+        <span>Floor {floor.number} / {floor.count}</span>
       </span>
       <button type="button" className="floor-map-expand" aria-label={expanded ? "Collapse map" : "Expand map"} aria-expanded={expanded} onClick={() => setExpanded((value) => !value)} title={expanded ? "Collapse map" : "Expand map"}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/></svg>
@@ -47,7 +51,7 @@ export default function FloorMap({ room, getCamera }: Props) {
     </div>
     <div className="floor-map-content">
       <div className="floor-map-viewport">
-        <svg viewBox={`0 0 ${extent} ${extent}`} role="img" aria-label="Floor 1 room outline aligned with your view and rotating around your position">
+        <svg viewBox={`0 0 ${extent} ${extent}`} role="img" aria-label={`Floor ${floor.number} room outline aligned with your view and rotating around your position`}>
           <defs><pattern id="floor-map-grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 H 0 V 50" fill="none" stroke="#aa9d8d" strokeOpacity=".2" strokeWidth="2"/></pattern></defs>
           <g ref={world}>
             <rect x="0" y="0" width={room.widthCm} height={room.depthCm} fill="#f8f6f1" stroke="#8d8070" strokeWidth="10"/>
@@ -60,9 +64,9 @@ export default function FloorMap({ room, getCamera }: Props) {
         </svg>
       </div>
       <div className="floor-map-levels" aria-label="Building floor controls">
-        <button type="button" aria-label="Floor up" title="This room has only one floor" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg></button>
-        <span className="floor-map-level-count">1 / 1</span>
-        <button type="button" aria-label="Floor down" title="This room has only one floor" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 10 6 6 6-6"/></svg></button>
+        <button type="button" aria-label="Floor up" title={floor.count === 1 ? "This room has only one floor" : "Go up one floor"} disabled={!floor.next || !onFloorChange || floorChangeDisabled} onClick={() => floor.next && onFloorChange?.(floor.next.roomId)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg></button>
+        <span className="floor-map-level-count">{floor.number} / {floor.count}</span>
+        <button type="button" aria-label="Floor down" title={floor.count === 1 ? "This room has only one floor" : "Go down one floor"} disabled={!floor.previous || !onFloorChange || floorChangeDisabled} onClick={() => floor.previous && onFloorChange?.(floor.previous.roomId)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 10 6 6 6-6"/></svg></button>
         <span className="floor-map-north" aria-label="North direction" title="North direction">
           <svg viewBox="0 0 38 38" aria-hidden="true">
             <circle cx="19" cy="19" r="16" fill="none" stroke="currentColor" strokeOpacity=".28" strokeWidth="1"/>

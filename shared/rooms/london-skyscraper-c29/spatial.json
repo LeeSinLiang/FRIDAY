@@ -1,0 +1,21 @@
+{
+  "freeAreas": [
+    {
+      "minXcm": 50,
+      "maxXcm": 450,
+      "minZcm": 50,
+      "maxZcm": 850
+    }
+  ],
+  "obstacles": [
+    {
+      "obstacleId": "C29:fixed-1",
+      "label": "building wall",
+      "xCm": 335.03915071487427,
+      "zCm": 674.3739471435547,
+      "widthCm": 56.00000000000005,
+      "depthCm": 351.2521057128906,
+      "yawRad": 0
+    }
+  ]
+}
