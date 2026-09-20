@@ -1,5 +1,5 @@
 {
-  "title": "FRIDAY · Project Plan",
+  "title": "FRIDAY \u00b7 Project Plan",
   "components": [
     {
       "id": "50b44d3e-94c7-4fed-8d83-969c925957d9",
@@ -62,7 +62,7 @@
         },
         {
           "id": "2133f112-5c47-4325-adcd-545b04e3000c",
-          "title": "Pull Sin’s current 3D editor and review model references",
+          "title": "Pull Sin\u2019s current 3D editor and review model references",
           "done": true,
           "owner": "sin"
         },
@@ -142,6 +142,18 @@
           "id": "39c4231e-4a28-446a-b81c-5ca7d331df07",
           "title": "Replace low-poly workstation props with textured GLBs",
           "done": false,
+          "owner": "william"
+        },
+        {
+          "id": "7e82963e-80af-4fd4-a9a8-6c1f34a30fdd",
+          "title": "Import and verify the supplied Cg Arch living room locally",
+          "done": true,
+          "owner": "william"
+        },
+        {
+          "id": "dd5ede57-1071-44eb-8fe8-56faa3493797",
+          "title": "Fix Empty Interior Scene 2 walking and placement boundaries",
+          "done": true,
           "owner": "william"
         }
       ]

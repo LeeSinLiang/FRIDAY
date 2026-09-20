@@ -264,7 +264,23 @@ def serialize(scene):
     context = room_context(scene.room_id)
     revision = geometry_revision(context['room'])
     if scene.geometry_revision and scene.geometry_revision != revision:
-        raise SceneError('geometry_conflict', 'The fixed room geometry changed. Activate a new room ID to preserve this layout.', 409, scene.revision)
+        # This reviewed transition only expands free floor: identical GLB,
+        # dimensions, transform and every v1 permitted point. Never generalize
+        # this exception to arbitrary geometry revisions or other rooms.
+        compatible = (scene.room_id, scene.geometry_revision, revision) == (
+            'cg-arch-interior', 'cg-arch-interior-v1', 'cg-arch-interior-v2')
+        if compatible:
+            try:
+                validate_instances(scene.instances, scene.room_id)
+            except SceneError:
+                compatible = False
+        if not compatible:
+            raise SceneError('geometry_conflict', 'The fixed room geometry changed. Activate a new room ID to preserve this layout.', 409, scene.revision)
+        updated = SceneLayout.objects.filter(pk=scene.pk, revision=scene.revision,
+                                             geometry_revision=scene.geometry_revision).update(geometry_revision=revision)
+        if not updated:
+            raise SceneError('revision_conflict', 'The scene changed. Reload before saving.', 409)
+        scene.geometry_revision = revision
     known = {product['productId'] for product in context['products']}
     # All catalogue dimensions and rendering metadata stay server-authoritative.
     for item in scene.instances:

@@ -119,3 +119,13 @@ The teammate's [skyscraper-room PR #86](https://github.com/LeeSinLiang/hackmit20
 | [Production room](https://friday-hackmit.vercel.app/room/empty-room) | `dpl_4HpXref96fRAM8KVdoWx7JMbATAR` | `dpl_AvfZTu6JmRbtUkUPz1N8XAQ2DU35` | `c0b5858f4ea335ca209a4040d6ec1cb957605ac5434fa2199971ad9b7616f19c` |
 
 Both deployments reported `READY`. Direct and rewritten API health returned HTTP 200 with the same `X-Friday-Build` as the hosted frontend `data-build`. The public empty-room route loaded with Rooms/Cart and the compact category rail; choosing Chairs opened the category, and Space raised the camera while gravity returned it to floor height. The full suite on fresh combined `main` reported `Ran 267 tests in 9.602s / OK (skipped=5)`, frontend `tests 152 / pass 152 / fail 0`, auth `tests 18 / pass 18 / fail 0`, board `tests 6 / pass 6 / fail 0`, and Vite `built in 3.03s`. The input-level sofa-top test remains part of that passing suite; the full browser placement-and-landing limit above still applies. Git-triggered Vercel deployment remains blocked by issue #74.
+
+### Entrance lobby and real room previews — 2026-09-20
+
+The corrected lobby, mezzanine, 32 tower floor metadata and current editor UI are on merged `main` at `9adbf97`. The frontend release was built manually from the checkout serving port 5173, feature branch `codex/room-release-from-5173` at pushed commit `85f3279`. It adds actual renderer screenshots for the three gallery cards. The matching API was built from merged-main runtime sources.
+
+| Environment | Frontend deployment | API deployment | Runtime source identity |
+| --- | --- | --- | --- |
+| [Production rooms](https://friday-hackmit.vercel.app/rooms) | `dpl_Ah54qmfa7SriM8VvJrYgUQMn3GUn` | `dpl_3Q5aTaKrdvJQ4HfCEqL5WZJynh4f` | `96c81e343127e74219a3223af6d33e56a3753961499b5ceec6897f849ab72d64` |
+
+`vercel inspect` reported the frontend `READY`. Direct and rewritten `/api/health/` returned HTTP 200 with the identity above in `X-Friday-Build`; the live frontend `data-build` matched. The public browser showed screenshot cards and loaded the actual entrance, mezzanine and first tower floor as Floors 1, 2 and 3 of 34. The lobby floor plan showed its full irregular footprint. In the 5173 checkout, `manage.py test` ran 281 tests with `OK (skipped=4)`, `npm test` passed 181 scene and 25 account tests, the Vite build finished in 4.30 seconds, and board tests passed 6. The public Cg Arch card displays its captured preview but cannot be opened: its Blendkit licensed GLB is kept local and excluded from Vercel. This manual release does not resolve Git-triggered deployment issue #74. A fresh small off-centre public placement boundary replay remains open on the skyscraper task.
