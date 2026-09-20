@@ -261,6 +261,15 @@ Appended by Saketh's agent; nothing above was changed. Two fixes had combined in
 
 - 2026-09-20: Added post-download Haussmann preparation, geometry review, launch commands and browser URL to TODO_SAKETH.md, TODO_WILLIAM.md and TODO_ADELLE.md. Included saved-work prerequisite, GPU terminal requirement, local-only assets and experimental quality caveat. Verified all three command blocks and whitespace; documentation-only, no servers or runtime tests needed. Committed separately on codex/collaborator-room-setup; no push.
 
+## Note from Saketh's lane — small follow-up in your editor: quiet saves (2026-09-20)
+
+Not urgent, not changed by me. Context in `docs/backend/contracts/scene-api.md`, "The same principle in the PlayCanvas editor".
+
+- Catalogue placements now survive a 5xx: my layer shows the item at once and drives your existing `session.retry()` on a 0.5 s to 8 s backoff (`frontend/src/catalogue/quietSave.ts`). `useRoomSession.ts` is untouched; the mount line in `SplatEditor.tsx` gained `retry={session.retry} status={session.status}`.
+- **What lags, and is yours if you want it:** while a retry is running your header says *Disconnected* with a *Retry* button and shows the raw server message, the Objects list and layout count omit the item, and the editor is locked. For a save that fixes itself in a second or two, a quieter status (the legacy app says nothing until the second failure) would match the team rule that storage may delay a save but never refuse a placement.
+- Drags and removes inside your editor still fail outright on a 5xx. Same fix, your call.
+- Separate, already fixed on my side: the Cg Arch room's baked `scene.exposure` washed my floor overlay out to white; `regionOverlay.ts` now divides its emissive by it. If you change how exposure is applied, that line is the one to look at.
+
 ## Note from Saketh's lane — `AGENTS.md`: `main` freezes after the rehearsal (2026-09-20)
 
 Two additions, from Saketh. Please read the new "Merging close to the demo" section.
