@@ -237,13 +237,19 @@
           "id": "03bc6470-6a84-48d8-ba48-1df4ed0f3277",
           "title": "Merge account and checkout routes with the pushed 3D editor",
           "done": false,
-          "owner": "unassigned"
+          "owner": "william"
         },
         {
           "id": "4147c58c-2029-40ef-93ee-537ddad4a25e",
           "title": "Define guest-room transfer and account scene ownership",
           "done": false,
-          "owner": "unassigned"
+          "owner": "william"
+        },
+        {
+          "id": "6f866d46-0b3e-4718-8a5b-ccd61d89af98",
+          "title": "Build room selection, confirmed furniture cart and Vercel deployment",
+          "done": false,
+          "owner": "william"
         }
       ],
       "description": "React app shell, product browsing, constraint chips, and conversation."

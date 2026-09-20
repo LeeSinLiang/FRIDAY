@@ -12,6 +12,23 @@ from .models import DevelopmentEmail
 from .policy import account_status, local_inbox_allowed
 
 
+@require_POST
+def acknowledge_recovery(request):
+    from allauth.mfa.models import Authenticator
+    from .models import RecoveryAcknowledgement
+    if not account_status(request.user)['checkout_ready']:
+        return JsonResponse({'errors':[{'message':'Verify your email and connect an authenticator first.'}]},status=403)
+    try:
+        payload = json.loads(request.body)
+        if not isinstance(payload, dict) or set(payload) != {'acknowledged'} or payload['acknowledged'] is not True:
+            raise ValueError()
+    except (ValueError, UnicodeDecodeError):
+        return JsonResponse({'errors':[{'message':'Acknowledge that your recovery codes are saved.'}]},status=400)
+    authenticator = Authenticator.objects.get(user=request.user,type=Authenticator.Type.TOTP)
+    RecoveryAcknowledgement.objects.update_or_create(user=request.user,defaults={'authenticator':authenticator})
+    return JsonResponse({'acknowledged':True})
+
+
 @require_GET
 @ensure_csrf_cookie
 def status(request):

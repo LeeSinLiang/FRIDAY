@@ -14,6 +14,7 @@ import type { PlayCanvasRuntime } from "../scene/playcanvas/runtime";
 import type { Instance, Product, Room, SceneEdit } from "../scene/types";
 import CatalogueShelf from "./CatalogueShelf";
 import { saveQuietly } from "./quietSave";
+import { FREE } from '../region/types';
 
 type Props = {
   /** The engine handle, once it exists. Read lazily: the editor keeps it in a ref. */
@@ -28,9 +29,11 @@ type Props = {
   retry: () => Promise<unknown> | undefined;
   status: string;
   onNotice?: (message: string) => void;
+  shopping?: boolean;
+  confirm?: (instance:Instance) => Promise<boolean>;
 };
 
-export default function SplatCatalogueLayer({ getRuntime, room, products, instances, ready, locked, submit, retry, status, onNotice }: Props) {
+export default function SplatCatalogueLayer({ getRuntime, room, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, confirm }: Props) {
   const [hovered, setHovered] = useState<Listing | null>(null);
   const [armed, setArmed] = useState<Listing | null>(null);
   const [place, setPlace] = useState<PlaceClause[]>([]);
@@ -38,6 +41,13 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
   const overlay = useRef<RegionOverlay | null>(null);
   const ghost = useRef<PendingGhost | null>(null);
   const [unconfirmed, setUnconfirmed] = useState<Instance | null>(null);
+  const [purchase, setPurchase] = useState<Listing | null>(null);
+  const [saving, setSaving] = useState(false);
+  useEffect(()=>{
+    if (shopping && unconfirmed && instances.some(item=>item.instanceId===unconfirmed.instanceId)) {
+      ghost.current?.hide();setUnconfirmed(null);setPurchase(null);
+    }
+  },[shopping,unconfirmed,instances]);
   const statusNow = useRef(status);
   statusNow.current = status;
   const alive = useRef(true);
@@ -85,6 +95,7 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
       setArmed(null); setHovered(null);
       // On the floor at once, and it stays there through a storage hiccup. Only a definite refusal removes it.
       setUnconfirmed(instance); ghost.current?.show(instance.product!, pose);
+      if (shopping) { setPurchase(listing); return; }
       const outcome = await saveQuietly({
         submit: () => submit({ type: "add", instance }), retry, status: () => statusNow.current,
         sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)), cancelled: () => !alive.current,
@@ -100,7 +111,7 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
       canvas.removeEventListener("click", onClick, true);
       for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup"]) canvas.removeEventListener(type, swallow, true);
     };
-  }, [armed, getRuntime, standing, known, locked, ready, onNotice, room, submit, retry]);
+  }, [armed, getRuntime, standing, known, locked, ready, onNotice, room, submit, retry, shopping]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -115,8 +126,43 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
     return () => window.removeEventListener("keydown", onKey);
   }, [armed, fitting, yawIndex]);
 
-  return (
-    <CatalogueShelf region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked}
+  async function confirmPurchase() {
+    if (!unconfirmed || saving) return;
+    setSaving(true);
+    try {
+      const ok = status === 'offline' ? await retry() : await confirm?.(unconfirmed);
+      if (ok || instances.some(i=>i.instanceId===unconfirmed.instanceId)) {
+        ghost.current?.hide(); setUnconfirmed(null); setPurchase(null); onNotice?.('Added to cart');
+      } else onNotice?.('Placement not confirmed. Check the room status and retry.');
+    } finally {setSaving(false);}
+  }
+  function previewSuggested() {
+    const mask = region?.solution.masks[yawIndex];
+    if (!armed || !mask) return;
+    const index = mask.data.findIndex(value=>value===FREE);
+    if (index<0) return;
+    const pose = {xCm:mask.originCm[0]+(index%mask.shape[0])*mask.cellSizeCm,zCm:mask.originCm[1]+Math.floor(index/mask.shape[0])*mask.cellSizeCm,yawRad:mask.yawRad};
+    const instance = instanceFromListing(armed,crypto.randomUUID(),pose);
+    setUnconfirmed(instance);setPurchase(armed);setArmed(null);setHovered(null);ghost.current?.show(instance.product!,pose);
+  }
+  function adjustPreview(axis:'xCm'|'zCm'|'yawRad',value:number) {
+    if (!unconfirmed || !Number.isFinite(value)) return;
+    const next = {...unconfirmed,pose:{...unconfirmed.pose,[axis]:value}};
+    setUnconfirmed(next);ghost.current?.show(next.product!,next.pose);
+  }
+  const verdict = unconfirmed ? validatePlacement(room,known,[...instances,unconfirmed],unconfirmed.instanceId,unconfirmed.pose) : null;
+  return <>
+    <CatalogueShelf region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
       canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} />
-  );
+    {shopping && armed && <section className="purchase-confirm" aria-label="Preview furniture"><p>Click the lit floor, or use a suggested position.</p><button className="button" disabled={!ready || locked || !fitting.length} onClick={previewSuggested}>Preview a fitting position</button><button className="button" onClick={()=>setArmed(null)}>Cancel</button></section>}
+    {shopping && purchase && unconfirmed && <section className="purchase-confirm" aria-label="Confirm furniture placement">
+      <p className="eyebrow">Placement preview</p><h2>{purchase.title}</h2><p>${(purchase.price_cents/100).toFixed(2)} USD · sandbox</p>
+      <p>{purchase.dims_mm.w/10} × {purchase.dims_mm.d/10} × {purchase.dims_mm.h/10} cm</p>
+      <div className="coordinate-row">{(['xCm','zCm'] as const).map(axis=><label key={axis}>{axis==='xCm'?'X':'Z'} position (cm)<input type="number" step="5" value={unconfirmed.pose[axis]} disabled={saving || locked || status!=='ready'} onChange={e=>adjustPreview(axis,Number(e.target.value))}/></label>)}</div>
+      <button className="button" disabled={saving || locked || status!=='ready'} onClick={()=>adjustPreview('yawRad',unconfirmed.pose.yawRad+Math.PI/2)}>Rotate preview 90°</button>
+      <p role="status">{verdict?.valid?'Fits here. Confirm to save this piece and add it to your cart.':verdict?.reason}</p>
+      <button className="button confirm-primary" disabled={saving || locked || status==='conflict' || !verdict?.valid} onClick={()=>void confirmPurchase()}>{saving?'Confirming…':status==='offline'?'Retry confirmation':'Confirm placement'}</button>
+      <button className="button secondary" disabled={saving || locked || status==='offline'} onClick={()=>{ghost.current?.hide();setUnconfirmed(null);setPurchase(null);}}>Cancel preview</button>
+    </section>}
+  </>;
 }

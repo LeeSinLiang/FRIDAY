@@ -83,7 +83,10 @@ export function sharedRoomAssets(): Plugin {
     name: "friday-shared-room-assets",
     async config() {
       prepared = await inspectRoomPackages();
-      return { define: { "import.meta.env.VITE_DEFAULT_ROOM_ID": JSON.stringify(prepared.defaultRoomId) } };
+      const publicRooms = JSON.parse(await readFile(new URL('../../shared/public-rooms.json', import.meta.url), 'utf8')) as {id:string; title:string; description:string; thumbnail:string}[];
+      const gallery = publicRooms.filter(room => prepared.packages.has(room.id));
+      if (process.env.VERCEL) prepared.packages = new Map([...prepared.packages].filter(([id]) => gallery.some(room => room.id === id)));
+      return { define: { "import.meta.env.VITE_DEFAULT_ROOM_ID": JSON.stringify(prepared.defaultRoomId), "import.meta.env.VITE_PUBLIC_ROOMS": JSON.stringify(gallery) } };
     },
     configResolved(config) {
       for (const warning of prepared.warnings) config.logger.warn(warning);

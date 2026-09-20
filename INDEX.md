@@ -19,6 +19,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Frontend
 
+- [Room, cart and Vercel release](docs/frontend/room-cart-deployment.md) — guest shopping routes, atomic cart/scene persistence, account handoff, deployment configuration and remaining release gates.
+
 - [Team room setup](docs/frontend/room-capture/team-room-setup.md) — one-command checked import of the prepared room, packaging and sharing instructions.
 
 | Document | Purpose |

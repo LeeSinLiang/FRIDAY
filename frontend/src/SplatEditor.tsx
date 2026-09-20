@@ -9,6 +9,7 @@ import type { CameraMode, FirstPersonCamera, Pose, Product } from "./scene/types
 import type { InteractionCallbacks, InteractionMode, InteractionState, ModelStatus, PlacementPreview } from "./scene/playcanvas/contracts";
 import type { PlayCanvasRuntime, RuntimeStatus } from "./scene/playcanvas/runtime";
 import "./splat-editor.css";
+import { useCart } from './shopping/CartProvider';
 
 const PlayCanvasScene=lazy(()=>import("./PlayCanvasScene"));
 function ProductPreview({product}:{product:Product}) {
@@ -33,7 +34,8 @@ function PositionField({axis,value,disabled,commit}:{axis:"X"|"Z";value:number;d
   }}/>{error && <small>Enter a number</small>}</label>;
 }
 
-export default function SplatEditor() {
+export default function SplatEditor({roomId, shopping = false}:{roomId?:string; shopping?:boolean}) {
+  const {cart, refresh} = useCart();
   const [active,setActive]=useState(false);
   const [captureOpen,setCaptureOpen]=useState(false);
   const [mode,setMode]=useState<InteractionMode>("explore");
@@ -51,7 +53,7 @@ export default function SplatEditor() {
   const [statuses,setStatuses]=useState<Record<string,ModelStatus>>({});
   const [retries,setRetries]=useState<Record<string,number>>({});
   const runtime=useRef<PlayCanvasRuntime|null>(null);
-  const requestedRoom = new URLSearchParams(window.location.search).get("room");
+  const requestedRoom = roomId ?? new URLSearchParams(window.location.search).get("room");
   const defaultRoom = import.meta.env.VITE_DEFAULT_ROOM_ID === "cg-arch-interior" ? "cg-arch-interior" : "empty-room";
   const session=useRoomSession(requestedRoom === "haussmann-apartment" || requestedRoom === "studio-11" || requestedRoom === "empty-room" || requestedRoom === "cg-arch-interior" || requestedRoom === "cg-arch-lightmapper-proof" ? requestedRoom : defaultRoom,active || !!pendingProductId);
   const snapshot=session.snapshot;
@@ -117,7 +119,7 @@ export default function SplatEditor() {
   return <main className={`splat-editor ${panel?"has-panel":""}`}>
     <div className="splat-room" aria-label="First-person room editor">
       {state && <Suspense fallback={null}><PlayCanvasScene state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}
-      {snapshot && <SplatCatalogueLayer getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice}/>}
+      {snapshot && <SplatCatalogueLayer getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
       {runtimeStatus.phase!=="ready" && <div className="splat-loading" role="status">
         <div className="glass splat-loading-card"><span className="loading-orbit"/><h1>{runtimeStatus.phase==="error"?"Room unavailable":"Come on in."}</h1><p>{runtimeStatus.message}</p>
           {runtimeStatus.progress!==undefined && <progress max={1} value={runtimeStatus.progress} aria-label="Room loading progress"/>}
@@ -128,6 +130,7 @@ export default function SplatEditor() {
     </div>
     <header className="glass splat-header">
       <a className="wordmark" href="/" aria-label="FRIDAY room editor">FRIDAY<span className="wordmark-dot">.</span></a>
+      {shopping && <><a href="/rooms">Rooms</a><a href="/cart">Cart ({cart?.items.length ?? 0})</a></>}
       <span className="splat-title">{room?.scan?.attribution.title ?? "Empty room"}<span>{room?.scan?.visualFormat === "glb" ? "Interior · mesh room" : "Living space"}</span></span>
       <span className={`splat-save save-${session.status}`} role="status">{session.status==="ready"?"Saved":session.status==="saving"?"Saving…":session.status==="loading"?"Connecting…":session.status==="conflict"?"Layout changed":"Disconnected"}</span>
       {(session.status==="offline"||session.status==="conflict")&&<button className="button" onClick={()=>void(session.status==="conflict"?session.reload():session.retry())}>{session.status==="conflict"?"Reload layout":"Retry"}</button>}
@@ -146,7 +149,8 @@ export default function SplatEditor() {
       <div className="splat-panel-heading"><h1>{panel==="catalogue"?"Make room for you.":"Your furniture"}</h1><button aria-label="Close furniture panel" className="icon-button" disabled={locked} onClick={()=>setPanel(null)}><Icon name="close" size={18}/></button></div>
       {panel==="catalogue" ? <>
         <p className="splat-panel-intro">A few considered pieces. A space that feels like yours.</p>
-        <div className="splat-products">{products.filter(item=>item.catalogueVisible!==false).map(item=><button key={item.productId} className="splat-product" onClick={()=>choose(item)} disabled={!ready||locked}>
+        {shopping && <p>Search the catalogue, preview a piece, then confirm its placement to add it to your cart.</p>}
+        <div className="splat-products">{products.filter(item=>!shopping && item.catalogueVisible!==false).map(item=><button key={item.productId} className="splat-product" onClick={()=>choose(item)} disabled={!ready||locked}>
           <span className="splat-product-image"><ProductPreview product={item}/><span className="splat-product-add"><Icon name="plus" size={18}/></span></span>
           <span className="splat-product-name">{item.name}</span><span className="splat-product-dimensions">{item.widthCm} × {item.depthCm} × {item.heightCm} cm</span>
           <span className="splat-product-kind">{item.modelUrl?"GLB model":"Dimensioned preview"}</span>
@@ -156,6 +160,7 @@ export default function SplatEditor() {
         <button className="splat-back" disabled={locked||!!pendingProductId} onClick={()=>setPanel("catalogue")}><Icon name="chevron" size={14}/>All furniture</button>
         <div className="splat-selected-preview"><ProductPreview product={product}/></div>
         <h2 className="splat-product-title">{product.name}</h2><p className="splat-dimensions">{product.widthCm} × {product.depthCm} × {product.heightCm} cm</p>
+        {shopping && selected && (cart?.items.some(i=>i.instanceId===selected.instanceId && i.roomId===room?.roomId) ? <p>In your cart · moving this piece does not change quantity.</p> : <><p>Not in cart</p><button className="button" disabled={!ready||locked} onClick={async()=>{const ok=await session.confirm(selected,cart?.revision??-1); await refresh(); setNotice(ok?'Added to cart':session.message);}}>Add this piece to cart</button></>)}
         <div className="splat-property-section">
           {selected ? <><h3>Position <span>(cm)</span></h3><div className="splat-coordinates"><PositionField axis="X" value={selected.pose.xCm} disabled={!ready||locked} commit={xCm=>updatePose({xCm})}/><PositionField axis="Z" value={selected.pose.zCm} disabled={!ready||locked} commit={zCm=>updatePose({zCm})}/></div>
           <div className="splat-rotation"><span>Rotation <b>{Math.round(((selected.pose.yawRad*180/Math.PI)%360+360)%360)}°</b></span><button className="button" disabled={!ready||locked} onClick={()=>void updatePose({yawRad:selected.pose.yawRad+Math.PI/2})}><Icon name="rotate" size={17}/>Rotate 90°</button></div></> : <p className="splat-placement-instruction">Move your pointer over the floor. Click when the footprint turns green.</p>}

@@ -5,6 +5,7 @@ description = "FRIDAY Django REST API"
 requires-python = ">=3.12,<3.14"
 dependencies = [
     "cryptography>=50.0.1",
+    "dj-database-url>=2,<4",
     "django>=5.2,<5.3",
     "django-allauth[headless,mfa]>=65.19.4,<66",
     "djangorestframework>=3.16,<4",
@@ -12,9 +13,13 @@ dependencies = [
     "httpx>=0.28,<0.29",
     "jwcrypto>=1.5,<2",
     "openai-agents>=0.22.3",
+    "psycopg[binary]>=3.2,<4",
     "pydantic>=2,<3",
     "python-dotenv>=1.1,<2",
 ]
 
 [tool.uv]
 package = false
+
+[tool.vercel]
+entrypoint = "config.wsgi:application"
