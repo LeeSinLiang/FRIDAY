@@ -144,3 +144,13 @@ Two additions, from Saketh. Please read the new "Merging close to the demo" sect
 - **Freeze.** Once the demo has been rehearsed end to end on the presenting machine, `main` takes only fixes to things that break that rehearsed run. No polish, no refactors. If unsure whether the freeze has started, ask before merging.
 - **Chains stop on the first failure, and a status is quoted, not remembered.** `&&` not `;`, no pipe that eats an exit code, do not trust `set -e` blindly, and paste the `Ran N tests … OK` line you actually read. The full backend suite is `manage.py test` with **no app labels** (206 tests); a label list silently skips apps.
 - **Said out loud, because this is what the freeze is for:** tonight #34 went into `main` without the suite being run and left `main` red, seven backend failures, until #37. Nobody was careless in an unusual way; it was a reasonable-looking asset PR late at night. That is exactly the change the freeze rule exists to stop from landing an hour before we present. Whoever merges runs the full suite on fresh `main` at once, and says so with the numbers.
+
+## Note from Saketh's lane — CI now runs on every pull request (2026-09-20, 00:55)
+
+`.github/workflows/ci.yml` is on `main`. Every PR gets two checks within about a minute: **Backend** (`manage.py test` with no app labels, plus `manage.py check`) and **Frontend** (`npm test`, `npm run build`). No secrets, nothing to configure.
+
+- **A red X on your PR means do not press Merge.** Tonight #34 and #42 both went into `main` without the suite and left it red; each was caught only because someone happened to look. This is the thing that stops that.
+- It is **advisory**, not a required check: it will never block an emergency fix.
+- It does not replace running the suite on fresh `main` after you merge. CI tests your PR against the `main` it was cut from.
+- `npm test` is now the whole frontend suite (it used to skip the two auth test files), and the backend suite is `manage.py test` with **no labels** (`test api catalogue` skips three apps). README has the three commands.
+- When you report a result, name the command and quote its output line, e.g. "`python manage.py test` → Ran 217 tests in 6.951s / OK (skipped=3)", not "tests pass".

@@ -105,6 +105,16 @@ type Opening = {
 
 **The hero sentence, whole, in the real room:** "by the window, 4 feet from any wall" leaves HERRÅKRA 60 / 75 / 60 / 75 positions per turn (220 / 265 without the window clause; 240 / 255 at 3 feet; none at 5 feet: "needs 371 cm of width, this room has 334 cm"). Derived by hand in `rooms.test.ts` and matched by the solver: 121.9 cm off every wall leaves 4 columns unturned and 5 turned, and `near` reaches 75 cm past the window wall's own clearance, which leaves 15 rows.
 
+## What the current abstraction cannot say
+
+Known limits, written down so nobody mistakes them for bugs or, worse, quietly works around them.
+
+**A footprint is not a bounding box.** `dims_mm` is one box, and the solver erodes the floor by it. A floor lamp with an arc arm occupies 31 cm of *floor* and 103 cm of *air*: the HEKTAR model is 103.5 cm wide at the arm against a 31 cm base. With one box we must either refuse placements where the arm would harmlessly overhang a sofa, or let the arm pass through a wall. The honest model is two shapes per product: a **footprint** (floor contact, what the solver erodes by) and a **clearance volume** (what must not intersect other objects or walls). The same applies to wall shelves, corner desks and anything cantilevered. Until then such a model stays unbound (see the asset handoff doc) and the listing places as its footprint box.
+
+**Diagonal walls.** There are four yaw bins, so an item can only be square to the axes. `against(wall)` on a wall that is not axis-aligned cannot align the item to it, and `distance_min` to such a wall is measured to its bounding segment. The fix, for the record, is to derive the yaw bins from the wall angles actually present in the room instead of fixing them at 0, 90, 180 and 270 degrees.
+
+**Left and right.** "The left wall" means something only relative to a viewer. It is designed but not built: it resolves against the camera at compile time, which needs the camera's heading threaded into `compile()`. Today the compiler is given compass ids (`w-n`, `w-e`, `w-s`, `w-w`) and a sentence that says "left" is resolved by the model against a fixed stub, not the shopper's view. No DSL change is needed for it; the 13 clauses stay closed.
+
 ## In the app: hover, pick up, place
 
 `frontend/src/catalogue/CatalogueShelf.tsx` is a docked, non-modal panel in the editor. A sentence goes to `POST /api/compile`; its `find[]` searches `GET /api/search`; its `place[]` narrows the region. Hovering a result solves for it (`useRegion`: 90 ms debounce, a result is discarded if the pointer has moved on) and lights the floor. Clicking a result picks it up; clicking lit floor places it through `instanceFromListing` and the editor's normal edit path, so it is validated and saved like any other item. **R** turns it through the rotations that fit; **Esc** puts it down. The panel says that it fits, or that it won't and why, and lists clauses it could not use. `?dev=1` adds the raw per-rotation sample counts, which mean nothing to a shopper.

@@ -14,7 +14,7 @@
 ## The 90 seconds
 
 1. **Search.** In the catalogue panel (bottom left) type `an armchair`, press **Find**. The chip reads `armchair`; about a thousand matches.
-2. **Hover the HERRÅKRA armchair.** It is the one armchair with a real 3D model. The floor lights up green with everywhere its centre can go. Moving onto a card shifts the list down a little as the explanation appears; settle the pointer before clicking.
+2. **Hover the HERRÅKRA armchair.** It is the one armchair with a real 3D model. The floor lights up green with everywhere its centre can go.
 3. **Click it, then click the lit floor.** It is placed at true scale (71 × 66 × 73 cm). **R** turns it before placing; **Esc** puts it down. A click on a wall, or on floor that is not lit, does nothing, on purpose.
 4. **Ask for too much.** Type `a reading chair by the window, under $400, 5 feet from any wall`, hover HERRÅKRA: **"won't fit — needs 371 cm of width, this room has 334 cm."** (POÄNG says 373.) This is the beat no retailer can show: a store has to sell you something, and we can say your room cannot take it, and why.
 5. **Say the real one, literally.** Press the microphone, say **"a reading chair by the window, under four hundred dollars, four feet from any wall"**, press again. Deepgram transcribes it on our server and it lands in the box as if typed. Chips: `armchair` · `under $400` · `near the window` · `4 ft from any wall`. Hover HERRÅKRA: the lit floor shrinks to a small patch in front of the big window, centred between the side walls: 75 positions in the best turn, against 265 without the window and thousands unconstrained. That patch is the whole pitch: the room, not the catalogue, answered. Or type it.
@@ -34,6 +34,7 @@ Everything so far has been seen only in headless Chrome on software WebGL. Repor
 4. **Frame rate** with the room and three or four placed items, looking around. Chrome: DevTools → Rendering → *Frame rendering stats*. Anything under 30 fps, say so. **If it is bad, transmission is the first lever to pull.** The glass costs one full-screen copy of the rendered scene per camera per frame (not one per pane): it is switched on by the single line `camera.camera!.requestSceneColorMap(true)` in `frontend/src/scene/playcanvas/runtime.ts`. Without it the windows go flat, which is a trade we would take over a stuttering demo. That file is Sin's; tell him and Saketh the number before anyone changes it. The 4.3 fps seen in headless testing was software rendering and means nothing.
 5. **Microphone**, with permission already granted in that profile: press, speak, press. With `?dev=1` the panel must say `ANSWERED BY: deepgram`.
 6. **A save.** Place a chair: header says *Saved*, reload the page, the chair is still there.
+7. **Does the hero patch read from the back of a room?** Type the full hero sentence (four feet) and hover HERRÅKRA. The lit patch in front of the window is small on purpose: 75 positions in the best turn. Stand where the audience will be, or look at the projector from the far wall. **If it is not clearly visible at presenting distance, switch the sentence to three feet** (240 / 255 positions, a patch about three times the size) and say "three feet" on stage. Whoever is on that laptop makes this call; nobody needs to be asked.
 
 ## If something goes wrong
 

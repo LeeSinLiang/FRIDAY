@@ -99,3 +99,13 @@ What I did, and nothing of yours is lost:
 - **LISABO table:** 149.6 x 79.9 cm as generated against 140 x 78 cm listed. Unlinked for the moment (`model_url: null`, `unbound` reason in its `metadata.json`). It needs 6.8% non-uniform scale, inside the 10% cap Saketh set, so I am refitting it next and it comes back.
 - **HEKTAR lamp:** the arm reaches 103.5 cm sideways, and the listing's footprint is the 31 cm base, which is what the fit check uses. Rendered, the arm would pass through walls the solver thinks are clear. No scale fixes that. Unlinked, stays in the repo.
 - **How to land a model that misses:** leave the listing's `model_url` as `null` and add an `"unbound": "<why>"` line to the asset's `metadata.json`. The suite accepts that, the listing still places as a true-size stand-in, and `main` stays green. The rule the test enforces: a model either matches its listing (2 cm or 3%) or no listing links to it.
+
+## Note from Saketh's lane — CI now runs on every pull request (2026-09-20, 00:55)
+
+`.github/workflows/ci.yml` is on `main`. Every PR gets two checks within about a minute: **Backend** (`manage.py test` with no app labels, plus `manage.py check`) and **Frontend** (`npm test`, `npm run build`). No secrets, nothing to configure.
+
+- **A red X on your PR means do not press Merge.** Tonight #34 and #42 both went into `main` without the suite and left it red; each was caught only because someone happened to look. This is the thing that stops that.
+- It is **advisory**, not a required check: it will never block an emergency fix.
+- It does not replace running the suite on fresh `main` after you merge. CI tests your PR against the `main` it was cut from.
+- `npm test` is now the whole frontend suite (it used to skip the two auth test files), and the backend suite is `manage.py test` with **no labels** (`test api catalogue` skips three apps). README has the three commands.
+- When you report a result, name the command and quote its output line, e.g. "`python manage.py test` → Ran 217 tests in 6.951s / OK (skipped=3)", not "tests pass".

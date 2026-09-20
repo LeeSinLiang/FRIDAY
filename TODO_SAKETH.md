@@ -218,3 +218,10 @@ Left open on purpose:
 - "Add speech and typed user input" (`3dc03f7b`): typed input and Deepgram are merged and verified with a recorded clip; it closes after Saketh's own real-microphone test, which a headless browser cannot do (its fake microphone delivers silence).
 - "Import CC0 GLB asset metadata…" (`46dd9a0d`) and "Curate product-to-GLB links…" (`1baafdb6`): asset work, which moved to the second agent's lane tonight. Not touched.
 - "Add Blender MCP-style scene and object context to the agent" (`6ae44373`): deferred by Saketh earlier; not touched.
+
+## Log, appended (2026-09-20, 00:55)
+
+- Merged #44, #46, #47, #48, each followed by the whole suite on fresh `main`. Last read, `main` `3478b27`: `uv run python manage.py test` → `Ran 217 tests in 6.951s / OK (skipped=3)`; `npm run build` → `✓ built in 2.74s`; `npm test` → `tests 122 pass 122 fail 0`, `tests 15 pass 15 fail 0`.
+- **CI (#50), merged.** Proved from a bare worktree with an empty environment first (`Ran 217 tests in 8.459s / OK (skipped=4)`), then its first run on its own PR, quoted from the job logs: backend `Ran 217 tests in 21.285s / OK (skipped=4)` on Python 3.12.3, frontend `# tests 122 # pass 122 # fail 0`, `# tests 15 # pass 15 # fail 0`, `✓ built in 8.27s` on Node v22.23.2; 40 s and 49 s wall clock. Writing it found that `npm test` never ran the two auth test files (9 tests); it does now, and `frontend/scripts/every-test-runs.test.ts` fails for any test file unreachable from `npm test` (checked with an orphan file: exit 1, names it).
+- Docs: three known limits in `docs/frontend/region-solver.md` (footprint is not the bounding box; diagonal walls; left and right), the three-foot fallback on the real-GPU checklist, the stale "settle the pointer" sentence removed from the run of show now that #47 is in.
+- Next: the room model (distance from the mask, portals, components), behind the safety gate Saketh set: Cg Arch 4 ft stays 220 / 265 / 220 / 265, the full hero sentence 60 / 75 / 60 / 75, 5 ft still says "needs 371 cm of width, this room has 334 cm", and the two-directional property test at full scale stays at zero both ways.
