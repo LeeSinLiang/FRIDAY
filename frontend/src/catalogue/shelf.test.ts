@@ -56,6 +56,10 @@ test("a listing with no known price says so, and never reads $0", async () => {
     assert.match(text, /priceLabel\((listing|item)\.price_cents, dollars\)/, `${file} prints prices through priceLabel`);
     assert.doesNotMatch(text, /\{dollars\((listing|item)\.price_cents\)\}/, `${file} must not print a raw price`);
   }
+  // The placement-confirm panel printed "$0.00 USD" for a piece whose price nobody knows.
+  const layer = await source("SplatCatalogueLayer.tsx");
+  assert.match(layer, /priceLabel\(purchase\.price_cents,/, "the confirm panel prints its price through priceLabel");
+  assert.doesNotMatch(layer, /\$\{\(purchase\.price_cents\/100\)\.toFixed\(2\)\} USD/, "never a raw price in the confirm panel");
 });
 
 test("in the shop a piece is pickable for its deployed model; an unknown price does not lock the card", async t => {

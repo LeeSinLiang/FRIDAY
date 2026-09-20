@@ -22,7 +22,7 @@ export default function CartSummary({editable = false}: {editable?: boolean}) {
       {!items[0].available && <p role="alert">Currently unavailable</p>}
       {editable && <button className="text-button" disabled={busy} onClick={() => void remove(items[items.length - 1].id)}>Remove {items.length > 1 ? 'one' : 'from cart'}</button>}</div><strong>{items[0].priced ? money(items.reduce((sum, i) => sum + i.unit_amount, 0)) : '—'}</strong>
     </li>)}</ul> : <p>Your cart is waiting for its first piece. Confirm furniture in a room to add it here.</p>}
-    <div className="cart-total"><span>{cart?.items.some(i => i.available && !i.priced) ? 'Priced pieces · USD' : 'Total · USD'}</span><strong>{money(cart?.amount ?? 0)}</strong></div>
+    <div className="cart-total"><span>{cart?.items.some(i => i.available && !i.priced) ? 'Priced pieces · USD' : 'Total · USD'}</span><strong>{cart?.items.length && !cart.items.some(i => i.priced) ? '—' : money(cart?.amount ?? 0)}</strong></div>
     <p className="cart-note">Sandbox checkout. No charge or vendor order is placed.</p>
     {(error || loadError) && <p className="error" role="alert">{error || loadError}</p>}
     <a className="settings-link" href={cart?.items[0] ? '/room/' + cart.items[0].roomId : '/rooms'}>← Back to your room</a>
