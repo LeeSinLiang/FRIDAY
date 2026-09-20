@@ -42,6 +42,11 @@ Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if
 - **Three branches, none merged, none should be merged as-is**: `codex/adelle-herrakra-chair-asset` (superseded — already fixed and merged by Saketh's lane), `codex/adelle-sofa-bed-assets` (sofa + bed both fail dimension check), `codex/adelle-bookshelf-coffeetable-assets` (bookshelf passes, coffee table fails dimension check). This is the "red main is a whole-team stop" scenario for the latter two if merged without fixing first.
 - Bookshelf and coffee table images came from local file paths this time (worked); the earlier HEMNES-style dresser image never produced a usable path across two attempts — still blocked on that one specifically.
 - Nightstand and rug (rest of the 5-more living-room list) not started yet.
+- Kitchen + bedroom expansion planned: dining table + chairs, bar stools, sideboard, nightstand, dresser, mirror, floor lamp, rug, side table — see 2026-09-20 message for the full list.
+
+## Both `codex/adelle-sofa-bed-assets` (#34) and this branch (#35) were merged into main with known-failing assets
+
+Per explicit owner direction (confirmed twice, once per branch) after being flagged. `main`'s `backend/api/test_furniture_assets.py` is now red on the sofa, bed, and coffee table dimension checks until someone regenerates those three via `multi_image_to_3d` with extra angle photos. This is intentional and was not a silent merge — see PR #34 and #35 descriptions.
 
 ## Note from Saketh's lane — a colour call for you (2026-09-19)
 
