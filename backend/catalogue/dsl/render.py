@@ -7,8 +7,8 @@ from catalogue.dsl.schema import Program
 from catalogue.dsl.units import format_cents, format_mm
 
 GENERIC_REF = {"any_wall": "any wall", "wall": "the wall", "window": "the window",
-               "door": "the door", "instance": "that item"}
-REF_GROUPS = ("walls", "windows", "doors", "instances")
+               "door": "the door", "instance": "that item", "surface": "that surface", "compartment": "that compartment"}
+REF_GROUPS = ("walls", "windows", "doors", "instances", "surfaces", "compartments")
 
 
 def _labels(refs: dict | None) -> dict[str, str]:
@@ -38,6 +38,7 @@ PLACE_CHIPS: dict[str, Callable[[object, str], str]] = {
     "distance_min": lambda c, where: f"{format_mm(c.mm)} from {where}",
     "clear": lambda c, where: f"{format_mm(c.mm)} clear of {where}",
     "on": lambda c, where: f"on {where}",
+    "inside": lambda c, where: f"inside {where}",
     "not_blocking": lambda c, where: f"not blocking {where}",
 }
 

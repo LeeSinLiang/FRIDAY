@@ -1,0 +1,20 @@
+{
+  "productId": "pc-workspace-can",
+  "catalogueListingId": "pc-workspace-can",
+  "modelUrl": "/models/furniture/pc-workspace-can/model.glb",
+  "widthCm": 6.6,
+  "depthCm": 6.6,
+  "heightCm": 12,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "license": "CC0-1.0",
+  "creator": "Kenney",
+  "sourceUrl": "https://kenney.nl/assets/food-kit",
+  "originalFile": "soda-can.glb",
+  "dimensionBasis": "Authored demo size, not manufacturer measurements",
+  "modelSha256": "4f6702906d6584767b944d6a3810bf8b7472795c9ab0939fd2d82b926a5594eb",
+  "matchType": "generic_visual_proxy",
+  "matchNote": "CC0 Kenney model at authored demo dimensions; this is a synthetic catalogue item, not a retail product match."
+}

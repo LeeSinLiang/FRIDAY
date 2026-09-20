@@ -9,7 +9,7 @@ import { validatePlacement } from "./scene/placement";
 import { instanceToAdd } from "./scene/products";
 import { pieceInHand, walkKeyAction } from "./scene/walkKeys";
 import { sceneToCm } from "./scene/units";
-import type { CameraMode, FirstPersonCamera, Pose, Product } from "./scene/types";
+import type { CameraMode, FirstPersonCamera, Attachment, Pose, Product } from "./scene/types";
 import type { InteractionCallbacks, InteractionMode, InteractionState, ModelStatus, PlacementPreview } from "./scene/playcanvas/contracts";
 import type { PlayCanvasRuntime, RuntimeStatus } from "./scene/playcanvas/runtime";
 import "./splat-editor.css";
@@ -67,6 +67,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   const requestedRoom = roomId ?? roomParams.get("roomId") ?? roomParams.get("room");
   const [activeRoomId,setActiveRoomId]=useState(()=>initialRoom(requestedRoom,roomParams.get("floor")));
   const session=useRoomSession(activeRoomId,active || !!pendingProductId);
+  useEffect(()=>{ if(session.designerMessage) setNotice(session.designerMessage); },[session.designerMessage]);
   // Keep the building mounted while fetching the next independent floor layout.
   const previousSnapshot=useRef<RoomSnapshot|null>(null);
   if(session.snapshot)previousSnapshot.current=session.snapshot;
@@ -106,18 +107,19 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   const onRuntime=useCallback((handle:PlayCanvasRuntime|null)=>{runtime.current=handle;},[]);
   const getRuntime=useCallback(()=>runtime.current,[]);
   const onModelStatus=useCallback((id:string,status:ModelStatus)=>setStatuses(old=>old[id]===status?old:{...old,[id]:status}),[]);
-  const commit=useCallback(async(id:string,pose:Pose)=>{
+  const commit=useCallback(async(id:string,pose:Pose,attachment?:Attachment)=>{
     if(!snapshot)return false;
-    const result=validatePlacement(snapshot.room,snapshot.products,snapshot.instances,id,pose);
+    const result=validatePlacement(snapshot.room,snapshot.products,snapshot.instances,id,pose,attachment);
     if(!result.valid){setNotice(`${result.reason}. Position unchanged.`);return false;}
-    const accepted=await session.submit({type:"setPose",instanceId:id,pose});
+    const accepted=await session.submit({type:"setPose",instanceId:id,pose,...(attachment?{attachment}:{})});
     if(accepted)setNotice("Position saved");
     return accepted;
   },[snapshot,session.submit]);
-  const place=useCallback(async(productId:string,pose:Pose)=>{
+  const place=useCallback(async(productId:string,pose:Pose,attachment?:Attachment)=>{
     const id=crypto.randomUUID();
-    // A catalogue piece listed in the rail must carry its product, as the search panel's add does; a shared one must not.
-    const accepted=await session.submit({type:"add",instance:instanceToAdd(id,productId,pose,instances)});
+    // Keep main's catalogue identity handling and add the optional support relationship.
+    const instance = {...instanceToAdd(id,productId,pose,instances),...(attachment?{attachment}:{})};
+    const accepted=await session.submit({type:"add",instance});
     if(accepted){setPendingProductId(null);setSelectedId(null);setPanel("catalogue");setPanelOpen(false);setMode(view==="perspective"?"walk":"place");setNotice("Furniture placed");captureWalk();}
     return accepted;
   },[session.submit,view,captureWalk,instances]);
@@ -207,7 +209,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   return <main className={`splat-editor ${panelOpen?"has-panel":""}`}>
     <div className="splat-room" aria-label="First-person room editor">
       {state && <Suspense fallback={null}><PlayCanvasScene state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}
-      {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen} onCloseShelf={()=>setShopSearchOpen(false)} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
+      {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} sceneRevision={snapshot.revision} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen} onCloseShelf={()=>setShopSearchOpen(false)} designMessage={session.designerMessage} onDesign={async text => { const result = await session.design(text, selectedId, getCamera()); setNotice(result.message); await refresh(); return result.message; }} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
       {runtimeStatus.phase!=="ready" && <div className="splat-loading" role="status">
         <div className="glass splat-loading-card"><span className="loading-orbit"/><h1>{runtimeStatus.phase==="error"?"Room unavailable":"Come on in."}</h1><p>{runtimeStatus.message}</p>
           {runtimeStatus.progress!==undefined && <progress max={1} value={runtimeStatus.progress} aria-label="Room loading progress"/>}
@@ -253,7 +255,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
         <p className="splat-model-note">{product.modelUrl ? statuses[selectedId??""]==="error"?"Model unavailable · showing dimensions":statuses[selectedId??""]==="loading"?"Loading model…":"Separate, editable GLB" : "Furniture preview · final models coming soon"}</p>
         {selectedId&&statuses[selectedId]==="error"&&<button className="button" onClick={()=>setRetries(old=>({...old,[selectedId]:(old[selectedId]??0)+1}))}>Retry furniture model</button>}
       </> : <div className="splat-empty-properties"><Icon name="chair" size={32}/><p>Select a piece in the room or choose something new.</p><button className="button" onClick={()=>{setPanel("catalogue");setPanelOpen(true);}}>Browse furniture</button></div>}
-      <div className="splat-room-note"><span>{room?.roomId === "cg-arch-lightmapper-proof" ? "Lighting proof · partial room" : room?.roomId === "cg-arch-interior" ? "Living-room placement zone" : room?.scan?.visualFormat === "glb" ? "Authored room · exact dimensions" : "Test room · assumed scale"}</span><label><input type="checkbox" checked={showSurface} onChange={e=>setShowSurface(e.target.checked)} disabled={!ready||locked}/>Surface reference</label>{showSurface&&surfaceNote&&<p>{surfaceNote}</p>}</div>
+      <div className="splat-room-note"><span>{room?.roomId === "cg-arch-lightmapper-proof" ? "Lighting proof · partial room" : room?.roomId === "cg-arch-interior" ? "Living room, corridor and entry" : room?.scan?.visualFormat === "glb" ? "Authored room · exact dimensions" : "Test room · assumed scale"}</span><label><input type="checkbox" checked={showSurface} onChange={e=>setShowSurface(e.target.checked)} disabled={!ready||locked}/>Surface reference</label>{showSurface&&surfaceNote&&<p>{surfaceNote}</p>}</div>
       </>}
     </aside>
     {room&&view==="perspective"&&<FloorMap room={room} getCamera={getCamera} onFloorChange={changeFloor} floorChangeDisabled={!ready||locked||!!pendingProductId} compact={shopSearchOpen}/>}

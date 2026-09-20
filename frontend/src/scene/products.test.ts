@@ -35,6 +35,7 @@ test("a catalogue piece without a model carries no modelUrl key at all", () => {
 
 test("the editor builds its add with instanceToAdd, never as a bare instance", async () => {
   const editor = await readFile(new URL("SplatEditor.tsx", `file://${process.cwd()}/src/`), "utf8");
-  assert.match(editor, /type:"add",instance:instanceToAdd\(id,productId,pose,instances\)/);
+  assert.match(editor, /instanceToAdd\(id,productId,pose,instances\)/);
+  assert.match(editor, /session.submit\(\{type:"add",instance\}\)/);
   assert.doesNotMatch(editor, /type:"add",instance:\{instanceId/);
 });

@@ -219,6 +219,70 @@ class EmptyMeshRoomTests(TestCase):
 
 
 class CgArchRoomTests(TestCase):
+    def test_corridor_and_entry_accept_placement_and_reload_without_crossing_walls(self):
+        client = Client()
+        item = {'instanceId': 'hall-chair', 'productId': 'test-chair',
+                'pose': {'xCm': 400, 'zCm': 490, 'yawRad': 0}}
+        for revision, (x, z) in enumerate([(400, 490), (80, 650), (800, 490)]):
+            item['pose'].update(xCm=x, zCm=z)
+            response = client.post('/api/scene/placement/?roomId=cg-arch-interior',
+                                   {'baseRevision': revision, 'commandId': f'hall-{revision}', 'instance': item},
+                                   content_type='application/json')
+            self.assertEqual(response.status_code, 200, response.content)
+            self.assertEqual(client.get('/api/scene/?roomId=cg-arch-interior').json()['instances'], [item])
+        for x, z in [(400, 420), (400, 300), (500, 650), (10, 490)]:
+            with self.subTest(x=x, z=z):
+                invalid = copy.deepcopy(item)
+                invalid['pose'].update(xCm=x, zCm=z)
+                with self.assertRaises(SceneError):
+                    validate_instances([invalid], 'cg-arch-interior')
+
+    def test_reviewed_expansion_preserves_saved_layout_revision_and_command_receipt(self):
+        client = Client()
+        item = {'instanceId': 'old-chair', 'productId': 'test-chair',
+                'pose': {'xCm': 950, 'zCm': 600, 'yawRad': 0}}
+        payload = {'baseRevision': 0, 'commandId': 'old-command', 'instance': item}
+        current = prepared_room('cg-arch-interior')
+        legacy = copy.deepcopy(current)
+        legacy['revision'] = 1
+        legacy['scan']['geometryRevision'] = 'cg-arch-interior-v1'
+        legacy['spatial']['freeAreas'] = [{'minXcm': 787, 'maxXcm': 1121, 'minZcm': 180, 'maxZcm': 760}]
+        with patch('api.room_context.prepared_room', return_value=legacy):
+            before = client.post('/api/scene/placement/?roomId=cg-arch-interior', payload,
+                                 content_type='application/json')
+        self.assertEqual(before.status_code, 200, before.content)
+        row = SceneLayout.objects.get(room_id='cg-arch-interior')
+        original_time = row.updated_at
+        snapshot = client.get('/api/scene/?roomId=cg-arch-interior').json()
+        self.assertEqual(snapshot['geometryRevision'], 'cg-arch-interior-v2')
+        self.assertEqual(snapshot['instances'], [item])
+        self.assertEqual(snapshot['revision'], 1)
+        row.refresh_from_db()
+        self.assertEqual(row.geometry_revision, 'cg-arch-interior-v2')
+        self.assertEqual(row.updated_at, original_time)
+        # Receipts are historical responses, never rewritten by a geometry upgrade.
+        retry = client.post('/api/scene/placement/?roomId=cg-arch-interior', payload,
+                            content_type='application/json')
+        self.assertEqual(retry.json(), before.json())
+        self.assertEqual(SceneCommandReceipt.objects.count(), 1)
+        self.assertEqual(client.get('/api/scene/?roomId=cg-arch-interior').json()['room'], current)
+
+    def test_expansion_rejects_invalid_legacy_layout_and_unknown_revision_without_mutation(self):
+        client = Client()
+        client.get('/api/scene/?roomId=cg-arch-interior')
+        row = SceneLayout.objects.get(room_id='cg-arch-interior')
+        invalid = [{'instanceId': 'invalid', 'productId': 'test-chair',
+                    'pose': {'xCm': 400, 'zCm': 300, 'yawRad': 0}}]
+        for revision, instances in [('cg-arch-interior-v1', invalid), ('cg-arch-interior-v0', [])]:
+            row.geometry_revision, row.instances = revision, instances
+            row.save()
+            response = client.get('/api/scene/?roomId=cg-arch-interior')
+            self.assertEqual(response.status_code, 409)
+            self.assertEqual(response.json()['error']['code'], 'geometry_conflict')
+            row.refresh_from_db()
+            self.assertEqual(row.instances, instances)
+            self.assertEqual(row.geometry_revision, revision)
+
     def test_default_camera_is_on_reviewed_floor_and_capture_freezes_it(self):
         room = prepared_room('cg-arch-interior')
         camera = room['scan']['defaultCamera']
@@ -248,7 +312,7 @@ class CgArchRoomTests(TestCase):
         response = client.post('/api/scene/placement/?roomId=cg-arch-interior', payload,
                                content_type='application/json')
         self.assertEqual(response.status_code, 200, response.content)
-        item['pose']['xCm'] = 800
+        item['pose']['xCm'] = 500
         response = client.post('/api/scene/placement/?roomId=cg-arch-interior',
                                dict(payload, baseRevision=1, commandId='cg-outside'),
                                content_type='application/json')

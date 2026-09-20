@@ -119,6 +119,50 @@
       "color": "#545b66",
       "kind": "sofa",
       "catalogueVisible": false
+    },
+    {
+      "productId": "support-demo-table",
+      "name": "Demo support table",
+      "widthCm": 120,
+      "depthCm": 70,
+      "heightCm": 75,
+      "modelUrl": "/models/furniture/support-demo-table/model.glb",
+      "color": "#ba8955",
+      "kind": "table",
+      "catalogueVisible": true
+    },
+    {
+      "productId": "support-demo-cabinet",
+      "name": "Demo open cabinet",
+      "widthCm": 100,
+      "depthCm": 40,
+      "heightCm": 100,
+      "modelUrl": "/models/furniture/support-demo-cabinet/model.glb",
+      "color": "#30485b",
+      "kind": "table",
+      "catalogueVisible": true
+    },
+    {
+      "productId": "support-demo-lamp",
+      "name": "Demo table lamp",
+      "widthCm": 20,
+      "depthCm": 20,
+      "heightCm": 35,
+      "modelUrl": "/models/furniture/support-demo-lamp/model.glb",
+      "color": "#edbe64",
+      "kind": "table",
+      "catalogueVisible": true
+    },
+    {
+      "productId": "support-demo-box",
+      "name": "Demo storage box",
+      "widthCm": 24,
+      "depthCm": 20,
+      "heightCm": 20,
+      "modelUrl": "/models/furniture/support-demo-box/model.glb",
+      "color": "#af6953",
+      "kind": "table",
+      "catalogueVisible": true
     }
   ],
   "rooms": {

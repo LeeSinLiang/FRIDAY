@@ -5,14 +5,15 @@ export type AgentMotion = { revision: number; instanceId: string; fromPose: Pose
 export const angleDelta = (a: number, b: number) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
 export function motionPose(from: Pose, to: Pose, t: number): Pose {
   return { xCm: from.xCm + (to.xCm - from.xCm) * t, zCm: from.zCm + (to.zCm - from.zCm) * t,
-    yawRad: from.yawRad + angleDelta(from.yawRad, to.yawRad) * t };
+    yawRad: from.yawRad + angleDelta(from.yawRad, to.yawRad) * t,
+    ...(from.yCm === undefined && to.yCm === undefined ? {} : {yCm:(from.yCm ?? 0) + ((to.yCm ?? 0)-(from.yCm ?? 0))*t}) };
 }
 
 /** A decorative move may only traverse reviewed, collision-free furniture poses. */
 export function planAngelMove(event: AgentMotion, room: Room, products: Product[], instances: Instance[], camera?: {xCm:number; zCm:number}) {
   const item = instances.find(i => i.instanceId === event.instanceId);
   const product = products.find(p => p.productId === item?.productId);
-  if (!item || !product) return null;
+  if (!item || !product || item.attachment || instances.some(i=>i.attachment?.parentInstanceId===item.instanceId)) return null;
   const to = item.pose;
   const safe = (from: Pose) => {
     const steps = Math.max(1, Math.ceil(Math.hypot(to.xCm - from.xCm, to.zCm - from.zCm) / 5),

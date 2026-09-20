@@ -1,10 +1,13 @@
 from django.urls import include, path
 from .views import health
+from .designer_views import designer, designer_poll
 from .scene_views import scene, scene_commands, scene_placement, captures, capture_claim, capture_complete, capture_detail, capture_image
 
 urlpatterns = [
     path('health/', health, name='health'),
     path('scene/', scene, name='scene'),
+    path('designer/', designer, name='scene-designer'),
+    path('designer/<uuid:job_id>/', designer_poll, name='scene-designer-poll'),
     path('scene/commands/', scene_commands, name='scene-commands'),
     path('scene/placement/', scene_placement, name='scene-placement'),
     path('scene/captures/', captures, name='captures'),

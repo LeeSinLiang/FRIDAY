@@ -69,3 +69,18 @@ test("capture completion always has exactly one terminal result even across stal
   assert.equal(bounded.error?.code.length, 100);
   assert.equal(bounded.error?.message.length, 1000);
 });
+
+test("frozen capture derives child height and rotation from its reviewed support", () => {
+  const instances = [
+    {instanceId:'desk',productId:'support-demo-table',pose:{xCm:200,zCm:250,yawRad:Math.PI/2}},
+    {instanceId:'lamp',productId:'support-demo-lamp',pose:{xCm:0,zCm:0,yCm:999,yawRad:0},attachment:{
+      parentInstanceId:'desk',target:{kind:'surface',id:'top'},profileRevision:'1',localPose:{xCm:25,zCm:0,yawRad:0}}},
+  ];
+  const parsed=parseCaptureJob({captureId:'capture-support',leaseToken:'lease',revision:1,view:'top',width:960,height:720,
+    snapshot:{room:ROOM,products:PRODUCTS,instances,revision:1}});
+  assert.equal(parsed.snapshot.instances[1].pose.yCm,75);
+  assert.equal(parsed.snapshot.instances[1].pose.xCm,200);
+  assert.equal(parsed.snapshot.instances[1].pose.zCm,225);
+  assert.equal(parsed.snapshot.instances[1].pose.yawRad,Math.PI/2);
+  assert.equal(instances[1].pose.yCm,999);
+});

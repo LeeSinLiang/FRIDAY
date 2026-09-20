@@ -42,8 +42,18 @@ class InstanceRef(_Strict):
     id: str  # something already in the room
 
 
+class SurfaceRef(_Strict):
+    kind: Literal["surface"]
+    id: str
+
+
+class CompartmentRef(_Strict):
+    kind: Literal["compartment"]
+    id: str
+
+
 Ref = Annotated[
-    Union[AnyWallRef, WallRef, WindowRef, DoorRef, InstanceRef],
+    Union[AnyWallRef, WallRef, WindowRef, DoorRef, InstanceRef, SurfaceRef, CompartmentRef],
     Field(discriminator="kind"),
 ]
 
@@ -122,6 +132,11 @@ class OnClause(_Strict):
     ref: Ref
 
 
+class InsideClause(_Strict):
+    k: Literal["inside"]
+    ref: CompartmentRef
+
+
 class NotBlockingClause(_Strict):
     k: Literal["not_blocking"]
     ref: Ref
@@ -130,7 +145,7 @@ class NotBlockingClause(_Strict):
 PlaceClause = Annotated[
     Union[
         NearClause, AgainstClause, DistanceMinClause,
-        ClearClause, OnClause, NotBlockingClause,
+        ClearClause, OnClause, InsideClause, NotBlockingClause,
     ],
     Field(discriminator="k"),
 ]

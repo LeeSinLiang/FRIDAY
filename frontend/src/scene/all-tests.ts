@@ -12,9 +12,12 @@ import "./playcanvas/runtime.test";
 import "./playcanvas/room.test";
 import "./playcanvas/interaction.test";
 import "./useRoomSession.test";
+import "./designerIntent.test";
 
 import "./playcanvas/angelMotion.test";
 
 import "./agentMotionSnapshot.test";
 
 import "./playcanvas/materialize.test";
+
+import "./supports.test";

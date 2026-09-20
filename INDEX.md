@@ -15,6 +15,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 | [TODO_WILLIAM.md](TODO_WILLIAM.md) | William's tasks and agent work log |
 | [TODO_ADELLE.md](TODO_ADELLE.md) | Adelle's tasks and agent work log |
 
+- [In-app scene designer](docs/backend/scene-designer/README.md) — stable object references, relative placement, agent tool loop and acceptance checks.
+
 ## Feature documentation
 
 ### Frontend
@@ -23,6 +25,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 - [Full skyscraper GLB test](docs/frontend/room-capture/skyscraper-glb-test.md) — preserved complete building, entrance lobby, mezzanine and 32 tower floors with measured outlines, existing floor arrows, public gallery/deployment, reference placement and agent context reader.
 
 - [Minimal supported placement plan](docs/frontend/3d-object/supported-placement-mvp-plan.md) — full-skyscraper test scene, explicit scale reference, floor-surface dragging, then table/cabinet placement with stable AI target references.
+
+- [Supported placement verification](docs/frontend/3d-object/supported-placement-verification.md) — inherited engine and manual-browser evidence; integrated in-app AI acceptance is tracked in the scene-designer guide.
 
 - [Supported object placement](docs/frontend/3d-object/supported-object-placement.md) — research for lamps on tables and objects inside cabinets: support metadata, cavity geometry, attachment transforms, collision rules and acceptance checks.
 
@@ -39,7 +43,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 | [docs/frontend/room-capture/gaussian-splatting-handoff.md](docs/frontend/room-capture/gaussian-splatting-handoff.md) | Separate task: find a free similar empty-room splat or fully convert the source mesh, with coverage and integration gates |
 | [docs/frontend/room-capture/parallel-visual-tracks.md](docs/frontend/room-capture/parallel-visual-tracks.md) | Mesh versus Gaussian task ownership, separate-session handoff, shared contracts and demo comparison gates |
 | [docs/frontend/room-capture/rendering-alternatives.md](docs/frontend/room-capture/rendering-alternatives.md) | Baked mesh, runtime lightmaps, architectural viewers, browser path tracing and panorama tradeoffs |
-| [docs/frontend/room-capture/cg-arch-interior.md](docs/frontend/room-capture/cg-arch-interior.md) | Selected Blendkit room, local export, texture handling, living-room placement zone and sharing requirements |
+| [docs/frontend/room-capture/cg-arch-interior.md](docs/frontend/room-capture/cg-arch-interior.md) | Selected Blendkit room, local export, texture handling, connected living-room/corridor/entry coverage and sharing requirements |
 | [docs/frontend/room-capture/empty-mesh-room.md](docs/frontend/room-capture/empty-mesh-room.md) | Optional authored empty mesh fixture, reproducible GLB, exact interior bounds and retained Studio 11 route |
 | [docs/frontend/room-capture/playcanvas-implementation.md](docs/frontend/room-capture/playcanvas-implementation.md) | Implemented local Studio 11 editor, preparation, fixed geometry, interaction, captures and integration boundaries |
 | [docs/frontend/editor-implementation.md](docs/frontend/editor-implementation.md) | Historical Three.js editor, available through `?legacy`, with integration and verification notes |
@@ -72,6 +76,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Demo
 
+- [Public test release](docs/demo/public-test-release.md) — integrated release scope, tester workflow, checks and recording evidence.
+
 - [Demo run of show](docs/demo/run-of-show.md) — what to click, in order, what each beat proves, and what happens when a dependency fails.
 
 ### Setup and tooling
@@ -101,3 +107,5 @@ Add dedicated feature docs here as they are created.
 
 - [Cart choreography](docs/frontend/shopping-cart-animation.md) — The cart preview folded into `/cart`: the shopper's real pieces gather under the checkout button; nothing on sign-in, authenticator or review; reduced motion; the StrictMode trap; the retired standalone preview as history.
 - [Furniture materialization](docs/frontend/furniture-materialization.md) — spatial-agent add animation, preview event, unchanged placement and static captures.
+
+- [Cg Arch boundary fix](docs/tickets/cg-arch-boundaries.md) — connected-floor diagnosis, preservation plan and runtime verification.

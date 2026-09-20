@@ -7,6 +7,7 @@ import type { Listing } from "../lib/types";
 import { instanceFromListing } from "../region/boundary";
 import { openingsFor, portalsFor } from "../region/roomOpenings";
 import { useRegion } from "../region/useRegion";
+import { attachmentTarget, attachAt, moveWithAttachments, resolveAttachments } from "../scene/supports";
 import { validatePlacement } from "../scene/placement";
 import { createPendingGhost, type PendingGhost } from "../scene/playcanvas/pendingGhost";
 import { priceLabel } from "./price";
@@ -21,11 +22,14 @@ type Props = {
   /** The engine handle, once it exists. Read lazily: the editor keeps it in a ref. */
   getRuntime: () => PlayCanvasRuntime | null;
   room: Room;
+  sceneRevision?: number;
   products: Product[];
   instances: Instance[];
   ready: boolean;
   locked: boolean;
   submit: (edit: SceneEdit) => Promise<boolean>;
+  onDesign?: (text: string) => Promise<string>;
+  designMessage?: string;
   /** The session's own retry and status. A save that fails uncertainly is retried from here, quietly. */
   retry: () => Promise<unknown> | undefined;
   status: string;
@@ -39,7 +43,7 @@ type Props = {
 /** The engine's own drag threshold (interaction.ts): a press that moves this far is a look, not a click. */
 const LOOK_THRESHOLD_PX = 4;
 
-export default function SplatCatalogueLayer({ getRuntime, room, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, showShelf = true, onCloseShelf, confirm }: Props) {
+export default function SplatCatalogueLayer({ getRuntime, room, sceneRevision, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, showShelf = true, onCloseShelf, confirm, onDesign, designMessage }: Props) {
   const [hovered, setHovered] = useState<Listing | null>(null);
   const [armed, setArmed] = useState<Listing | null>(null);
   useEffect(() => { if (!showShelf) { setHovered(null); setArmed(null); } }, [showShelf]);
@@ -67,6 +71,16 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
   const region = useRegion(armed ?? hovered, room, known, standing, place, openingsFor(room.roomId), portalsFor(room.roomId));
   const fitting = useMemo(() => region ? region.solution.legalCounts.flatMap((count, index) => (count > 0 ? [index] : [])) : [], [region]);
   const yawIndex = yawChoice !== null && fitting.includes(yawChoice) ? yawChoice : Math.max(region?.solution.bestYawIndex ?? 0, 0);
+  const supportedInstance = (listing: Listing, id: string, pose: Instance["pose"]) => {
+    let instance=instanceFromListing(listing,id,pose);
+    const template=region?.solution.masks[yawIndex]?.attachment;
+    if (template) {
+      const {parent,target,profile}=attachmentTarget(template,standing,known);
+      instance={...instance,attachment:attachAt(parent,target,profile,pose)};
+      instance=resolveAttachments([...standing,instance],[...known,instance.product!]).at(-1)!;
+    }
+    return instance;
+  };
   const owner = armed?.id ?? hovered?.id ?? null;
   useEffect(() => setYawChoice(null), [owner]);
 
@@ -110,13 +124,13 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
       if (looked) return;
       const pose = overlay.current?.poseAt(event.clientX, event.clientY);
       if (!pose) return; // outside the lit region: nothing happens, and that is the message
-      const instance = instanceFromListing(armed, crypto.randomUUID(), pose);
+      const instance = supportedInstance(armed, crypto.randomUUID(), pose);
       const verdict = validatePlacement(room, [...known, instance.product!], [...standing, instance], instance.instanceId, pose);
       if (!verdict.valid) { console.error("region solver lit a pose the editor refuses", pose, verdict.reason); return; }
       const listing = armed;
       setArmed(null); setHovered(null);
       // On the floor at once, and it stays there through a storage hiccup. Only a definite refusal removes it.
-      setUnconfirmed(instance); ghost.current?.show(instance.product!, pose);
+      setUnconfirmed(instance); ghost.current?.show(instance.product!, instance.pose);
       if (shopping) { setPurchase(listing); return; }
       const outcome = await saveQuietly({
         submit: () => submit({ type: "add", instance }), retry, status: () => statusNow.current,
@@ -142,7 +156,7 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
       canvas.removeEventListener("pointerdown", onDown, true);
       canvas.removeEventListener("pointermove", onMove, true);
     };
-  }, [armed, getRuntime, standing, known, locked, ready, onNotice, room, submit, retry, shopping]);
+  }, [armed, getRuntime, standing, known, locked, ready, onNotice, room, submit, retry, shopping, region, yawIndex]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -173,18 +187,20 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
     const index = mask.data.findIndex(value=>value===FREE);
     if (index<0) return;
     const pose = {xCm:mask.originCm[0]+(index%mask.shape[0])*mask.cellSizeCm,zCm:mask.originCm[1]+Math.floor(index/mask.shape[0])*mask.cellSizeCm,yawRad:mask.yawRad};
-    const instance = instanceFromListing(armed,crypto.randomUUID(),pose);
-    setUnconfirmed(instance);setPurchase(armed);setArmed(null);setHovered(null);ghost.current?.show(instance.product!,pose);
+    const instance = supportedInstance(armed,crypto.randomUUID(),pose);
+    setUnconfirmed(instance);setPurchase(armed);setArmed(null);setHovered(null);ghost.current?.show(instance.product!,instance.pose);
   }
   function adjustPreview(axis:'xCm'|'zCm'|'yawRad',value:number) {
     if (!unconfirmed || !Number.isFinite(value)) return;
-    const next = {...unconfirmed,pose:{...unconfirmed.pose,[axis]:value}};
+    const next = moveWithAttachments([...instances,unconfirmed],[...known,unconfirmed.product!],unconfirmed.instanceId,{...unconfirmed.pose,[axis]:value}).at(-1)!;
     setUnconfirmed(next);ghost.current?.show(next.product!,next.pose);
   }
   const verdict = unconfirmed ? validatePlacement(room,known,[...instances,unconfirmed],unconfirmed.instanceId,unconfirmed.pose) : null;
   return <>
-    {showShelf && <CatalogueShelf region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
-      canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} onClose={onCloseShelf} />}
+    {showShelf && <CatalogueShelf roomId={room.roomId} sceneRevision={sceneRevision} region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
+      canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} onClose={onCloseShelf} designMessage={designMessage}
+      onDesign={onDesign ? text => !ready || locked || !!unconfirmed
+        ? Promise.resolve("Confirm or cancel the current placement before asking the designer.") : onDesign(text) : undefined} />}
     {shopping && armed && <section className="purchase-confirm" aria-label="Preview furniture"><p>Click the lit floor, or use a suggested position.</p><button className="button" disabled={!ready || locked || !fitting.length} onClick={previewSuggested}>Preview a fitting position</button><button className="button" onClick={()=>setArmed(null)}>Cancel</button></section>}
     {shopping && purchase && unconfirmed && <section className="purchase-confirm" aria-label="Confirm furniture placement">
       <p className="eyebrow">Placement preview</p><h2>{purchase.title}</h2><p>{priceLabel(purchase.price_cents, cents => `$${(cents/100).toFixed(2)} USD`)} · sandbox</p>

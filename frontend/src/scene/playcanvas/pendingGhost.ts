@@ -23,7 +23,7 @@ export function createPendingGhost(runtime: Runtime): PendingGhost {
       const colour = new pc.Color(); colour.fromString(product.color);
       material.diffuse = colour; material.update();
       entity.setLocalScale(cmToScene(product.widthCm), cmToScene(product.heightCm), cmToScene(product.depthCm));
-      entity.setLocalPosition(cmToScene(pose.xCm), cmToScene(product.heightCm / 2), cmToScene(pose.zCm));
+      entity.setLocalPosition(cmToScene(pose.xCm), cmToScene((pose.yCm ?? 0) + product.heightCm / 2), cmToScene(pose.zCm));
       entity.setLocalEulerAngles(0, pose.yawRad * pc.math.RAD_TO_DEG, 0);
       entity.enabled = true;
     },

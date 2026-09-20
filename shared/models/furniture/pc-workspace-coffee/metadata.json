@@ -1,0 +1,20 @@
+{
+  "productId": "pc-workspace-coffee",
+  "catalogueListingId": "pc-workspace-coffee",
+  "modelUrl": "/models/furniture/pc-workspace-coffee/model.glb",
+  "widthCm": 9,
+  "depthCm": 9,
+  "heightCm": 14,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "license": "CC0-1.0",
+  "creator": "Kenney",
+  "sourceUrl": "https://kenney.nl/assets/food-kit",
+  "originalFile": "cup-coffee.glb",
+  "dimensionBasis": "Authored demo size, not manufacturer measurements",
+  "modelSha256": "b1b6327d6f906ed4ae378f3ff7dfc198612a229c4265751a069c913af1c6a101",
+  "matchType": "generic_visual_proxy",
+  "matchNote": "CC0 Kenney model at authored demo dimensions; this is a synthetic catalogue item, not a retail product match."
+}
