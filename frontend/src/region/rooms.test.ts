@@ -105,3 +105,10 @@ test("HERO: '5 feet from any wall' does not fit the Cg Arch living room, and say
     assert.ok(x - ex >= 787 + 91.4 - 1e-6 && x + ex <= 1121 - 91.4 + 1e-6 && z - ez >= 180 + 91.4 - 1e-6 && z + ez <= 760 - 91.4 + 1e-6, `${x},${z}`);
   }
 });
+
+test("HERO, as spoken: '4 feet from any wall' leaves a usable region in the Cg Arch living room", () => {
+  // Chosen over 5 feet (nothing fits, 334 cm wide) and 3 feet (over a thousand positions, no visible narrowing).
+  const four = (id: string) => solve(cgScene, { product: listingToProduct(listing(id)) }, [{ k: "distance_min", ref: { kind: "any_wall" }, mm: 1219 }]).legalCounts;
+  assert.deepEqual(four("ikea-405.355.47"), [220, 265, 220, 265]); // HERRÅKRA, the one with a real model
+  assert.deepEqual(four("ikea-193.025.39"), [255, 106, 255, 106]); // POÄNG
+});
