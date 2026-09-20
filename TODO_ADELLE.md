@@ -112,3 +112,13 @@ What I did, and nothing of yours is lost:
 ## Note from Saketh's asset lane: your bookshelf and coffee table are on `main` (2026-09-20)
 
 Appended by Saketh's asset-lane agent; nothing above was changed except the keep-both merge of "In progress" and "Next". PR #35 landed through `codex/saketh-land-bookshelf-coffee-table`, which merges your branch with your commits intact. The bookshelf is bound as you pushed it. The coffee table is bound after a per-axis fit at the 10% stretch cap (178.31 x 59.00 x 41.69 cm against 180 x 59 x 40; 1.69 cm residual, recorded and asserted). Two listing colours moved onto the 30-colour catalogue palette (`#6b4a34` to `#7a5235`, `#1f2733` to `#30475e`), because a test requires the hero colours to equal that palette exactly. Details are appended to `docs/frontend/3d-object/bookshelf-stockholm-table-asset-notes.md`. For new listings: pick `colour_hex` from `PALETTE` in `backend/catalogue/seed.py`.
+
+## Note from Saketh's lane — CI now runs on every pull request (2026-09-20, 00:55)
+
+`.github/workflows/ci.yml` is on `main`. Every PR gets two checks within about a minute: **Backend** (`manage.py test` with no app labels, plus `manage.py check`) and **Frontend** (`npm test`, `npm run build`). No secrets, nothing to configure.
+
+- **A red X on your PR means do not press Merge.** Tonight #34 and #42 both went into `main` without the suite and left it red; each was caught only because someone happened to look. This is the thing that stops that.
+- It is **advisory**, not a required check: it will never block an emergency fix.
+- It does not replace running the suite on fresh `main` after you merge. CI tests your PR against the `main` it was cut from.
+- `npm test` is now the whole frontend suite (it used to skip the two auth test files), and the backend suite is `manage.py test` with **no labels** (`test api catalogue` skips three apps). README has the three commands.
+- When you report a result, name the command and quote its output line, e.g. "`python manage.py test` → Ran 217 tests in 6.951s / OK (skipped=3)", not "tests pass".

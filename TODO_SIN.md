@@ -284,3 +284,13 @@ Two additions, from Saketh. Please read the new "Merging close to the demo" sect
 - **I did not put it in `manifest.json` or `spatial.json`, on purpose.** `room_bundle.py` compares those byte for byte with the zip, so a new field would make `import-room.sh` fail for everyone with "Repository metadata differs". A test now fails if `openings` ever appears in either. If you would rather own openings in the manifest (and serve them on `Room`), that needs a re-packed bundle and is your call after the demo.
 - It feeds the region solver only: "by the window" now narrows the lit floor to the patch in front of the glazing. Nothing in your engine reads it.
 - For the real-GPU run: PlayCanvas 2.22.2 does support `KHR_materials_transmission` and your `requestSceneColorMap(true)` enables it. In software rendering the glazing reads as a flat pale panel. If frame rate is poor on the MacBook, that one line is the first lever; if the glass still looks flat there, a brighter emissive on that node would make the wall read as having an opening.
+
+## Note from Saketh's lane — CI now runs on every pull request (2026-09-20, 00:55)
+
+`.github/workflows/ci.yml` is on `main`. Every PR gets two checks within about a minute: **Backend** (`manage.py test` with no app labels, plus `manage.py check`) and **Frontend** (`npm test`, `npm run build`). No secrets, nothing to configure.
+
+- **A red X on your PR means do not press Merge.** Tonight #34 and #42 both went into `main` without the suite and left it red; each was caught only because someone happened to look. This is the thing that stops that.
+- It is **advisory**, not a required check: it will never block an emergency fix.
+- It does not replace running the suite on fresh `main` after you merge. CI tests your PR against the `main` it was cut from.
+- `npm test` is now the whole frontend suite (it used to skip the two auth test files), and the backend suite is `manage.py test` with **no labels** (`test api catalogue` skips three apps). README has the three commands.
+- When you report a result, name the command and quote its output line, e.g. "`python manage.py test` → Ran 217 tests in 6.951s / OK (skipped=3)", not "tests pass".

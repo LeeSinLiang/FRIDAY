@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 from django.http import QueryDict
@@ -93,6 +94,10 @@ class ParamTests(SimpleTestCase):
 
 class SearchEndpointTests(SimpleTestCase):
     def setUp(self):
+        # These tests are about shape and backend choice; the results filter has its own tests.
+        flag = mock.patch.dict(os.environ, {"SEARCH_RESULTS_REQUIRE_MODEL": "0"})
+        flag.start()
+        self.addCleanup(flag.stop)
         # Hero feed only, so the expected totals stay readable.
         patcher = mock.patch("catalogue.views.load_catalogue", return_value=load_listings())
         patcher.start()

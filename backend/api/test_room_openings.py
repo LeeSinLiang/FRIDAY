@@ -41,8 +41,14 @@ class RoomOpeningsTests(SimpleTestCase):
         bundle = load_script('room_bundle')
         self.assertNotIn('openings.json', bundle.FILES)
         for name in ('manifest.json', 'spatial.json'):
-            self.assertNotIn('openings', json.loads((ROOM / name).read_text()).get('room', {}))
-            self.assertNotIn('openings', json.loads((ROOM / name).read_text()))
+            for key in ('openings', 'portals'):
+                self.assertNotIn(key, json.loads((ROOM / name).read_text()).get('room', {}))
+                self.assertNotIn(key, json.loads((ROOM / name).read_text()))
+
+    def test_portals_are_axis_aligned_and_the_demo_room_applies_none_yet(self):
+        # Applying the measured west portal changes two rehearsed demo numbers; that is Saketh's decision, not a default.
+        self.assertEqual(self.openings['portals'], [])
+        self.assertIn('p-west', self.openings['portalsNote'])
 
     @unittest.skipUnless(MODEL.is_file(), 'the licensed room model is not imported on this machine')
     def test_the_window_is_where_the_model_has_its_glass(self):

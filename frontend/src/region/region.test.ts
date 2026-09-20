@@ -3,12 +3,14 @@ import test from "node:test";
 import "./clauses.test";
 import "./cataloguePlacement.test";
 import "./rooms.test";
+import "./floor.test";
 import "../catalogue/quietSave.test";
 import "../catalogue/shelf.test";
 import type { Listing } from "../lib/types";
 import { findOpenPose, validatePlacement } from "../scene/placement";
 import type { Instance, Pose, Product, Room } from "../scene/types";
-import { listingToProduct, mmToCm, placeToCm, wallRect } from "./boundary";
+import { listingToProduct, mmToCm, placeToCm } from "./boundary";
+import { floorRegion, wallEdges } from "./floor";
 import { countFree, footprintRect, intersect, nearestLegal, newMask, pointCm, stateAtPoint, union } from "./grid";
 import { invariantMask } from "./invariants";
 import { seeded, type Rng } from "./rng";
@@ -173,8 +175,8 @@ test("boundary: mm become cm in one place, walls map to compass sides, listings 
   assert.deepEqual(placeToCm([
     { k: "distance_min", ref: { kind: "any_wall" }, mm: 1524 }, { k: "near", ref: { kind: "window", id: "w1" } },
   ]), [{ k: "distance_min", ref: { kind: "any_wall" }, cm: 152.4 }, { k: "near", ref: { kind: "window", id: "w1" } }]);
-  assert.deepEqual([wallRect(room, "n"), wallRect(room, "e")],
-    [{ minX: 0, maxX: 600, minZ: 0, maxZ: 0 }, { minX: 600, maxX: 600, minZ: 0, maxZ: 500 }]);
+  assert.deepEqual([wallEdges(floorRegion(room), "n"), wallEdges(floorRegion(room), "e")].map((edges) => edges.map((edge) => edge.rect)),
+    [[{ minX: 0, maxX: 600, minZ: 0, maxZ: 0 }], [{ minX: 600, maxX: 600, minZ: 0, maxZ: 500 }]]);
   const listing: Listing = { id: "ikea-193.025.39", source: "ikea", title: "POÄNG armchair", category: "armchair", price_cents: 12900,
     dims_mm: { w: 680, d: 820, h: 1000 }, model_url: null, thumb_url: "", colour_hex: ["#c9a77c"], materials: ["birch"] };
   assert.deepEqual(listingToProduct(listing), { productId: "ikea-193.025.39", name: "POÄNG armchair", widthCm: 68, depthCm: 82,
@@ -187,7 +189,9 @@ test("debug SVG shows the room, each placed item, the lit region and unobserved 
     openings: [{ id: "d1", kind: "door", wall: "w", startCm: 60, widthCm: 90 }] };
   const svg = toSvg(scene, invariantMask(scene, { product: chair }, 0), { title: "chair <test>" });
   assert.match(svg, /^<svg xmlns="http:\/\/www.w3.org\/2000\/svg" viewBox="-30 -30 660 560"/);
-  assert.match(svg, /<rect x="0" y="0" width="600" height="500" fill="none"/);
+  // The outline is the floor's real boundary, piece by piece, not a rectangle drawn around it.
+  for (const wall of ['x1="0" y1="0" x2="600" y2="0"', 'x1="0" y1="500" x2="600" y2="500"', 'x1="0" y1="0" x2="0" y2="500"', 'x1="600" y1="0" x2="600" y2="500"'])
+    assert.ok(svg.includes(`<line ${wall} stroke="#2b2b2b" stroke-width="6"/>`), `wall ${wall}`);
   const points = /<polygon points="([^"]+)"/.exec(svg)?.[1].split(" ").sort();
   assert.deepEqual(points, ["252.5,140.0", "252.5,360.0", "347.5,140.0", "347.5,360.0"]); // sofa, quarter turn: 95 x 220
   assert.match(svg, /<title>door d1<\/title>/);
