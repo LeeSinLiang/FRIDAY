@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { PRODUCTS, ROOM } from "./fixtures";
-import { createSceneSyncController, parseSceneSnapshot, sceneFingerprint, type SyncStatus } from "./useSceneSync";
+import { createSceneSyncController, parseSceneSnapshot, sceneFingerprint, type SyncStatus, canLeaveRoom, LEAVE_AFTER_FAILURES } from "./useSceneSync";
 import type { Instance } from "./types";
 
 const instance = { instanceId: "one", productId: PRODUCTS[0].productId, pose: { xCm: 150, zCm: 200, yawRad: 0 } };
@@ -38,13 +38,18 @@ test("scene fingerprint ignores property order and distinguishes physical pose c
 });
 
 const flush = () => new Promise<void>((resolve) => setImmediate(resolve));
-function harness() {
+function memoryStore() {
+  const items = new Map<string, string>();
+  return { items, getItem: (k: string) => items.get(k) ?? null, setItem: (k: string, v: string) => void items.set(k, v), removeItem: (k: string) => void items.delete(k) };
+}
+function harness(options: { storage?: ReturnType<typeof memoryStore>; roomId?: string } = {}) {
   const requests: { init: RequestInit; resolve: (response: Response) => void; reject: (error: Error) => void }[] = [];
   const replacements: Instance[][] = [];
   const latest = { current: { instances: [] as Instance[], interactionActive: false, replace: (instances: Instance[]) => replacements.push(instances) } };
   let state = { ready: false, status: "loading" as SyncStatus, message: "", revision: null as number | null };
   const controller = createSceneSyncController(latest, (next) => { state = next; }, {
     csrfToken: () => "test-csrf-token",
+    storage: options.storage ?? memoryStore(), roomId: options.roomId ?? "default",
     fetch: (_url, init) => new Promise<Response>((resolve, reject) => requests.push({ init: init!, resolve, reject })),
   });
   const respond = (index: number, revision: number, xCm = 150) => {
@@ -268,4 +273,104 @@ test("an unchanged poll response does not erase edits made while it was pending"
   h.respond(2, 4, 155);
   await flush();
   assert.equal(h.state().status, "saved");
+});
+
+test("DEADLOCK: a save that never succeeds must not trap the user in a room", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const storage = memoryStore();
+  const h = harness({ storage, roomId: "default" });
+  t.after(() => h.controller.dispose());
+  h.respond(0, 3);
+  await flush();
+  assert.equal(canLeaveRoom(h.state(), false), true, "a saved room can always be left");
+  h.edit(155);
+  assert.equal(canLeaveRoom(h.state(), false), false, "a merely pending save is worth waiting 400 ms for");
+  t.mock.timers.tick(400);
+  for (let failure = 1; failure <= 6; failure++) {
+    h.requests[h.requests.length - 1].resolve(busy());
+    await flush();
+    assert.equal(canLeaveRoom(h.state(), false), failure >= LEAVE_AFTER_FAILURES, `after ${failure} failed saves`);
+    assert.equal(canLeaveRoom(h.state(), true), false, "never mid-drag");
+    t.mock.timers.tick(8000);
+  }
+  // And leaving costs nothing: the layout is parked in the browser under this room.
+  const parked = JSON.parse(storage.items.get("friday:pending-scene:default")!);
+  assert.deepEqual([parked.baseRevision, parked.instances[0].pose.xCm], [3, 155]);
+});
+
+test("coming back to a room restores the layout that could not be saved, and saves it", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const storage = memoryStore();
+  storage.setItem("friday:pending-scene:studio", JSON.stringify({ baseRevision: 3, instances: [{ ...instance, pose: { ...instance.pose, xCm: 155 } }] }));
+  storage.setItem("friday:pending-scene:default", JSON.stringify({ baseRevision: 3, instances: [] }));
+  const h = harness({ storage, roomId: "studio" });
+  t.after(() => h.controller.dispose());
+  h.respond(0, 3, 150);
+  await flush();
+  assert.equal(h.replacements[h.replacements.length - 1][0].pose.xCm, 155, "the parked layout is back on screen");
+  assert.equal(storage.items.has("friday:pending-scene:studio"), false);
+  assert.equal(storage.items.has("friday:pending-scene:default"), true, "another room's parked layout is not touched");
+  h.controller.reconcile();
+  t.mock.timers.tick(400);
+  assert.equal(JSON.parse(String(h.requests[1].init.body)).instances[0].pose.xCm, 155, "and it is sent to the server");
+  h.respond(1, 4, 155);
+  await flush();
+  assert.equal(h.state().status, "saved");
+});
+
+test("a parked layout made against an older revision is dropped, not replayed over someone else's room", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const storage = memoryStore();
+  storage.setItem("friday:pending-scene:default", JSON.stringify({ baseRevision: 2, instances: [{ ...instance, pose: { ...instance.pose, xCm: 999 } }] }));
+  const h = harness({ storage });
+  t.after(() => h.controller.dispose());
+  h.respond(0, 3, 150);
+  await flush();
+  assert.equal(h.replacements[h.replacements.length - 1][0].pose.xCm, 150);
+  assert.equal(storage.items.size, 0);
+});
+
+test("a successful save clears the parked copy", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const storage = memoryStore();
+  const h = harness({ storage });
+  t.after(() => h.controller.dispose());
+  h.respond(0, 3);
+  await flush();
+  h.edit(155);
+  t.mock.timers.tick(400);
+  h.requests[1].resolve(busy());
+  await flush();
+  assert.equal(storage.items.size, 1);
+  t.mock.timers.tick(500);
+  h.respond(2, 4, 155);
+  await flush();
+  assert.equal(storage.items.size, 0);
+});
+
+test("the server dying AFTER load blocks nothing: polls fail quietly, a new edit is still retried and parked", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const storage = memoryStore();
+  const h = harness({ storage });
+  t.after(() => h.controller.dispose());
+  h.respond(0, 3);
+  await flush();
+  t.mock.timers.tick(2000); // a background poll goes out...
+  h.requests[1].resolve(busy()); // ...and the server is gone
+  await flush();
+  assert.equal(h.state().ready, true);
+  assert.ok(!/busy|\d{3}/i.test(h.state().message), h.state().message);
+  assert.equal(canLeaveRoom(h.state(), false), true);
+  h.edit(155); // the user places something anyway
+  t.mock.timers.tick(400);
+  const put = h.requests[h.requests.length - 1];
+  assert.equal(put.init.method, "PUT", "a failed poll must not stop saves");
+  put.resolve(busy());
+  await flush();
+  assert.equal(JSON.parse(storage.items.get("friday:pending-scene:default")!).instances[0].pose.xCm, 155);
+  t.mock.timers.tick(500);
+  h.respond(h.requests.length - 1, 4, 155); // the server comes back
+  await flush();
+  assert.equal(h.state().status, "saved");
+  assert.equal(storage.items.size, 0);
 });
