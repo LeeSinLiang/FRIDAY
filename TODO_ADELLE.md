@@ -21,13 +21,19 @@ Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if
 
 ## In progress
 
-- Table asset (the other priority item) not started yet. Bookshelf and dresser assets requested but blocked on getting their source image files (didn't save to disk in this session — same issue as one earlier image).
+- Dresser (HEMNES-style black-brown) still blocked on getting a usable source image file. Bar stool, sideboard, nightstand not started (no matching stub catalogue entry, would need new listings.json rows like the bookshelf).
 
 ## Next
 
-- Table is still the one priority item from `collaborator-handoff.md` with nothing delivered.
-- **Do not merge `codex/adelle-sofa-bed-assets` into `main` as-is** — see Blockers below. Needs a `multi_image_to_3d` regeneration pass with extra angle photos before it will pass the backend suite.
-- Open both sofa and bed in Blender to inspect actual proportions against the source photos.
+- **Do not merge `codex/adelle-sofa-bed-assets`, `codex/adelle-bookshelf-coffeetable-assets`, or `codex/adelle-lisabo-hektar-stockholm-assets` into `main` as-is** — each has at least one asset failing `backend/api/test_furniture_assets.py`. See each branch's own notes doc for exact numbers.
+- Open the four failing assets (sofa, bed, coffee table, LISABO table, HEKTAR lamp — that's five, not four) in Blender to inspect real proportions against source photos, or regenerate via `multi_image_to_3d`.
+- For any future round/flat object (mirrors, wall art, rugs, clocks): inspect the raw axis assignment before fitting — see the mirror orientation bug below.
+
+## This branch (`codex/adelle-lisabo-hektar-stockholm-assets`)
+
+- Pushed model_url updates (not new listings — these four already existed as stub catalogue entries) for `ikea-702.211.42` (LISABO table), `ikea-403.608.74` (LISABO chair), `ikea-805.109.92` (HEKTAR floor lamp), `ikea-403.284.34` (STOCKHOLM mirror). Generated `should_texture=true, enable_pbr=true`, compressed via `gltf-transform` (8.3-9.9MB/28-30k tri raw → 2.0-2.5MB/11-12k tri).
+- **Chair and mirror PASS the dimension check cleanly.** Table and lamp FAIL (table width off 9.6cm vs ~4.2cm tolerance; lamp width off 72.5cm — the worst miss of any asset this session, likely the angled lamp arm's reach being captured instead of the tripod base footprint).
+- **Caught a real orientation bug on the mirror before it shipped**: raw generation put the mirror's thin axis on height instead of depth (reconstructed as a disc lying on the floor, not hanging on a wall). Fixed with a lossless -90° root-node rotation before the usual height-fit; the fix itself is not checked in (was a throwaway script), but the resulting corrected GLB is. Full writeup in `docs/frontend/3d-object/lisabo-hektar-stockholm-asset-notes.md`.
 
 ## Done
 
