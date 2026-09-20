@@ -79,3 +79,7 @@ Record all agent work here when working for Sin. Include status, file paths, ver
 ## Blockers / handoff
 
 - Recommend React/TypeScript/Vite + R3F/drei for the confirmed scope. Incoming room format, units, and separately addressable walls still require teammate agreement; these do not block the empty-room fixture.
+
+- 2026-09-19: Started collaborator room bundle/import workflow. Added scripts/room_bundle.py, scripts/import-room.sh and indexed docs/frontend/room-capture/team-room-setup.md. Preserve branch and teammate changes; local ZIP only, no upload. Integrity, metadata compatibility, safe destination and non-overwrite verification pending.
+
+- Collaborator room sharing complete locally: four importer regressions passed (roundtrip/idempotence, checksum/metadata mismatch, archive paths/corruption, existing files/symlink protection). Packaged current Cg Arch room in ignored .room-preparation/sharing/friday-cg-arch-room.zip with companion SHA-256; real full-size import into temporary clean fixture verified byte-identical GLB. Setup doc indexed. No Blender/server jobs, upload, branch switch, commit or push. Importer/scripts must reach collaborator checkout with the next code checkpoint.

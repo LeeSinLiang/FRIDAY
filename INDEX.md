@@ -19,6 +19,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Frontend
 
+- [Team room setup](docs/frontend/room-capture/team-room-setup.md) — one-command checked import of the prepared room, packaging and sharing instructions.
+
 | Document | Purpose |
 | --- | --- |
 | [docs/frontend/editor-implementation.md](docs/frontend/editor-implementation.md) | Implemented editor, integration contracts, commands, verification, and remaining handoff |
