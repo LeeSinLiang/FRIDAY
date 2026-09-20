@@ -97,6 +97,27 @@ Every folder under `shared/models/furniture/` with a `metadata.json` is checked 
 
 Generated models usually arrive normalised around the origin. `python3 scripts/fit_glb.py <model.glb> <height_cm>` scales one **uniformly** to its true height, centres it and stands it on the floor by adding a root node: lossless, and safe to re-run after a re-export. It never stretches a model to force its box to match.
 
+### Fitting a model to its listing, and when not to (2026-09-20)
+
+```bash
+python3 scripts/fit_glb.py <model.glb> <height_cm>                        # uniform: the default
+python3 scripts/fit_glb.py <model.glb> <width_cm> <depth_cm> <height_cm>  # per axis, capped at 10%
+```
+
+Both are lossless (one root node carries the transform) and repeatable (a second fit replaces the first). The per-axis form exists because single-photo generators get proportions a few percent wrong. It **never stretches past 10% anisotropy**, and the suite reads that from each GLB's own root node, not from what `metadata.json` claims.
+
+The cap is not about rendering quality. It is the line between *this model is the product, slightly imprecise* and *this is a different object stretched into the product's shape*. In an app whose whole claim is that what you see is true to scale, the second is a lie with the product's name on it. If the script exits 1 (still outside 2 cm or 3% at the cap), **leave the model unbound**: the listing's `model_url` stays `null`, and `metadata.json` gets an `"unbound": "<why>"` line. The listing still places, as a true-size stand-in. The suite accepts an unbound asset only if no listing links to it.
+
+| Asset | Outcome |
+| --- | --- |
+| HERRÅKRA armchair, LISABO chair, STOCKHOLM mirror | uniform fit, inside tolerance |
+| LISABO dining table | per-axis, 6.83%, exact |
+| RAMNEFJÄLL bed | per-axis **at the 10% cap**, lands 162.7 × 212.0 × 99.3 cm against 162 × 212 × 100: 0.67 cm residual on two axes, recorded in its `metadata.json` so nobody reads it as exact |
+| EKTORP 2-seat sofa | **unbound**: needs 22.6%; at the cap still 6.5 cm off in width and depth |
+| HEKTAR floor lamp | **unbound**: the arm reaches 103.5 cm, the listed footprint is the 31 cm base; no scale fixes that |
+
+**One grandfathered exception to the size budget, and only one.** `modular-sofa-grey-scan` (Sin's, 10.8 MB, 46k triangles) predates the 5 MB / 30k budget and is pinned at exactly its current size in the test. It is a single exception. A second one ends the budget: a dozen 10 MB models is a demo that stalls on load.
+
 ## Acceptance check before expanding the catalogue
 
 - Open/re-import the exported GLB and confirm that textures and all furniture parts are present.
