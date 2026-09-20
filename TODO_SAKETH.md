@@ -29,6 +29,23 @@ For each import, verify expected/actual counts, rejected rows, stable IDs on a s
 
 ## Done
 
+- **First real 3D asset: HERRÅKRA armchair fixed, listed and wired (2026-09-20).** Branch `codex/saketh-herrakra-chair`, off fresh `main`.
+  - Adele had not pushed a fix or replied, so per Saketh the transform was baked here. Her commit was cherry-picked with her authorship; the `TODO_ADELLE.md` conflict was resolved keeping both sides.
+  - `backend/api/glb.py` (stdlib GLB reader, world-space bounds, `fit_to_height`), `scripts/fit_glb.py`. Applied to her `model.glb`: uniform scale 0.3845, lift 0.3654 m, as a root node. Lossless: the binary chunk is byte-identical. Box 182.4 × 189.9 × 175.3 cm → 70.1 × 73.0 × 67.4 cm, feet at y = 0.
+  - Catalogue: `ikea-405.355.47` HERRÅKRA armchair, 710 × 660 × 730 mm, $149, `model_url` set, colour from the existing palette. Data, not a schema change. Hero count 40 → 41; eight count assertions updated. Elasticsearch re-ingested: 12,041, mapping unchanged.
+  - **The cross-lane bbox assertion is real now:** `backend/api/test_furniture_assets.py` checks every asset folder against its listing (2 cm or 3%, whichever is larger), floor contact, centring, size and triangle budget, and proves it would catch a unit-cube export. Units still cross in exactly two places.
+  - Browser: "an armchair" lists HERRÅKRA; hover lights the floor; placed at (485, 140); Objects panel "3D model loaded"; top view shows the 71 × 66 cm footprint outline wrapping the model, seat facing +Z.
+  - `docs/demo/run-of-show.md` added and indexed (the demo hovers HERRÅKRA now, and ends in the Studio). Asset rules and triangle target added to the collaborator handoff; note to Adele.
+  - Verification: backend 179 tests, frontend 65, build OK. Processes stopped; 0 listeners on 8211/5211/9334.
+
+- **A failing save can no longer trap the user in a room (2026-09-20).** Branch `codex/saketh-room-switch-never-stuck`, off fresh `main` after merging PR #27 (suite re-run on that `main`: 175 / 65 / build OK). Sin was messaged directly (commit comment on `e93075a`) about the assertion of his that PR #26 changed.
+  - The trap Saketh spotted: PR #25 made room links wait for a saved scene; PR #26 made a failing save retry forever. With a wedged backend the Studio room would have been unreachable on stage.
+  - Fix, keeping both halves: `canLeaveRoom()` reopens the links after two failed saves or when offline/in conflict; from the first failed save the layout is parked per room in `localStorage` (`frontend/src/scene/pendingEdits.ts`), restored on return if the server still has that revision, then saved normally; cleared on success.
+  - Found by the dead-backend browser test: a failed background **poll** still set the old hard `offline` block, which stopped saves, so an item placed while the server was down was neither retried nor parked, and "The server is busy." leaked onto the status line. After the initial load nothing transient blocks anything now.
+  - Browser verification (Django and Vite started separately on 8211/5211, Django killed mid-session): status went to "Reconnecting. Your room is safe in this browser."; a chair placed with the backend dead showed "Saving your room…", the Studio link was inert after one failure and live after two, the layout was parked (`default=2`); switching to Studio worked; with the backend restarted and the living room reopened, the parked layout was restored and saved (server revision 2, both chairs).
+  - Answer to Saketh's question on PR #26's numbers: 3,297 and 1,733 were **attempts**. Successful saves went from 1,000 to 1,733 in the same 12 s, so `IMMEDIATE` bought throughput as well as correctness.
+  - Verification: frontend 70 tests (6 new), build OK, backend unchanged at 175. Processes stopped; 0 listeners on 8211/5211/9334.
+
 - **`AGENTS.md`: trust the remote, not your terminal (2026-09-20).** Branch `codex/saketh-merge-discipline`, off fresh `main` after merging PR #26 (`main` re-verified: 175 backend tests, 65 frontend tests, build OK; merged branch deleted locally and remotely; remote head compared by hash). One block holding the push-verification rules and the after-merge sequence, with the reason each exists. Posted to `TODO_SIN.md`, `TODO_WILLIAM.md` and `TODO_ADELLE.md`. Documentation only.
 
 - **Storage may delay a save, never refuse a placement (2026-09-20).** Branch `codex/saketh-storage-never-blocks`, off fresh `main` after merging PR #25 (`main`: 174 backend tests with William's accounts/Visa/checkout work in, 61 frontend tests, build OK). PR #25 first got a review fix: room switching is inert until the scene is saved.
@@ -142,7 +159,7 @@ For each import, verify expected/actual counts, rejected rows, stable IDs on a s
 
 ## Blockers / handoff
 
-- **Cross-lane, not built (no assets yet):** units stay millimetres in the catalogue and centimetres in the 3D pipeline, converted as `mm / 10` at Sin's boundary. Wanted later: a check that a listing's GLB bounding box agrees with `dims_mm / 10`, failing loudly instead of rendering at the wrong scale. Needs Sin's loader and real `model_url` assets.
+- **Cross-lane, now built** (`backend/api/test_furniture_assets.py`), kept here for the reasoning: units stay millimetres in the catalogue and centimetres in the 3D pipeline, converted as `mm / 10` at Sin's boundary. Wanted later: a check that a listing's GLB bounding box agrees with `dims_mm / 10`, failing loudly instead of rendering at the wrong scale. Needs Sin's loader and real `model_url` assets.
 
 - Phase E note: seeded listings must draw colours from a bounded palette (under 2,000 distinct), or the colour filter's palette aggregation truncates and the backends drift.
 

@@ -44,6 +44,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 | [docs/frontend/room-capture/research-and-integration-plan.md](docs/frontend/room-capture/research-and-integration-plan.md) | Selected first-person PlayCanvas/SuperSplat pivot, local reconstruction research, GLB furniture and spatial integration |
 | [docs/frontend/rendering-and-furniture-workflow.md](docs/frontend/rendering-and-furniture-workflow.md) | Rendering-engine comparison and furniture asset workflow research |
 | [docs/frontend/3d-object/collaborator-handoff.md](docs/frontend/3d-object/collaborator-handoff.md) | Furniture collaborator instructions, GLB deliverables, dimensions, and acceptance checks |
+| [docs/frontend/3d-object/herrakra-chair-asset-notes.md](docs/frontend/3d-object/herrakra-chair-asset-notes.md) | HERRÅKRA armchair asset delivery notes, sourcing, and known limitations vs. the handoff spec |
 | [docs/frontend/design/visual-directions.md](docs/frontend/design/visual-directions.md) | Three futuristic furniture-editor concepts, saved images, and generation prompts |
 
 ### Backend
@@ -53,6 +54,10 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 - [Spatial engine tools and screenshots](docs/backend/contracts/spatial-engine-tools.md) — explicit placement results, dry runs, selectable cameras, revision-specific PNGs, and Python agent adapters.
 
 - [Scene persistence and agent command API](docs/backend/contracts/scene-api.md) — session storage, validation, revisions, CSRF, and agent adapter handoff.
+
+### Demo
+
+- [Demo run of show](docs/demo/run-of-show.md) — what to click, in order, what each beat proves, and what happens when a dependency fails.
 
 ### Setup and tooling
 

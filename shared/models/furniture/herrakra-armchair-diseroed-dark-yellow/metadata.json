@@ -1,0 +1,31 @@
+{
+  "productId": "herrakra-armchair-diseroed-dark-yellow",
+  "modelUrl": "/models/furniture/herrakra-armchair-diseroed-dark-yellow/model.glb",
+  "thumbnailUrl": "/models/furniture/herrakra-armchair-diseroed-dark-yellow/thumbnail.png",
+  "widthCm": 71,
+  "depthCm": 66,
+  "heightCm": 73,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "source": {
+    "product": "IKEA HERRÅKRA armchair, Diseröd dark yellow (40535547)",
+    "dimensionsVerifiedAt": "https://www.ikea.com/us/en/p/herrakra-armchair-diseroed-dark-yellow-40535547/",
+    "generation": "Higgsfield image_to_3d (Meshy), single reference image, should_texture=true, enable_pbr=false"
+  },
+  "knownLimitations": [
+    "No PBR maps — plain baked texture only, not yet meeting the collaborator-handoff PBR requirement",
+    "Generated from a single 160x160px thumbnail image (no additional angles) — geometry on the underside/back is inferred, not verified",
+    "Out of the agreed build order: collaborator-handoff.md specifies sofa + table before the chair",
+    "Axes verified from the geometry (proportions match +Y up; backrest sits at -Z so the seat faces +Z). Scale and pivot were wrong as generated and are corrected by a root-node transform, see `fit`.",
+    "Measured box after the fit is 70.1 x 73.0 x 67.4 cm against the listing's 71 x 73 x 66: uniform scale only, so width and depth are within 2%, not exact."
+  ],
+  "catalogueListingId": "ikea-405.355.47",
+  "fit": {
+    "appliedBy": "scripts/fit_glb.py",
+    "uniformScale": 0.3845,
+    "liftM": 0.3654,
+    "note": "Generator output was normalised to a ~1.9 m cube centred on the origin. A root node now scales it uniformly to 73 cm tall and stands it on y = 0. Lossless; re-run after any re-export."
+  }
+}
