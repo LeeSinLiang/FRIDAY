@@ -19,10 +19,10 @@ From the repository root, after `./setup.sh`:
 ```sh
 python3 scripts/gaussian_room/prepare_haussmann.py "$HOME/Downloads/HAUSSMANN APARTMENT.zip"
 python3 scripts/gaussian_room/review_surface.py
-BACKEND_PORT=8222 FRONTEND_PORT=5222 ./run-local.sh
+./run-local.sh
 ```
 
-Open `http://localhost:5222/?room=haussmann-apartment`; append `&perf=1` for the development observer. Preparation uses the pinned SplatTransform 3.4.2, checks the exact reviewed source hash and license, preserves all Gaussians without cropping/decimation, and produces a complete SOG plus a separate 5 cm voxel-shell reference GLB. It refuses to overwrite an existing immutable SOG; preserve existing assets before repeating. Generated binary assets are ignored by Git. Each teammate must run preparation locally after downloading the ZIP. The existing Cg Arch room importer is specific to that room and cannot import this fixture.
+Haussmann is the default at `http://127.0.0.1:5173/` after running `./run-local.sh`. Open the mesh room with `http://127.0.0.1:5173/?roomId=cg-arch-interior`. Explicit `?roomId=haussmann-apartment` and the older `?room=haussmann-apartment` alias also work; append `&perf=1` to an explicit room URL for the development observer. Missing Gaussian assets produce a provisioning error instead of silently selecting a mesh room. Preparation uses the pinned SplatTransform 3.4.2, checks the exact reviewed source hash and license, preserves all Gaussians without cropping/decimation, and produces a complete SOG plus a separate 5 cm voxel-shell reference GLB. It refuses to overwrite an existing immutable SOG; preserve existing assets before repeating. Generated binary assets are ignored by Git. Each teammate must run preparation locally after downloading the ZIP. The existing Cg Arch room importer is specific to that room and cannot import this fixture.
 
 Generated files under `shared/rooms/haussmann-apartment/assets/`:
 
@@ -40,7 +40,7 @@ The window wall/recesses are fixed. Closed doors are not portals to adjoining ro
 
 ## Integration and verification evidence
 
-Work was prepared in `/private/tmp/HackMIT2026-haussmann` on `codex/haussmann-gaussian` from `9641a99`, then reconciled with fetched `origin/main` and merged into local main at `ae03845`. The original dirty checkout and cabinet work remain untouched. Shared integration is limited to the room selector in `frontend/src/SplatEditor.tsx` and a Haussmann-only `GSPLATDATA_LARGE` setting in `frontend/src/scene/playcanvas/runtime.ts`. The latter improves reverse headings that smear with compact unified storage. Original PLY and packed SOG standalone reverse renders were clean; this is a renderer-path issue, not justification for cropping the room. No production backend, mesh preparation, furniture dimensions, dependencies or default room changes. Reconciliation with fetched main required a narrow backend asset-test correction: the pre-existing generated sofa is checked against its scene fixture instead of inventing a retail catalogue listing, retaining its documented size/triangle ceiling.
+Work was prepared in `/private/tmp/HackMIT2026-haussmann` on `codex/haussmann-gaussian` from `9641a99`, then reconciled with fetched `origin/main` and merged into local main at `ae03845`. The original dirty checkout and cabinet work remain untouched. Shared integration is limited to the room selector in `frontend/src/SplatEditor.tsx` and a Haussmann-only `GSPLATDATA_LARGE` setting in `frontend/src/scene/playcanvas/runtime.ts`. The latter improves reverse headings that smear with compact unified storage. Original PLY and packed SOG standalone reverse renders were clean; this is a renderer-path issue, not justification for cropping the room. That initial integration did not change the default room. The subsequent user-requested default is now Haussmann; mesh rooms remain available by roomId query. No production backend, mesh preparation, furniture dimensions or dependencies changed. Reconciliation with fetched main required a narrow backend asset-test correction: the pre-existing generated sofa is checked against its scene fixture instead of inventing a retail catalogue listing, retaining its documented size/triangle ceiling.
 
 Local ignored evidence is under `.scratch/gaussian/`:
 

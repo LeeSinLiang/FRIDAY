@@ -73,7 +73,7 @@ export async function inspectRoomPackages(assetRoot = root) {
     else packages.set(room.name, files);
   }
   if (!packages.has("empty-room")) throw Error("The required tracked empty-room fallback is unavailable");
-  return { packages, warnings, defaultRoomId: packages.has("cg-arch-interior") ? "cg-arch-interior" : "empty-room" };
+  return { packages, warnings, defaultRoomId: "haussmann-apartment" };
 }
 
 /** Stream prepared room assets; large source captures never enter a Vite bundle. */
