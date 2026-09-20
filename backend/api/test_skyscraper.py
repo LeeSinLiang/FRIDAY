@@ -16,7 +16,7 @@ class SkyscraperTests(TestCase):
         with TemporaryDirectory() as temporary:
             target = Path(temporary) / 'runtime_shared'
             package_shared(source, target)
-            for room_id in ['empty-room', *FIXTURE['legacyRoomIds'], *[floor['roomId'] for floor in FIXTURE['floors']]]:
+            for room_id in ['haussmann-apartment', 'empty-room', *FIXTURE['legacyRoomIds'], *[floor['roomId'] for floor in FIXTURE['floors']]]:
                 self.assertTrue((target / 'rooms' / room_id / 'manifest.json').is_file())
                 self.assertTrue((target / 'rooms' / room_id / 'spatial.json').is_file())
             self.assertFalse(list(target.rglob('*.glb')))

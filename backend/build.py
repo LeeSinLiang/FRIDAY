@@ -11,7 +11,8 @@ def package_shared(source=None, target=None):
     if target.exists():
         shutil.rmtree(target)  # This directory contains only regenerable build output.
     files = [source/'scene-fixtures.json', source/'public-rooms.json']
-    pending = [room['id'] for room in json.loads((source/'public-rooms.json').read_text())]
+    # App's homepage and cart preview open this room independently of the gallery.
+    pending = ['haussmann-apartment', *[room['id'] for room in json.loads((source/'public-rooms.json').read_text())]]
     seen = set()
     while pending:
         room_id = pending.pop(0)

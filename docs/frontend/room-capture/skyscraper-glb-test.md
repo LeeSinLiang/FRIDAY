@@ -51,7 +51,7 @@ Trusted adapters call `api.engine_tools.get_scene_context(session_key, room_id)`
 
 ## Packaging and regression checks
 
-There is one current gallery entry and one shipped building GLB. All current/legacy contexts share that canonical asset. Backend packaging follows the explicitly declared level and legacy IDs (225 runtime JSON files), with no model, capture or private data copies. Existing scene/cart/account/payment and jump/gravity implementations remain unchanged; walking speed is intentionally increased by 1.5×.
+There is one current gallery entry and one shipped building GLB. All current/legacy contexts share that canonical asset. Backend packaging follows the explicitly declared level and legacy IDs (227 runtime JSON files, including the existing Haussmann homepage context), with no model, capture or private data copies. Existing scene/cart/account/payment and jump/gravity implementations remain unchanged; walking speed is intentionally increased by 1.5×.
 
 After correction: `manage.py test` → **Ran 269 tests in 12.271s / OK (skipped=5)**; `npm test` → **155 + 18 passed, 0 failures**; `npm run build` → **built in 3.23s**. Tests cover the entrance/mezzanine order, measured transforms, off-centre slanted-edge rejection, all-floor reference persistence, old layout coordinates, ordinary room routing and production metadata closure.
 
