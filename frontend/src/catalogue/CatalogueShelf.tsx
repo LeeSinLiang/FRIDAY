@@ -8,6 +8,7 @@ import type { Listing } from "../lib/types";
 import type { Region } from "../region/useRegion";
 import { ROOM_CHOICES, ROOM_ID } from "../scene/fixtures";
 import { compileSentence, searchCatalogue, type Compiled } from "./api";
+import { canListen, fetchBackend, listen, type Listening, type TranscribeBackend } from "./transcribe";
 import "./shelf.css";
 
 type Props = {
@@ -54,6 +55,9 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const request = useRef<AbortController | null>(null);
+  const [voice, setVoice] = useState<TranscribeBackend>("browser");
+  const [listening, setListening] = useState<Listening | null>(null);
+  useEffect(() => { const controller = new AbortController(); void fetchBackend(controller.signal).then(setVoice); return () => controller.abort(); }, []);
 
   const run = async (text: string) => {
     request.current?.abort();
@@ -73,6 +77,22 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
     }
   };
   useEffect(() => { void run(sentence); return () => request.current?.abort(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Press to talk, press again to stop. What was heard lands in the box and is searched like typed text.
+  const talk = async () => {
+    if (listening) { listening.stop(); return; }
+    try {
+      const session = await listen(voice);
+      setListening(session);
+      const heard = (await session.result).trim();
+      if (heard) { setSentence(heard); onPick(null); void run(heard); }
+      else setError("Didn’t catch that. Try again, or type it.");
+    } catch (caught) {
+      setError((caught as Error).message);
+    } finally {
+      setListening(null);
+    }
+  };
 
   const submit = (event: FormEvent) => { event.preventDefault(); onPick(null); void run(sentence); };
   const dropped = region?.solution.dropped ?? [];
@@ -94,6 +114,12 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
       <form onSubmit={submit}>
         <input value={sentence} onChange={(event) => setSentence(event.target.value)} maxLength={300}
           aria-label="Describe what you are looking for" placeholder="a reading chair by the window, under $400" />
+        {canListen(voice) && (
+          <button type="button" className="mic" onClick={() => void talk()} aria-pressed={listening !== null}
+            aria-label={listening ? "Stop listening" : "Say what you are looking for"} title={listening ? "Stop" : "Speak"}>
+            {listening ? "■" : "🎙"}
+          </button>
+        )}
         <button className="go" disabled={busy}>{busy ? "…" : "Find"}</button>
       </form>
       {compiled && compiled.chips.length > 0 && (
