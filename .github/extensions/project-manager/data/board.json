@@ -130,19 +130,22 @@
           "id": "46dd9a0d-bb2e-4ae8-8a42-e035f8199f58",
           "title": "Import CC0 GLB asset metadata into a separate Elasticsearch index",
           "done": false,
-          "owner": "saketh"
+          "owner": "saketh",
+          "phase": "mvp"
         },
         {
           "id": "5f377efe-8281-4a31-bbf1-311b0661c8af",
           "title": "Normalize DummyJSON and WANDS reference products for Elasticsearch",
           "done": false,
-          "owner": "saketh"
+          "owner": "saketh",
+          "phase": "mvp"
         },
         {
           "id": "1baafdb6-1a43-4f24-bda1-a1746b5f46fe",
           "title": "Curate product-to-GLB links for placeable demo listings",
           "done": false,
-          "owner": "saketh"
+          "owner": "saketh",
+          "phase": "mvp"
         }
       ],
       "description": "Product records, dimensions, prices, assets, and filtered search."

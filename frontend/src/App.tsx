@@ -9,6 +9,7 @@ import {
 import CapturePanel from "./CapturePanel";
 import { Icon } from "./Icons";
 import { PRODUCTS, ROOM } from "./scene/fixtures";
+import { productOf, productsWith } from "./scene/products";
 import { SCENE_UNIT_CM } from "./scene/units";
 import { useSceneSync } from "./scene/useSceneSync";
 import { findOpenPose, validatePlacement } from "./scene/placement";
@@ -161,7 +162,7 @@ export default function App() {
   const [performanceSample, setPerformanceSample] =
     useState<PerformanceSample | null>(null);
   const selected = instances.find((i) => i.instanceId === selectedId);
-  const product = catalogue.find((p) => p.productId === selected?.productId);
+  const product = selected ? productOf(selected, catalogue) : undefined;
   useEffect(() => {
     selectedRowRef.current?.scrollIntoView({
       block: "nearest",
@@ -309,7 +310,7 @@ export default function App() {
             <Scene
               editingEnabled={sync.ready}
               instances={instances}
-              products={catalogue}
+              products={productsWith(catalogue, instances)}
               selectedId={selectedId}
               mode={mode}
               resetKey={resetKey}
@@ -382,9 +383,7 @@ export default function App() {
               </div>
             ) : (
               instances.map((instance, index) => {
-                const item = catalogue.find(
-                  (p) => p.productId === instance.productId,
-                )!;
+                const item = productOf(instance, catalogue)!;
                 return (
                   <button
                     ref={

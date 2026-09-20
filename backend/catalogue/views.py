@@ -1,6 +1,7 @@
 import logging
 import os
 
+from django.db import DatabaseError
 from elasticsearch import ApiError, TransportError
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
@@ -58,6 +59,16 @@ class CompileThrottle(AnonRateThrottle):
 
     scope = "compile"
     rate = "30/min"
+
+    def allow_request(self, request, view):
+        # Fail open. The counter lives in the project's cache, which may be a database table or a
+        # network service. A rate limiter that can take down the endpoint it protects is a worse
+        # trade than a briefly unthrottled endpoint; each request is still bounded on its own.
+        try:
+            return super().allow_request(request, view)
+        except (DatabaseError, OSError) as exc:
+            logger.warning("compile throttle unavailable, allowing the request: %s", type(exc).__name__)
+            return True
 
 
 # Public for the same reason as search. Each request is bounded (length cap, one retry, small output)

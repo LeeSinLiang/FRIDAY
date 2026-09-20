@@ -16,7 +16,9 @@ export type Product = {
   color: string;
   kind: "sofa" | "table" | "chair";
 };
-export type Instance = { instanceId: string; productId: string; pose: Pose };
+/** `product` is optional and additive: instances of the shared fixture products omit it, while an item
+ *  from the catalogue carries its own, so a scene does not depend on shared/scene-fixtures.json. */
+export type Instance = { instanceId: string; productId: string; pose: Pose; product?: Product };
 export type SceneEdit =
   | { type: "add"; instance: Instance }
   | { type: "setPose"; instanceId: string; pose: Pose }

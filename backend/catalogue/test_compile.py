@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest import mock
 
 from django.core.cache import cache
+from django.db import OperationalError
 from django.test import SimpleTestCase, override_settings
 from openai import APITimeoutError, AuthenticationError
 from rest_framework.test import APIClient
@@ -251,14 +252,14 @@ class RenderTests(SimpleTestCase):
         self.assertEqual(render(program), ["against the wall", "within 2 ft of the door"])
 
 
-# These endpoint tests need isolated throttle state without database access.
-# Keep the application's persistent auth cache in effect for every other suite.
-@override_settings(CACHES={
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "catalogue-compile-endpoint-tests",
-    },
-})
+# The compile throttle counts requests in the cache. These tests touch no database, so they pin an
+# in-memory cache rather than inherit whatever the project configures: with a database-backed cache
+# (the accounts work uses one) a SimpleTestCase would be refused the query. Runtime keeps the
+# project's cache, so rate limits still persist where the project wants them to.
+@override_settings(CACHES={"default": {
+    "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    "LOCATION": "catalogue-compile-endpoint-tests",
+}})
 class CompileEndpointTests(SimpleTestCase):
     def setUp(self):
         cache.clear()  # throttle counters live in the cache
@@ -293,6 +294,14 @@ class CompileEndpointTests(SimpleTestCase):
         with mock.patch.object(CompileThrottle, "rate", "2/min"), mock.patch("catalogue.views.compile_text", ok):
             statuses = [self.post({"text": "a chair"}).status_code for _ in range(3)]
         self.assertEqual(statuses, [200, 200, 429])
+        self.assertEqual(ok.call_count, 2)
+
+    def test_an_unreachable_cache_does_not_take_compile_down(self):
+        ok = mock.Mock(return_value=compile_module.CompileResult(Program(find=[], place=[]), "model", 1))
+        for failure in (OperationalError("no such table: friday_cache"), ConnectionRefusedError("cache server down")):
+            with mock.patch("rest_framework.throttling.SimpleRateThrottle.allow_request", side_effect=failure), \
+                    mock.patch("catalogue.views.compile_text", ok):
+                self.assertEqual(self.post({"text": "a chair"}).status_code, 200, type(failure).__name__)
         self.assertEqual(ok.call_count, 2)
 
     def test_search_is_not_throttled(self):
