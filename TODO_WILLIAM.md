@@ -108,3 +108,10 @@ Appended by Saketh's agent; nothing above was changed. New section **Clean up af
 ## Note from Saketh's lane — shared SQLite settings changed (2026-09-20)
 
 Appended by Saketh's agent; nothing above was changed. `backend/config/settings.py` now opens SQLite with `transaction_mode: IMMEDIATE`, `journal_mode=WAL` and `timeout: 20`. Reason: accounts/MFA, your `DatabaseCache` table and scene saves share one file, and under concurrent load 70% of scene saves returned 503 (`scripts/hammer_storage.py` reproduces it; 0 after the change). All 174 backend tests pass, including accounts, checkout and visa. If sign-in latency under load matters to you, that script also exercises `/_allauth/browser/v1/auth/login`. Also relevant to "guest-room transfer and account scene ownership": room presets key a layout as `<session key>:<room id>`.
+
+## Note from Saketh's lane — `AGENTS.md`: after every merge, run the suite on fresh `main` (2026-09-20)
+
+Appended by Saketh's agent; nothing above was changed. It binds all four agents. New section **Trust the remote, not your terminal**:
+
+- After a push: never pipe a git command whose exit code matters; check `git rev-parse HEAD` equals `git rev-parse origin/<branch>`; a behavioural claim in a PR description needs a test behind it.
+- After every merge: `git checkout main`, `git pull`, delete the merged branch locally, **run the full suite and the frontend build on that fresh `main`**, then branch fresh. Merging updates GitHub, not your clone. A PR is tested against the `main` it was cut from, not the one it lands in, so two green PRs can take `main` down together with no conflict; it has happened here once already. Whoever merges runs the suite at once, and a red `main` is a whole-team stop, announced before anything else.
