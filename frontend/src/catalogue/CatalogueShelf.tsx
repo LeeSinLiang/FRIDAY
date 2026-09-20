@@ -136,12 +136,17 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
         <p className="shelf-status"><code>voice configured: {voice}{heardBy ? ` · last transcript ANSWERED BY: ${heardBy.answeredBy}${heardBy.note ? ` (${heardBy.note})` : ""}` : " · nothing transcribed yet"}</code></p>
       )}
       {error && <p className="shelf-status refused" role="alert">{error}</p>}
-      <Status region={region} yawIndex={yawIndex} armed={armedId !== null} />
-      {dropped.length > 0 && (
-        <ul className="shelf-dropped">
-          {dropped.map((item, index) => <li key={index}>Couldn’t use “{item.clause.k.replace("_", " ")} {"id" in item.clause.ref && item.clause.ref.id ? item.clause.ref.id : item.clause.ref.kind.replace("_", " ")}”: {item.reason}</li>)}
-        </ul>
-      )}
+      {/* One fixed-height slot for everything that changes on hover. The panel is bottom-anchored and usually
+          at its max height, so a taller explanation used to shrink the list from the top, and the card under a
+          still pointer became a different card. */}
+      <div className={DEV ? "shelf-explain dev" : "shelf-explain"}>
+        <Status region={region} yawIndex={yawIndex} armed={armedId !== null} />
+        {dropped.length > 0 && (
+          <ul className="shelf-dropped">
+            {dropped.map((item, index) => <li key={index}>Couldn’t use “{item.clause.k.replace("_", " ")} {"id" in item.clause.ref && item.clause.ref.id ? item.clause.ref.id : item.clause.ref.kind.replace("_", " ")}”: {item.reason}</li>)}
+          </ul>
+        )}
+      </div>
       <ul className="shelf-results">
         {items.map((listing) => (
           <li key={listing.id}>

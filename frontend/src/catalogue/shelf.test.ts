@@ -1,0 +1,20 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+
+const source = (name: string) => readFile(new URL(name, `file://${process.cwd()}/src/catalogue/`), "utf8");
+
+test("what changes on hover sits in a fixed-height slot, so the card under a still pointer never becomes another card", async () => {
+  const css = await source("shelf.css");
+  const rule = css.match(/\.shelf-explain \{([^}]*)\}/)?.[1] ?? "";
+  assert.match(rule, /(^|[\s;])height: \d+px/, "a fixed height, not min-height or auto: the panel is bottom-anchored at its max height");
+  assert.match(rule, /overflow-y: auto/, "longer text scrolls inside the slot instead of pushing the list");
+  assert.match(css, /\.shelf-explain\.dev \{[^}]*height: \d+px/, "?dev=1 shows two more lines and needs its own fixed height");
+
+  const tsx = await source("CatalogueShelf.tsx");
+  const open = tsx.indexOf('"shelf-explain dev"');
+  const close = tsx.indexOf("</div>", open); // the slot's own closing tag: the first one after it opens
+  const order = [open, tsx.indexOf("<Status "), tsx.indexOf('className="shelf-dropped"'), close, tsx.indexOf('className="shelf-results"')];
+  assert.ok(order.every((at) => at >= 0), "markers present");
+  assert.deepEqual(order, [...order].sort((a, b) => a - b), "the status and the set-aside clauses are inside the slot, and the list comes after it");
+});
