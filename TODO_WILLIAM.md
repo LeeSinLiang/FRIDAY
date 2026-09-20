@@ -31,8 +31,10 @@ Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if
 
 ## Next
 
+- Hosted routing correction verified: `frontend/vercel.mjs` uses per-environment `FRIDAY_API_ORIGIN` plus explicit trailing-slash rewrites. Preview passes Neon concurrent-idempotency, authoritative pricing, secure cookies, CSRF refusal and scene persistence. SMTP is configured in both environments and provider TLS/authentication passes; inbox delivery still needs verification. Latest automated baseline: 229 backend tests (4 optional skips) and 138 frontend tests, plus production build.
+
 - Finish hosted verification for **Merge account and checkout routes with the pushed 3D editor** (`03bc6470-6a84-48d8-ba48-1df4ed0f3277`) and **Define guest-room transfer and account scene ownership** (`4147c58c-2029-40ef-93ee-537ddad4a25e`); implementation is now included above, not deferred. Keep both active until the deployed runtime passes.
-- Configure private SMTP/Visa settings, apply hosted migrations, verify paired previews, then create separate Production configuration and promote only the verified release. Real payment authorization and merchant ordering remain outside the sandbox contract.
+- Finish hosted browser verification and publish the configured separate Production pair. SMTP/Visa settings and both database migrations are complete. Real payment authorization and merchant ordering remain outside the sandbox contract.
 
 ## Done
 
