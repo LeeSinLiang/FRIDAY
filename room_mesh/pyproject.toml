@@ -1,0 +1,29 @@
+[project]
+name = "room-mesh"
+version = "0.1.0"
+description = "Standalone calibrated video to textured room mesh pipeline"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "numpy>=1.26,<2",
+  "opencv-python>=4.8,<4.12",
+  "open3d==0.19.0",
+  "trimesh>=4.6,<5",
+  "Pillow>=10,<12",
+]
+
+[project.optional-dependencies]
+inference = [
+  "torch>=2.3,<3",
+  "torchvision>=0.18,<1",
+  "vggt @ https://github.com/facebookresearch/vggt/archive/a288dd0f14786c93483e45524328726ab7b1b4ce.zip",
+]
+
+[project.scripts]
+room-mesh = "room_mesh.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["room_mesh*"]
