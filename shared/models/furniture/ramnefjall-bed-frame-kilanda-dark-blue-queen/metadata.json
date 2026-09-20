@@ -10,6 +10,7 @@
   "frontAxis": "+Z",
   "pivot": "floor-footprint-center",
   "catalogueListingId": "ikea-805.589.66",
+  "matchType": "reconstructed_from_product_photo",
   "source": {
     "product": "IKEA RAMNEFJÄLL upholstered bed frame, Kilanda dark blue, Queen (805.589.66)",
     "dimensionsVerifiedAt": "https://www.ikea.com/us/en/p/ramnefjaell-upholstered-bed-frame-kilanda-dark-blue-s69607505/ (converted from inches: 63 3/4in x 39 3/8in headboard height x 83 1/2in)",
