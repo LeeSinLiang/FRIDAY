@@ -10,6 +10,7 @@ import cgArch from "../../../shared/rooms/cg-arch-interior/manifest.json";
 import cgArchSpatial from "../../../shared/rooms/cg-arch-interior/spatial.json";
 import { listingToProduct, wallBounds, wallRect } from "./boundary";
 import { openingZone } from "./geometry";
+import { maskToPixels } from "./maskPixels";
 import { openingsFor } from "./roomOpenings";
 import { solve } from "./solve";
 import type { Scene } from "./types";
@@ -80,7 +81,8 @@ test("the PlayCanvas overlay stays outside the region module, and is the only ot
   assert.match(source, /from "\.\.\/\.\.\/region\/(grid|types)"/, "it consumes the region module's mask; the dependency points one way");
   for (const setting of ["minFilter: pc.FILTER_NEAREST", "magFilter: pc.FILTER_NEAREST", "mipmaps: false", "addressU: pc.ADDRESS_CLAMP_TO_EDGE", "addressV: pc.ADDRESS_CLAMP_TO_EDGE"])
     assert.ok(source.includes(setting), `texture ${setting} must be explicit`);
-  assert.match(source, /!== FREE\) continue/, "only free samples are lit; unknown and blocked stay transparent");
+  assert.match(source, /maskToPixels\(mask, LIT, texture\.lock\(\)/, "pixels come from the region module's maskToPixels, rows in mask order");
+  assert.doesNotMatch(source, /countZ - 1 - iz/, "never reverse the rows here: that mirrored every region front to back (see maskPixels.ts)");
 });
 
 const cgRoom = { ...(cgArch.room as unknown as Room), spatial: cgArchSpatial as Room["spatial"] };
@@ -155,4 +157,24 @@ test("a measured sill replaces the assumed one: floor-to-ceiling glass is blocke
   const free = solve(cgWithWindow, { product: herrakra }, []).legalCounts;
   assert.deepEqual(assumed, free, "under an assumed 90 cm sill a 73 cm chair blocks nothing");
   for (let turn = 0; turn < 4; turn++) assert.ok(measured[turn] < free[turn], "with the real sill the strip in front of the glass is excluded");
+});
+
+
+test("maskToPixels keeps mask order: pixel row 0 is z = 0, and only free samples are lit", () => {
+  const lit = [99, 186, 140, 150] as const;
+  const mask = solve(cgWithWindow, { product: listingToProduct(listing("ikea-405.355.47")) }, [NEAR_W1, FOUR_FEET]).masks[1];
+  const [countX, countZ] = mask.shape, pixels = maskToPixels(mask, lit);
+  assert.equal(pixels.length, countX * countZ * 4);
+  let litRows: number[] = [], litCount = 0;
+  for (let iz = 0; iz < countZ; iz++) for (let ix = 0; ix < countX; ix++) {
+    const at = (iz * countX + ix) * 4, isLit = pixels[at + 3] !== 0;
+    assert.equal(isLit, mask.data[iz * countX + ix] === 1, `pixel (${ix}, ${iz}) must mirror the mask sample at the SAME row`);
+    if (isLit) { litCount++; if (!litRows.includes(iz)) litRows.push(iz); assert.deepEqual([...pixels.slice(at, at + 4)], [...lit]); }
+  }
+  assert.equal(litCount, 75);
+  // The hero patch is by the window, z 340..410 of an 844 cm deep room: nowhere near its own front-to-back mirror
+  // (z 434..504). A reversed row order would put every lit row past the middle, which is how the bug looked.
+  assert.deepEqual([Math.min(...litRows) * 5, Math.max(...litRows) * 5], [340, 410]);
+  assert.ok(Math.max(...litRows) < countZ / 2, "lit rows stay in the near half, on the window's side");
+  assert.throws(() => maskToPixels(mask, lit, new Uint8Array(8)), /does not match/);
 });
