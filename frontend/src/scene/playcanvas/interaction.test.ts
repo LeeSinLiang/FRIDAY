@@ -1,9 +1,11 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
+import * as pc from "playcanvas";
 import { dragPose, furnitureHit, intersectFloor } from "./interaction";
-import { advanceVertical, advanceWalk, canWalkAt, furnitureTopAt, movementDelta, walkRoomAtHeight } from "./navigation";
+import { advanceVertical, advanceWalk, canWalkAt, createNavigation, furnitureTopAt, movementDelta, walkRoomAtHeight } from "./navigation";
 import { placementTone } from "./overlays";
 import { createProxyMaterials } from "./furniture";
+import { cmToScene, sceneToCm } from "../units";
 import type { Instance, Product, Room } from "../types";
 import manifest from "../../../../shared/rooms/studio-11/manifest.json";
 import spatial from "../../../../shared/rooms/studio-11/spatial.json";
@@ -101,6 +103,41 @@ test("floor-level furniture blocks the player but its top can be crossed without
   assert.equal(canWalkAt(walkRoomAtHeight(withWall, [instance], [product], 0), 300, 250), false);
   assert.equal(canWalkAt(walkRoomAtHeight(withWall, [instance], [product], 80), 300, 250), true);
   assert.equal(canWalkAt(walkRoomAtHeight(withWall, [instance], [product], 80), 500, 250), false);
+});
+
+test("Walk input jumps onto a placed sofa, stays there, then falls when walking off", () => {
+  const oldWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  const oldDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
+  const oldHTMLElement = Object.getOwnPropertyDescriptor(globalThis, "HTMLElement");
+  const listeners = new Map<string, (event: any) => void>();
+  const fakeWindow = { addEventListener: (name: string, listener: (event: any) => void) => listeners.set(name, listener), removeEventListener: (name: string) => listeners.delete(name) };
+  const fakeDocument = { activeElement: null, hidden: false, addEventListener() {}, removeEventListener() {} };
+  Object.defineProperty(globalThis, "window", { configurable: true, value: fakeWindow });
+  Object.defineProperty(globalThis, "document", { configurable: true, value: fakeDocument });
+  Object.defineProperty(globalThis, "HTMLElement", { configurable: true, value: class {} });
+  const camera = new pc.Entity("walk-test-camera");
+  camera.setPosition(cmToScene(300), cmToScene(160), cmToScene(340));
+  let frame: (dt: number) => void = () => { throw new Error("Update handler not attached"); };
+  const app = { on: (_name: string, callback: (dt: number) => void) => { frame = callback; }, off() {} } as unknown as pc.Application;
+  const navigation = createNavigation({ app, camera, capturing: false, disposed: false },
+    { room: { ...scanned, spatial: { freeAreas: [{ minXcm: 0, maxXcm: 600, minZcm: 0, maxZcm: 500 }], obstacles: [] } }, mode: "walk", view: "perspective", instances: [instance], products: [product] }, () => false);
+  const key = (type: "keydown" | "keyup", code: string) => listeners.get(type)?.({ key: code === "Space" ? " " : "w", code, repeat: false, preventDefault() {}, metaKey: false, ctrlKey: false, altKey: false });
+  try {
+    key("keydown", "Space"); key("keydown", "KeyW");
+    for (let i = 0; i < 10; i++) frame(0.05);
+    key("keyup", "KeyW");
+    for (let i = 0; i < 20; i++) frame(0.05);
+    assert.ok(sceneToCm(camera.getPosition().z) < 300, "the player crossed onto the sofa");
+    assert.ok(Math.abs(sceneToCm(camera.getPosition().y) - 240) < 0.5, "the camera rests 80 cm above its floor eye height");
+    key("keydown", "KeyW");
+    for (let i = 0; i < 30; i++) frame(0.05);
+    assert.ok(Math.abs(sceneToCm(camera.getPosition().y) - 160) < 0.5, "gravity brings the camera back to the floor");
+  } finally {
+    navigation.dispose(); camera.destroy();
+    for (const [name, descriptor] of [["window", oldWindow], ["document", oldDocument], ["HTMLElement", oldHTMLElement]] as const) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor); else Reflect.deleteProperty(globalThis, name);
+    }
+  }
 });
 
 test("walking sweeps across thin fixed obstacles and slides along their edge", () => {
