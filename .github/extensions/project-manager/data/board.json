@@ -154,7 +154,7 @@
         {
           "id": "1baafdb6-1a43-4f24-bda1-a1746b5f46fe",
           "title": "Curate product-to-GLB links for placeable demo listings",
-          "done": false,
+          "done": true,
           "owner": "saketh",
           "phase": "mvp"
         }
@@ -266,6 +266,12 @@
         {
           "id": "a4577790-c0d7-49fb-b441-a6cfd0c02db5",
           "title": "Connect existing Vercel projects to GitHub main",
+          "done": false,
+          "owner": "william"
+        },
+        {
+          "id": "f5b7aa7e-70e7-4b8c-acaa-7c0f30368873",
+          "title": "Collapse furniture panel behind persistent chevron",
           "done": false,
           "owner": "william"
         }
