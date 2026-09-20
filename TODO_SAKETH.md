@@ -13,6 +13,11 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## Done
 
+- **Read the other lanes' logs; fixed the compile tests for a database cache (2026-09-19).** Branch `codex/saketh-compile-tests-cache`, off fresh `main` after merging PR #18 (`main`: 132 backend tests, 57 frontend tests, build OK). PR #18 first got a review fix: every carried product field is checked and the server's copy is what gets stored.
+  - William's work is on `codex/visa-sandbox`, open PR #19 (Visa IDX sandbox, accounts with MFA, checkout review), not on `main`. It touches none of `frontend/src/App.tsx`, `frontend/src/scene`, `frontend/src/region`, `backend/api`, `backend/catalogue` or `shared/`; he deliberately left the App and Vite proxy alone. No collision with the floor-overlay work.
+  - He logged two things for this lane. (1) A requested follow-up in this file's Next on his branch: Blender MCP-style scene and object context for the agent, with `docs/backend/contracts/blender-mcp-agent-handoff.md`. Not started; not part of the overlay. (2) His `DatabaseCache` makes the five `CompileEndpointTests` fail, because they are `SimpleTestCase` and the compile throttle counts in the cache. Reproduced exactly (5 failures under a database cache) and fixed by pinning an in-memory cache on that test class only; runtime keeps the project's cache. Verified 132 tests pass under both the project settings and a database-backed cache.
+  - Still open with William, not blocking: the shared catalogue/cart contract (his checkout uses a two-product fixture adapter).
+
 - **Catalogue items placeable in a scene (2026-09-19).** Branch `codex/saketh-catalogue-placement`, off fresh `main` after merging PRs #16 and #17 (`main`: 123 backend tests, 54 frontend tests, build OK).
   - Sin gave blanket permission to work in his lane; this PR touches his files and says so.
   - Frontend: optional `product` on `Instance`; `frontend/src/scene/products.ts` (`validInlineProduct`, `productOf`, `productsWith`); `placement.ts`, `commands.ts`, `useSceneSync.ts`, `App.tsx` resolve through it; `instanceFromListing` in `frontend/src/region/boundary.ts`.
