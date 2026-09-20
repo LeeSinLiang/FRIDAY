@@ -244,6 +244,18 @@
           "title": "Define guest-room transfer and account scene ownership",
           "done": false,
           "owner": "unassigned"
+        },
+        {
+          "id": "a1917888-c905-4059-ad6b-04d7b230458b",
+          "title": "Build agent-observation shopping choreography",
+          "done": true,
+          "owner": "sin"
+        },
+        {
+          "id": "2e51d8ea-36e3-4fce-8864-52617b81fdfb",
+          "title": "Refine furniture summon reveal",
+          "done": true,
+          "owner": "sin"
         }
       ],
       "description": "React app shell, product browsing, constraint chips, and conversation."

@@ -2,6 +2,7 @@ import * as pc from "playcanvas";
 import type { Instance, Pose, Product } from "../types";
 import { cmToScene, meterGlbToSceneScale } from "../units";
 import type { ModelStatus } from "./contracts";
+import { animateMaterialization, MATERIALIZE_PREVIEW_EVENT } from "./materialize";
 
 export type FurnitureRuntime = {
   assets: { instantiateContainer(url: string): Promise<pc.Entity> };
@@ -10,6 +11,7 @@ export type FurnitureRuntime = {
 export type FurnitureVisual = {
   entity: pc.Entity;
   ready: Promise<string | undefined>;
+  materialize(): void;
   dispose(): void;
 };
 
@@ -83,8 +85,12 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
   const entity = new pc.Entity(`Furniture · ${instance.instanceId}`);
   applyFurniturePose(entity, instance.pose);
   let disposed = false;
+  const presentation = new pc.Entity("Furniture presentation");
+  entity.addChild(presentation);
+  let stopAnimation: (() => void) | undefined;
+  let replayVersion = 0;
   let proxy: ReturnType<typeof createProxy> | null = createProxy(product);
-  entity.addChild(proxy.root);
+  presentation.addChild(proxy.root);
   let model: pc.Entity | null = null;
   const ready = (async (): Promise<string | undefined> => {
     if (!product.modelUrl) { onStatus?.("proxy"); return `${product.name}: dimensioned preview model`; }
@@ -97,7 +103,7 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
       model = new pc.Entity("Meter model conversion");
       model.setLocalScale(scale, scale, scale);
       model.addChild(loaded);
-      entity.addChild(model);
+      presentation.addChild(model);
       proxy?.dispose(); proxy = null;
       onStatus?.("ready");
       return undefined;
@@ -108,9 +114,19 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
   })();
   return {
     entity, ready,
+    materialize() {
+      const version = ++replayVersion;
+      void ready.then(() => {
+        if (disposed || runtime.disposed || version !== replayVersion) return;
+        stopAnimation?.();
+        stopAnimation = animateMaterialization(presentation,
+          () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
+      });
+    },
     dispose() {
       if (disposed) return;
       disposed = true;
+      ++replayVersion; stopAnimation?.();
       proxy?.dispose(); proxy = null;
       model?.destroy(); model = null;
       entity.destroy();
@@ -128,6 +144,12 @@ export async function createFurnitureEntity(runtime: FurnitureRuntime, instance:
 export function createFurnitureLayer(runtime: FurnitureRuntime, parent: pc.Entity,
   status: (id: string, status: ModelStatus) => void) {
   const entries = new Map<string, { signature: string; visual: FurnitureVisual }>();
+  let initialized = false;
+  const replay = (event: Event) => {
+    const id = (event as CustomEvent<{ instanceId?: string }>).detail?.instanceId;
+    if (typeof id === "string") entries.get(id)?.visual.materialize();
+  };
+  if (typeof window !== "undefined") window.addEventListener(MATERIALIZE_PREVIEW_EVENT, replay);
   return {
     sync(instances: Instance[], products: Product[], retries: Record<string, number>, movingId?: string) {
       const present = new Set(instances.map(instance => instance.instanceId));
@@ -138,16 +160,19 @@ export function createFurnitureLayer(runtime: FurnitureRuntime, parent: pc.Entit
         const signature = JSON.stringify([product, retries[instance.instanceId] ?? 0]);
         let entry = entries.get(instance.instanceId);
         if (entry?.signature !== signature) {
+          const isNew = !entry;
           entry?.visual.dispose();
           const visual = createFurnitureVisual(runtime, instance, product, value => status(instance.instanceId, value));
           parent.addChild(visual.entity);
           entry = { signature, visual }; entries.set(instance.instanceId, entry);
+          if (initialized && isNew) visual.materialize();
         }
         if (instance.instanceId !== movingId) applyFurniturePose(entry.visual.entity, instance.pose);
       }
+      initialized = true;
     },
     preview(id: string, pose: Pose) { const entry = entries.get(id); if (entry) applyFurniturePose(entry.visual.entity, pose); },
     setVisible(id: string, visible: boolean) { const entry = entries.get(id); if (entry) entry.visual.entity.enabled = visible; },
-    dispose() { for (const entry of entries.values()) entry.visual.dispose(); entries.clear(); },
+    dispose() { if (typeof window !== "undefined") window.removeEventListener(MATERIALIZE_PREVIEW_EVENT, replay); for (const entry of entries.values()) entry.visual.dispose(); entries.clear(); },
   };
 }

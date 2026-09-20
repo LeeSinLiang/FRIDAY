@@ -33,7 +33,7 @@ function PositionField({axis,value,disabled,commit}:{axis:"X"|"Z";value:number;d
   }}/>{error && <small>Enter a number</small>}</label>;
 }
 
-export default function SplatEditor() {
+export default function SplatEditor({ observation = false, onObservationReady }: { observation?: boolean; onObservationReady?: (ready: boolean) => void } = {}) {
   const [active,setActive]=useState(false);
   const [captureOpen,setCaptureOpen]=useState(false);
   const [mode,setMode]=useState<InteractionMode>("explore");
@@ -62,6 +62,7 @@ export default function SplatEditor() {
   const selected=instances.find(i=>i.instanceId===selectedId);
   const product=products.find(p=>p.productId===(pendingProductId ?? selected?.productId));
   const ready=runtimeStatus.phase==="ready" && session.status==="ready";
+  useEffect(() => { onObservationReady?.(ready); }, [ready, onObservationReady]);
   const locked=active || session.status==="saving";
   const select=useCallback((id:string|null)=>{setSelectedId(id);setPreview(null);if(id){setMode("place");setPanel("inspector");}else setMode("explore");},[]);
   const cancelPlacement=useCallback(()=>{setPendingProductId(null);setPreview(null);setMode("explore");setNotice("Placement cancelled");},[]);
@@ -86,13 +87,14 @@ export default function SplatEditor() {
   const callbacks:InteractionCallbacks=useMemo(()=>({onSelect:select,onCommit:commit,onPlace:place,onCancelPlacement:cancelPlacement,onPreview:setPreview,onActiveChange:setActive,onModelStatus,
     onSurfaceStatus:(status,message)=>setSurfaceNote(status==="error" ? message??"Surface reference could not load" : status==="loading" ? "Loading surface reference…" : message ?? "Surface reference ready"),
   }),[select,commit,place,cancelPlacement,onModelStatus]);
-  const state:InteractionState|null=useMemo(()=>room?({room,products,instances,selectedId,pendingProductId,editingEnabled:ready && !captureOpen,snap,mode,view,retries,showSurface}):null,
-    [room,products,instances,selectedId,pendingProductId,ready,captureOpen,snap,mode,view,retries,showSurface]);
+  const state:InteractionState|null=useMemo(()=>room?({room,products,instances,selectedId,pendingProductId,editingEnabled:ready && !captureOpen && !observation,snap,mode,view,retries,showSurface}):null,
+    [room,products,instances,selectedId,pendingProductId,ready,captureOpen,snap,mode,view,retries,showSurface,observation]);
   useEffect(()=>{if(selectedId && snapshot && !snapshot.instances.some(i=>i.instanceId===selectedId)){setSelectedId(null);setPreview(null);}},[snapshot,selectedId]);
   useEffect(()=>{if(!notice)return;const timeout=setTimeout(()=>setNotice(""),5500);return()=>clearTimeout(timeout);},[notice]);
   const remove=useCallback(async()=>{if(!selectedId||!ready||active)return;const ok=await session.submit({type:"remove",instanceId:selectedId});if(ok){setSelectedId(null);setPreview(null);setMode("explore");setPanel("catalogue");}},[selectedId,ready,active,session.submit]);
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{
+      if (observation) return;
       if(e.target instanceof Element && e.target.closest('input,textarea,select,[contenteditable="true"],dialog'))return;
       if(e.key==="Escape" && !active){if(pendingProductId)cancelPlacement();else{setMode("explore");setSelectedId(null);setPreview(null);}return;}
       if(!ready||active||pendingProductId)return;
@@ -100,7 +102,7 @@ export default function SplatEditor() {
       if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();void remove();}
     };
     window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key);
-  },[ready,active,pendingProductId,cancelPlacement,session.undo,session.redo,remove]);
+  },[ready,active,pendingProductId,cancelPlacement,session.undo,session.redo,remove,observation]);
   const choose=(item:Product)=>{
     if(!ready||locked)return;
     setSelectedId(null);setPendingProductId(item.productId);setMode("place");setPanel("inspector");setPreview(null);setNotice("");
@@ -115,9 +117,13 @@ export default function SplatEditor() {
   const tone=preview ? preview.valid?"valid":/unknown|unreviewed|unconfirmed|floor/i.test(preview.reason)?"unknown":"invalid" : "";
   const help=pendingProductId ? "Point at the floor · Click to place · Esc to cancel" : active ? "Release to place · Esc to cancel" : mode==="walk" ? "W A S D to walk · Drag to look · Esc to stop" : mode==="place"&&selected ? "Drag your furniture · Esc to explore" : "Drag to look around · Choose furniture to begin";
 
+  if (observation) return <div className="splat-editor observation-room" aria-hidden="true" inert>
+    <div className="splat-room">{state && <Suspense fallback={null}><PlayCanvasScene captureEnabled={!observation} state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}</div>
+  </div>;
+
   return <main className={`splat-editor ${panel?"has-panel":""}`}>
     <div className="splat-room" aria-label="First-person room editor">
-      {state && <Suspense fallback={null}><PlayCanvasScene state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}
+      {state && <Suspense fallback={null}><PlayCanvasScene captureEnabled={!observation} state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}
       {snapshot && <SplatCatalogueLayer getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice}/>}
       {runtimeStatus.phase!=="ready" && <div className="splat-loading" role="status">
         <div className="glass splat-loading-card"><span className="loading-orbit"/><h1>{runtimeStatus.phase==="error"?"Room unavailable":"Come on in."}</h1><p>{runtimeStatus.message}</p>
@@ -132,6 +138,7 @@ export default function SplatEditor() {
       <span className="splat-title">{room?.scan?.attribution.title ?? "Empty room"}<span>{room?.scan?.visualFormat === "glb" ? "Interior · mesh room" : "Living space"}</span></span>
       <span className={`splat-save save-${session.status}`} role="status">{session.status==="ready"?"Saved":session.status==="saving"?"Saving…":session.status==="loading"?"Connecting…":session.status==="conflict"?"Layout changed":"Disconnected"}</span>
       {(session.status==="offline"||session.status==="conflict")&&<button className="button" onClick={()=>void(session.status==="conflict"?session.reload():session.retry())}>{session.status==="conflict"?"Reload layout":"Retry"}</button>}
+      <a className="splat-reset" href="/?cartPreview" target="_blank" rel="noreferrer">Cart preview</a>
       <button className="splat-reset" disabled={!ready||locked||!!pendingProductId} onClick={()=>setResetKey(k=>k+1)}><Icon name="reset" size={18}/><span>Reset view</span></button>
     </header>
     <nav className="splat-view-controls" aria-label="Room views">
@@ -164,6 +171,7 @@ export default function SplatEditor() {
         </div>
         <div className={`splat-placement-status ${tone}`} role="status"><span/>{validLabel || (pendingProductId?"Point at the floor":"Select Move to reposition")}</div>
         {pendingProductId?<button className="button splat-cancel" disabled={locked} onClick={cancelPlacement}>Cancel placement</button>:<button className="button splat-remove" disabled={!ready||locked} onClick={()=>void remove()}><Icon name="trash" size={17}/>Remove from room</button>}
+        {selectedId && !pendingProductId && <button className="button" disabled={!ready || locked || captureOpen || statuses[selectedId] !== "ready"} onClick={() => window.dispatchEvent(new CustomEvent("friday:preview-furniture-materialize", { detail: { instanceId: selectedId } }))}>Preview summon</button>}
         <p className="splat-model-note">{product.modelUrl ? statuses[selectedId??""]==="error"?"Model unavailable · showing dimensions":statuses[selectedId??""]==="loading"?"Loading model…":"Separate, editable GLB" : "Furniture preview · final models coming soon"}</p>
         {selectedId&&statuses[selectedId]==="error"&&<button className="button" onClick={()=>setRetries(old=>({...old,[selectedId]:(old[selectedId]??0)+1}))}>Retry furniture model</button>}
       </> : <div className="splat-empty-properties"><Icon name="chair" size={32}/><p>Select a piece in the room or choose something new.</p><button className="button" onClick={()=>setPanel("catalogue")}>Browse furniture</button></div>}

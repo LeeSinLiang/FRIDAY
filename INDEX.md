@@ -75,3 +75,6 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 - [Catalogue, search and language layer: shared types, constraint DSL, configuration](docs/backend/catalogue.md)
 
 Add dedicated feature docs here as they are created.
+
+- [Shopping cart dispatch preview](docs/frontend/shopping-cart-animation.md) — Hands-off agent choreography over the Gaussian room, origami dispatch, developer replay and demo-only events.
+- [Furniture materialization](docs/frontend/furniture-materialization.md) — spatial-agent add animation, preview event, unchanged placement and static captures.

@@ -8,3 +8,5 @@ import "./playcanvas/runtime.test";
 import "./playcanvas/room.test";
 import "./playcanvas/interaction.test";
 import "./useRoomSession.test";
+
+import "./playcanvas/materialize.test";

@@ -27,6 +27,7 @@ import type { ModelStatus } from "./Scene";
 import type { PerformanceSample } from "./scene/PerformanceProbe";
 const Scene = lazy(() => import("./Scene"));
 const SceneCaptureWorker = lazy(() => import("./scene/SceneCapture"));
+const CartPreview = lazy(() => import("./checkout/CartPreview"));
 const SplatEditor = lazy(() => import("./SplatEditor"));
 const QA_PRODUCTS: Product[] =
   import.meta.env.DEV && new URLSearchParams(location.search).has("testAssets")
@@ -702,6 +703,7 @@ function LegacyApp() {
 }
 
 export default function App() {
+  if (new URLSearchParams(location.search).has("cartPreview")) return <Suspense fallback={<div className="canvas-loading">Opening your cart…</div>}><CartPreview/></Suspense>;
   if (new URLSearchParams(location.search).has("legacy") || new URLSearchParams(location.search).has("testAssets")) return <LegacyApp/>;
   return <Suspense fallback={<div className="canvas-loading">Opening your room…</div>}><SplatEditor/></Suspense>;
 }
