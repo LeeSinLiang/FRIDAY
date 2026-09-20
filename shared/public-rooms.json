@@ -12,9 +12,9 @@
     "thumbnail": "/room-previews/london-skyscraper.jpg"
   },
   {
-    "id": "cg-arch-interior",
-    "title": "The Cg Arch living room",
-    "description": "A finished interior with a wide north window. Furnish it piece by piece.",
-    "thumbnail": "/room-previews/cg-arch-interior.jpg"
+    "id": "haussmann-apartment",
+    "title": "The Haussmann apartment",
+    "description": "An unfurnished Paris apartment with tall windows and parquet floors.",
+    "thumbnail": "/room-previews/haussmann-apartment.webp"
   }
 ]

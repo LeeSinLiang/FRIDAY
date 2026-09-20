@@ -10,6 +10,8 @@ All four owner TODO files point to [HAUSSMANN APARTMENT](https://superspl.at/sce
 
 ## Actual asset and reproducible preparation
 
+The public gallery now packages the reviewed SOG and collision GLB directly from `shared/rooms/haussmann-apartment/assets/`. The tracked files are 43,111,562 and 4,867,408 bytes with SHA-256 `34e910c12a97eb8c1674023aa69e81aa8978ca64c06ca0597cbe93d3f86ac6bc` and `9a3c870e61a920f98df250b0282973c9205a476c51c5cf417136d9cb2e8b41d7`, respectively. The gallery preview is the creator's SuperSplat scene thumbnail under the same CC BY attribution. Public builds fail when either required room asset is missing. The separately licensed Cg Arch mesh remains local and is not served from the public gallery.
+
 The creator ZIP is 455,283,594 bytes and contains `scene.ply` (455,283,057 bytes) plus its license. The binary PLY has **2,995,277 Gaussians**, scales, opacity, quaternions, DC color and 24 higher-order SH properties (SH2). It is not a positions-only point cloud.
 
 Source SHA-256: `167fbe4c98379cb92b9f36c91463a3fb4ead84dc91cccf0dac58d82365a69e38`.

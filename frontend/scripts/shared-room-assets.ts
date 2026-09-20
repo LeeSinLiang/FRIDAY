@@ -107,6 +107,8 @@ export function sharedRoomAssets(): Plugin {
     async config() {
       prepared = await inspectRoomPackages();
       const publicRooms = JSON.parse(await readFile(new URL('../../shared/public-rooms.json', import.meta.url), 'utf8')) as PublicRoom[];
+      if (publicRooms.some(room => room.id === "haussmann-apartment") && !prepared.packages.has("haussmann-apartment"))
+        throw Error("The public Haussmann apartment is missing its packaged visual or collision asset");
       const gallery = galleryRooms(publicRooms, prepared.packages);
       if (process.env.VERCEL) prepared.packages = new Map([...prepared.packages].filter(([id]) => gallery.some(room => room.packaged && room.id === id)));
       return { define: { "import.meta.env.VITE_DEFAULT_ROOM_ID": JSON.stringify(prepared.defaultRoomId), "import.meta.env.VITE_PUBLIC_ROOMS": JSON.stringify(gallery) } };
