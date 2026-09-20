@@ -101,6 +101,18 @@ def is_flat(product):
     return product['heightCm'] <= FLAT_MAX_CM + EPSILON
 
 
+def supported_by(room, candidate, box, support, top):
+    """Same one-level, full rotated-footprint support rule as frontend/src/scene/placement.ts."""
+    if (is_flat(candidate) or is_flat(support) or candidate.get('supportSurface') or not support.get('supportSurface') or
+            candidate['heightCm'] + support['heightCm'] > room['heightCm'] + EPSILON):
+        return False
+    for corner in polygon(box):
+        relative = [corner[i] - top['center'][i] for i in range(2)]
+        if any(abs(sum(relative[i] * top['axes'][axis][i] for i in range(2))) > top['half'][axis] + EPSILON for axis in range(2)):
+            return False
+    return True
+
+
 def overlaps(a, b):
     delta = [b['center'][i] - a['center'][i] for i in range(2)]
     dot = lambda x, y: x[0] * y[0] + x[1] * y[1]
@@ -228,6 +240,8 @@ def validate_instances(instances, room_id='demo-room'):
         validate_fixed_geometry(room, box, identifier)
         for previous, previous_product, previous_id in boxes:
             if is_flat(product) or is_flat(previous_product):
+                continue
+            if supported_by(room, product, box, previous_product, previous) or supported_by(room, previous_product, previous, product, box):
                 continue
             if overlaps(box, previous):
                 raise SceneError('placement', f"Overlaps {previous_product['name']}.", details={'issues': [{'code': 'overlap', 'instanceId': identifier, 'conflictingInstanceIds': [previous_id]}]})

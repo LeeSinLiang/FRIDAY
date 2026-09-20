@@ -7,7 +7,8 @@ import type { Listing } from "../lib/types";
 import { instanceFromListing } from "../region/boundary";
 import { openingsFor, portalsFor } from "../region/roomOpenings";
 import { useRegion } from "../region/useRegion";
-import { validatePlacement } from "../scene/placement";
+import { supportHeightCm, validatePlacement } from "../scene/placement";
+import { productOf } from "../scene/products";
 import { createPendingGhost, type PendingGhost } from "../scene/playcanvas/pendingGhost";
 import { priceLabel } from "./price";
 import { createRegionOverlay, type RegionOverlay } from "../scene/playcanvas/regionOverlay";
@@ -63,6 +64,10 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
   // An unconfirmed item still stands on the floor as far as the solver is concerned.
   const standing = useMemo(() => (unconfirmed && !instances.some((i) => i.instanceId === unconfirmed.instanceId) ? [...instances, unconfirmed] : instances), [instances, unconfirmed]);
   const known = useMemo(() => (unconfirmed?.product && !products.some((p) => p.productId === unconfirmed.productId) ? [...products, unconfirmed.product] : products), [products, unconfirmed]);
+  const supports = useMemo(() => standing.flatMap(instance => {
+    const product = productOf(instance, known);
+    return product?.supportSurface ? [{ id: instance.instanceId, name: product.name }] : [];
+  }), [standing, known]);
 
   const region = useRegion(armed ?? hovered, room, known, standing, place, openingsFor(room.roomId), portalsFor(room.roomId));
   const fitting = useMemo(() => region ? region.solution.legalCounts.flatMap((count, index) => (count > 0 ? [index] : [])) : [], [region]);
@@ -85,7 +90,13 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
     return () => { created.dispose(); createdGhost.dispose(); overlay.current = null; ghost.current = null; };
   }, [engineUp, getRuntime, room.roomId]);
 
-  useEffect(() => { overlay.current?.setMask(region ? region.solution.masks[yawIndex] : null); }, [region, yawIndex, engineUp]);
+  const onTargetRef = place.find(clause => clause.k === "on" && clause.ref.kind === "instance")?.ref;
+  const targetId = onTargetRef?.kind === "instance" ? onTargetRef.id : null;
+  const target = targetId ? standing.find(item => item.instanceId === targetId) : undefined;
+  const targetHeightCm = target ? productOf(target, known)?.heightCm ?? 0 : 0;
+  useEffect(() => { overlay.current?.setMask(region ? region.solution.masks[yawIndex] : null, targetHeightCm); }, [region, yawIndex, engineUp, targetHeightCm]);
+  const showPending = (instance: Instance) => ghost.current?.show(instance.product!, instance.pose,
+    supportHeightCm(room, known, [...standing, instance], instance.instanceId, instance.pose));
 
   // The engine reads this: with a piece in hand here, a press on the canvas is a look (interaction.ts), which is what
   // keeps drag-to-look alive while holding. Placing stays with the click handler below.
@@ -115,8 +126,8 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
       if (!verdict.valid) { console.error("region solver lit a pose the editor refuses", pose, verdict.reason); return; }
       const listing = armed;
       setArmed(null); setHovered(null);
-      // On the floor at once, and it stays there through a storage hiccup. Only a definite refusal removes it.
-      setUnconfirmed(instance); ghost.current?.show(instance.product!, pose);
+      // At its derived floor or support height at once. Only a definite refusal removes it.
+      setUnconfirmed(instance); showPending(instance);
       if (shopping) { setPurchase(listing); return; }
       const outcome = await saveQuietly({
         submit: () => submit({ type: "add", instance }), retry, status: () => statusNow.current,
@@ -174,17 +185,17 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
     if (index<0) return;
     const pose = {xCm:mask.originCm[0]+(index%mask.shape[0])*mask.cellSizeCm,zCm:mask.originCm[1]+Math.floor(index/mask.shape[0])*mask.cellSizeCm,yawRad:mask.yawRad};
     const instance = instanceFromListing(armed,crypto.randomUUID(),pose);
-    setUnconfirmed(instance);setPurchase(armed);setArmed(null);setHovered(null);ghost.current?.show(instance.product!,pose);
+    setUnconfirmed(instance);setPurchase(armed);setArmed(null);setHovered(null);showPending(instance);
   }
   function adjustPreview(axis:'xCm'|'zCm'|'yawRad',value:number) {
     if (!unconfirmed || !Number.isFinite(value)) return;
     const next = {...unconfirmed,pose:{...unconfirmed.pose,[axis]:value}};
-    setUnconfirmed(next);ghost.current?.show(next.product!,next.pose);
+    setUnconfirmed(next);showPending(next);
   }
   const verdict = unconfirmed ? validatePlacement(room,known,[...instances,unconfirmed],unconfirmed.instanceId,unconfirmed.pose) : null;
   return <>
     {showShelf && <CatalogueShelf region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
-      canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} onClose={onCloseShelf} />}
+      canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} supports={supports} onClose={onCloseShelf} />}
     {shopping && armed && <section className="purchase-confirm" aria-label="Preview furniture"><p>Click the lit floor, or use a suggested position.</p><button className="button" disabled={!ready || locked || !fitting.length} onClick={previewSuggested}>Preview a fitting position</button><button className="button" onClick={()=>setArmed(null)}>Cancel</button></section>}
     {shopping && purchase && unconfirmed && <section className="purchase-confirm" aria-label="Confirm furniture placement">
       <p className="eyebrow">Placement preview</p><h2>{purchase.title}</h2><p>{priceLabel(purchase.price_cents, cents => `$${(cents/100).toFixed(2)} USD`)} · sandbox</p>

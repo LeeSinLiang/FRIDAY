@@ -138,11 +138,10 @@ test("clauses that cannot be honoured are dropped WITH a reason, and the rest st
     ["near", "the room does not describe its windows yet"],
     ["against", 'the room has no wall "w-up"'],
     ["near", 'nothing called "ghost" is in the room'],
-    ["on", "the editor cannot place one item on another yet, so this would light floor the drop then refuses"],
     ["not_blocking", "a wall cannot be blocked"],
   ]);
-  sameData(solution.masks[NORTH], solve(noOpenings, { product: chair }, [{ k: "distance_min", ref: ANY, mm: 500 }]).masks[NORTH]);
-  assert.equal(ALLOW_STACKING, false);
+  assert.equal(countFree(solution.masks[NORTH]), 0, "a sofa is not a support surface, so on-sofa lights nothing");
+  assert.equal(ALLOW_STACKING, true);
   assert.deepEqual(solve(furnished, { product: chair }, [{ k: "near", ref: { kind: "door", id: "d9" } }]).dropped.map((d) => d.reason),
     ['the room has no door "d9"']);
 });

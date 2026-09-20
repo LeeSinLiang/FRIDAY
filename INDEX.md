@@ -26,6 +26,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 - [Supported object placement](docs/frontend/3d-object/supported-object-placement.md) — research for lamps on tables and objects inside cabinets: support metadata, cavity geometry, attachment transforms, collision rules and acceptance checks.
 
+- [Furniture stacking](docs/frontend/3d-object/furniture-stacking.md) — implemented one-level table or desk support rule, derived render height, exact placement mask, live sentence handling and verification.
+
 - [Multistory GLB designer research](docs/frontend/room-capture/skyscraper-glb-research.md) — current renderer/AI input paths, measured London skyscraper floor candidates, unequal elevations, proposed integration and future screenshot acceptance checks.
 
 - [Room, cart and Vercel release](docs/frontend/room-cart-deployment.md) — guest shopping routes, atomic cart/scene persistence, account handoff, deployment configuration and remaining release gates.

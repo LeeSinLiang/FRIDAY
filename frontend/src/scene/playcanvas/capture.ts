@@ -2,6 +2,7 @@ import { ASPECT_MANUAL, Entity, PIXELFORMAT_RGBA8, PROJECTION_PERSPECTIVE, Rende
 import type { FirstPersonCamera } from "../types";
 import { MAX_CAPTURE_PNG_BYTES, type CaptureJob, type CaptureResult } from "../useCaptureWorker";
 import { createFurnitureEntity } from "./furniture";
+import { supportHeightCm } from "../placement";
 import { setFirstPersonCamera, waitForSplatFrame, type PlayCanvasRuntime } from "./runtime";
 
 class CaptureError extends Error {
@@ -133,7 +134,8 @@ export async function capturePlayCanvasScene(runtime: PlayCanvasRuntime, job: Ca
     await abortable(Promise.all(job.snapshot.instances.map(async instance => {
       const product = job.snapshot.products.find(item => item.productId === instance.productId);
       if (!product) throw new CaptureError("invalid_snapshot", `Missing product for ${instance.instanceId}`);
-      const item = await createFurnitureEntity(runtime, instance, product);
+      const item = await createFurnitureEntity(runtime, instance, product,
+        supportHeightCm(room, job.snapshot.products, job.snapshot.instances, instance.instanceId, instance.pose));
       if (controller.signal.aborted) { item.dispose(); return; }
       furniture.push(item);
       frozenRoot.addChild(item.entity);

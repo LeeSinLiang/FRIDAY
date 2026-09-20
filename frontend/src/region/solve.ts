@@ -45,9 +45,14 @@ function solveOnce(scene: Scene, candidate: Candidate, place: PlaceClause[]): Pi
   const region = floorRegion(scene.room, scene.portals); // once per solve, not once per clause or per grid point
   for (const clause of clauses) {
     const resolved = resolveClause(scene, candidate.product, clause, clearances, region);
-    if ("dropped" in resolved) { dropped.push({ clause, reason: resolved.dropped }); continue; }
+    if ("dropped" in resolved) {
+      dropped.push({ clause, reason: resolved.dropped });
+      // "On" names a required physical support. A missing or ambiguous target is impossible,
+      // never permission to place the item on the floor.
+      if (clause.k === "on") rules.push(() => false);
+      continue;
+    }
     rules.push(resolved.rule);
-    if (resolved.ignoreInstanceId) ignore.push(resolved.ignoreInstanceId);
   }
   const withIgnores = { ...candidate, ignoreInstanceIds: ignore };
   const masks = YAW_BINS.map((yawRad) => intersect(invariantMask(scene, withIgnores, yawRad), ruleMask(scene, candidate, yawRad, rules)));

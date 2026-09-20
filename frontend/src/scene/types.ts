@@ -46,6 +46,8 @@ export type Product = {
   modelUrl?: string;
   thumbnailUrl?: string;
   catalogueVisible?: boolean;
+  /** True only for a reviewed horizontal support category, not the visual "table" silhouette. */
+  supportSurface?: boolean;
   color: string;
   kind: "sofa" | "table" | "chair";
 };

@@ -1,6 +1,7 @@
 import "./commands.test";
 import "./buildingFloors.test";
 import "./placement.test";
+import "./stackingAgreement.test";
 import "./products.test";
 import "./walkKeys.test";
 import "./searchPanel.test";

@@ -6,6 +6,7 @@
 // This matches how compile() emits them; see docs/backend/catalogue.md.
 
 import type { Pose, Product } from "../scene/types";
+import { canPlaceOnSupport } from "../scene/placement";
 import { WALL_SIDES, WALL_SIDE_BY_ID, type PlaceCm } from "./boundary";
 import { floorRegion, wallEdges, type FloorRegion } from "./floor";
 import { EPSILON_CM, gap, openingZone, overlapsArea } from "./geometry";
@@ -23,9 +24,8 @@ export const WINDOW_SILL_CM = 90;
 export const WINDOW_ZONE_CM = 50;
 /** Room to walk up to a piece of furniture, for not_blocking(instance). */
 export const APPROACH_CM = 60;
-/** One line to enable if the editor ever accepts an item overlapping its support. Until then a lit
- *  region on a table top would be refused on drop, which is worse than no region. */
-export const ALLOW_STACKING = false;
+/** Tabletop regions are enabled only while the region, editor and server use the same support rule. */
+export const ALLOW_STACKING = true;
 
 /** The clearance each wall demands, from every distance_min and clear clause naming it or any_wall. */
 export function wallClearances(place: PlaceCm[]): Record<WallSide, number> {
@@ -42,7 +42,7 @@ export type Dropped = { clause: PlaceCm; reason: string };
 
 type Target = { rect: Rect; wall?: WallSide; opening?: Opening; instanceId?: string };
 export type Rule = (pose: Pose, footprint: Rect) => boolean;
-export type Resolved = { rule: Rule; ignoreInstanceId?: string } | { dropped: string };
+export type Resolved = { rule: Rule } | { dropped: string };
 
 const EVERY_KINDS = new Set<PlaceCm["k"]>(["distance_min", "clear", "not_blocking"]);
 
@@ -113,9 +113,10 @@ function ruleFor(scene: Scene, product: Product, clause: PlaceCm, target: Target
     return "a wall cannot be blocked";
   }
   if (k === "on" && target.instanceId) {
-    if (!ALLOW_STACKING) return "the editor cannot place one item on another yet, so this would light floor the drop then refuses";
-    const support = target.rect;
-    return (pose) => pose.xCm >= support.minX && pose.xCm <= support.maxX && pose.zCm >= support.minZ && pose.zCm <= support.maxZ;
+    const instance = scene.instances.find(item => item.instanceId === target.instanceId);
+    const support = instance && scene.products.find(item => item.productId === instance.productId);
+    if (!ALLOW_STACKING || !instance || !support) return () => false;
+    return (pose) => canPlaceOnSupport(scene.room, product, pose, support, instance.pose);
   }
   return `"${k}" does not apply to a ${clause.ref.kind}`;
 }
@@ -135,8 +136,7 @@ export function resolveClause(scene: Scene, product: Product, clause: PlaceCm,
   }
   const every = EVERY_KINDS.has(clause.k);
   const rule: Rule = (pose, footprint) => every ? rules.every((r) => r(pose, footprint)) : rules.some((r) => r(pose, footprint));
-  const stackedOn = clause.k === "on" && clause.ref.kind === "instance" ? clause.ref.id : undefined;
-  return { rule, ...(stackedOn ? { ignoreInstanceId: stackedOn } : {}) };
+  return { rule };
 }
 
 /** Never a clause, always applied: nothing may stand in a door's swing. */
