@@ -33,7 +33,29 @@
     {
       "id": "8f3cc2bd-c786-4d34-b0a7-d18ed9e6b86a",
       "name": "Data / AI-ML",
-      "tasks": []
+      "tasks": [
+        {
+          "id": "5f377efe-8281-4a31-bbf1-311b0661c8af",
+          "title": "Normalize DummyJSON and WANDS reference products for Elasticsearch",
+          "done": false,
+          "phase": "mvp",
+          "owner": "saketh"
+        },
+        {
+          "id": "46dd9a0d-bb2e-4ae8-8a42-e035f8199f58",
+          "title": "Import CC0 GLB asset metadata into a separate Elasticsearch index",
+          "done": false,
+          "phase": "mvp",
+          "owner": "saketh"
+        },
+        {
+          "id": "1baafdb6-1a43-4f24-bda1-a1746b5f46fe",
+          "title": "Curate product-to-GLB links for placeable demo listings",
+          "done": false,
+          "phase": "mvp",
+          "owner": "saketh"
+        }
+      ]
     },
     {
       "id": "fd20145e-b779-4eea-ac26-cf3f8183e769",
