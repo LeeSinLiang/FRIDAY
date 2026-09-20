@@ -14,6 +14,10 @@ from .models import SceneCommandReceipt, SceneLayout
 from .shared_data import shared_root
 
 EPSILON = 1e-6
+# A rug does not stop a chair: an item this low neither blocks other items nor is blocked by them. It must still lie
+# inside the room and clear of fixed obstacles. KEEP IN STEP with FLAT_MAX_CM in frontend/src/scene/placement.ts: the
+# editor's check and this one must agree, or the editor accepts a placement the save then refuses.
+FLAT_MAX_CM = 3
 
 
 class SceneError(Exception):
@@ -91,6 +95,10 @@ def footprint(product, pose):
     half = [product['widthCm'] / 2, product['depthCm'] / 2]
     return {'center': [pose['xCm'], pose['zCm']], 'axes': [[c, -s], [s, c]], 'half': half,
             'extents': [abs(c) * half[0] + abs(s) * half[1], abs(s) * half[0] + abs(c) * half[1]]}
+
+
+def is_flat(product):
+    return product['heightCm'] <= FLAT_MAX_CM + EPSILON
 
 
 def overlaps(a, b):
@@ -219,6 +227,8 @@ def validate_instances(instances, room_id='demo-room'):
             raise SceneError('placement', 'Outside room.', details={'issues': [{'code': 'out_of_bounds', 'instanceId': identifier, 'bounds': {'minX': box['center'][0] - box['extents'][0], 'maxX': box['center'][0] + box['extents'][0], 'minZ': box['center'][1] - box['extents'][1], 'maxZ': box['center'][1] + box['extents'][1]}, 'roomBounds': {'minX': 0, 'maxX': room['widthCm'], 'minZ': 0, 'maxZ': room['depthCm']}}]})
         validate_fixed_geometry(room, box, identifier)
         for previous, previous_product, previous_id in boxes:
+            if is_flat(product) or is_flat(previous_product):
+                continue
             if overlaps(box, previous):
                 raise SceneError('placement', f"Overlaps {previous_product['name']}.", details={'issues': [{'code': 'overlap', 'instanceId': identifier, 'conflictingInstanceIds': [previous_id]}]})
         boxes.append((box, product, identifier))

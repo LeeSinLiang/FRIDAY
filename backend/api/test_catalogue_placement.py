@@ -4,7 +4,7 @@ from django.test import Client, TestCase
 from catalogue.feed import load_listings
 
 from .catalogue_products import catalogue_product
-from .scene_service import SceneError, fixtures, validate_instances
+from .scene_service import FLAT_MAX_CM, SceneError, fixtures, is_flat, validate_instances
 
 POANG_ID = 'ikea-193.025.39'
 POANG = {'productId': POANG_ID, 'name': 'POÄNG armchair', 'widthCm': 68, 'depthCm': 82, 'heightCm': 100,
@@ -109,3 +109,32 @@ class CataloguePlacementTests(TestCase):
         outside = {'instanceId': 'pax-1', 'productId': wardrobe['productId'], 'product': wardrobe, 'pose': {'xCm': 10, 'zCm': 10, 'yawRad': 0}}
         response = self.commands([{'type': 'add', 'instance': outside}])
         self.assertEqual((response.status_code, response.json()['error']['message']), (400, 'Outside room.'))
+
+    # ---- A rug does not stop a chair. The same rule, and the same cases, as the editor's check in
+    # frontend/src/scene/placement.ts (frontend/src/region/cataloguePlacement.test.ts): the two must agree. ----
+
+    def carried(self, title_word, instance_id, x=300, z=250, **overrides):
+        listing = next(item for item in load_listings() if item.title.startswith(title_word))
+        product = {**catalogue_product(listing.id), **overrides}
+        return {'instanceId': instance_id, 'productId': listing.id, 'product': product, 'pose': {'xCm': x, 'zCm': z, 'yawRad': 0}}
+
+    def test_a_rug_neither_blocks_nor_is_blocked_in_either_order(self):
+        rug, pile = self.carried('LOHALS', 'rug-1'), self.carried('VINDUM', 'rug-2', x=320, z=260)
+        self.assertEqual((rug['product']['heightCm'], pile['product']['heightCm'], FLAT_MAX_CM), (1.0, 3.0, 3))
+        on_the_rug = self.commands([{'type': 'add', 'instance': rug}, {'type': 'add', 'instance': self.poang}])
+        self.assertEqual(on_the_rug.status_code, 200, on_the_rug.content)
+        # A rug slid under the chair that is already there, overlapping the first rug too; 3.0 cm is exactly the line.
+        under = self.commands([{'type': 'add', 'instance': pile}], revision=1, command_id='c2')
+        self.assertEqual(under.status_code, 200, under.content)
+        self.assertEqual([i['instanceId'] for i in under.json()['instances']], ['rug-1', 'poang-1', 'rug-2'])
+
+    def test_a_rug_is_still_an_item_in_a_room_and_a_millimetre_over_the_line_is_furniture(self):
+        outside = self.commands([{'type': 'add', 'instance': self.carried('LOHALS', 'rug-1', x=50)}])
+        self.assertEqual((outside.status_code, outside.json()['error']['message']), (400, 'Outside room.'))
+        # The line itself. (A carried product with a made-up height cannot test this end to end: the server
+        # refuses it for disagreeing with the catalogue before it ever gets to overlap.)
+        self.assertEqual([is_flat({'heightCm': h}) for h in (1.0, 3.0, 3.1, 73)], [True, True, False, False])
+        # And ordinary furniture still collides, exactly as before.
+        second = {**self.poang, 'instanceId': 'poang-2', 'pose': {'xCm': 310, 'zCm': 250, 'yawRad': 0}}
+        refused = self.commands([{'type': 'add', 'instance': self.poang}, {'type': 'add', 'instance': second}])
+        self.assertEqual((refused.status_code, refused.json()['error']['message']), (400, 'Overlaps POÄNG armchair.'))
