@@ -193,6 +193,26 @@
       ]
     },
     {
+      "id": "ikea-405.355.47",
+      "source": "ikea",
+      "title": "HERRÅKRA armchair",
+      "category": "armchair",
+      "price_cents": 14900,
+      "dims_mm": {
+        "w": 710,
+        "d": 660,
+        "h": 730
+      },
+      "model_url": "/models/furniture/herrakra-armchair-diseroed-dark-yellow/model.glb",
+      "colour_hex": [
+        "#b08d57"
+      ],
+      "materials": [
+        "polyester",
+        "steel"
+      ]
+    },
+    {
       "id": "ikea-002.191.78",
       "source": "ikea",
       "title": "ÄDDE chair",

@@ -33,7 +33,7 @@ class SeedTests(SimpleTestCase):
     def test_catalogue_is_hero_items_untouched_plus_seeds(self):
         catalogue = load_catalogue()
         self.assertGreater(len(catalogue), 12000)
-        self.assertEqual(catalogue[:40], load_listings())
+        self.assertEqual(catalogue[:41], load_listings())
         self.assertEqual(len({listing.id for listing in catalogue}), len(catalogue))
 
 

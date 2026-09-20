@@ -17,9 +17,9 @@ def run(**params: str) -> SearchResponse:
 
 
 class FeedTests(SimpleTestCase):
-    def test_feed_has_40_listings_across_all_categories(self):
+    def test_feed_has_41_listings_across_all_categories(self):
         listings = load_listings()
-        self.assertEqual(len(listings), 40)
+        self.assertEqual(len(listings), 41)
         self.assertEqual({listing.category for listing in listings}, set(CATEGORIES))
 
     def test_every_listing_gets_a_generated_thumb(self):
@@ -29,14 +29,14 @@ class FeedTests(SimpleTestCase):
 class MemorySearchTests(SimpleTestCase):
     def test_no_filters_returns_everything_paged(self):
         result = run(limit="10")
-        self.assertEqual((result.total, len(result.items)), (40, 10))
+        self.assertEqual((result.total, len(result.items)), (41, 10))
 
     def test_category(self):
         self.assertEqual({i.category for i in run(category="armchair").items}, {"armchair"})
 
     def test_fits_w_max_narrows_armchairs(self):
         wide, narrow = run(category="armchair"), run(category="armchair", fits_w_mm="900")
-        self.assertEqual((wide.total, narrow.total), (5, 4))
+        self.assertEqual((wide.total, narrow.total), (6, 5))
         self.assertTrue(all(i.dims_mm.w <= 900 for i in narrow.items))
 
     def test_price_range(self):
@@ -103,8 +103,8 @@ class SearchEndpointTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         body = response.json()
         self.assertEqual(set(body), {"items", "total", "facets"})
-        self.assertEqual((body["facets"]["fits_room"], body["facets"]["fits_room_of"]), (4, 5))
-        self.assertEqual(body["total"], 4)
+        self.assertEqual((body["facets"]["fits_room"], body["facets"]["fits_room_of"]), (5, 6))
+        self.assertEqual(body["total"], 5)
         SearchResponse.model_validate(body)
 
     def test_trailing_slash_and_bad_params(self):

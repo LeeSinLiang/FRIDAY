@@ -159,7 +159,7 @@ class QueryBodyTests(SimpleTestCase):
 class IngestTests(SimpleTestCase):
     def test_actions_use_listing_id_and_only_mapped_fields(self):
         actions = list(to_actions(load_listings(), "listings"))
-        self.assertEqual(len(actions), 40)
+        self.assertEqual(len(actions), 41)
         mapped = {"id", "source", "title", "category", "price_cents", "dims_mm",
                   "colour_hex", "materials", "model_url", "thumb_url"}
         for action in actions:
@@ -217,7 +217,7 @@ class BackendSwitchTests(SimpleTestCase):
                            key=lambda l: l.id)
         client = mock.Mock()
         find = _FIND.validate_python([{"k": "category", "value": "armchair"}, {"k": "fits_w_max", "mm": 900}])
-        client.search.return_value = fake_response(armchairs, find, candidates=5)
+        client.search.return_value = fake_response(armchairs, find, candidates=6)
         with mock.patch.dict(os.environ, {"SEARCH_BACKEND": "elastic"}), \
                 mock.patch.object(es, "get_client", return_value=client):
             response = APIClient().get(self.URL)
@@ -234,7 +234,7 @@ class BackendSwitchTests(SimpleTestCase):
                 mock.patch.object(es, "get_client", return_value=client):
             response = APIClient().get(self.URL)
         self.assertEqual((response.status_code, response["X-Search-Backend"]), (200, "memory-fallback"))
-        self.assertEqual(response.json()["total"], 4)
+        self.assertEqual(response.json()["total"], 5)
 
     def test_missing_credentials_fall_back_to_memory(self):
         env = {k: v for k, v in os.environ.items() if k not in ("ELASTIC_URL", "ELASTIC_API_KEY")}
