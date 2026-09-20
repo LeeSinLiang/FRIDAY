@@ -6,7 +6,8 @@
 // This matches how compile() emits them; see docs/backend/catalogue.md.
 
 import type { Pose, Product } from "../scene/types";
-import { WALL_SIDES, WALL_SIDE_BY_ID, wallRect, type PlaceCm } from "./boundary";
+import { WALL_SIDES, WALL_SIDE_BY_ID, type PlaceCm } from "./boundary";
+import { floorRegion, wallEdges, type FloorRegion } from "./floor";
 import { EPSILON_CM, gap, openingZone, overlapsArea } from "./geometry";
 import { footprintRect } from "./grid";
 import type { Opening, Rect, Scene, WallSide } from "./types";
@@ -49,12 +50,25 @@ const EVERY_KINDS = new Set<PlaceCm["k"]>(["distance_min", "clear", "not_blockin
 const YAW_BACK_TO_WALL: Record<WallSide, number> = { n: 0, w: Math.PI / 2, s: Math.PI, e: (3 * Math.PI) / 2 };
 const sameYaw = (a: number, b: number) => Math.abs(Math.sin((a - b) / 2)) < 1e-6;
 
-function targets(scene: Scene, clause: PlaceCm): Target[] | string {
+/** A wall is a segment now, not a whole side of the room, so touching its end point is not being against it:
+ *  the item's back must run along the wall for at least half the item's own length. On a rectangular floor a
+ *  wall spans the whole side and this is always true. */
+function liesAlong(footprint: Rect, wall: Rect, side: WallSide): boolean {
+  const [low, high, wallLow, wallHigh] = side === "n" || side === "s"
+    ? [footprint.minX, footprint.maxX, wall.minX, wall.maxX] : [footprint.minZ, footprint.maxZ, wall.minZ, wall.maxZ];
+  return Math.min(high, wallHigh) - Math.max(low, wallLow) >= (high - low) / 2 - EPSILON_CM;
+}
+
+// A wall is a solid piece of the floor's boundary, and a room has as many as its shape gives it: an
+// L-shaped floor has two north-facing walls, and "the north wall" means both. Portals are not walls.
+function targets(scene: Scene, clause: PlaceCm, region: FloorRegion): Target[] | string {
   const ref = clause.ref;
-  if (ref.kind === "any_wall") return WALL_SIDES.map((wall) => ({ rect: wallRect(scene.room, wall), wall }));
+  if (ref.kind === "any_wall") return wallEdges(region).map((edge) => ({ rect: edge.rect, wall: edge.side }));
   if (ref.kind === "wall") {
-    const wall = WALL_SIDE_BY_ID[ref.id];
-    return wall ? [{ rect: wallRect(scene.room, wall), wall }] : `the room has no wall "${ref.id}"`;
+    const side = WALL_SIDE_BY_ID[ref.id];
+    if (!side) return `the room has no wall "${ref.id}"`;
+    const edges = wallEdges(region, side);
+    return edges.length ? edges.map((edge) => ({ rect: edge.rect, wall: side })) : `this room has no wall on that side, only an opening`;
   }
   if (ref.kind === "instance") {
     const instance = scene.instances.find((i) => i.instanceId === ref.id);
@@ -88,7 +102,7 @@ function ruleFor(scene: Scene, product: Product, clause: PlaceCm, target: Target
     // "On the wall" (a shelf, a mirror) is floor-wise the same as against it.
     const wall = target.wall;
     return (pose, footprint) => gap(footprint, target.rect) <= AGAINST_TOLERANCE_CM + EPSILON_CM
-      && (wall === undefined || sameYaw(pose.yawRad, YAW_BACK_TO_WALL[wall]));
+      && (wall === undefined || (sameYaw(pose.yawRad, YAW_BACK_TO_WALL[wall]) && liesAlong(footprint, target.rect, wall)));
   }
   if (k === "not_blocking") {
     if (target.opening?.kind === "door") return (_, footprint) => !overlapsArea(footprint, zone(target.opening!.swingCm ?? target.opening!.widthCm));
@@ -108,9 +122,10 @@ function ruleFor(scene: Scene, product: Product, clause: PlaceCm, target: Target
 
 /** Turn one clause into a rule over poses, or say why it cannot be honoured. Never throws. */
 export function resolveClause(scene: Scene, product: Product, clause: PlaceCm,
-                              clearances: Record<WallSide, number> = { n: 0, e: 0, s: 0, w: 0 }): Resolved {
+                              clearances: Record<WallSide, number> = { n: 0, e: 0, s: 0, w: 0 },
+                              region: FloorRegion = floorRegion(scene.room)): Resolved {
   if ((clause.k === "distance_min" || clause.k === "clear") && clause.cm === undefined) return { dropped: "no distance was given" };
-  const found = targets(scene, clause);
+  const found = targets(scene, clause, region);
   if (typeof found === "string") return { dropped: found };
   const rules: Rule[] = [];
   for (const target of found) {

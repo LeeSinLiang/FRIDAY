@@ -13,6 +13,7 @@
 
 import * as pc from "playcanvas";
 import { stateAtPoint } from "../../region/grid";
+import { maskToPixels } from "../../region/maskPixels";
 import { FREE, type Mask } from "../../region/types";
 import type { Pose } from "../types";
 import { cmToScene, sceneToCm } from "../units";
@@ -60,13 +61,10 @@ export function createRegionOverlay(runtime: Runtime): RegionOverlay {
         mipmaps: false, minFilter: pc.FILTER_NEAREST, magFilter: pc.FILTER_NEAREST, addressU: pc.ADDRESS_CLAMP_TO_EDGE, addressV: pc.ADDRESS_CLAMP_TO_EDGE });
       material.emissiveMap = texture; material.opacityMap = texture;
     }
-    const pixels = texture.lock() as Uint8Array;
-    pixels.fill(0);
-    // The engine's plane has v = 0 at +Z, so texture row 0 is the room's far edge: rows are written back to front.
-    for (let iz = 0; iz < countZ; iz++) for (let ix = 0; ix < countX; ix++) {
-      if (mask.data[iz * countX + ix] !== FREE) continue;
-      pixels.set(LIT, ((countZ - 1 - iz) * countX + ix) * 4);
-    }
+    // Row 0 of the texture is the room's z = 0. The engine's plane puts v = 0 on its -Z edge (PlaneGeometry
+    // pushes uv (u, 1 - j/ls) while z runs from +halfExtent down), and raw pixel data is not flipped on
+    // upload, so the rows go in as they are. Reversing them here once mirrored every region.
+    maskToPixels(mask, LIT, texture.lock() as Uint8Array);
     texture.unlock();
     // A baked interior raises scene.exposure to its Blender value, which multiplies emissive too and
     // clips this green to white. Read at upload time because the room sets it after it loads.

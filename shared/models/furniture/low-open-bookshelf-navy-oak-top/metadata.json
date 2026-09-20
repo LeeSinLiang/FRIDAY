@@ -1,0 +1,25 @@
+{
+  "productId": "low-open-bookshelf-navy-oak-top",
+  "modelUrl": "/models/furniture/low-open-bookshelf-navy-oak-top/model.glb",
+  "thumbnailUrl": "/models/furniture/low-open-bookshelf-navy-oak-top/thumbnail.png",
+  "widthCm": 164,
+  "depthCm": 46,
+  "heightCm": 65,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-low-bookshelf-navy-oak",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "UNIDENTIFIED — generic low open bookshelf, navy/black body with an oak-look top, 3 columns x 2 rows of open cubbies, no doors. Visually similar to (but NOT a confirmed match for) IKEA SKRUVBY, which is a different shape (tall single-column unit, not this wide low 3-bay layout).",
+    "dimensionsVerifiedAt": null,
+    "generation": "Higgsfield image_to_3d (Meshy), single reference image, should_texture=true, enable_pbr=true, then gltf-transform optimize (--compress false, --texture-compress auto --texture-size 1024, --simplify --simplify-ratio 0.4)"
+  },
+  "knownLimitations": [
+    "No real product match found — dimensions here are DECLARED to equal the generated/fitted geometry's own measured box (164 x 65 x 46.3 cm, rounded), not verified against any real listing. This is a demo item per collaborator-handoff.md's explicit allowance ('for demo products, choose and declare dimensions deliberately'), not a units/proportion bug.",
+    "catalogueListingId is a synthetic demo listing (`demo-low-bookshelf-navy-oak`), not a real IKEA article number",
+    "Generated from a single product photo, no additional angles",
+    "No manual Blender inspection/correction pass has been done"
+  ]
+}

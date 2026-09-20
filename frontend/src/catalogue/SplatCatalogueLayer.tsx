@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { PlaceClause } from "../lib/dsl/schema";
 import type { Listing } from "../lib/types";
 import { instanceFromListing } from "../region/boundary";
-import { openingsFor } from "../region/roomOpenings";
+import { openingsFor, portalsFor } from "../region/roomOpenings";
 import { useRegion } from "../region/useRegion";
 import { validatePlacement } from "../scene/placement";
 import { createPendingGhost, type PendingGhost } from "../scene/playcanvas/pendingGhost";
@@ -46,7 +46,7 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
   const standing = useMemo(() => (unconfirmed && !instances.some((i) => i.instanceId === unconfirmed.instanceId) ? [...instances, unconfirmed] : instances), [instances, unconfirmed]);
   const known = useMemo(() => (unconfirmed?.product && !products.some((p) => p.productId === unconfirmed.productId) ? [...products, unconfirmed.product] : products), [products, unconfirmed]);
 
-  const region = useRegion(armed ?? hovered, room, known, standing, place, openingsFor(room.roomId));
+  const region = useRegion(armed ?? hovered, room, known, standing, place, openingsFor(room.roomId), portalsFor(room.roomId));
   const fitting = useMemo(() => region ? region.solution.legalCounts.flatMap((count, index) => (count > 0 ? [index] : [])) : [], [region]);
   const yawIndex = yawChoice !== null && fitting.includes(yawChoice) ? yawChoice : Math.max(region?.solution.bestYawIndex ?? 0, 0);
   const owner = armed?.id ?? hovered?.id ?? null;

@@ -201,6 +201,10 @@ class BackendSwitchTests(SimpleTestCase):
     def setUp(self):
         es.get_client.cache_clear()
         self.addCleanup(es.get_client.cache_clear)
+        # These tests are about shape and backend choice; the results filter has its own tests.
+        flag = mock.patch.dict(os.environ, {"SEARCH_RESULTS_REQUIRE_MODEL": "0"})
+        flag.start()
+        self.addCleanup(flag.stop)
         patcher = mock.patch("catalogue.views.load_catalogue", return_value=load_listings())
         patcher.start()
         self.addCleanup(patcher.stop)
@@ -217,7 +221,7 @@ class BackendSwitchTests(SimpleTestCase):
                            key=lambda l: l.id)
         client = mock.Mock()
         find = _FIND.validate_python([{"k": "category", "value": "armchair"}, {"k": "fits_w_max", "mm": 900}])
-        client.search.return_value = fake_response(armchairs, find, candidates=6)
+        client.search.return_value = fake_response(armchairs, find, candidates=sum(l.category == "armchair" for l in load_listings()))
         with mock.patch.dict(os.environ, {"SEARCH_BACKEND": "elastic"}), \
                 mock.patch.object(es, "get_client", return_value=client):
             response = APIClient().get(self.URL)
@@ -234,7 +238,7 @@ class BackendSwitchTests(SimpleTestCase):
                 mock.patch.object(es, "get_client", return_value=client):
             response = APIClient().get(self.URL)
         self.assertEqual((response.status_code, response["X-Search-Backend"]), (200, "memory-fallback"))
-        self.assertEqual(response.json()["total"], 5)
+        self.assertEqual(response.json()["total"], sum(l.category == "armchair" and l.dims_mm.w <= 900 for l in load_listings()))
 
     def test_missing_credentials_fall_back_to_memory(self):
         env = {k: v for k, v in os.environ.items() if k not in ("ELASTIC_URL", "ELASTIC_API_KEY")}

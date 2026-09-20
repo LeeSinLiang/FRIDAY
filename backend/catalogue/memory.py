@@ -38,12 +38,16 @@ def matches(listing: Listing, find: Sequence) -> bool:
     return all(MATCHERS[clause.k](listing, clause) for clause in find)
 
 
-def search(listings: Sequence[Listing], find: Sequence, limit: int, offset: int) -> SearchResponse:
+def search(listings: Sequence[Listing], find: Sequence, limit: int, offset: int,
+           models_only: bool = False) -> SearchResponse:
     """Filter listings by every find clause (AND), order by id, page, and facet the full hit set.
 
     Id order matches the Elasticsearch backend's tiebreak, so both backends page identically.
+    With models_only, items and total cover only listings that have a 3D model, exactly as
+    Elasticsearch's post_filter does; the facets still describe every match.
     """
     candidates = [listing for listing in listings if matches(listing, without_fit(find))]
     hits = sorted((listing for listing in candidates if matches(listing, find)), key=lambda l: l.id)
-    return SearchResponse(items=hits[offset:offset + limit], total=len(hits),
+    returned = [listing for listing in hits if listing.model_url] if models_only else hits
+    return SearchResponse(items=returned[offset:offset + limit], total=len(returned),
                           facets=memory_facets(hits, find, len(candidates)))

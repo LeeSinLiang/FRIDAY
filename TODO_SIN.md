@@ -338,3 +338,15 @@ Two additions, from Saketh. Please read the new "Merging close to the demo" sect
 - Authorized Wan retry submitted as269355d1-822c-4109-badc-e0798d760d66 at live35-credit quote; terminal failed within seconds, no output/provider explanation. User-confirmed first refund recorded separately; retry refund unverified. Preserved identical single-generation20s720p settings and references in docs/demo/assets/wan-one-shot-retry.json; updated treatment and first-attempt history. No third submission, browser access attempt or model switch.
 
 - Post-Wan alternatives checked: live20s720p/audio quotes remain Seedance2.5=140credits,FLUX3Video=110,Wan3Prime=60. Official Higgsfield docs confirm Seedance2.5 up to30s andFLUX3 up to20s with audio. Recommend Seedance2.5 next to preserve the script while trying a different model family from the failed Wan jobs; quality on this exact scene untested. No generations submitted.
+
+## Note from Saketh's lane — CI now runs on every pull request (2026-09-20, 00:55)
+
+`.github/workflows/ci.yml` is on `main`. Every PR gets two checks within about a minute: **Backend** (`manage.py test` with no app labels, plus `manage.py check`) and **Frontend** (`npm test`, `npm run build`). No secrets, nothing to configure.
+
+- **A red X on your PR means do not press Merge.** Tonight #34 and #42 both went into `main` without the suite and left it red; each was caught only because someone happened to look. This is the thing that stops that.
+- It is **advisory**, not a required check: it will never block an emergency fix.
+- It does not replace running the suite on fresh `main` after you merge. CI tests your PR against the `main` it was cut from.
+- `npm test` is now the whole frontend suite (it used to skip the two auth test files), and the backend suite is `manage.py test` with **no labels** (`test api catalogue` skips three apps). README has the three commands.
+- When you report a result, name the command and quote its output line, e.g. "`python manage.py test` → Ran 217 tests in 6.951s / OK (skipped=3)", not "tests pass".
+
+- 2026-09-20 (Evaluate Gaussian splats and surface reconstruction — latest main sync): Resolved the sole TODO_SIN.md conflict by retaining both branch histories while integrating fetched main0f44bc5. Backend manage.py test --noinput: Ran232tests in7.786s / OK(skipped=3). npm test:137+16passed,0failed; npm run build: built in2.48s with existing chunk warning. Browser verification unavailable because owner localhost5173 server is stopped; no servers started. Gaussian board card remains Sin/incomplete for unverified scale. Untracked demo assets preserved; no fetch or push.

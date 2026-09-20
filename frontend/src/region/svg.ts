@@ -2,7 +2,7 @@
 // North (z = 0) is drawn at the top, west (x = 0) at the left, 1 SVG unit = 1 cm.
 
 import type { Instance, Pose, Product } from "../scene/types";
-import { wallBounds } from "./boundary";
+import { floorRegion } from "./floor";
 import { openingZone } from "./geometry";
 import { FREE, UNKNOWN, type Mask, type Opening, type Scene } from "./types";
 
@@ -39,7 +39,9 @@ export type SvgOptions = { title?: string; candidate?: { product: Product; pose:
 
 /** Room outline, openings, placed items, the lit region (green) and unobserved floor (amber). */
 export function toSvg(scene: Scene, mask: Mask, options: SvgOptions = {}): string {
-  const { widthCm: w, depthCm: d } = scene.room, walls = wallBounds(scene.room);
+  const { widthCm: w, depthCm: d } = scene.room;
+  // Every boundary piece of the floor: solid for a wall, dashed for a portal. Not a rectangle, unless the floor is one.
+  const boundary = floorRegion(scene.room, scene.portals).edges.map((edge) => `<line x1="${edge.rect.minX}" y1="${edge.rect.minZ}" x2="${edge.rect.maxX}" y2="${edge.rect.maxZ}" stroke="${COLOURS.wall}" stroke-width="6"${edge.portalId ? ' stroke-dasharray="14 10" stroke-opacity="0.5"' : ""}/>`).join("");
   const product = (instance: Instance) => scene.products.find((p) => p.productId === instance.productId);
   const items = scene.instances.map((instance) => {
     const found = product(instance);
@@ -52,6 +54,6 @@ export function toSvg(scene: Scene, mask: Mask, options: SvgOptions = {}): strin
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-MARGIN_CM} ${-MARGIN_CM} ${w + 2 * MARGIN_CM} ${d + 2 * MARGIN_CM}" style="max-width:100%;height:auto">`
     + `<rect x="${-MARGIN_CM}" y="${-MARGIN_CM}" width="${w + 2 * MARGIN_CM}" height="${d + 2 * MARGIN_CM}" fill="#fff"/>${title}`
     + `<g fill-opacity="0.55" shape-rendering="crispEdges">${runs(mask, FREE, COLOURS.lit)}${runs(mask, UNKNOWN, COLOURS.unknown)}</g>`
-    + `<rect x="${walls.minX}" y="${walls.minZ}" width="${walls.maxX - walls.minX}" height="${walls.maxZ - walls.minZ}" fill="none" stroke="${COLOURS.wall}" stroke-width="6"/>`
+    + boundary
     + (scene.openings ?? []).map((opening) => openingLine(scene, opening)).join("") + items + candidate + `</svg>`;
 }
