@@ -8,7 +8,7 @@
 
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { DataTexture, DoubleSide, Mesh, NearestFilter, RedFormat, ShaderMaterial, UnsignedByteType } from "three";
+import { ClampToEdgeWrapping, DataTexture, DoubleSide, Mesh, NearestFilter, RedFormat, ShaderMaterial, UnsignedByteType } from "three";
 import { cmToScene, sceneToCm } from "../scene/units";
 import type { Pose } from "../scene/types";
 import { stateAtPoint } from "./grid";
@@ -31,8 +31,14 @@ const LIFT_CM = 0.6; // above the floor and grid lines, below any furniture
 const VERTEX = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
 // Texel centres sit on grid points. A soft edge inside each texel keeps the region readable at the
 // grazing angles of a first-person camera, where flat colour alone would smear into a thin band.
+// Precision is declared, not inherited: drivers differ on the default, and software WebGL (where this
+// was first verified) is more forgiving than phones and integrated GPUs. mediump is enough because
+// nothing here grows: the pulse arrives as a 0..1 number computed in JavaScript rather than as a
+// clock the shader would have to take the sine of after an hour on stage.
 const FRAGMENT = `
-  uniform sampler2D uMask; uniform vec2 uShape; uniform float uTime; uniform float uArmed; varying vec2 vUv;
+  precision mediump float;
+  precision mediump sampler2D;
+  uniform sampler2D uMask; uniform vec2 uShape; uniform float uPulse; uniform float uArmed; varying vec2 vUv;
   void main() {
     vec2 uv = vec2(vUv.x, 1.0 - vUv.y);
     float state = texture2D(uMask, uv).r * 255.0;
@@ -44,9 +50,8 @@ const FRAGMENT = `
     vec2 span = fwidth(grid);
     float detail = 1.0 - smoothstep(0.18, 0.45, max(span.x, span.y));
     float dot_ = mix(0.45, 1.0 - smoothstep(0.55, 0.95, max(cell.x, cell.y)), detail);
-    float pulse = 0.85 + 0.15 * sin(uTime * 3.0);
     vec3 colour = mix(vec3(0.16, 0.62, 0.36), vec3(0.35, 0.95, 0.55), dot_);
-    gl_FragColor = vec4(colour, (0.30 + 0.38 * dot_) * mix(0.8, pulse, uArmed));
+    gl_FragColor = vec4(colour, (0.30 + 0.38 * dot_) * mix(0.8, uPulse, uArmed));
   }`;
 
 export default function FloorOverlay({ mask, armed, onPlace, onHoverPose }: Props) {
@@ -56,7 +61,14 @@ export default function FloorOverlay({ mask, armed, onPlace, onHoverPose }: Prop
   const texture = useMemo(() => {
     if (!mask) return null;
     const made = new DataTexture(mask.data, mask.shape[0], mask.shape[1], RedFormat, UnsignedByteType);
-    made.minFilter = made.magFilter = NearestFilter;
+    // Every sampling parameter is set here. Nothing is left to a default: a sample must map to
+    // exactly one texel, with no blending, no mip chain and no wrap at the room's edge.
+    made.minFilter = NearestFilter;
+    made.magFilter = NearestFilter;
+    made.generateMipmaps = false;
+    made.wrapS = ClampToEdgeWrapping;
+    made.wrapT = ClampToEdgeWrapping;
+    made.flipY = false;
     made.unpackAlignment = 1; // rows of 121 bytes are not a multiple of four
     made.needsUpdate = true;
     return made;
@@ -67,14 +79,14 @@ export default function FloorOverlay({ mask, armed, onPlace, onHoverPose }: Prop
   // The scene renders on demand, so the pulse only costs frames while something is armed.
   useFrame(({ clock }) => {
     if (!material.current || !armed) return;
-    material.current.uniforms.uTime.value = clock.elapsedTime;
+    material.current.uniforms.uPulse.value = 0.85 + 0.15 * Math.sin(clock.elapsedTime * 3);
     invalidate();
   });
 
   // Initial values only. three.js CLONES a ShaderMaterial's uniforms, so later writes to this object
   // never reach the GPU: every update below goes through material.current.uniforms instead. Writing
   // to this object is how the first version changed its count on R while drawing the same region.
-  const initialUniforms = useMemo(() => ({ uMask: { value: null }, uShape: { value: [1, 1] }, uTime: { value: 0 }, uArmed: { value: 0 } }), []);
+  const initialUniforms = useMemo(() => ({ uMask: { value: null }, uShape: { value: [1, 1] }, uPulse: { value: 1 }, uArmed: { value: 0 } }), []);
   useLayoutEffect(() => {
     const live = material.current?.uniforms;
     if (!live || !mask || !texture) return;
