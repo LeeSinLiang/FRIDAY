@@ -65,11 +65,10 @@ type Props = {
   ready: boolean;
   locked: boolean;
   onChoose: (product: Product) => void;
-  onClose: () => void;
   onOpenLiveCatalogue?: () => void;
 };
 
-export default function FurnitureCatalogue({ products, ready, locked, onChoose, onClose, onOpenLiveCatalogue }: Props) {
+export default function FurnitureCatalogue({ products, ready, locked, onChoose, onOpenLiveCatalogue }: Props) {
   const [category, setCategory] = useState<Category>("Sofas");
   const [filter, setFilter] = useState<SofaFilter>("All");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -92,7 +91,7 @@ export default function FurnitureCatalogue({ products, ready, locked, onChoose, 
 
   return <div className="furn-catalogue">
     <div className="furn-main">
-      <div className="furn-heading"><h1>{category}</h1><button type="button" className="furn-close" aria-label="Close furniture panel" disabled={locked} onClick={onClose}><Icon name="close" size={21}/></button></div>
+      <div className="furn-heading"><h1>{category}</h1></div>
       {showDetails && selected ? <div className="furn-details">
         <button type="button" className="furn-details-back" onClick={() => setShowDetails(false)}><Icon name="chevron" size={16}/>Back to {category.toLowerCase()}</button>
         <div className="furn-details-image"><ItemImage item={selected}/></div>

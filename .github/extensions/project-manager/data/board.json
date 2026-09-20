@@ -268,6 +268,12 @@
           "title": "Connect existing Vercel projects to GitHub main",
           "done": false,
           "owner": "william"
+        },
+        {
+          "id": "f5b7aa7e-70e7-4b8c-acaa-7c0f30368873",
+          "title": "Collapse furniture panel behind persistent chevron",
+          "done": false,
+          "owner": "william"
         }
       ],
       "description": "React app shell, product browsing, constraint chips, and conversation."
