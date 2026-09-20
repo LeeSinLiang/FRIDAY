@@ -28,7 +28,7 @@ Generated files under `shared/rooms/haussmann-apartment/assets/`:
 
 - `room-full-167fbe4c9837.sog`: 43,110,214 bytes in the reviewed run, SHA-256 `babdd467cfb303f3af58cd1d5d0e2544f0fd7bf630d28685d9b175a6e969b54c`.
 - `surface-full-167fbe4c9837.collision.glb`: approximately 4.6 MB, 137,028 vertices / 268,534 triangles. This is a reference shell, not automatically approved traversable geometry.
-- `preparation.json`: archive/source/output hashes, exact byte counts, tool version and calibration caveat. Compression may be platform-dependent; the source hash is the review identity.
+- `preparation.json`: archive/source/output hashes, exact byte counts, tool version and calibration caveat. GPU clustering produced different compressed bytes on a successful repeat run (43,112,559 bytes); the original browser-reviewed SOG was restored for delivery. Both run reports remain in local scratch. The source hash is the review identity.
 
 ## Transform and reviewed space
 
@@ -40,7 +40,7 @@ The window wall/recesses are fixed. Closed doors are not portals to adjoining ro
 
 ## Integration and verification evidence
 
-Work is isolated in `/private/tmp/HackMIT2026-haussmann` on `codex/haussmann-gaussian`, based on local main `9641a99`. Shared integration is limited to the room selector in `frontend/src/SplatEditor.tsx` and a Haussmann-only `GSPLATDATA_LARGE` setting in `frontend/src/scene/playcanvas/runtime.ts`. The latter improves reverse headings that smear with compact unified storage. Original PLY and packed SOG standalone reverse renders were clean; this is a renderer-path issue, not justification for cropping the room. No shared backend, mesh preparation, furniture dimensions, dependencies or default room changes.
+Work is isolated in `/private/tmp/HackMIT2026-haussmann` on `codex/haussmann-gaussian`, based on local main `9641a99`. Shared integration is limited to the room selector in `frontend/src/SplatEditor.tsx` and a Haussmann-only `GSPLATDATA_LARGE` setting in `frontend/src/scene/playcanvas/runtime.ts`. The latter improves reverse headings that smear with compact unified storage. Original PLY and packed SOG standalone reverse renders were clean; this is a renderer-path issue, not justification for cropping the room. No production backend, mesh preparation, furniture dimensions, dependencies or default room changes. Reconciliation with fetched main required a narrow backend asset-test correction: the pre-existing generated sofa is checked against its scene fixture instead of inventing a retail catalogue listing, retaining its documented size/triangle ceiling.
 
 Local ignored evidence is under `.scratch/gaussian/`:
 
@@ -56,3 +56,7 @@ Use only one current room/session capture worker. QA used separate development p
 ## Earlier search evidence
 
 The creator-linked public 2.6 GB dataset was inspected via bounded ZIP ranges: 1,951 entries include RGB/depth/normal images, COLMAP and XYZ/RGB point clouds, not a ready trained splat. The first PLY header lacked Gaussian attributes; no license file appeared in that inventory. The authenticated SuperSplat asset supplied by the user resolved acquisition instead. The original Blender/Brush training route and Mesh2Splat were researched but not performed. Studio 11 remains a compatibility baseline, not the chosen visual target.
+
+## Automated integration checks
+
+Combined frontend: 110 scene tests and five packaging tests passed; auth: nine passed; production build passed with the existing large-chunk warning. The standalone room-mesh suite (11 tests) and room-bundle suite (four tests) passed. Full backend verification after the asset-test compatibility correction is recorded in TODO_SIN.md. All room documentation is indexed. The Kanban evaluation remains Sin/incomplete because photographic quality is not accepted.

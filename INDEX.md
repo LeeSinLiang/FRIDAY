@@ -24,7 +24,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 | Document | Purpose |
 | --- | --- |
 | [docs/product/PRODUCT.md](docs/product/PRODUCT.md) | Confirmed product purpose, laptop/local constraints, current capabilities and selected first-person direction |
-| [docs/frontend/room-capture/haussmann-apartment.md](docs/frontend/room-capture/haussmann-apartment.md) | Promising CC BY empty-room Gaussian candidate, acquisition gate, visual inspection and pending integration checks |
+| [docs/frontend/room-capture/haussmann-apartment.md](docs/frontend/room-capture/haussmann-apartment.md) | CC BY Haussmann test download, preparation, reviewed geometry, integration evidence and remaining visual defects |
 | [docs/frontend/room-capture/gaussian-splatting-handoff.md](docs/frontend/room-capture/gaussian-splatting-handoff.md) | Separate task: find a free similar empty-room splat or fully convert the source mesh, with coverage and integration gates |
 | [docs/frontend/room-capture/parallel-visual-tracks.md](docs/frontend/room-capture/parallel-visual-tracks.md) | Mesh versus Gaussian task ownership, separate-session handoff, shared contracts and demo comparison gates |
 | [docs/frontend/room-capture/rendering-alternatives.md](docs/frontend/room-capture/rendering-alternatives.md) | Baked mesh, runtime lightmaps, architectural viewers, browser path tracing and panorama tradeoffs |
