@@ -93,6 +93,28 @@ type Opening = {
 
 Without it those clauses are dropped with a reason and everything else still solves.
 
+## In the app: hover, pick up, place
+
+`frontend/src/catalogue/CatalogueShelf.tsx` is a docked, non-modal panel in the editor. A sentence goes to `POST /api/compile`; its `find[]` searches `GET /api/search`; its `place[]` narrows the region. Hovering a result solves for it (`useRegion`: 90 ms debounce, a result is discarded if the pointer has moved on) and lights the floor. Clicking a result picks it up; clicking lit floor places it through `instanceFromListing` and the editor's normal edit path, so it is validated and saved like any other item. **R** turns it through the rotations that fit; **Esc** puts it down. The panel says that it fits, or that it won't and why, and lists clauses it could not use. `?dev=1` adds the raw per-rotation sample counts, which mean nothing to a shopper.
+
+**A click on green always places.** The mask is drawn with nearest filtering, one texel per sample, so the lit area *is* the set of pixels that round to a lit sample. A click is snapped to that sample rather than placed at the raw raycast point: the mask is the set of poses that were proven, so an item is only ever placed at one of them. The editor's snap-to-grid toggle therefore has no effect on whether a placement succeeds. Clicks outside the lit region do nothing, quietly. As a last guard the app re-asks `validatePlacement` before adding and logs an error if it ever disagrees, since that would be a solver bug.
+
+### The renderer lives in one file
+
+`frontend/src/region/FloorOverlay.tsx` is the only file in the region module that imports three.js or React Three Fiber; a test fails if another one does. Its whole interface is **a mask in, a pose out**: `{ mask, armed, onPlace(pose) }`. It needs three things from whatever renderer hosts it:
+
+1. **A floor plane in scene coordinates** with a known origin and axes. Today: origin at a floor corner, +X width, +Z depth, `cmToScene` for scale; the quad overhangs the first and last sample by half a cell so texel centres sit on grid points.
+2. **A single-channel texture it can upload and sample in the floor material.** Today: `mask.data` as an `R8` `DataTexture`, nearest filtering, `unpackAlignment = 1` (rows of 121 bytes are not a multiple of four), sampled by a ~20-line shader that lights `free`, discards everything else, and fades its dot pattern with `fwidth` so it does not crawl at eye level.
+3. **A raycast from the pointer to a floor coordinate in cm.** Today: R3F's pointer events on the quad give `event.point`.
+
+Porting to PlayCanvas means rewriting this one file against those three points: a `pc.Texture` with `PIXELFORMAT_R8` and nearest filtering, a small shader or material chunk on a floor plane entity, and a camera `screenToWorld` ray intersected with the floor plane. Estimate: **2–3 hours** including the eye-level check, assuming the splat room keeps the floor at y = 0 in the same cm-derived coordinates. Nothing else in `frontend/src/region/` or `frontend/src/catalogue/` changes.
+
+One thing worth knowing before porting: three.js clones a `ShaderMaterial`'s uniforms, so they must be written through the live material, not the object passed in. The first version here wrote to the original object; the count changed when the item was turned and the drawn region did not.
+
+### Rooms
+
+`shared/scene-fixtures.json` has an additive `rooms` map of presets beside the default `room`. `?room=studio` selects the **Studio**, 260 × 200 cm with a table and a chair already placed, and the panel switches rooms in one click (a reload: the room is a constant for the life of the page). It exists so "this won't fit, and here is why" can be shown rather than described: in the 600 × 500 cm living room almost everything fits. See the [scene API](../backend/contracts/scene-api.md) for how the server keeps a layout per room.
+
 ## Debug view
 
 `toSvg(scene, mask)` returns an SVG string: room, openings, placed items, lit region (green), unobserved floor (amber). `npm --prefix frontend run region:debug [outDir]` writes examples. The dev page at `/dev-search.html` solves the compiled sentence in the editor's 600 × 500 cm fixture room (with stub openings and two placed items, so the ids `compile()` emits resolve) and shows the floor, the legal count per rotation, and dropped clauses in red.
@@ -108,5 +130,7 @@ Without it those clauses are dropped with a reason and everything else still sol
 | `occupancy.ts` | `floor-grid-v1` input, summed-area footprint tests |
 | `geometry.ts`, `clauses.ts` | Rect helpers; one rule per clause; tunables; `dropped` reasons |
 | `solve.ts`, `explain.ts` | Entry point; why nothing fits |
+| `FloorOverlay.tsx` | The only renderer-specific file: draws a mask, reports a placed pose |
+| `useRegion.ts` | Debounced hover → solve, stale results dropped |
 | `svg.ts`, `debugScenes.ts`, `devScene.ts` | Debug view, debug script scenes, dev-page stub room |
 | `rng.ts`, `region.test.ts`, `clauses.test.ts` | Seeded generator and tests; run by `npm test` through `scene/all-tests.ts` |

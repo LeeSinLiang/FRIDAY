@@ -6,7 +6,7 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## In progress
 
-- None. Next, each off fresh `main`: catalogue products placeable in a scene; floor overlay on the Three.js scene; Deepgram transcription.
+- None. Item C is in review. Next is Deepgram transcription, only on Saketh's go-ahead.
 
 ## Next
 
@@ -24,6 +24,16 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 For each import, verify expected/actual counts, rejected rows, stable IDs on a second run, search results, and one selected GLB through the real browser scene before marking these tasks done. No source data has been imported yet.
 
 ## Done
+
+- **Item C — catalogue in the room: hover lights the floor, click places (2026-09-19).** Branch `codex/saketh-floor-overlay`.
+  - Before it: PR #22 (compile tests independent of the project cache) merged, then found that my piped `git push` had been rejected because William's agent had pushed a docs commit onto that branch, so #22 merged without the fail-open throttle its description claimed. Landed it as PR #24, corrected the record on #22, and verified `main`. Runtime path verified on a fresh clone of `codex/visa-sandbox` plus the fix: `setup.sh` there creates the cache table; two real compiles wrote a throttle row to the database cache; with the table dropped compile still answered 200.
+  - Built: `frontend/src/region/FloorOverlay.tsx` (only renderer-specific file; mask in, pose out), `useRegion.ts`, `frontend/src/catalogue/{api.ts,CatalogueShelf.tsx,shelf.css}`, room presets (`shared/scene-fixtures.json` `rooms`, `frontend/src/scene/fixtures.ts`, per-room layouts in `backend/api/scene_service.py` / `scene_views.py`), tests `frontend/src/region/rooms.test.ts` and `backend/api/test_rooms.py`.
+  - Found and fixed in the browser: (1) three.js clones shader uniforms, so the drawn region never changed after first mount although the count did, exactly the "rotation is cosmetic" failure Saketh predicted; (2) the chosen turn reset when the pointer moved from the shelf to the floor; (3) a stale hover survived a new search; (4) dev counts overlapped the results list.
+  - Browser verification (headless Chrome, software WebGL, private stack on 8211/5211): "an armchair" → chip `armchair`, 1,005 matches. Hover POÄNG → floor lights. Per-rotation counts 8881 / 8961 / 8881 / 8961, matching Saketh's hand calculation; R changes the count and visibly reshapes the lit rectangle (520 × 553 px → 533 × 527 px in top view). Click outside the lit region: nothing, item stays in hand. Click inside: placed, saved (revision 1), POÄNG joins the server's product list. Snap-to-grid off (`aria-checked=false`): placed at a proven sample, turn kept (180°). No solver/editor disagreement logged. One transient 503 from SQLite contention in scene storage; the app's retry saved it. Eye-level view checked; dot pattern now fades with screen-space sample size. Studio room: one click, server agrees (260 × 200, two seeded items), EKTORP → "won't fit — there is no free floor big enough for its 218 × 88 cm footprint."
+  - Copy: the panel says it fits or why it won't; raw sample counts only with `?dev=1`.
+  - Docs: `docs/frontend/region-solver.md` (app flow, renderer contract, rooms), `docs/backend/contracts/scene-api.md` (room presets), notes appended to `TODO_SIN.md`, `TODO_ADELLE.md` (overlay colour is her call), `TODO_WILLIAM.md`. `AGENTS.md` gains "Clean up after yourself"; `.gitignore` gains `.scratch/`.
+  - Verification: backend 138 tests, frontend 61 tests, build OK. Processes stopped and ports checked (0 listeners); scratch files under `.scratch/`; the stray screenshot beside the repo was removed.
+  - Not started, by decision: William's Blender-MCP agent-context request and his three catalogue-import tasks stay in Next.
 
 - **Combined product and GLB import handoff (2026-09-19).** Added three planning tasks under Next and matching Saketh catalogue cards on the Kanban board. Sources, proposed Elasticsearch indices, field/provenance requirements, scene-ready listing gate, and verification criteria are recorded above. No data was imported and no application code or runtime was changed. Verification: task titles and IDs match the board; `git diff --check` passed.
 

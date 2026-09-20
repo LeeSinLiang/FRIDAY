@@ -49,6 +49,10 @@ An instance may carry its product inline, so a scene no longer depends on `share
 - Snapshots list every catalogue product placed in the scene under `products`, after the fixtures, so consumers that look products up by id need no change. The carried `product` also round-trips on the instance through `PUT /api/scene/`.
 - Frontend: `instanceFromListing(listing, instanceId, pose)` in `frontend/src/region/boundary.ts` builds such an instance; `productOf` and `productsWith` in `frontend/src/scene/products.ts` resolve it. `validatePlacement`, the edit reducer and `parseSceneSnapshot` accept it; a shared product always wins over a carried one.
 
+## Room presets (added by Saketh's lane, 2026-09-19)
+
+`shared/scene-fixtures.json` may list extra rooms under `rooms`, each `{label, room, instances}`. The `friday_room` cookie selects one; an absent, empty or unknown value means the default room, which behaves exactly as before. Each room has its own layout per session, stored under `<session key>:<room id>`, so switching rooms never drags furniture into walls, and every scene endpoint (snapshot, commands, placement, captures) follows the cookie because they all key off the same value. A preset's `instances` seed its layout once, on first use; after that the layout is the user's, including an empty one. Validation uses the selected room's dimensions. Snapshots never include the `rooms` map.
+
 ## Placement and failures
 
 Both engines check rotated rectangular footprints using separating axes, room bounds, height, finite numbers, and known dimensions. Touching edges are allowed (1e-6 cm tolerance). This is conservative metadata geometry, not mesh collision, walking clearance, door swing, or a feasible-space overlay. New manual pieces find the nearest free grid slot; dragging previews green/red, and invalid drops restore the last committed pose.

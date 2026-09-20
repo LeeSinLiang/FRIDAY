@@ -60,3 +60,6 @@ Thumbs.db
 # Project-manager transient persistence files (keep board.json tracked)
 .github/extensions/project-manager/data/board.json.lock
 .github/extensions/project-manager/data/board.json.*.tmp
+
+# Agent scratch space: screenshots and throwaway files (see AGENTS.md)
+.scratch/

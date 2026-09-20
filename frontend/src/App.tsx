@@ -4,12 +4,19 @@ import {
   useCallback,
   useEffect,
   useRef,
+  useMemo,
   useState,
 } from "react";
 import CapturePanel from "./CapturePanel";
 import { Icon } from "./Icons";
-import { PRODUCTS, ROOM } from "./scene/fixtures";
+import { PRODUCTS, ROOM, ROOM_LABEL } from "./scene/fixtures";
 import { productOf, productsWith } from "./scene/products";
+import CatalogueShelf from "./catalogue/CatalogueShelf";
+import type { PlaceClause } from "./lib/dsl/schema";
+import type { Listing } from "./lib/types";
+import { instanceFromListing } from "./region/boundary";
+import FloorOverlay from "./region/FloorOverlay";
+import { useRegion } from "./region/useRegion";
 import { SCENE_UNIT_CM } from "./scene/units";
 import { useSceneSync } from "./scene/useSceneSync";
 import { findOpenPose, validatePlacement } from "./scene/placement";
@@ -147,6 +154,19 @@ export default function App() {
   const sync = useSceneSync({instances, replace, interactionActive: dragging});
   const [placementPreview, setPlacementPreview] = useState<PlacementPreview | null>(null);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  // Catalogue placement: hover lights the floor, picking arms it, a click on lit floor places.
+  const [hoveredListing, setHoveredListing] = useState<Listing | null>(null);
+  const [armedListing, setArmedListing] = useState<Listing | null>(null);
+  const [placeClauses, setPlaceClauses] = useState<PlaceClause[]>([]);
+  const [yawChoice, setYawChoice] = useState<number | null>(null);
+  const sceneProducts = useMemo(() => productsWith(catalogue, instances), [instances]);
+  const region = useRegion(armedListing ?? hoveredListing, ROOM, sceneProducts, instances, placeClauses);
+  const fitting = region ? region.solution.legalCounts.map((count, index) => (count > 0 ? index : -1)).filter((index) => index >= 0) : [];
+  const yawIndex = yawChoice !== null && fitting.includes(yawChoice) ? yawChoice : Math.max(region?.solution.bestYawIndex ?? 0, 0);
+  // A chosen turn belongs to the item in hand. Hovering other cards, or moving the pointer from the
+  // shelf to the floor, must not undo it.
+  const turnOwner = armedListing?.id ?? hoveredListing?.id ?? null;
+  useEffect(() => setYawChoice(null), [turnOwner]);
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const selectedRowRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -238,11 +258,15 @@ export default function App() {
         edit({ type: "remove", instanceId: selectedId });
       } else if (event.key === "Escape") {
         select(null);
+        setArmedListing(null);
+      } else if (event.key.toLowerCase() === "r" && armedListing && fitting.length > 1) {
+        event.preventDefault();
+        setYawChoice(fitting[(fitting.indexOf(yawIndex) + 1) % fitting.length]);
       }
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [edit, redo, undo, select, selectedId, sync.ready]);
+  }, [edit, redo, undo, select, selectedId, sync.ready, armedListing, fitting, yawIndex]);
   const add = (item: Product) => {
     if (draggingRef.current || !sync.ready) return;
     const instanceId = crypto.randomUUID();
@@ -258,6 +282,19 @@ export default function App() {
     select(instanceId);
     setCatalogOpen(false);
     setNotice(`${item.name} added`);
+  };
+  const placeListing = (pose: Pose) => {
+    if (!armedListing || draggingRef.current || !sync.ready || instances.length >= 100) return;
+    const instance = instanceFromListing(armedListing, crypto.randomUUID(), pose);
+    // The overlay only reports poses the solver proved, and the solver asks this same check, so a
+    // refusal here is a solver bug. Say so loudly rather than drop an item where the editor forbids it.
+    const verdict = validatePlacement(ROOM, sceneProducts, [...instances, instance], instance.instanceId, pose);
+    if (!verdict.valid) { console.error("region solver lit a pose the editor refuses", pose, verdict.reason); return; }
+    edit({ type: "add", instance });
+    select(instance.instanceId);
+    setNotice(`${armedListing.title} placed`);
+    setArmedListing(null);
+    setHoveredListing(null);
   };
   const updatePose = (patch: Partial<Pose>) => {
     if (selected && !draggingRef.current)
@@ -279,7 +316,7 @@ export default function App() {
         </a>
         <span className="header-divider" />
         <div className="room-title">
-          Living room
+          {ROOM_LABEL}
           <span>
             {ROOM.widthCm} × {ROOM.depthCm} cm
           </span>
@@ -310,7 +347,10 @@ export default function App() {
             <Scene
               editingEnabled={sync.ready}
               instances={instances}
-              products={productsWith(catalogue, instances)}
+              products={sceneProducts}
+              overlay={
+                <FloorOverlay mask={region ? region.solution.masks[yawIndex] : null} armed={armedListing !== null} onPlace={placeListing} />
+              }
               selectedId={selectedId}
               mode={mode}
               resetKey={resetKey}
@@ -643,6 +683,16 @@ export default function App() {
           ))}
         </div>
       </dialog>
+      <CatalogueShelf
+        region={region}
+        yawIndex={yawIndex}
+        armedId={armedListing?.id ?? null}
+        disabled={!sync.ready}
+        canSwitchRooms={sync.status === "saved" && !dragging}
+        onHover={setHoveredListing}
+        onPick={setArmedListing}
+        onPlace={setPlaceClauses}
+      />
       <div className="placement-notice" role="status" aria-live="polite">
         {notice}
       </div>

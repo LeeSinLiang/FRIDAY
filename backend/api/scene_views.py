@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .scene_service import SceneError, apply_scene_commands, save_scene, scene_for_session, serialize
+from .scene_service import SceneError, apply_scene_commands, layout_key, room_presets, save_scene, scene_for_session, serialize
 
 
 def anonymous_csrf(view):
@@ -26,10 +26,16 @@ def anonymous_csrf(view):
     return respond
 
 
+ROOM_COOKIE = 'friday_room'
+
+
 def session_key(request):
     if not request.session.session_key:
         request.session.create()
-    return request.session.session_key
+    # Every scene endpoint keys its storage off this value, so choosing the room here moves the whole
+    # API (layout, commands, placement, captures) to that room's layout with no other change.
+    room_id = request.COOKIES.get(ROOM_COOKIE) or None
+    return layout_key(request.session.session_key, room_id if room_id in room_presets() else None)
 
 
 def execute(callback, status=200, explicit=False):
