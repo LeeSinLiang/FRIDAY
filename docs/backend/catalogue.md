@@ -1,6 +1,6 @@
 # Catalogue, search and language layer
 
-Owner: Saketh. Status: `GET /api/search` live on the in-memory backend; Elasticsearch backend live and verified against the cluster (12,040 listings indexed), with facets.
+Owner: Saketh. Status: `GET /api/search` live on the in-memory backend; Elasticsearch backend live and verified against the cluster (12,041 listings indexed), with facets.
 
 ## What this is
 
@@ -16,7 +16,7 @@ This layer never does geometry.
 | `backend/catalogue/dsl/schema.py` | `Program`, 7 `FindClause` + 6 `PlaceClause`, `Ref` — validating definition |
 | `frontend/src/lib/types.ts` | TypeScript mirror of `types.py` |
 | `frontend/src/lib/dsl/schema.ts` | TypeScript mirror of `dsl/schema.py` |
-| `backend/catalogue/data/listings.json` | Stub merchant feed: 40 items, real dimensions, feed-shaped (`source`, `fetched_at`) |
+| `backend/catalogue/data/listings.json` | Stub merchant feed: 41 items, real dimensions; one (HERRÅKRA) carries a `model_url`, feed-shaped (`source`, `fetched_at`) |
 | `backend/catalogue/feed.py` | Reads the feed into validated `Listing`s; fills in generated thumbnails |
 | `backend/catalogue/thumbs.py` | SVG data-URI placeholder thumbnails (no image assets) |
 | `backend/catalogue/params.py` | Query params → find clauses. Pure |
@@ -145,7 +145,7 @@ defaults to `listings`; override with `ELASTIC_INDEX`. Re-ingesting overwrites b
 
 ## Catalogue size
 
-The catalogue is the 40 hero items plus `CATALOGUE_SEED_COUNT` seed listings (default 12,000),
+The catalogue is the 41 hero items plus `CATALOGUE_SEED_COUNT` seed listings (default 12,000),
 generated deterministically so the memory backend and the index always hold the same data.
 `uv run python -m catalogue.ingest` indexes all of it in about three seconds.
 

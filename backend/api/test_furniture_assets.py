@@ -23,6 +23,11 @@ FLOOR_TOLERANCE_CM = 1.0
 CENTRE_TOLERANCE_CM = 2.0
 MAX_BYTES = 5 * 1024 * 1024
 MAX_TRIANGLES = 30000
+# The regression tests below replay what happened to one specific asset, so they name it. Picking
+# "the first folder" would silently test a different model the day a lamp sorts ahead of this chair.
+HERRAKRA = ASSETS / 'herrakra-armchair-diseroed-dark-yellow'
+HERRAKRA_GENERATED_HEIGHT_M = 1.8987
+HERRAKRA_LISTED_WIDTH_CM = 71
 
 
 def allowed(expected_cm):
@@ -66,19 +71,18 @@ class FurnitureAssetTests(SimpleTestCase):
 
     def test_the_check_really_catches_a_unit_cube_export(self):
         """Undo the fit on a copy and make sure the numbers it would have failed on are the ones we saw."""
-        folder = asset_folders()[0]
         with tempfile.TemporaryDirectory() as scratch:
             copy = Path(scratch) / 'model.glb'
-            shutil.copy(folder / 'model.glb', copy)
-            fit_to_height(copy, 1.8987)  # back to the generator's scale, but standing on the floor
+            shutil.copy(HERRAKRA / 'model.glb', copy)
+            fit_to_height(copy, HERRAKRA_GENERATED_HEIGHT_M)  # back to the generator's scale, but standing on the floor
             raw = measure(copy)
-            self.assertGreater(100 * raw['size'][0] - 71, allowed(71) * 10, 'a 2.6x model must miss by far more than the tolerance')
+            self.assertGreater(100 * raw['size'][0] - HERRAKRA_LISTED_WIDTH_CM, allowed(HERRAKRA_LISTED_WIDTH_CM) * 10,
+                               'a 2.6x model must miss by far more than the tolerance')
 
     def test_fitting_is_uniform_and_lands_on_the_floor(self):
-        folder = asset_folders()[0]
         with tempfile.TemporaryDirectory() as scratch:
             copy = Path(scratch) / 'model.glb'
-            shutil.copy(folder / 'model.glb', copy)
+            shutil.copy(HERRAKRA / 'model.glb', copy)
             before = measure(copy)
             applied = fit_to_height(copy, 0.5)
             after = measure(copy)
