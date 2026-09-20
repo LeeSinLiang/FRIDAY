@@ -155,3 +155,6 @@ Screenshots: `.scratch/progressive-voice-desktop.jpg` and `.scratch/progressive-
 `npm test` reported `187 passed / 0 failed` plus `25 passed / 0 failed`; full backend
 `manage.py test` reported `Ran 284 tests in 11.123s / OK (skipped=5)`; `npm run build` reported
 `built in 3.83s`. No catalogue, placement, cart, or floor code changed for this correction.
+At 390 × 844, a browser check confirmed the live status remains in the accessibility tree
+(`display: block`, clipped to 1 px) with no visible bubble; the final CSS build reported
+`built in 3.86s`.

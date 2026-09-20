@@ -196,7 +196,7 @@
 @media(max-width:760px){
   .splat-editor.has-panel .splat-panel.is-catalogue {bottom:78px;}
   .splat-editor.has-panel:has(.splat-panel.is-catalogue) .splat-bottom-center {display:flex;bottom:12px;left:50%;right:auto;transform:translateX(-50%);z-index:4;}
-  .splat-editor.has-panel:has(.splat-panel.is-catalogue) .splat-help,
+  .splat-editor.has-panel:has(.splat-panel.is-catalogue) .splat-help:not(.is-voice-status),
   .splat-editor.has-panel:has(.splat-panel.is-catalogue) .splat-edit-tools>span,
   .splat-editor.has-panel:has(.splat-panel.is-catalogue) .splat-edit-tools>button:not(.splat-speak) {display:none;}
   .splat-editor.has-panel:has(.splat-panel.is-catalogue) .splat-bottom-center:has(.is-voicing) {left:50%;}
