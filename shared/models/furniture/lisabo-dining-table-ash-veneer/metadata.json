@@ -9,6 +9,7 @@
   "upAxis": "+Y",
   "frontAxis": "+Z",
   "pivot": "floor-footprint-center",
+  "unbound": "As generated the model is 149.6 x 79.9 cm against the listing's 140 x 78 cm, outside the asset check. It needs 6.8% non-uniform scale, inside the 10% cap, so it is unlinked only until it is refitted.",
   "catalogueListingId": "ikea-702.211.42",
   "source": {
     "product": "IKEA LISABO table, ash veneer (702.211.42), matches the pre-existing stub catalogue entry",

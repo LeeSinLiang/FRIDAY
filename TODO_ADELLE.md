@@ -82,3 +82,20 @@ Two additions, from Saketh. Please read the new "Merging close to the demo" sect
 - **Said out loud, because this is what the freeze is for:** tonight #34 went into `main` without the suite being run and left `main` red, seven backend failures, until #37. Nobody was careless in an unusual way; it was a reasonable-looking asset PR late at night. That is exactly the change the freeze rule exists to stop from landing an hour before we present. Whoever merges runs the full suite on fresh `main` at once, and says so with the numbers.
 
 - **About #34 specifically:** nothing of yours was lost. Both listings stay in the catalogue. The two models are unlinked for now (`model_url: null`, an `unbound` reason in each `metadata.json`) because they miss their listings by 14 and 18 cm, as your own notes said, and a rendered sofa narrower than the box the fit check uses would be a visible lie. Their colours were moved onto the hero palette (`#30475e`): colour search only matches palette colours. Refit with capped non-uniform scale is on Saketh's list.
+
+## Note from Saketh's lane — #42 turned `main` red; fixed in the PR that adds this note (2026-09-20, 00:20)
+
+Adele, this is the second time tonight (#34, then #42), so plainly: **before you press Merge, run this from the repo root and read the last lines.**
+
+```
+(cd backend && OPENAI_API_KEY= COMPILE_LIVE_TEST=0 uv run python manage.py test)
+```
+
+It takes about ten seconds. It must end `OK`. After #42 it ended `FAILED (failures=2)`, and until it is green again nobody else can tell whether their own change broke something. Your asset notes already say which models miss their listing; that knowledge just has to stop the merge, or travel with an `unbound` line as below.
+
+What I did, and nothing of yours is lost:
+
+- **LISABO chair and STOCKHOLM mirror pass and stay linked.** Good models; the chair is within 1 cm on every axis.
+- **LISABO table:** 149.6 x 79.9 cm as generated against 140 x 78 cm listed. Unlinked for the moment (`model_url: null`, `unbound` reason in its `metadata.json`). It needs 6.8% non-uniform scale, inside the 10% cap Saketh set, so I am refitting it next and it comes back.
+- **HEKTAR lamp:** the arm reaches 103.5 cm sideways, and the listing's footprint is the 31 cm base, which is what the fit check uses. Rendered, the arm would pass through walls the solver thinks are clear. No scale fixes that. Unlinked, stays in the repo.
+- **How to land a model that misses:** leave the listing's `model_url` as `null` and add an `"unbound": "<why>"` line to the asset's `metadata.json`. The suite accepts that, the listing still places as a true-size stand-in, and `main` stays green. The rule the test enforces: a model either matches its listing (2 cm or 3%) or no listing links to it.

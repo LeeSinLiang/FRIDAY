@@ -323,7 +323,7 @@
         "d": 780,
         "h": 740
       },
-      "model_url": "/models/furniture/lisabo-dining-table-ash-veneer/model.glb",
+      "model_url": null,
       "colour_hex": [
         "#d9b88a"
       ],
@@ -736,7 +736,7 @@
         "d": 310,
         "h": 1810
       },
-      "model_url": "/models/furniture/hektar-floor-lamp-dark-gray/model.glb",
+      "model_url": null,
       "colour_hex": [
         "#3d3f41"
       ],
