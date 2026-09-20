@@ -1,0 +1,41 @@
+{
+  "productId": "walnut-slat-bed",
+  "modelUrl": "/models/furniture/walnut-slat-bed/model.glb",
+  "thumbnailUrl": "/models/furniture/walnut-slat-bed/thumbnail.png",
+  "widthCm": 172.7,
+  "depthCm": 212.3,
+  "heightCm": 85.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-walnut-slat-bed",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented warm-Japandi low walnut slat bed, a low slatted platform with a thin slatted headboard, dressed with a rumpled linen duvet and two pillows, backing a synthetic stub listing.",
+    "generation": "Four-view turnaround reference sheet generated with the codex-image skill (front, three-quarter-front-left, side profile, rear on an opaque white seamless background), cut at detected gutter boundaries by scripts/turnaround_crop.mjs, then Higgsfield multi_image_to_3d (Meshy) with should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging and animation off, plus a walnut/linen texture_prompt.",
+    "postProcessing": "gltf-transform resize to 1024 x 1024 textures (resize only: textures were NOT re-encoded to a lossy codec and geometry was NOT simplified, so every vertex is the generator's own; 12.65 MB to 3.9 MB), then scripts/fit_glb.py 170 215 85.",
+    "dimensionsVerifiedAt": "Not a retail product, so there is nothing external to verify against. The declared dimensions are what the mesh measures: 172.6607 x 212.3393 x 85.0 cm (w x d x h).",
+    "priceVerifiedAt": "None. price_cents on the stub listing is invented demo data, not a real price."
+  },
+  "measured": {
+    "triangles": 25215,
+    "bytes": 3901208,
+    "exactCm": [
+      172.6607,
+      212.3393,
+      85.0
+    ]
+  },
+  "knownLimitations": [
+    "Generic visual proxy, not a real SKU. It may only back a synthetic stub listing.",
+    "The best fit of the three in this batch. fit_glb.py exited 0, inside the asset tolerance, with residuals of only +2.66 cm width and -2.66 cm depth against the 170 x 215 x 85 brief. Height is exact at 85.0 cm. It reached that by using the full 10 percent anisotropy cap, so the mesh is stretched relative to what the generator produced; the raw mesh measured 169.6 x 189.6 x 77.4 cm.",
+    "Orientation was checked against the file and is correct for this repo: the long axis is on Z and the headboard mass sits at negative Z (normalised centroid Z of -0.94 over the top 15 percent of the model's height), so the foot of the bed faces +Z. No rotation was applied.",
+    "The slats are the whole point of this design and they are the part most at risk. They were reconstructed photogrammetrically from four still views, so the gaps between slats may be partly filled, shallow, or uneven rather than true openings, and the slat pitch may drift from the reference sheet. This has NOT been checked in a render.",
+    "Single merged mesh: frame, slats, mattress, duvet and pillows are not separately addressable.",
+    "The duvet folds and pillows are reconstructed from four still views, so the bedding geometry is an approximation of the reference sheet rather than simulated cloth.",
+    "The underside and the area behind the headboard are generated, not observed. Expect approximate geometry there.",
+    "No manual Blender inspection pass.",
+    "Visual quality has NOT been verified in a render. Only measurements, orientation, triangle count and byte size were checked against the file."
+  ]
+}

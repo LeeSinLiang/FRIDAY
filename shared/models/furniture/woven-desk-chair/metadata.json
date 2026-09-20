@@ -1,0 +1,39 @@
+{
+  "productId": "woven-desk-chair",
+  "modelUrl": "/models/furniture/woven-desk-chair/model.glb",
+  "thumbnailUrl": "/models/furniture/woven-desk-chair/thumbnail.png",
+  "widthCm": 50.0,
+  "depthCm": 55.0,
+  "heightCm": 85.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-woven-desk-chair",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented warm-Japandi solid white-oak desk chair with a coarse woven paper-cord seat and a curved low back rail, backing a synthetic stub listing.",
+    "generation": "Four-view turnaround sheet (codex-image), cropped at detected gutter boundaries by scripts/turnaround_crop.mjs, then Higgsfield multi_image_to_3d (Meshy) with should_texture, enable_pbr, should_remesh, triangle topology, target_polycount 28000, symmetry_mode auto, and a texture_prompt calling for a chunky, openly gapped basketweave.",
+    "postProcessing": "gltf-transform resize to 1024 px textures (resize only, no lossy re-encode, geometry untouched), then scripts/fit_glb.py 50 55 85.",
+    "dimensionsVerifiedAt": "Not a retail product; nothing external to verify against. The declared dimensions are what the mesh measures.",
+    "priceVerifiedAt": "None. price_cents on the stub listing is invented demo data."
+  },
+  "measured": {
+    "triangles": 28870,
+    "bytes": 4060432,
+    "exactCm": [
+      50.0,
+      85.0,
+      55.0
+    ]
+  },
+  "knownLimitations": [
+    "Generic visual proxy, not a real SKU. It may only back a synthetic stub listing.",
+    "The seat weave is the riskiest part of the asset. The source sheet draws it as a coarse, openly gapped basketweave, but at 28k triangles the individual cords are likely carried by texture and normal detail rather than by modelled strands, and the gaps between them may be painted rather than actually open. Not verified in a render.",
+    "The joints where the seat rails, back uprights and legs meet are reconstructed, not engineered. Small interpenetrations or soft transitions are possible.",
+    "The underside of the seat and the frame's inner faces are generated rather than observed.",
+    "fit_glb.py reached 50 x 55 x 85 cm exactly (exit 0, residual 0.00 on every axis) using a per-axis scale at 5.78 percent anisotropy, so the mesh is slightly stretched relative to what the generator produced.",
+    "frontAxis +Z checked from geometry: every vertex in the top 5 cm band, which is the backrest, sits between z -27.5 and -13.3 cm, so the back is at negative z and the seat faces +Z as declared.",
+    "Visual quality has NOT been verified in a render. Only measurements, orientation, triangle count and byte size were checked against the file."
+  ]
+}

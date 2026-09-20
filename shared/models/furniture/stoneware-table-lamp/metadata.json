@@ -1,0 +1,40 @@
+{
+  "productId": "stoneware-table-lamp",
+  "modelUrl": "/models/furniture/stoneware-table-lamp/model.glb",
+  "thumbnailUrl": "/models/furniture/stoneware-table-lamp/thumbnail.png",
+  "widthCm": 38.5,
+  "depthCm": 38.5,
+  "heightCm": 51.5,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-stoneware-lamp",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "realProduct": null,
+    "note": "No real product. A generic Japandi visual proxy made for the demo catalogue; it copies no retailer's design and carries no brand.",
+    "requestedSize": "38 x 38 x 52 cm",
+    "generation": "Higgsfield multi_image_to_3d from a four-view AI turnaround sheet generated with the Codex image_gen tool (codex-image.sh); should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging and animation off.",
+    "postProcessing": "@gltf-transform/cli resize --width 1024 --height 1024, then scripts/fit_glb.py per-axis fit (centres the footprint, puts the base at y=0), then emissiveFactor zeroed on the single material.",
+    "priceProvenance": "invented: a plausible demo figure, not a real or quoted price"
+  },
+  "measured": {
+    "widthCm": 38.5,
+    "depthCm": 38.5,
+    "heightCm": 51.5,
+    "minYCm": 0.0,
+    "triangles": 26558,
+    "bytes": 3006840
+  },
+  "knownLimitations": [
+    "No real product. Generic Japandi visual proxy generated from an AI turnaround sheet; the catalogue price is invented, not sourced.",
+    "Fitted essentially exactly: requested 38 x 38 x 52 cm, shipped 38.5 x 38.5 x 51.5 cm at 10% anisotropy with residuals of +0.48, -0.48, +0.48 cm. fit_glb.py exited 0. The cleanest of the three.",
+    "Silhouette matches the reference sheet: a radius-by-height profile shows an unglazed foot 0-3 cm, a bulbous stoneware body swelling to about 26 cm across at 10-16 cm, a narrow neck about 10 cm across at 26-29 cm, then a constant 38.5 cm drum shade from 29 cm to 51.5 cm.",
+    "Unlit as required: the single material's emissiveFactor was [1,1,1] as generated and has been set to [0,0,0]; its emissive texture is black anyway (sampled max 0 of 255). The file contains no KHR_lights_punctual and no light nodes, so it emits nothing.",
+    "Not inspected in a render; no render was available to this agent. All geometry claims above are read from vertex positions in the GLB.",
+    "PBR textures resized to 1024 px, so the glaze speckle and linen weave are softer than the source sheet.",
+    "PLACEMENT: Tabletop item. Needs a reviewed support profile before automatic placement."
+  ],
+  "automaticFloorPlacement": false
+}

@@ -1,0 +1,42 @@
+{
+  "productId": "end-of-bed-bench",
+  "modelUrl": "/models/furniture/end-of-bed-bench/model.glb",
+  "thumbnailUrl": "/models/furniture/end-of-bed-bench/thumbnail.png",
+  "widthCm": 125.5,
+  "depthCm": 45.0,
+  "heightCm": 39.5,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-end-of-bed-bench",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented warm-Japandi upholstered end-of-bed bench, an oatmeal linen bench cushion on a slim light-oak frame and four tapered oak legs, backing a synthetic stub listing.",
+    "generation": "Four-view turnaround reference sheet generated with the codex-image skill (front, three-quarter-front-left, side profile, rear on an opaque white seamless background), cut at detected gutter boundaries by scripts/turnaround_crop.mjs, then Higgsfield multi_image_to_3d (Meshy) with should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging and animation off, plus a linen/oak texture_prompt.",
+    "postProcessing": "gltf-transform resize to 1024 x 1024 textures (resize only: textures were NOT re-encoded to a lossy codec and geometry was NOT simplified, so every vertex is the generator's own; 10.92 MB to 2.81 MB), then scripts/fit_glb.py 120 45 45.",
+    "dimensionsVerifiedAt": "Not a retail product, so there is nothing external to verify against. The declared dimensions are what the mesh measures: 125.5212 x 45.0 x 39.4788 cm (w x d x h).",
+    "priceVerifiedAt": "None. price_cents on the stub listing is invented demo data, not a real price."
+  },
+  "measured": {
+    "triangles": 27256,
+    "bytes": 2810664,
+    "exactCm": [
+      125.5212,
+      45.0,
+      39.4788
+    ]
+  },
+  "knownLimitations": [
+    "Generic visual proxy, not a real SKU. It may only back a synthetic stub listing.",
+    "LIST IT AT THE MEASURED NUMBERS ABOVE, NOT THE 120 x 45 x 45 BRIEF. fit_glb.py exited 1: it hit the 10 percent anisotropy cap without reaching the target box, with residuals of +5.52 cm width and -5.52 cm height. Depth is exact at 45.0 cm. As shipped this is a 125.5 cm long, 39.5 cm tall bench, so it is a little longer and a little lower than asked. 39.5 cm is at the low end of, but still inside, the normal range for a bench of this type.",
+    "The height miss traces to the reference sheet, not the fit: the sheet drew a bench whose height-to-length ratio is 0.286 where the brief implies 0.375, and the raw mesh measured 191.4 x 63.6 x 54.7 cm, which is 120 x 39.9 x 34.3 cm when scaled uniformly to a 120 cm length. The sheet was not regenerated because the piece itself looks right; only its proportions are off.",
+    "fit_glb.py applied a per-axis scale at the full 10 percent anisotropy cap, so the mesh is stretched relative to what the generator produced.",
+    "The long axis is on X and the piece is close to front-to-back symmetric, which is correct for a bench. There is no distinguishing front feature to orient by, and the mass in the upper part of the model sits within 0.08 of centre on both X and Z, so either long face can be treated as the front.",
+    "Single merged mesh: cushion, frame rail and legs are not separately addressable.",
+    "The four legs are the thinnest geometry here and are the part most at risk from photogrammetric reconstruction and remeshing. They may be thicker, blunter, or less cleanly tapered than the reference sheet, and the open space between them may be partly webbed. This has NOT been checked in a render.",
+    "The underside is generated, not observed. Expect approximate geometry there.",
+    "No manual Blender inspection pass.",
+    "Visual quality has NOT been verified in a render. Only measurements, triangle count and byte size were checked against the file."
+  ]
+}

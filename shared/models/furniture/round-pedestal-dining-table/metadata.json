@@ -1,0 +1,49 @@
+{
+  "productId": "round-pedestal-dining-table",
+  "modelUrl": "/models/furniture/round-pedestal-dining-table/model.glb",
+  "thumbnailUrl": "/models/furniture/round-pedestal-dining-table/thumbnail.png",
+  "widthCm": 119.3,
+  "depthCm": 119.2,
+  "heightCm": 74.8,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-round-pedestal-table",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "UNIDENTIFIED - there is no real product behind this asset. A generic warm-Japandi round pedestal dining table in solid oak, invented for the FRIDAY demo catalogue. Not a copy of, and not a confirmed match for, any retail SKU.",
+    "dimensionsVerifiedAt": null,
+    "targetCm": {
+      "width": 120,
+      "depth": 120,
+      "height": 74
+    },
+    "generation": "Higgsfield multi_image_to_3d, four cropped views (front / three-quarter-front-left / side profile / rear) taken from one AI-generated product turnaround sheet made with the codex-image skill; should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=30000, symmetry_mode=auto, no rigging or animation",
+    "postProcessing": "gltf-transform resize --width 1024 --height 1024 (texture resize only, no lossy re-encode, geometry untouched), then scripts/fit_glb.py per-axis fit to stand the piece on the floor (minY = 0) and centre its footprint on x/z",
+    "priceIsInventedDemoData": true
+  },
+  "measured": {
+    "triangles": 30525,
+    "bytes": 2122504,
+    "exactCm": {
+      "width": 119.2519,
+      "depth": 119.2398,
+      "height": 74.7602
+    },
+    "minYCm": 0.0,
+    "footprintCentreCm": {
+      "x": 0.0,
+      "z": 0.0
+    }
+  },
+  "knownLimitations": [
+    "No real product: the dimensions below are the generated mesh's own measured box, not a figure verified against any retail listing. Targeted 120 x 120 x 74 cm and landed 119.3 x 119.2 x 74.8 cm.",
+    "The generator returned the table noticeably squatter than a real dining table (189.9 cm across by 130.9 cm tall, a 1.45 width-to-height ratio against the real 1.62), so fit_glb.py used all 10% of its anisotropy cap to reach the target proportions. The top is therefore squashed about 10% relative to the mesh as generated.",
+    "30525 triangles, just over the 30000 triangle budget in backend/api/test_furniture_assets.py. Generated at target_polycount 30000 on the coordinator's instruction to favour looks over the gate; the coordinator owns any budget entry.",
+    "catalogueListingId is a synthetic demo listing, not a real article number, and its price is invented demo data.",
+    "Visual quality is UNVERIFIED: no render of the GLB was inspected. Only the source turnaround sheet was reviewed by eye.",
+    "The four source views are AI-generated renders of a table that does not exist, not photographs, so surface detail is plausible rather than accurate.",
+    "No manual Blender inspection or correction pass has been done."
+  ]
+}

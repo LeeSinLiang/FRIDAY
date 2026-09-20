@@ -1,0 +1,39 @@
+{
+  "productId": "leaning-floor-mirror",
+  "modelUrl": "/models/furniture/leaning-floor-mirror/model.glb",
+  "thumbnailUrl": "/models/furniture/leaning-floor-mirror/thumbnail.png",
+  "widthCm": 58.9,
+  "depthCm": 19.1,
+  "heightCm": 162.9,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-leaning-mirror",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "realProduct": null,
+    "note": "No real product. A generic Japandi visual proxy made for the demo catalogue; it copies no retailer's design and carries no brand.",
+    "requestedSize": "65 x 12 x 170 cm",
+    "generation": "Higgsfield multi_image_to_3d from a four-view AI turnaround sheet generated with the Codex image_gen tool (codex-image.sh); should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging and animation off.",
+    "postProcessing": "@gltf-transform/cli resize --width 1024 --height 1024, then scripts/fit_glb.py per-axis fit (centres the footprint, puts the base at y=0), then emissiveFactor zeroed on the single material.",
+    "priceProvenance": "invented: a plausible demo figure, not a real or quoted price"
+  },
+  "measured": {
+    "widthCm": 58.9,
+    "depthCm": 19.1,
+    "heightCm": 162.9,
+    "minYCm": 0.0,
+    "triangles": 26139,
+    "bytes": 2781768
+  },
+  "knownLimitations": [
+    "No real product. Generic Japandi visual proxy generated from an AI turnaround sheet; the catalogue price is invented, not sourced.",
+    "Fit missed the listing box. Requested 65 x 12 x 170 cm, shipped 58.9 x 19.1 x 162.9 cm at the 10% anisotropy cap; fit_glb.py exited 1 with residuals -6.07 cm width, -7.08 cm height, +7.08 cm depth. The generated mirror is deeper than the listing's 12 cm because the reconstruction includes the rear support strut a free-standing leaning mirror needs. A uniform fit to 170 cm height instead would give about 61.5 x 21.9 x 170.0 cm with no distortion, if the coordinator prefers exact height over the listing footprint.",
+    "The frame HAS real depth: sampling vertices by height shows a dense slab cluster from z +4 to +10 cm (about 6 cm of solid timber) at every height band from 5 cm to 160 cm, with a separate rear strut cluster at z -6 to -2 cm and empty space between them. It is not a thin sheet.",
+    "The frame reconstructed UPRIGHT, not leaning. The slab cluster occupies the same z +4..+10 cm range at 5 cm height and at 160 cm height, so the reference sheet's ~8 degree backward lean was flattened out. It stands vertically on its own strut rather than raking back.",
+    "The mirror face is a flat matte pale panel by design, not a reflective surface: no reflection, no environment map. Prompting for a true reflection bakes garbage scenery into the texture.",
+    "Not inspected in a render; no render was available to this agent. All geometry claims above are read from vertex positions in the GLB.",
+    "PBR textures resized to 1024 px, so the oak grain is softer than the source sheet."
+  ]
+}

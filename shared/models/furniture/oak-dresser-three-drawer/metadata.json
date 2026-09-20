@@ -1,0 +1,35 @@
+{
+  "productId": "oak-dresser-three-drawer",
+  "modelUrl": "/models/furniture/oak-dresser-three-drawer/model.glb",
+  "thumbnailUrl": "/models/furniture/oak-dresser-three-drawer/thumbnail.png",
+  "widthCm": 120.0,
+  "depthCm": 48.0,
+  "heightCm": 80.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-oak-dresser",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented warm-Japandi solid white-oak three-drawer dresser backing a synthetic stub listing.",
+    "generation": "Four-view turnaround (codex-image), cropped at detected gutter boundaries, Higgsfield multi_image_to_3d (Meshy), should_texture+enable_pbr, target_polycount 24000",
+    "postProcessing": "gltf-transform resize to 1024 px textures (resize only, no lossy re-encode, geometry untouched), then scripts/fit_glb.py 120 48 80",
+    "dimensionsVerifiedAt": "Not a retail product; nothing external to verify against. Declared dimensions are what the mesh measures.",
+    "priceVerifiedAt": "None. price_cents on the stub listing is invented demo data."
+  },
+  "measured": {
+    "triangles": 20864,
+    "bytes": 2760180,
+    "exactCm": [120.0, 48.0, 80.0]
+  },
+  "knownLimitations": [
+    "Generic visual proxy, not a real SKU. It may only back a synthetic stub listing.",
+    "The first turnaround sheet came back with a transparent (alpha) background and coloured edge fringing, which defeats the gutter detection in scripts/turnaround_crop.mjs. The sheet was regenerated with an explicit opaque-white-background instruction; this model is built from that second sheet.",
+    "fit_glb.py applied a per-axis scale with 7.23 percent anisotropy to reach the listed box exactly. The mesh is therefore very slightly stretched relative to what the generator produced.",
+    "The three-quarter source view showed a faintly bowed drawer front rather than a dead-flat one, so the front face may not be perfectly planar in the mesh.",
+    "Drawer fronts and their finger grooves are texture and shallow relief only. Nothing opens, and there is no drawer interior.",
+    "The underside and the inside faces are generated, not observed. Expect approximate geometry where the source sheet showed nothing.",
+    "Visual quality has NOT been verified in a render. Only measurements, triangle count and byte size were checked against the file."
+  ]
+}

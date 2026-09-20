@@ -1,0 +1,34 @@
+{
+  "productId": "linen-armchair-oatmeal",
+  "modelUrl": "/models/furniture/linen-armchair-oatmeal/model.glb",
+  "thumbnailUrl": "/models/furniture/linen-armchair-oatmeal/thumbnail.png",
+  "widthCm": 85.5,
+  "depthCm": 85.0,
+  "heightCm": 74.5,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-linen-armchair",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented generic Japandi lounge armchair created for the hackathon demo catalogue; it does not depict or reproduce any manufacturer's design, and its price is invented demo data.",
+    "generation": "Four-view turnaround reference sheet generated with the codex-image skill (front, three-quarter-front-left, side profile, rear on a seamless white studio backdrop), cut into four images with scripts/turnaround_crop.mjs, then Higgsfield generate_3d model multi_image_to_3d with all four views as role \"image\": should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=30000, symmetry_mode=auto, rigging and animation false, plus a texture_prompt describing oatmeal washed linen and pale oak legs.",
+    "postProcessing": "npx @gltf-transform/cli resize --width 1024 --height 1024 (textures only, geometry untouched; 11.31 MB -> 3.30 MB), then scripts/fit_glb.py 82 85 78 to centre the footprint, put the base at y=0 and scale toward the listing size."
+  },
+  "measured": {
+    "widthCm": 85.5,
+    "depthCm": 85.0,
+    "heightCm": 74.5,
+    "minYCm": 0.0,
+    "triangles": 30715,
+    "bytes": 3304752
+  },
+  "knownLimitations": [
+    "Dimensions are a visual proxy, not a measured product. Against the intended 82 x 85 x 78 cm the asset measures 85.5 x 85.0 x 74.5 cm: 3.5 cm too wide and 3.5 cm too short, with depth exact. fit_glb.py hit its 10% anisotropy cap and exited 1, so this model would not pass the 2 cm / 3% tolerance in backend/api/test_furniture_assets.py without a budget entry.",
+    "Viewed from below the floor plane the underside of the seat is a flat dark untextured cap. It is not visible once the chair stands on the floor, which it does (measured minY = 0.0 cm).",
+    "The linen renders paler and cooler than the intended #e6e0d4 warm oatmeal, closer to a very pale greige.",
+    "Reconstructed from generated reference images, not from photographs of a real object; small-scale detail such as piping and seam placement is approximate.",
+    "No manual Blender inspection or correction pass has been done. Verified by rendering the GLB in model-viewer from front, rear three-quarter and low angles; geometry is clean and free of holes or floating fragments at those angles."
+  ]
+}

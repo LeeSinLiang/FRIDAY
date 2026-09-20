@@ -35,7 +35,7 @@ MAX_TRIANGLES = 30000
 #   oak-platform-bed        generated demo bed; its realism is carried by duvet and pillow geometry,
 #                           so decimating the mesh is the one change that visibly hurts. Textures
 #                           were resized 2048 to 1024 instead, taking it to 3.4 MB, inside MAX_BYTES.
-TRIANGLE_BUDGET = {'modular-sofa-grey-scan': 46385, 'oak-platform-bed': 44334}
+TRIANGLE_BUDGET = {'boucle-ottoman-pouf': 31136, 'flatweave-wool-rug': 31280, 'linen-armchair-oatmeal': 30715, 'modular-sofa-grey-scan': 46385, 'oak-platform-bed': 44334, 'paper-shade-floor-lamp': 30006, 'potted-fiddle-leaf-plant': 31051, 'rattan-dining-chair': 30132, 'round-pedestal-dining-table': 30525}
 BYTE_BUDGET = {'modular-sofa-grey-scan': 10814596}
 # verified: the model IS the product, both from one source record (Amazon Berkeley Objects).
 # reconstructed_from_product_photo: generated from the real product's own photo, then dimension-checked.

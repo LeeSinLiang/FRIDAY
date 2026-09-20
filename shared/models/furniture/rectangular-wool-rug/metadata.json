@@ -1,0 +1,39 @@
+{
+  "productId": "rectangular-wool-rug",
+  "modelUrl": "/models/furniture/rectangular-wool-rug/model.glb",
+  "thumbnailUrl": "/models/furniture/rectangular-wool-rug/thumbnail.png",
+  "widthCm": 173.8,
+  "depthCm": 326.2,
+  "heightCm": 6.2,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-rectangular-rug",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "realProduct": null,
+    "note": "No real product. A generic warm-Japandi visual proxy made for the demo catalogue; it copies no retailer's design and carries no brand.",
+    "requestedSize": "200 x 300 x 2 cm",
+    "generation": "Higgsfield multi_image_to_3d from a four-view AI turnaround sheet generated with the Codex image_gen tool (codex-image.sh); should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging and animation off.",
+    "postProcessing": "@gltf-transform/cli resize --width 1024 --height 1024; then a lossless 90 degree rotation about +Y added on a root node, so the rug's long axis runs along Z (depth) rather than X; then scripts/fit_glb.py per-axis fit (centres the footprint, puts the base at y=0).",
+    "priceProvenance": "invented: a plausible demo figure, not a real or quoted price"
+  },
+  "measured": {
+    "widthCm": 173.8,
+    "depthCm": 326.2,
+    "heightCm": 6.2,
+    "minYCm": 0.0,
+    "triangles": 29132,
+    "bytes": 4733768
+  },
+  "knownLimitations": [
+    "No real product. Generic Japandi visual proxy generated from an AI turnaround sheet; the catalogue price is invented, not sourced.",
+    "The rug is genuinely oblong. Measured from the raw mesh before any fitting: 189.7 x 91.9 cm footprint, a 2.07:1 rectangle. The generator honoured the 'clearly rectangular' request and in fact overshot it, producing a rug more elongated than the requested 1:1.5. The shipped footprint is 326.2 / 173.8 = 1.88:1. The elongation is the generator's, not the fit's.",
+    "The generator put the long axis on X. It was corrected in post with a lossless 90 degree rotation about +Y on a root node, so the long side now runs along Z and the model matches the listing's 200 wide x 300 deep convention. Without that rotation fit_glb.py missed by 126 cm on both footprint axes; with it the miss is 26 cm.",
+    "The rug is genuinely flat and was NOT inflated into a pillow. Raw thickness was 3.6 cm against a 189.7 cm long side, 1.9 percent. The shipped 6.2 cm is a consequence of scaling the whole model up about 1.72x to reach a 300 cm-class footprint while fit_glb.py's 10 percent anisotropy cap held the vertical scale near the horizontal ones; it is not generator inflation. At 1.9 percent of its length it still reads as a thick flatweave, but the edge is about three times thicker than the 2 cm the listing asks for.",
+    "Fit missed and fit_glb.py exited 1, outside the repository's asset-check tolerance: shipped 173.8 x 326.2 x 6.2 cm against the requested 200 x 300 x 2 (26.2 cm narrow, 26.2 cm long, 4.2 cm thick). Reaching exactly 200 x 300 x 2 from this mesh would need roughly 240 percent anisotropy, far past the 10 percent cap, so it was not attempted.",
+    "Not inspected in a render; no render was available to this agent. The source turnaround sheet showed four views of one flat oatmeal-ecru wool flatweave rug at a low three-quarter angle, with fine soft grey-taupe stripes running along the length, a visible thin cut edge, and no fringe: front and rear views with the short end nearest the camera and the length receding, a diagonal three-quarter, and a side view with the long edge across the frame.",
+    "PBR textures resized to 1024 px, so the woven wool fibre texture is softer than the source sheet."
+  ]
+}

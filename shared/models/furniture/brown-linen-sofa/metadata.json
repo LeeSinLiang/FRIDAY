@@ -1,0 +1,53 @@
+{
+  "productId": "brown-linen-sofa",
+  "modelUrl": "/models/furniture/brown-linen-sofa/model.glb",
+  "thumbnailUrl": "/models/furniture/brown-linen-sofa/thumbnail.png",
+  "widthCm": 210.0,
+  "depthCm": 90.0,
+  "heightCm": 75.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-brown-linen-sofa",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented generic low three-seat Japandi sofa created for the hackathon demo catalogue; it does not depict or reproduce any manufacturer's design, and its price is invented demo data.",
+    "generation": "Four-view turnaround reference sheet generated with the codex-image skill (front, three-quarter-front-left, side profile, rear on a seamless white studio backdrop under soft even diffused light, with only a contact shadow under the feet), cut into four images with scripts/turnaround_crop.mjs, then Higgsfield generate_3d model multi_image_to_3d with all four views as role \"image\": should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging and animation false, plus a texture_prompt describing very pale oatmeal cream washed slub linen and short slim dark-stained oak feet.",
+    "postProcessing": "Identical mesh to cream-linen-sofa. Only the glTF JSON chunk differs: pbrMetallicRoughness.baseColorFactor set to [0.3839, 0.1737, 0.0748, 1.0] (linear), computed from the delivered fabric mean #d6d2cc toward #8b5e3c. BIN chunk and textures copied byte for byte, so geometry, pivot and dimensions are identical by construction."
+  },
+  "measured": {
+    "widthCm": 210.0,
+    "depthCm": 90.0,
+    "heightCm": 75.0,
+    "minYCm": 0.0,
+    "triangles": 27767,
+    "bytes": 2672076
+  },
+  "material": {
+    "count": 1,
+    "baseColorFactor": null,
+    "baseColorFactorNote": "The single material declares no baseColorFactor, so the glTF default [1, 1, 1, 1] applies. A brown variant can be derived by adding baseColorFactor without removing or replacing anything.",
+    "baseColorTexture": true,
+    "baseColorTextureMeanHex": "#d4d0c9",
+    "fabricMeanHex": "#d6d2cc",
+    "feetMeanHex": "#402817",
+    "emissiveFactor": [
+      1,
+      1,
+      1
+    ],
+    "emissiveTextureIsBlack": true,
+    "metallicRoughnessNote": "metallic ~0, roughness ~0.58 from the metallicRoughness texture; matte and non-metal, so a tint reads as fabric rather than plastic."
+  },
+  "knownLimitations": [
+    "Dimensions are a visual proxy, not a measured product, but the fit is exact: 210.0 x 90.0 x 75.0 cm against the intended 210 x 90 x 75, residual 0.00 cm on all three axes, footprint centred at x=0 z=0 and minY = 0.0 cm. fit_glb.py exited 0 at 9.40% anisotropy, just inside its 10% cap, so the asset passes the 2 cm / 3% tolerance in backend/api/test_furniture_assets.py without a budget entry.",
+    "The whole sofa is a single mesh with a single material, so the fabric and the feet share one baseColorTexture. Tinting the material with baseColorFactor to derive the brown variant will also darken the feet, which are already a dark warm brown at about #402817; they will go nearly black rather than staying oak.",
+    "The material carries emissiveFactor [1, 1, 1] with an emissiveTexture, which would normally add an untintable glow on top of any baseColorFactor. The emissive texture is solid black in this asset (maximum luminance 0 over all 1024x1024 texels), so it contributes nothing and will not dilute a brown tint. It must not be replaced with a non-black image.",
+    "The fabric measures a light neutral #d6d2cc rather than the palette's warmer #e9e4d8 cream: about 8% darker in luminance and noticeably less yellow. A brown multiplier will therefore read slightly cooler and more desaturated than the same multiplier over a warm cream, and may want a warmer or more saturated brown factor to compensate.",
+    "Seat height was not measured directly. The vertex distribution is dense between 35 and 45 cm, which is consistent with the intended ~42 cm seat, but this is inferred from geometry statistics rather than measured.",
+    "Reconstructed from generated reference images, not from photographs of a real object; small-scale detail such as seam placement, piping and the exact cushion split is approximate.",
+    "No render and no manual Blender inspection has been done. Verification is numeric only: bounding box, footprint centring, floor contact, triangle count, per-slab vertex distribution (feet correctly inset at X +/-95 cm and Z -40..38 cm under a body at X +/-105 cm and Z +/-45 cm, with no stray fragments), and texture colour statistics. The underside of the seat was not inspected and may be a flat untextured cap as on other assets in this batch.",
+    "Fabric and feet share one material, so the brown factor also darkens the already-dark oak feet. Cosmetic, and preferable to tinting the fabric muddy."
+  ]
+}

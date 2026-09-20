@@ -111,7 +111,11 @@ class EndpointTests(SimpleTestCase):
         capped = client.get("/api/search?limit=20&models=only").json()
         self.assertEqual(len(capped["items"]), 20)
         self.assertGreater(capped["total"], 20)
-        self.assertEqual(client.get("/api/search?category=rug&models=only").json()["items"], [])
+        # models=only must still be able to return nothing. This asserted that
+        # `category=rug` was empty until 2026-09-20, when the demo catalogue gave
+        # rug and plant their first models and every category gained one. Empty by
+        # construction now, so no future asset can make it fail or pass vacuously.
+        self.assertEqual(client.get("/api/search?category=rug&price_max=1&models=only").json()["items"], [])
 
     def test_model_filter_rejects_invalid_modes(self):
         response = APIClient().get("/api/search?models=anything")

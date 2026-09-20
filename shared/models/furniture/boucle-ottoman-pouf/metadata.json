@@ -1,0 +1,35 @@
+{
+  "productId": "boucle-ottoman-pouf",
+  "modelUrl": "/models/furniture/boucle-ottoman-pouf/model.glb",
+  "thumbnailUrl": "/models/furniture/boucle-ottoman-pouf/thumbnail.png",
+  "widthCm": 60.0,
+  "depthCm": 60.0,
+  "heightCm": 42.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-boucle-pouf",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented generic Japandi bouclé ottoman pouf created for the hackathon demo catalogue; it does not depict or reproduce any manufacturer's design, and its price is invented demo data.",
+    "generation": "Four-view turnaround reference sheet generated with the codex-image skill (front, three-quarter-front-left, side profile, rear on a seamless white studio backdrop), cut into four images with scripts/turnaround_crop.mjs, then Higgsfield generate_3d model multi_image_to_3d with all four views as role \"image\": should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=30000, symmetry_mode=auto, rigging and animation false, plus a texture_prompt describing cream bouclé looped pile and pale oak feet.",
+    "postProcessing": "npx @gltf-transform/cli resize --width 1024 --height 1024 (textures only, geometry untouched; 14.01 MB -> 3.66 MB), then scripts/fit_glb.py 60 60 42 to centre the footprint, put the base at y=0 and scale to the listing size."
+  },
+  "measured": {
+    "widthCm": 60.0,
+    "depthCm": 60.0,
+    "heightCm": 42.0,
+    "minYCm": 0.0,
+    "triangles": 31136,
+    "bytes": 3661092
+  },
+  "knownLimitations": [
+    "Dimensions are a visual proxy, not a measured product, but this asset happens to fit exactly: 60.0 x 60.0 x 42.0 cm against the intended 60 x 60 x 42 cm, with 4.01% anisotropy, well inside the 10% cap. fit_glb.py exited 0.",
+    "Because the piece is near-symmetrical the four reference views were nearly identical, so the reconstruction had little independent information about the rear; the sides are plausible rather than derived.",
+    "The bouclé reads slightly whiter than the intended #f1ece2 cream.",
+    "The silhouette came out rounder and more barrel-like than a square-cornered pouf; it reads as a soft drum pouf with a seam around the circumference.",
+    "Reconstructed from generated reference images, not from photographs of a real object.",
+    "No manual Blender inspection or correction pass has been done. Verified by rendering the GLB in model-viewer from front, rear three-quarter and low angles; geometry and the four oak feet are clean, with no holes or floating fragments and no dark underside cap."
+  ]
+}

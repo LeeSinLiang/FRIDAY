@@ -1,0 +1,51 @@
+{
+  "productId": "oak-open-bookcase",
+  "modelUrl": "/models/furniture/oak-open-bookcase/model.glb",
+  "thumbnailUrl": "/models/furniture/oak-open-bookcase/thumbnail.png",
+  "widthCm": 86.4,
+  "depthCm": 30.8,
+  "heightCm": 184.2,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-oak-bookcase",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "origin": "generated",
+    "realProduct": null,
+    "generation": {
+      "turnaroundSheet": "codex-image (Codex CLI image_gen), 16:9 four-view product turnaround reference sheet on a pure white seamless background",
+      "sheetCrop": "scripts/turnaround_crop.mjs \u2014 gutter-detected crop into 4 single-view PNGs",
+      "mesh": "Higgsfield generate_3d, model multi_image_to_3d, 4 views role=image, should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=30000, symmetry_mode=auto, rigging/animation disabled"
+    },
+    "postProcessing": "npx @gltf-transform/cli resize --width 1024 --height 1024; scripts/fit_glb.py per-axis fit (capped at 10% anisotropy), footprint centred and base placed at y=0",
+    "title": "Oak open bookcase",
+    "category": "shelf",
+    "description": "Warm Japandi solid-oak open bookcase, five open compartments separated by four internal shelf boards, solid back panel, low recessed plinth base.",
+    "artDirection": "Warm Japandi: solid oak with fine open grain, matte finish, gently chamfered edges; the plant in a matte stoneware pot.",
+    "requestedSizeCm": {
+      "widthCm": 90,
+      "depthCm": 35,
+      "heightCm": 180,
+      "note": "Rough target for the demo catalogue. The recorded widthCm/depthCm/heightCm above are measured from the GLB and take precedence."
+    },
+    "priceProvenance": "invented"
+  },
+  "measured": {
+    "widthCm": 86.4,
+    "depthCm": 30.8,
+    "heightCm": 184.2,
+    "minYCm": 0.0,
+    "triangles": 26236,
+    "bytes": 2314116,
+    "method": "backend/api/glb.py measure(), read back from the fitted GLB"
+  },
+  "knownLimitations": [
+    "No real product: geometry, texture and proportions come from an AI-generated turnaround sheet, not from a manufacturer's model or spec. matchType is generic_visual_proxy; do not present it as a specific purchasable item.",
+    "price_cents in the batch manifest is invented for the demo and has no vendor behind it.",
+    "The per-axis fit is capped at 10% anisotropy, so the mesh kept its generated proportions: measured 86.4 x 30.8 x 184.2 cm against a requested rough 90 x 35 x 180 cm. Depth is ~4.2 cm shallower and height ~4.2 cm taller than requested. The dimensions recorded here are the measured ones, read back from the GLB.",
+    "Verified by rendering the GLB in three.js: the five compartments are genuinely open and separated, with a visible back panel behind each \u2014 the shelves did not fuse. Shelf boards are slightly thicker and less crisp than the reference sheet.",
+    "Texture is a single baked PBR set at 1024 px; the fine open oak grain reads as a pale blond oak rather than the honey-caramel described in the prompt."
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "productId": "woven-storage-basket",
+  "modelUrl": "/models/furniture/woven-storage-basket/model.glb",
+  "thumbnailUrl": "/models/furniture/woven-storage-basket/thumbnail.png",
+  "widthCm": 45.0,
+  "depthCm": 45.0,
+  "heightCm": 42.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-woven-basket",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "origin": "generated",
+    "realProduct": null,
+    "generation": {
+      "turnaroundSheet": "codex-image (Codex CLI image_gen), 16:9 four-view product turnaround reference sheet on a pure white opaque seamless background",
+      "sheetCrop": "scripts/turnaround_crop.mjs — gutter-detected crop into 4 single-view PNGs",
+      "mesh": "Higgsfield generate_3d, model multi_image_to_3d, 4 views role=image, should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging/animation disabled"
+    },
+    "postProcessing": "npx @gltf-transform/cli resize --width 1024 --height 1024; scripts/fit_glb.py per-axis fit (capped at 10% anisotropy), footprint centred and base placed at y=0",
+    "title": "Woven seagrass storage basket",
+    "category": "storage",
+    "description": "Round woven seagrass storage basket, gently tapered so the rim is wider than the base, built from thick coiled seagrass rope in visible horizontal bands, with a chunky rolled rim and two woven cut-out side handles.",
+    "artDirection": "Warm Japandi: natural seagrass in warm straw and pale oatmeal, matte unfinished fibre, no lining and no lid.",
+    "requestedSizeCm": {
+      "widthCm": 45,
+      "depthCm": 45,
+      "heightCm": 42,
+      "note": "Rough target for the demo catalogue. The recorded widthCm/depthCm/heightCm above are measured from the GLB and take precedence."
+    },
+    "priceProvenance": "invented"
+  },
+  "measured": {
+    "widthCm": 45.0,
+    "depthCm": 45.0,
+    "heightCm": 42.0,
+    "minYCm": 0.0,
+    "triangles": 28710,
+    "bytes": 4636460,
+    "method": "backend/api/glb.py measure(), read back from the fitted GLB"
+  },
+  "knownLimitations": [
+    "No real product: geometry, texture and proportions come from an AI-generated turnaround sheet, not from a manufacturer's model. matchType is generic_visual_proxy; do not present it as a specific purchasable item.",
+    "price_cents in the batch manifest is invented for the demo and has no vendor behind it.",
+    "The per-axis fit landed exactly on the requested 45 x 45 x 42 cm (residual 0.00 cm on every axis, anisotropy 5.52%), so no dimension was compromised.",
+    "Not visually inspected in a render. Verified geometrically from the GLB instead: the vertices in every horizontal slab from 30% to 99% of height sit entirely in the outer two tenths of the radius, and the top 15% of the model has zero vertices within half a radius of the axis — so the basket is genuinely open and hollow, with no lid, cap or filled interior.",
+    "It has a real closed woven floor, not an open-ended tube: a slab at y=0.84 cm contains vertices at every radius from the axis outward, while slabs above y=4 cm are wall-only.",
+    "Flat and stable on the floor: minY is exactly 0.0 cm and the contact band within 3 mm of the base spans a 32.7 x 32.7 cm disc (35.6 cm within 10 mm). That base disc is narrower than the 45 cm rim because the basket tapers, which matches the source sheet — placement logic keyed to the bounding-box footprint will reserve the rim's 45 cm, slightly more floor than the basket actually touches.",
+    "The woven surface is modelled as real displaced geometry rather than a normal map, so the base contact band fragments into many small clusters at millimetre resolution. It reads as a textured weave at room scale, not in close-up.",
+    "The source sheet's four views are a near-symmetric drum, so the three-quarter and rear views carried little extra information; fine detail around the handles is the generator's interpolation rather than observed from a distinct angle."
+  ]
+}

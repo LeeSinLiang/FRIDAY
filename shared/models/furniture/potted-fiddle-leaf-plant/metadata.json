@@ -1,0 +1,53 @@
+{
+  "productId": "potted-fiddle-leaf-plant",
+  "modelUrl": "/models/furniture/potted-fiddle-leaf-plant/model.glb",
+  "thumbnailUrl": "/models/furniture/potted-fiddle-leaf-plant/thumbnail.png",
+  "widthCm": 67.8,
+  "depthCm": 68.0,
+  "heightCm": 152.2,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-fiddle-leaf-plant",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "origin": "generated",
+    "realProduct": null,
+    "generation": {
+      "turnaroundSheet": "codex-image (Codex CLI image_gen), 16:9 four-view product turnaround reference sheet on a pure white seamless background",
+      "sheetCrop": "scripts/turnaround_crop.mjs \u2014 gutter-detected crop into 4 single-view PNGs",
+      "mesh": "Higgsfield generate_3d, model multi_image_to_3d, 4 views role=image, should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=30000, symmetry_mode=auto, rigging/animation disabled"
+    },
+    "postProcessing": "npx @gltf-transform/cli resize --width 1024 --height 1024; scripts/fit_glb.py per-axis fit (capped at 10% anisotropy), footprint centred and base placed at y=0",
+    "title": "Potted fiddle-leaf fig",
+    "category": "plant",
+    "description": "Sculptural potted fiddle-leaf fig: two slender bare woody trunks carrying large broad violin-shaped leaves, in a matte stoneware planter.",
+    "artDirection": "Warm Japandi: solid oak with fine open grain, matte finish, gently chamfered edges; the plant in a matte stoneware pot.",
+    "requestedSizeCm": {
+      "widthCm": 70,
+      "depthCm": 70,
+      "heightCm": 150,
+      "note": "Rough target for the demo catalogue. The recorded widthCm/depthCm/heightCm above are measured from the GLB and take precedence."
+    },
+    "priceProvenance": "invented"
+  },
+  "measured": {
+    "widthCm": 67.8,
+    "depthCm": 68.0,
+    "heightCm": 152.2,
+    "minYCm": 0.0,
+    "triangles": 31051,
+    "bytes": 3614860,
+    "method": "backend/api/glb.py measure(), read back from the fitted GLB"
+  },
+  "knownLimitations": [
+    "No real product: geometry, texture and proportions come from an AI-generated turnaround sheet, not from a grower's or manufacturer's model. matchType is generic_visual_proxy; do not present it as a specific purchasable item.",
+    "price_cents in the batch manifest is invented for the demo and has no vendor behind it.",
+    "The per-axis fit is capped at 10% anisotropy: measured 67.8 x 68.0 x 152.2 cm against a requested rough 70 x 70 x 150 cm. The dimensions recorded here are the measured ones.",
+    "Foliage is solid geometry, not alpha-cut cards: leaves are thick slabs with rounded edges rather than thin blades, and leaf-to-stalk joins are blobby at close range. It is built to read correctly at room scale, not in close-up.",
+    "Verified by rendering the GLB in three.js from the front and rear: the leaves stayed individually separated on visible trunks and did NOT fuse into a single green mass, which is the usual failure for plants in image-to-3D.",
+    "The planter reads as a near-white light grey rather than the warm oatmeal speckle described in the prompt.",
+    "The bounding box spans the leaf canopy, so its footprint is much wider than the pot; any placement or collision logic keyed to the footprint will reserve more floor than the pot physically occupies."
+  ]
+}

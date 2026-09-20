@@ -1,0 +1,49 @@
+{
+  "productId": "oak-bench-linen-cushion",
+  "modelUrl": "/models/furniture/oak-bench-linen-cushion/model.glb",
+  "thumbnailUrl": "/models/furniture/oak-bench-linen-cushion/thumbnail.png",
+  "widthCm": 130.0,
+  "depthCm": 43.4,
+  "heightCm": 39.6,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-oak-bench",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "UNIDENTIFIED - there is no real product behind this asset. A generic warm-Japandi oak bench with a fitted oatmeal linen cushion, invented for the FRIDAY demo catalogue. Not a copy of, and not a confirmed match for, any retail SKU.",
+    "dimensionsVerifiedAt": null,
+    "targetCm": {
+      "width": 130,
+      "depth": 38,
+      "height": 45
+    },
+    "generation": "Higgsfield multi_image_to_3d, four cropped views (front / three-quarter-front-left / side profile / rear) taken from one AI-generated product turnaround sheet made with the codex-image skill; should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=30000, symmetry_mode=auto, no rigging or animation",
+    "postProcessing": "gltf-transform resize --width 1024 --height 1024 (texture resize only, no lossy re-encode, geometry untouched), then scripts/fit_glb.py per-axis fit to stand the piece on the floor (minY = 0) and centre its footprint on x/z",
+    "priceIsInventedDemoData": true
+  },
+  "measured": {
+    "triangles": 28404,
+    "bytes": 2478884,
+    "exactCm": {
+      "width": 130.0,
+      "depth": 43.4065,
+      "height": 39.5935
+    },
+    "minYCm": 0.0,
+    "footprintCentreCm": {
+      "x": 0.0,
+      "z": 0.0
+    }
+  },
+  "knownLimitations": [
+    "No real product: the dimensions below are the generated mesh's own measured box, not a figure verified against any retail listing.",
+    "This is the worst dimensional miss of the three. The target was 130 x 38 x 45 cm; the mesh reconstructed the bench far deeper and lower than drawn (190 x 69 x 57.2 cm as generated, a depth-to-width ratio of 0.36 against the intended 0.29), so fit_glb.py hit its 10% anisotropy cap and stopped at 130.0 x 43.4 x 39.6 cm. It is 5.4 cm too deep and 5.4 cm too low, and fit_glb.py exited 1 saying so. The declared dimensions here are the measured ones, so the piece is self-consistent; it is simply a chunkier, lower bench than the brief asked for.",
+    "catalogueListingId is a synthetic demo listing, not a real article number, and its price is invented demo data.",
+    "Visual quality is UNVERIFIED: no render of the GLB was inspected. Only the source turnaround sheet was reviewed by eye.",
+    "The four source views are AI-generated renders of a bench that does not exist, not photographs, so surface detail is plausible rather than accurate.",
+    "The linen cushion's soft rumpled surface and edge seam are carried by texture more than by geometry at this polygon budget.",
+    "No manual Blender inspection or correction pass has been done."
+  ]
+}

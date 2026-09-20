@@ -1,0 +1,39 @@
+{
+  "productId": "arched-floor-lamp",
+  "modelUrl": "/models/furniture/arched-floor-lamp/model.glb",
+  "thumbnailUrl": "/models/furniture/arched-floor-lamp/thumbnail.png",
+  "widthCm": 93.4,
+  "depthCm": 45.2,
+  "heightCm": 184.8,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-arched-floor-lamp",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "realProduct": null,
+    "note": "No real product. A generic Japandi visual proxy made for the demo catalogue; it copies no retailer's design and carries no brand.",
+    "requestedSize": "90 x 40 x 190 cm",
+    "generation": "Higgsfield multi_image_to_3d from a four-view AI turnaround sheet generated with the Codex image_gen tool (codex-image.sh); should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging and animation off.",
+    "postProcessing": "@gltf-transform/cli resize --width 1024 --height 1024, then a 90 degree yaw about +Y (scene re-parented under one rotation node) so the arc sweeps along X, then scripts/fit_glb.py per-axis fit (centres the footprint, puts the base at y=0), then emissiveFactor zeroed on the single material.",
+    "priceProvenance": "invented: a plausible demo figure, not a real or quoted price"
+  },
+  "measured": {
+    "widthCm": 93.4,
+    "depthCm": 45.2,
+    "heightCm": 184.8,
+    "minYCm": 0.0,
+    "triangles": 28442,
+    "bytes": 2668832
+  },
+  "knownLimitations": [
+    "No real product. Generic Japandi visual proxy generated from an AI turnaround sheet; the catalogue price is invented, not sourced.",
+    "Reconstructed with the arc sweeping along Z (51 x 105 cm footprint), which would have forced a per-axis fit to crush 105 cm of arc into the listing's 40 cm depth. The scene was re-parented under a single 90 degree yaw node before fitting so the arc sweeps along X instead. Lossless: no vertex, index or texture bytes changed.",
+    "Fit missed the listing box slightly. Requested 90 x 40 x 190 cm, shipped 93.4 x 45.2 x 184.8 cm at the 10% anisotropy cap; fit_glb.py exited 1 with residuals +3.35 cm width, -5.18 cm height, +5.18 cm depth.",
+    "The cantilevered arm SURVIVED and is continuous. A vertex-count-by-height profile over 32 bands has no empty band between 0 and 184.8 cm, and the stem's cross-section is a solid tube of about 4.3-5.1 cm by 5.2-5.7 cm sampled at 33, 63, 93 and 121 cm height. The heavy disc base is about 38 cm across at 0-10 cm, the drum shade about 45 cm across hanging at 131-161 cm well clear of the base, and the arc apex is still about 5 cm thick at 170-185 cm. The arm neither snapped nor fused to the shade.",
+    "Unlit as required: the single material's emissiveFactor was [1,1,1] as generated and has been set to [0,0,0]; its emissive texture is black anyway (sampled max 1 of 255). The file contains no KHR_lights_punctual and no light nodes, so it emits nothing and casts no beam.",
+    "Not inspected in a render; no render was available to this agent. All geometry claims above are read from vertex positions in the GLB.",
+    "PBR textures resized to 1024 px, so the brass patina and linen weave are softer than the source sheet."
+  ]
+}

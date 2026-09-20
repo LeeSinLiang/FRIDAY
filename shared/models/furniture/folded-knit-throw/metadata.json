@@ -1,0 +1,40 @@
+{
+  "productId": "folded-knit-throw",
+  "modelUrl": "/models/furniture/folded-knit-throw/model.glb",
+  "thumbnailUrl": "/models/furniture/folded-knit-throw/thumbnail.png",
+  "widthCm": 49.5,
+  "depthCm": 35.9,
+  "heightCm": 19.5,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-knit-throw",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "realProduct": null,
+    "note": "No real product. A generic warm-Japandi visual proxy made for the demo catalogue; it copies no retailer's design and carries no brand.",
+    "requestedSize": "55 x 40 x 14 cm",
+    "generation": "Higgsfield multi_image_to_3d from a four-view AI turnaround sheet generated with the Codex image_gen tool (codex-image.sh); should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging and animation off.",
+    "postProcessing": "@gltf-transform/cli resize --width 1024 --height 1024, then scripts/fit_glb.py per-axis fit (centres the footprint, puts the base at y=0).",
+    "priceProvenance": "invented: a plausible demo figure, not a real or quoted price"
+  },
+  "measured": {
+    "widthCm": 49.5,
+    "depthCm": 35.9,
+    "heightCm": 19.5,
+    "minYCm": 0.0,
+    "triangles": 29195,
+    "bytes": 5331784
+  },
+  "knownLimitations": [
+    "No real product. Generic Japandi visual proxy generated from an AI turnaround sheet; the catalogue price is invented, not sourced.",
+    "Fit missed and fit_glb.py exited 1, outside the repository's asset-check tolerance: shipped 49.5 x 35.9 x 19.5 cm against the requested 55 x 40 x 14 (5.5 cm narrow, 4.1 cm shallow, 5.5 cm tall).",
+    "The footprint proportion is right and the height is not. The raw mesh measured 189.3 x 137.2 x 82.0 cm: a 1.38:1 footprint against the requested 55:40, which is 1.375:1, essentially exact. But it is proportionally about 70 percent taller than the requested 14 cm, so the per-axis fit hit its 10 percent anisotropy cap and shrank the footprint instead of flattening the stack.",
+    "The tall stack is faithful to the source sheet rather than to the listing: the sheet showed a chunky multi-fold pile, not a thin folded square. If the catalogue needs a 14 cm throw, the listing height is the thing to change, not this mesh.",
+    "Not inspected in a render; no render was available to this agent. The source turnaround sheet showed four views of one neatly folded oatmeal-cream chunky knit throw with a deep, clearly readable garter and rib stitch, soft rounded folded edges down one side, and stacked layers visible in the side view.",
+    "PBR textures resized to 1024 px, so the chunky knit stitch is softer than the source sheet.",
+    "PLACEMENT: Sits on a bed, sofa or bench, not on open floor."
+  ],
+  "automaticFloorPlacement": false
+}

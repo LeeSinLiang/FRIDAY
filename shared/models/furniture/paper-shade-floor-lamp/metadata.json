@@ -1,0 +1,36 @@
+{
+  "productId": "paper-shade-floor-lamp",
+  "modelUrl": "/models/furniture/paper-shade-floor-lamp/model.glb",
+  "thumbnailUrl": "/models/furniture/paper-shade-floor-lamp/thumbnail.png",
+  "widthCm": 36.1,
+  "depthCm": 36.0,
+  "heightCm": 164.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-paper-floor-lamp",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "realProduct": null,
+    "note": "No real product. A generic Japandi visual proxy made for the demo catalogue; it copies no retailer's design and carries no brand.",
+    "requestedSize": "40 x 40 x 160 cm",
+    "generation": "Higgsfield multi_image_to_3d from a four-view AI turnaround sheet generated with the Codex image_gen tool (codex-image.sh); should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=30000, symmetry_mode=auto, rigging and animation off.",
+    "postProcessing": "@gltf-transform/cli resize --width 1024 --height 1024, then scripts/fit_glb.py per-axis fit (centres the footprint, puts the base at y=0).",
+    "priceProvenance": "invented: a plausible demo figure, not a real or quoted price"
+  },
+  "measured": {
+    "widthCm": 36.1,
+    "depthCm": 36.0,
+    "heightCm": 164.0,
+    "minYCm": 0.0,
+    "triangles": 30006,
+    "bytes": 3345480
+  },
+  "knownLimitations": [
+    "No real product. Generic Japandi visual proxy generated from an AI turnaround sheet; the catalogue price is invented, not sourced.",
+    "Requested 40 x 40 x 160 cm. The generated lamp is more slender than that (raw height/width 5.0 against the requested 4.0), so scripts/fit_glb.py hit its 10% anisotropy cap and applied the closest fit inside it: 36.1 x 36.0 x 164.0 cm, about 4 cm narrower and 4 cm taller than requested. fit_glb.py exited 1, i.e. outside the repository's asset-check tolerance.",
+    "Not inspected in a render; no render was available to this agent. Geometry was checked numerically instead: a radius-by-height profile shows an 18.1 cm-radius disc base from 0-5 cm, a continuous 2.83 cm-radius stem from 5-87 cm, and a 15.0 cm-radius cylindrical shade from 87-164 cm. The slender stem is therefore neither broken nor fused to the shade or base.",
+    "PBR textures resized to 1024 px, so fine washi paper and wood-grain detail is softer than the source sheet."
+  ]
+}

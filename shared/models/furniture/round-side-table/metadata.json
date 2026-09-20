@@ -1,0 +1,38 @@
+{
+  "productId": "round-side-table",
+  "modelUrl": "/models/furniture/round-side-table/model.glb",
+  "thumbnailUrl": "/models/furniture/round-side-table/thumbnail.png",
+  "widthCm": 45.0,
+  "depthCm": 45.0,
+  "heightCm": 55.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-round-side-table",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented warm-Japandi round solid white-oak side table, a circular chamfered top on three slim splayed tapered legs, backing a synthetic stub listing.",
+    "generation": "Four-view turnaround sheet (codex-image), cropped at detected gutter boundaries by scripts/turnaround_crop.mjs, then Higgsfield multi_image_to_3d (Meshy) with should_texture, enable_pbr, should_remesh, triangle topology, target_polycount 28000, symmetry_mode auto, and an oak texture_prompt.",
+    "postProcessing": "gltf-transform resize to 1024 px textures (resize only, no lossy re-encode, geometry untouched), then scripts/fit_glb.py 45 45 55.",
+    "dimensionsVerifiedAt": "Not a retail product; nothing external to verify against. The declared dimensions are what the mesh measures.",
+    "priceVerifiedAt": "None. price_cents on the stub listing is invented demo data."
+  },
+  "measured": {
+    "triangles": 26642,
+    "bytes": 2605180,
+    "exactCm": [
+      45.0,
+      55.0,
+      45.0
+    ]
+  },
+  "knownLimitations": [
+    "Generic visual proxy, not a real SKU. It may only back a synthetic stub listing.",
+    "The piece is close to rotationally symmetric, so the four source views carry little independent information about the sides and rear. The leg spacing and the exact leg-to-top junction are inferred rather than observed.",
+    "The underside of the top is generated, not observed.",
+    "fit_glb.py reached 45 x 45 x 55 cm exactly (exit 0, residual 0.00 on every axis) using a per-axis scale at 7.46 percent anisotropy, so the mesh is slightly stretched relative to what the generator produced. The footprint stayed square, so the top should still read as circular.",
+    "frontAxis +Z is nominal only. With three legs the piece has no meaningful front, and rotating it about Y is harmless.",
+    "Visual quality has NOT been verified in a render. Only measurements, top-surface flatness, triangle count and byte size were checked against the file."
+  ]
+}

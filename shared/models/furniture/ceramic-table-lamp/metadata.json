@@ -1,0 +1,36 @@
+{
+  "productId": "ceramic-table-lamp",
+  "modelUrl": "/models/furniture/ceramic-table-lamp/model.glb",
+  "thumbnailUrl": "/models/furniture/ceramic-table-lamp/thumbnail.png",
+  "widthCm": 28.0,
+  "depthCm": 28.0,
+  "heightCm": 48.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-ceramic-table-lamp",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "realProduct": null,
+    "note": "No real product. A generic Japandi visual proxy made for the demo catalogue; it copies no retailer's design and carries no brand.",
+    "requestedSize": "28 x 28 x 48 cm",
+    "generation": "Higgsfield multi_image_to_3d from a four-view AI turnaround sheet generated with the Codex image_gen tool (codex-image.sh); should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=30000, symmetry_mode=auto, rigging and animation off.",
+    "postProcessing": "@gltf-transform/cli resize --width 1024 --height 1024, then scripts/fit_glb.py per-axis fit (centres the footprint, puts the base at y=0).",
+    "priceProvenance": "invented: a plausible demo figure, not a real or quoted price"
+  },
+  "measured": {
+    "widthCm": 28.0,
+    "depthCm": 28.0,
+    "heightCm": 48.0,
+    "minYCm": 0.0,
+    "triangles": 29777,
+    "bytes": 3118168
+  },
+  "knownLimitations": [
+    "No real product. Generic Japandi visual proxy generated from an AI turnaround sheet; the catalogue price is invented, not sourced.",
+    "Fitted to the requested 28 x 28 x 48 cm exactly: 3.63% anisotropy, inside the 10% cap, residuals 0.00 cm on every axis. fit_glb.py exited 0.",
+    "Not inspected in a render; no render was available to this agent. A radius-by-height profile shows a bulbous ceramic base peaking at 10.3 cm radius near 10 cm, narrowing to a 4.3 cm-radius neck at 21-24 cm, then a constant 14.0 cm-radius drum shade from 24-48 cm, which matches the reference sheet's silhouette.",
+    "PBR textures resized to 1024 px, so the linen weave and glaze speckle are softer than the source sheet."
+  ]
+}

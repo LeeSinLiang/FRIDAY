@@ -1,0 +1,35 @@
+{
+  "productId": "oak-nightstand",
+  "modelUrl": "/models/furniture/oak-nightstand/model.glb",
+  "thumbnailUrl": "/models/furniture/oak-nightstand/thumbnail.png",
+  "widthCm": 46.3,
+  "depthCm": 36.5,
+  "heightCm": 55.5,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-oak-nightstand",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented warm-Japandi solid white-oak bedside nightstand with one drawer over an open niche, backing a synthetic stub listing.",
+    "generation": "Four-view turnaround (codex-image), cropped at detected gutter boundaries, Higgsfield multi_image_to_3d (Meshy), should_texture+enable_pbr, target_polycount 24000",
+    "postProcessing": "gltf-transform resize to 1024 px textures (resize only, no lossy re-encode, geometry untouched), then scripts/fit_glb.py 45 40 52",
+    "dimensionsVerifiedAt": "Not a retail product; nothing external to verify against. Declared dimensions are what the mesh measures.",
+    "priceVerifiedAt": "None. price_cents on the stub listing is invented demo data."
+  },
+  "measured": {
+    "triangles": 20911,
+    "bytes": 2419344,
+    "exactCm": [46.2504, 36.5472, 55.4528]
+  },
+  "knownLimitations": [
+    "Generic visual proxy, not a real SKU. It may only back a synthetic stub listing.",
+    "The target box was 45 x 40 x 52 cm. The generated mesh was too tall and too shallow for that, and the 10 percent anisotropy cap in fit_glb.py could not close the gap: fit_glb.py exited 1 with residuals of +1.25 cm width, +3.45 cm height, -3.45 cm depth. The declared dimensions above are what the file actually measures, not the original target, so the asset check passes only if the catalogue listing is written to these numbers.",
+    "fit_glb.py applied a per-axis scale at the full 10 percent anisotropy cap, so the mesh is stretched relative to what the generator produced.",
+    "The drawer front and its finger groove are texture and shallow relief only. Nothing opens.",
+    "The open shelf niche is reconstructed from a single front and three-quarter view; its interior depth and back face are inferred rather than observed.",
+    "The underside is generated, not observed. Expect approximate geometry there.",
+    "Visual quality has NOT been verified in a render. Only measurements, triangle count and byte size were checked against the file."
+  ]
+}

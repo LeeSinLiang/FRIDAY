@@ -1,0 +1,37 @@
+{
+  "productId": "oak-wardrobe",
+  "modelUrl": "/models/furniture/oak-wardrobe/model.glb",
+  "thumbnailUrl": "/models/furniture/oak-wardrobe/thumbnail.png",
+  "widthCm": 161.2,
+  "depthCm": 79.9,
+  "heightCm": 185.1,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-oak-wardrobe",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented warm-Japandi solid white-oak two-door wardrobe backing a synthetic stub listing.",
+    "generation": "Four-view turnaround (codex-image), cropped at detected gutter boundaries, Higgsfield multi_image_to_3d (Meshy), should_texture+enable_pbr, target_polycount 24000",
+    "postProcessing": "gltf-transform resize to 1024 px textures (resize only, no lossy re-encode, geometry untouched), then scripts/fit_glb.py 180 60 205",
+    "dimensionsVerifiedAt": "Not a retail product; nothing external to verify against. Declared dimensions are what the mesh measures.",
+    "priceVerifiedAt": "None. price_cents on the stub listing is invented demo data."
+  },
+  "measured": {
+    "triangles": 19825,
+    "bytes": 2284216,
+    "exactCm": [161.2278, 79.8833, 185.1167]
+  },
+  "knownLimitations": [
+    "Generic visual proxy, not a real SKU. It may only back a synthetic stub listing.",
+    "This is the SECOND attempt. The first turnaround sheet drew a tall narrow wardrobe, and its mesh measured 120.8 x 78.0 x 189.9 cm raw, far off the 180 x 60 x 205 brief. The sheet was regenerated with explicit wide-and-shallow proportion instructions; this model is built from that second sheet.",
+    "Depth is the weak axis and is the main way this asset disappoints. Meshy reconstructed the carcass much deeper than the source side-profile view implied: the raw mesh measured 165.4 x 90.2 x 189.9 cm, a depth-to-width ratio of 0.55 where the brief wants 0.33. Both generations did this.",
+    "The target box was 180 x 60 x 205 cm. The 10 percent anisotropy cap in fit_glb.py could not reach it: fit_glb.py exited 1 with residuals of -18.77 cm width, -19.88 cm height, +19.88 cm depth. The declared dimensions above are what the file actually measures, not the original target, so the asset check passes only if the catalogue listing is written to these numbers. As shipped it is a 161 cm wide, 80 cm deep, 185 cm tall wardrobe, not a 180 x 60 x 205 one.",
+    "fit_glb.py applied a per-axis scale at the full 10 percent anisotropy cap, so the mesh is stretched relative to what the generator produced.",
+    "The doors and their recessed finger grooves are texture and shallow relief only. Nothing opens, and there is no interior.",
+    "The three-quarter source view showed a slightly sloping top edge rather than a dead-flat top, so the top face may not be perfectly planar in the mesh.",
+    "The underside is generated, not observed. Expect approximate geometry there.",
+    "Visual quality has NOT been verified in a render. Only measurements, triangle count and byte size were checked against the file."
+  ]
+}

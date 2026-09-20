@@ -1,0 +1,50 @@
+{
+  "productId": "rattan-dining-chair",
+  "modelUrl": "/models/furniture/rattan-dining-chair/model.glb",
+  "thumbnailUrl": "/models/furniture/rattan-dining-chair/thumbnail.png",
+  "widthCm": 46.0,
+  "depthCm": 52.0,
+  "heightCm": 82.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-rattan-dining-chair",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "UNIDENTIFIED - there is no real product behind this asset. A generic warm-Japandi dining chair with an oak frame and a woven rattan seat and back, invented for the FRIDAY demo catalogue. Not a copy of, and not a confirmed match for, any retail SKU.",
+    "dimensionsVerifiedAt": null,
+    "targetCm": {
+      "width": 46,
+      "depth": 52,
+      "height": 82
+    },
+    "generation": "Higgsfield multi_image_to_3d, four cropped views (front / three-quarter-front-left / side profile / rear) taken from one AI-generated product turnaround sheet made with the codex-image skill; should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=30000, symmetry_mode=auto, no rigging or animation",
+    "postProcessing": "gltf-transform resize --width 1024 --height 1024 (texture resize only, no lossy re-encode, geometry untouched), then scripts/fit_glb.py per-axis fit to stand the piece on the floor (minY = 0) and centre its footprint on x/z",
+    "priceIsInventedDemoData": true
+  },
+  "measured": {
+    "triangles": 30132,
+    "bytes": 4498140,
+    "exactCm": {
+      "width": 46.0,
+      "depth": 52.0,
+      "height": 82.0
+    },
+    "minYCm": 0.0,
+    "footprintCentreCm": {
+      "x": 0.0,
+      "z": 0.0
+    }
+  },
+  "knownLimitations": [
+    "No real product: the dimensions below are the generated mesh's own measured box, not a figure verified against any retail listing. This one happens to hit the 46 x 52 x 82 cm target exactly because the fit landed inside its cap.",
+    "The woven rattan seat and back are the weak point. The reference sheet was deliberately drawn with a coarse, large-hole basket weave so it would survive image-to-3D, but a mesh at this budget almost certainly renders the weave as a flat textured panel rather than as real interwoven geometry with see-through holes. Expect the weave to read as a printed pattern up close.",
+    "30132 triangles, marginally over the 30000 triangle budget in backend/api/test_furniture_assets.py. Generated at target_polycount 30000 on the coordinator's instruction to favour looks over the gate; the coordinator owns any budget entry.",
+    "4.50 MB, the heaviest of these three and close to the 5 MiB ceiling, because the weave texture does not compress well.",
+    "catalogueListingId is a synthetic demo listing, not a real article number, and its price is invented demo data.",
+    "Visual quality is UNVERIFIED: no render of the GLB was inspected. Only the source turnaround sheet was reviewed by eye.",
+    "The four source views are AI-generated renders of a chair that does not exist, not photographs, so surface detail is plausible rather than accurate.",
+    "No manual Blender inspection or correction pass has been done."
+  ]
+}

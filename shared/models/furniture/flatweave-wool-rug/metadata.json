@@ -1,0 +1,37 @@
+{
+  "productId": "flatweave-wool-rug",
+  "modelUrl": "/models/furniture/flatweave-wool-rug/model.glb",
+  "thumbnailUrl": "/models/furniture/flatweave-wool-rug/thumbnail.png",
+  "widthCm": 258.4,
+  "depthCm": 241.6,
+  "heightCm": 2.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-flatweave-rug",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "realProduct": null,
+    "note": "No real product. A generic Japandi visual proxy made for the demo catalogue; it copies no retailer's design and carries no brand.",
+    "requestedSize": "200 x 300 x 2 cm",
+    "generation": "Higgsfield multi_image_to_3d from a four-view AI turnaround sheet generated with the Codex image_gen tool (codex-image.sh); should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=30000, symmetry_mode=auto, rigging and animation off.",
+    "postProcessing": "@gltf-transform/cli resize --width 1024 --height 1024, then scripts/fit_glb.py per-axis fit (centres the footprint, puts the base at y=0).",
+    "priceProvenance": "invented: a plausible demo figure, not a real or quoted price"
+  },
+  "measured": {
+    "widthCm": 258.4,
+    "depthCm": 241.6,
+    "heightCm": 2.0,
+    "minYCm": 0.0,
+    "triangles": 31280,
+    "bytes": 3431184
+  },
+  "knownLimitations": [
+    "No real product. Generic Japandi visual proxy generated from an AI turnaround sheet; the catalogue price is invented, not sourced.",
+    "The rug is genuinely flat and was NOT inflated by the generator. Raw mesh height was 1.45 cm against a 190 cm width (0.8%), and in the shipped file 13511 vertices lie on the bottom plane and 13183 on the top plane with only about 1200 on the 2 cm rim: two parallel planes and a thin edge, not a pillow.",
+    "Requested 200 x 300 x 2 cm. The generated footprint is squarer than requested (raw 190 x 161 cm, about 1.18:1, against the requested 1:1.5) and its long axis runs along X rather than Z, so scripts/fit_glb.py hit its 10% anisotropy cap: the shipped rug is 258.4 x 241.6 x 2.0 cm. Thickness matches exactly; the footprint is a large near-square area rug, not a 200 x 300 rectangle. fit_glb.py exited 1, outside the repository's asset-check tolerance.",
+    "Not inspected in a render; no render was available to this agent. The source turnaround sheet showed four flat rugs at a low three-quarter angle with a visible thin cut edge, oatmeal ground and narrow grey woven stripes.",
+    "PBR textures resized to 1024 px, so the herringbone flatweave texture is softer than the source sheet."
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "productId": "slim-console-table",
+  "modelUrl": "/models/furniture/slim-console-table/model.glb",
+  "thumbnailUrl": "/models/furniture/slim-console-table/thumbnail.png",
+  "widthCm": 103.6,
+  "depthCm": 38.4,
+  "heightCm": 76.8,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-slim-console",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented generic Japandi solid-oak hallway console table created for the hackathon demo catalogue; it does not depict or reproduce any manufacturer's design, and its price is invented demo data.",
+    "generation": "Four-view turnaround reference sheet generated with the codex-image skill (front, three-quarter-front-left, side profile, rear on a seamless white studio backdrop), cut into four images with scripts/turnaround_crop.mjs, then Higgsfield generate_3d model multi_image_to_3d with all four views as role \"image\": should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=30000, symmetry_mode=auto, rigging and animation false, plus a texture_prompt describing warm honey-brown solid oak with a fine straight grain and a matte hand-oiled finish.",
+    "postProcessing": "npx @gltf-transform/cli resize --width 1024 --height 1024 (textures only, geometry untouched; 9.71 MB -> 2.63 MB), then scripts/fit_glb.py 110 32 78 to centre the footprint, put the base at y=0 and scale toward the listing size."
+  },
+  "measured": {
+    "widthCm": 103.6,
+    "depthCm": 38.4,
+    "heightCm": 76.8,
+    "minYCm": 0.0,
+    "triangles": 27084,
+    "bytes": 2626760
+  },
+  "knownLimitations": [
+    "Dimensions are a visual proxy, not a measured product, and this is the loosest fit of the three. Against the intended 110 x 32 x 78 cm the asset measures 103.6 x 38.4 x 76.8 cm: 6.4 cm too narrow, 6.4 cm too deep and 1.2 cm too short. fit_glb.py hit its 10% anisotropy cap and exited 1, so this model would not pass the 2 cm / 3% tolerance in backend/api/test_furniture_assets.py without a budget entry. The reconstruction made the table squarer in plan than the very narrow console the reference sheet showed.",
+    "The oak renders lighter and more golden than the intended #b98b5e, closer to a pale honey oak.",
+    "Reconstructed from generated reference images, not from photographs of a real object; the joinery is read from the images, so the apron and stretcher are approximate rather than dimensioned carpentry.",
+    "No manual Blender inspection or correction pass has been done. Verified by rendering the GLB in model-viewer from front, rear three-quarter and low angles; the legs, apron and low stretcher are clean and connected, with no holes or floating fragments and no dark underside cap."
+  ]
+}

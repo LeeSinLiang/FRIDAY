@@ -1,0 +1,38 @@
+{
+  "productId": "oak-writing-desk",
+  "modelUrl": "/models/furniture/oak-writing-desk/model.glb",
+  "thumbnailUrl": "/models/furniture/oak-writing-desk/thumbnail.png",
+  "widthCm": 120.0,
+  "depthCm": 55.0,
+  "heightCm": 75.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-oak-writing-desk",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented warm-Japandi solid white-oak writing desk with one slim full-width drawer on slim tapered legs, backing a synthetic stub listing.",
+    "generation": "Four-view turnaround sheet (codex-image), cropped at detected gutter boundaries by scripts/turnaround_crop.mjs, then Higgsfield multi_image_to_3d (Meshy) with should_texture, enable_pbr, should_remesh, triangle topology, target_polycount 28000, symmetry_mode auto, and an oak texture_prompt.",
+    "postProcessing": "gltf-transform resize to 1024 px textures (resize only, no lossy re-encode, geometry untouched), then scripts/fit_glb.py 120 55 75.",
+    "dimensionsVerifiedAt": "Not a retail product; nothing external to verify against. The declared dimensions are what the mesh measures.",
+    "priceVerifiedAt": "None. price_cents on the stub listing is invented demo data."
+  },
+  "measured": {
+    "triangles": 26802,
+    "bytes": 2538880,
+    "exactCm": [
+      120.0,
+      75.0,
+      55.0
+    ]
+  },
+  "knownLimitations": [
+    "Generic visual proxy, not a real SKU. It may only back a synthetic stub listing.",
+    "The drawer front and its finger groove are texture and shallow relief only. Nothing opens.",
+    "The underside, the inside of the knee space and the back face are generated rather than observed, because the source sheet shows the desk only from outside. Expect approximate geometry there.",
+    "fit_glb.py reached 120 x 55 x 75 cm exactly (exit 0, residual 0.00 on every axis) using a per-axis scale at 6.74 percent anisotropy, so the mesh is slightly stretched relative to what the generator produced.",
+    "frontAxis +Z is the pipeline convention and was confirmed on the chair from the same batch, but the desk's own silhouette is close to front/back symmetric, so its facing could not be checked from geometry alone. If it faces backwards in the room, the drawer side is the tell.",
+    "Visual quality has NOT been verified in a render. Only measurements, top-surface flatness, triangle count and byte size were checked against the file."
+  ]
+}

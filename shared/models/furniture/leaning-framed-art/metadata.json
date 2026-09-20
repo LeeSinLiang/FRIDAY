@@ -1,0 +1,56 @@
+{
+  "productId": "leaning-framed-art",
+  "modelUrl": "/models/furniture/leaning-framed-art/model.glb",
+  "thumbnailUrl": "/models/furniture/leaning-framed-art/thumbnail.png",
+  "widthCm": 64.8,
+  "depthCm": 11.2,
+  "heightCm": 88.1,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-leaning-art",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "origin": "generated",
+    "realProduct": null,
+    "generation": {
+      "turnaroundSheet": "codex-image (Codex CLI image_gen), 16:9 four-view product turnaround reference sheet on a pure white opaque seamless background",
+      "sheetCrop": "scripts/turnaround_crop.mjs — gutter-detected crop into 4 single-view PNGs",
+      "mesh": "Higgsfield generate_3d, model multi_image_to_3d, 4 views role=image, should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging/animation disabled"
+    },
+    "postProcessing": "npx @gltf-transform/cli resize --width 1024 --height 1024; scripts/fit_glb.py per-axis fit (capped at 10% anisotropy), footprint centred and base placed at y=0",
+    "title": "Leaning framed art, oak frame",
+    "category": "decor",
+    "description": "Large framed picture standing on the floor, in a chunky solid oak box frame with deep side rails and square machined corners. The artwork inside is a deliberately simple abstract wash of warm beige, greige and pale sand with no subject, pattern or lettering.",
+    "artDirection": "Warm Japandi: pale blond oak with fine open grain and a matte oiled finish; muted neutral artwork chosen to carry no recognisable imagery.",
+    "requestedSizeCm": {
+      "widthCm": 70,
+      "depthCm": 6,
+      "heightCm": 90,
+      "note": "Rough target for the demo catalogue. The recorded widthCm/depthCm/heightCm above are measured from the GLB and take precedence."
+    },
+    "priceProvenance": "invented"
+  },
+  "measured": {
+    "widthCm": 64.8,
+    "depthCm": 11.2,
+    "heightCm": 88.1,
+    "minYCm": 0.0,
+    "triangles": 25687,
+    "bytes": 2353524,
+    "method": "backend/api/glb.py measure(), read back from the fitted GLB"
+  },
+  "knownLimitations": [
+    "No real product: geometry, texture and proportions come from an AI-generated turnaround sheet, not from a manufacturer's model. matchType is generic_visual_proxy; do not present it as a specific purchasable item.",
+    "price_cents in the batch manifest is invented for the demo and has no vendor behind it.",
+    "It does NOT lean. The turnaround sheet showed a slight lean only in the three-quarter view, and the reconstruction resolved it as a perfectly upright frame. Measured from the GLB: the depth extent is a constant 11.15 cm at 5%, 25%, 50%, 75% and 95% of the height and the depth-centre never drifts (+0.00 to +0.01 cm), which is a vertical object, not a tilted one. If the scene wants a leaning look it must rotate the model itself.",
+    "The frame does have real depth — that constant 11.15 cm extent is frame, not lean — but it is 11.2 cm deep against the 6 cm requested. The per-axis fit is capped at 10% anisotropy and could not thin it further, so this reads as a notably chunky gallery box frame rather than a slim one. Measured 64.8 x 11.2 x 88.1 cm against the rough 70 x 6 x 90 cm target; the recorded dimensions are the measured ones.",
+    "The depth profile confirms a hollow box section rather than a solid slab: at the top and bottom rails the frame's full 11.15 cm depth is present across the centre of the picture, while at 25%, 50% and 75% of the height the centre column is empty, which is the thin artwork panel spanning between two deep side rails.",
+    "Not visually inspected in a render; all of the above is measured from the vertex data, so nothing here is a claim about how it looks.",
+    "The artwork is a flat image on a flat panel. It is intentionally an abstract neutral wash with no subject, text or signature, both because such detail reconstructs as garbage at this resolution and to avoid reproducing anyone's work. Do not describe it as a specific artwork or attribute it to an artist.",
+    "Because it stands upright and flat-backed, it will z-fight or interpenetrate if placed flush against a wall plane; leave a small offset.",
+    "PLACEMENT: Leans against a wall. It also reconstructed upright, so the scene must rotate it."
+  ],
+  "automaticFloorPlacement": false
+}

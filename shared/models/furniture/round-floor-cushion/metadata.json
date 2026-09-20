@@ -1,0 +1,37 @@
+{
+  "productId": "round-floor-cushion",
+  "modelUrl": "/models/furniture/round-floor-cushion/model.glb",
+  "thumbnailUrl": "/models/furniture/round-floor-cushion/thumbnail.png",
+  "widthCm": 70.0,
+  "depthCm": 70.0,
+  "heightCm": 22.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-floor-cushion",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "realProduct": null,
+    "note": "No real product. A generic warm-Japandi visual proxy made for the demo catalogue; it copies no retailer's design and carries no brand.",
+    "requestedSize": "70 x 70 x 22 cm",
+    "generation": "Higgsfield multi_image_to_3d from a four-view AI turnaround sheet generated with the Codex image_gen tool (codex-image.sh); should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging and animation off.",
+    "postProcessing": "@gltf-transform/cli resize --width 1024 --height 1024, then scripts/fit_glb.py per-axis fit (centres the footprint, puts the base at y=0).",
+    "priceProvenance": "invented: a plausible demo figure, not a real or quoted price"
+  },
+  "measured": {
+    "widthCm": 70.0,
+    "depthCm": 70.0,
+    "heightCm": 22.0,
+    "minYCm": 0.0,
+    "triangles": 28373,
+    "bytes": 2980552
+  },
+  "knownLimitations": [
+    "No real product. Generic Japandi visual proxy generated from an AI turnaround sheet; the catalogue price is invented, not sourced.",
+    "Best fit of the three: exactly 70.0 x 70.0 x 22.0 cm at 5.99 percent anisotropy, fit_glb.py exited 0. The raw mesh was a circular 189.9 x 189.9 cm plan 56.3 cm tall, a 3.37:1 width-to-height ratio against the listing's 3.18:1, so almost no correction was needed.",
+    "A round object gives four nearly identical turnaround views, so the multi-view reconstruction had less independent information than an asymmetric object would; the underside is not visible in any source view and is likely a flat cap, hidden once the cushion sits on the floor (minY 0.0).",
+    "Not inspected in a render; no render was available to this agent. The source turnaround sheet showed four views of one low wide drum-shaped floor cushion in washed greige-oatmeal linen, with a piped seam around the top and bottom rim, a single central button tuft, and a straight gusseted side band.",
+    "PBR textures resized to 1024 px, so the washed-linen slub texture is softer than the source sheet."
+  ]
+}

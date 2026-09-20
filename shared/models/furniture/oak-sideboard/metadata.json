@@ -1,0 +1,52 @@
+{
+  "productId": "oak-sideboard",
+  "modelUrl": "/models/furniture/oak-sideboard/model.glb",
+  "thumbnailUrl": "/models/furniture/oak-sideboard/thumbnail.png",
+  "widthCm": 160.7,
+  "depthCm": 45.2,
+  "heightCm": 51.8,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-oak-sideboard",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "origin": "generated",
+    "realProduct": null,
+    "generation": {
+      "turnaroundSheet": "codex-image (Codex CLI image_gen), 16:9 four-view product turnaround reference sheet on a pure white seamless background",
+      "sheetCrop": "scripts/turnaround_crop.mjs \u2014 gutter-detected crop into 4 single-view PNGs",
+      "mesh": "Higgsfield generate_3d, model multi_image_to_3d, 4 views role=image, should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=30000, symmetry_mode=auto, rigging/animation disabled"
+    },
+    "postProcessing": "npx @gltf-transform/cli resize --width 1024 --height 1024; scripts/fit_glb.py per-axis fit (capped at 10% anisotropy), footprint centred and base placed at y=0",
+    "title": "Oak sideboard / TV unit",
+    "category": "storage",
+    "description": "Warm Japandi solid-oak low sideboard / TV media unit, four flat door panels with slim recessed finger pulls, on four slender round tapered legs.",
+    "artDirection": "Warm Japandi: solid oak with fine open grain, matte finish, gently chamfered edges; the plant in a matte stoneware pot.",
+    "requestedSizeCm": {
+      "widthCm": 160,
+      "depthCm": 42,
+      "heightCm": 55,
+      "note": "Rough target for the demo catalogue. The recorded widthCm/depthCm/heightCm above are measured from the GLB and take precedence."
+    },
+    "priceProvenance": "invented"
+  },
+  "measured": {
+    "widthCm": 160.7,
+    "depthCm": 45.2,
+    "heightCm": 51.8,
+    "minYCm": 0.0,
+    "triangles": 28101,
+    "bytes": 2446660,
+    "method": "backend/api/glb.py measure(), read back from the fitted GLB"
+  },
+  "knownLimitations": [
+    "No real product: geometry, texture and proportions come from an AI-generated turnaround sheet, not from a manufacturer's model or spec. matchType is generic_visual_proxy; do not present it as a specific purchasable item.",
+    "price_cents in the batch manifest is invented for the demo and has no vendor behind it.",
+    "The per-axis fit is capped at 10% anisotropy: measured 160.7 x 45.2 x 51.8 cm against a requested rough 160 x 42 x 55 cm. Width matches; depth is ~3.2 cm deeper and height ~3.2 cm lower than requested. The dimensions recorded here are the measured ones.",
+    "Verified by rendering the GLB in three.js: the four door divisions are carried mostly by the texture and only shallowly by geometry, so the front reads as a nearly flush panel in raking light. The finger-pull grooves are shallow.",
+    "An unlit albedo render confirms the back panel is the same warm oak as the front; it looks dark only when a scene lights the unit from the front with no fill behind.",
+    "There is one small dark speck baked into the texture near the top centre of the back panel."
+  ]
+}

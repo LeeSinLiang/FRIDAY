@@ -1,0 +1,57 @@
+{
+  "productId": "branch-vase",
+  "modelUrl": "/models/furniture/branch-vase/model.glb",
+  "thumbnailUrl": "/models/furniture/branch-vase/thumbnail.png",
+  "widthCm": 43.2,
+  "depthCm": 26.8,
+  "heightCm": 75.4,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-branch-vase",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "origin": "generated",
+    "realProduct": null,
+    "generation": {
+      "turnaroundSheet": "codex-image (Codex CLI image_gen), 16:9 four-view product turnaround reference sheet on a pure white opaque seamless background",
+      "sheetCrop": "scripts/turnaround_crop.mjs — gutter-detected crop into 4 single-view PNGs",
+      "mesh": "Higgsfield generate_3d, model multi_image_to_3d, 4 views role=image, should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging/animation disabled"
+    },
+    "postProcessing": "npx @gltf-transform/cli resize --width 1024 --height 1024; scripts/fit_glb.py per-axis fit (capped at 10% anisotropy), footprint centred and base placed at y=0",
+    "title": "Stoneware vase with dried branches",
+    "category": "decor",
+    "description": "Hand-thrown matte stoneware cylinder with a softly tapered shoulder and short narrow neck, holding a small number of thick sculptural dried branches that fan out widely, each carrying a few broad paddle-shaped dried seed heads.",
+    "artDirection": "Warm Japandi: chalky oatmeal-grey matte glaze with subtle speckle, muted dusty-beige dried foliage, deliberately sparse and bold rather than wispy.",
+    "requestedSizeCm": {
+      "widthCm": 35,
+      "depthCm": 35,
+      "heightCm": 75,
+      "note": "Rough target for the demo catalogue. The recorded widthCm/depthCm/heightCm above are measured from the GLB and take precedence."
+    },
+    "priceProvenance": "invented"
+  },
+  "measured": {
+    "widthCm": 43.2,
+    "depthCm": 26.8,
+    "heightCm": 75.4,
+    "minYCm": 0.0,
+    "triangles": 29052,
+    "bytes": 3461408,
+    "method": "backend/api/glb.py measure(), read back from the fitted GLB"
+  },
+  "knownLimitations": [
+    "No real product: geometry, texture and proportions come from an AI-generated turnaround sheet, not from a manufacturer's model. matchType is generic_visual_proxy; do not present it as a specific purchasable item.",
+    "price_cents in the batch manifest is invented for the demo and has no vendor behind it.",
+    "The branches did NOT fuse into a blob, which is the usual failure for thin foliage in image-to-3D. Measured from the GLB: horizontal slabs at 55%, 65%, 75%, 85% and 92% of the height each contain 4 to 6 spatially separated vertex clusters, so the stems stay distinct geometry all the way up rather than merging into one mass.",
+    "The arrangement is a flat fan, not a radially symmetric spray: measured 43.2 cm wide but only 26.8 cm deep. The requested rough 35 x 35 cm assumed a round footprint, and the per-axis fit is capped at 10% anisotropy, so it could not force one (residual +8.16 cm on width, -8.16 cm on depth; height landed at 75.4 cm against 75). The recorded dimensions are the measured ones. The asset therefore has a clear front: it looks fullest from +Z and thinnest from the side.",
+    "The bounding box spans the branch canopy, not the vase. The vase body is only about 19 cm across, so any placement or collision logic keyed to the footprint will reserve roughly twice the floor or shelf area the vase physically occupies.",
+    "Flat and stable enough to sit on furniture: minY is exactly 0.0 cm, and a slab at y=0.38 cm has vertices across nearly the full radius, so the vase has a genuine closed flat bottom about 15-19 cm across rather than a rim or a point. The contact band within 3 mm of the base spans 14.6 x 15.6 cm.",
+    "Not visually inspected in a render; the branch-separation and base findings above are measured from the vertex data, not a claim about how it looks.",
+    "Branches and seed heads are solid geometry, not alpha-cut cards, so they are thicker than real dried stems and the joins where a stem meets a seed head are rounded and blobby at close range. Built to read at room scale.",
+    "The stoneware may render paler and greyer than the warm oatmeal described in the prompt, which was the outcome on sibling stoneware assets in this batch; this has not been checked in a render here.",
+    "PLACEMENT: Tabletop item, and its bounding box spans the canopy rather than the ~19 cm vessel."
+  ],
+  "automaticFloorPlacement": false
+}

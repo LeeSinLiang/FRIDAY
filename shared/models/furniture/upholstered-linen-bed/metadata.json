@@ -1,0 +1,42 @@
+{
+  "productId": "upholstered-linen-bed",
+  "modelUrl": "/models/furniture/upholstered-linen-bed/model.glb",
+  "thumbnailUrl": "/models/furniture/upholstered-linen-bed/thumbnail.png",
+  "widthCm": 180.5,
+  "depthCm": 204.5,
+  "heightCm": 110.0,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-upholstered-linen-bed",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented warm-Japandi upholstered platform bed in oatmeal linen with a tall soft padded headboard, dressed with a rumpled linen duvet and two pillows, backing a synthetic stub listing.",
+    "generation": "Four-view turnaround reference sheet generated with the codex-image skill (front, three-quarter-front-left, side profile, rear on an opaque white seamless background), cut at detected gutter boundaries by scripts/turnaround_crop.mjs, then Higgsfield multi_image_to_3d (Meshy) with should_texture=true, enable_pbr=true, should_remesh=true, topology=triangle, target_polycount=28000, symmetry_mode=auto, rigging and animation off, plus a linen/oak texture_prompt.",
+    "postProcessing": "gltf-transform resize to 1024 x 1024 textures (resize only: textures were NOT re-encoded to a lossy codec and geometry was NOT simplified, so every vertex is the generator's own; 10.32 MB to 3.29 MB), then scripts/fit_glb.py 170 215 110.",
+    "dimensionsVerifiedAt": "Not a retail product, so there is nothing external to verify against. The declared dimensions are what the mesh measures: 180.5185 x 204.4815 x 110.0 cm (w x d x h).",
+    "priceVerifiedAt": "None. price_cents on the stub listing is invented demo data, not a real price."
+  },
+  "measured": {
+    "triangles": 28347,
+    "bytes": 3294532,
+    "exactCm": [
+      180.5185,
+      204.4815,
+      110.0
+    ]
+  },
+  "knownLimitations": [
+    "Generic visual proxy, not a real SKU. It may only back a synthetic stub listing.",
+    "LIST IT AT THE MEASURED NUMBERS ABOVE, NOT THE 170 x 215 x 110 BRIEF. fit_glb.py exited 1: it hit the 10 percent anisotropy cap without reaching the target box, with residuals of +10.52 cm width and -10.52 cm depth. Height is exact at 110.0 cm. As shipped this is a 180.5 cm wide, 204.5 cm deep bed, not a 170 x 215 one, so it reads as slightly wide and slightly short for a queen.",
+    "Depth is the weak axis in image-to-3D and it was weak here too: the raw mesh came back 184.4 x 189.9 x 110.1 cm, close to square in plan where the brief wants a 0.79 width-to-depth ratio. Reaching 170 x 215 would have needed about 23 percent anisotropy.",
+    "fit_glb.py applied a per-axis scale at the full 10 percent anisotropy cap, so the mesh is stretched relative to what the generator produced.",
+    "Orientation was checked against the file and is correct for this repo: the long axis is on Z and the headboard mass sits at negative Z (normalised centroid Z of -0.89 over the top 15 percent of the model's height), so the foot of the bed faces +Z. No rotation was applied.",
+    "Single merged mesh: frame, headboard, mattress, duvet and pillows are not separately addressable.",
+    "The duvet folds and pillows are reconstructed from four still views, so the bedding geometry is an approximation of the reference sheet rather than simulated cloth.",
+    "The underside and the area behind the headboard are generated, not observed. Expect approximate geometry there.",
+    "No manual Blender inspection pass.",
+    "Visual quality has NOT been verified in a render. Only measurements, orientation, triangle count and byte size were checked against the file."
+  ]
+}
