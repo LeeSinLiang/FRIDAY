@@ -59,7 +59,31 @@ suggestion. Confirmation saved one instance and Cart (1) remained after browser 
 backend scene row also retained that instance. Floor 1 → Floor 2 → Floor 1 and the bottom Speak
 recording/cancel state were verified in the same browser. The full integration checks passed:
 backend 393 tests (5 skipped), frontend 209 scene/catalogue plus 25 account tests, board 6 tests,
-and Vite build in 3.15 seconds. Hosted release verification remains pending.
+and Vite build in 3.15 seconds.
+
+### Main release, 2026-09-20
+
+PR [#110](https://github.com/LeeSinLiang/hackmit2026/pull/110) passed backend,
+frontend and security CI and merged as `fba5ab1cf8733595bf03387e71862612353eba98`.
+The clean merged checkout passed `./setup.sh`, 393 backend tests (5 skipped), 209
+scene/catalogue tests, 25 account tests, 6 board tests and a Vite build. Its runtime
+source identity is `7dae28167a5e096ef28e622169c3619948a88db5d6e1ee1cc5e8be318179b040`.
+
+Production API deployment `dpl_3QQDj9vkp4HU6AY67hFfusPDPSW2` and frontend
+deployment `dpl_HqRst43QJ4GhY7351owEDvgqjxHs` are Ready at the stable
+`friday-hackmit-api.vercel.app` and `friday-hackmit.vercel.app` aliases. Direct
+and rewritten `/api/health/` returned HTTP 200 with the same `X-Friday-Build`
+identity, and the public browser's `data-build` matched. The API's Production
+Elastic settings were configured server-side; public model-only search returned
+`X-Search-Backend: elastic` and `X-Search-Results: with-model`.
+
+The public browser opened the actual London entrance and showed AI-first
+recommendations, the Tables tab with 20 of 27 model-backed cards and exact-model
+images, bottom Speak, and Floor 1 → 2 → 1. The local browser additionally
+confirmed table placement/cart persistence and the known-price chair preview.
+Public screenshot: `.scratch/sidebar-main/public-london-tables.png` in the
+release worktree. The existing Vercel Git binding issue [#74](https://github.com/LeeSinLiang/hackmit2026/issues/74)
+still requires manual deployment on future merges.
 
 ## Category browsing
 
