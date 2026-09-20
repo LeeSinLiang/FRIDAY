@@ -1,7 +1,7 @@
 const cueOnly = /^do\s+it\s+now[.!?]*$/i;
 const cue = /\bdo\s+it\s+now\b/gi;
-const actionWord = /\b(?:add|place|put|move|rotate|remove|delete|arrange|rearrange|decorate|furnish|clear|inspect|describe)\b/gi;
-const startsWithAction = /^(?:(?:please|can you|could you|i want you to)\s+)*(?:add|place|put|move|rotate|remove|delete|arrange|rearrange|decorate|furnish|clear|inspect|describe)\b/i;
+const actionWord = /\b(?:add|place|put|move|rotate|remove|delete|arrange|rearrange|decorate|furnish|design|build|create|clear|inspect|describe)\b/gi;
+const startsWithAction = /^(?:(?:please|can you|could you|i want you to)\s+)*(?:add|place|put|move|rotate|remove|delete|arrange|rearrange|decorate|furnish|design|build|create|clear|inspect|describe)\b/i;
 
 export function isDoItNowCue(text: string): boolean {
   return cueOnly.test(text.trim());
@@ -32,7 +32,7 @@ export function designerInstruction(text: string, priorDraft = ""): string | nul
     return /^(?:an?|the|some|\d+)\s+/i.test(action) ? `Place ${action}` : action;
   }
   if (/^place\s+mats?\b/i.test(action)) return null;
-  return /^(?:add|place|put|move|rotate|remove|delete|arrange|rearrange|decorate|furnish|clear|inspect|describe)\b/i.test(action)
+  return /^(?:add|place|put|move|rotate|remove|delete|arrange|rearrange|decorate|furnish|design|build|create|clear|inspect|describe)\b/i.test(action)
     || /^(?:what(?:'s| is| are)|where is)\b.*\b(?:room|scene|selected|chair|table|sofa|lamp)\b/i.test(action) ? value : null;
 }
 
