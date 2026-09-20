@@ -1,8 +1,8 @@
 # Visa/auth integration handoff
 
-Owner: William. Branch: `codex/visa-sandbox`. Updated: 2026-09-19.
+Owner: William. Branch: `codex/visa-cache-compatibility`. Updated: 2026-09-19.
 
-Review: [PR #19 — Add Visa IDX sandbox, account MFA, and checkout handoff](https://github.com/LeeSinLiang/hackmit2026/pull/19), from `codex/visa-sandbox` into `main`. Opened for the team's Codex review workflow; no completed review or merge is claimed. The verification results and remaining integration work below still apply.
+Review: [PR #21 — Add Visa IDX and account MFA with isolated catalogue cache tests](https://github.com/LeeSinLiang/hackmit2026/pull/21), from `codex/visa-cache-compatibility` into `main`, replaces [PR #19](https://github.com/LeeSinLiang/hackmit2026/pull/19). It retains the original implementation and resolves the reported P1 cache/test regression tracked in [issue #20](https://github.com/LeeSinLiang/hackmit2026/issues/20). Review and merge remain pending.
 
 ## Baseline and teammates' work
 
@@ -14,7 +14,7 @@ The previously separate `codex/saketh-wall-exceptions` work is now included thro
 
 ## What this branch adds
 
-**Scope boundary:** William requested that teammates' code and the existing Visa HTML tester remain unchanged. The editor integration and catalogue-test edits tried during reconciliation were removed. Account components are provided for the UI owner to integrate using the steps below; they are not currently mounted by the new editor.
+**Scope boundary:** The editor and existing Visa HTML tester remain unchanged. William subsequently authorized resolving the P1 review: the only additional executable-source change is a class-scoped cache override and cleanup in `backend/catalogue/test_compile.py`. Catalogue runtime logic and application authentication/cache settings are unchanged. Account components are provided for the UI owner to integrate using the steps below; they are not currently mounted by the new editor.
 
 | Area | Current behaviour and source |
 | --- | --- |
@@ -64,17 +64,17 @@ These changes are proposed, **not applied to the teammate's editor**:
 3. **Define guest-room and account ownership.** `backend/api/scene_views.py` and `scene_service.py` address scenes by Django session key. Authentication can rotate or replace that key. No transfer from a guest scene to an account is implemented or verified here; decide the transfer/ownership policy before claiming a room survives a first login, logout, or account switch.
 4. **Finish the broader agent/spatial journey.** Compiler/search endpoints, scene tool adapters and the [region solver](../frontend/region-solver.md) are available. The solver handles placement clauses and optional opening/occupancy inputs with masks and rejection explanations. Rendering its overlay in the editor, making real catalogue products persistable, full agent orchestration and catalogue-to-checkout wiring remain separate work. Keep broad integration cards open despite completed foundations.
 5. **Payment and ordering remain separate.** An IDX Match Key is accepted transaction context, not a card authorization, purchase, or vendor order. No final transaction was performed. Production hosting, HTTPS, production database/cache, provider configuration, and font licensing remain subject to their existing feature documentation.
-6. **Resolve cache/test compatibility with the catalogue owner.** Our account settings use Django `DatabaseCache` for persistent rate limits and used-TOTP markers. Five existing `CompileEndpointTests(SimpleTestCase)` call `cache.clear()` and fail because that test class forbids database access. A database-aware test case or an explicitly isolated cache override is an owner decision. Do not disable production replay/rate-limit protections to hide the test failure. The attempted test-class edit was reverted at William's request.
 
 ## Verification
 
-After syncing main through `e6a046e`:
+Current P1 correction, on main baseline `e6a046e`:
 
-- Canonical `./setup.sh` passed with no new migrations to apply; the existing auth key and account database were preserved.
-- Final combined backend run: **159 tests, 5 failures, 1 optional live test skipped**. All five failures are the same cache/test incompatibility above; all other tests passed. An earlier exploratory run on `98ca88d` passed after editing those five tests, but that edit was removed and is not the final branch result.
+- Canonical `./setup.sh` passed during the preceding main sync; no dependency, schema or setup changes were introduced by this test-only correction.
+- Exact reproduction before the fix: the documented combined backend command ran **159 tests with five `DatabaseOperationForbidden` failures and one optional live skip**. After the fix, the same command reports **158 passed, one optional live-model test skipped, zero failures**. The five existing endpoint tests retain their assertions, including the `200, 200, 429` throttle check. Their dedicated `LocMemCache` is cleared before/after each test; unittest class cleanup restores the application `DatabaseCache`. Auth and checkout tests still use that persistent cache.
 - The scoped `visa accounts checkout` suite previously passed all **36 tests** independently, and these tests pass within the current combined run.
-- Frontend: **54 scene/region tests and 9 auth/API/routing tests passed**. TypeScript/Vite production build passed; the existing large Three.js furniture chunk warning remains.
-- Refreshed this worktree using `./run-local.sh` on **5174/8001**. The independent **5173/8000** checkout was preserved. Chrome loaded the unchanged HTML tester with X-Pay/MLE readiness and a source hash matching the local Visa implementation, then validated a new sample locally without sending it to Visa. Auth user/email/authenticator rows and the MFA encryption key matched the pre-pull fingerprints.
+- TypeScript/Vite production build passed again; the existing large Three.js furniture chunk warning remains. Earlier **54 scene/region and 9 auth/API/routing tests** passed on the same unchanged frontend source and were not repeated for this test-only correction.
+- During the preceding main sync, refreshed this worktree using `./run-local.sh` on **5174/8001**. The independent **5173/8000** checkout was preserved. Chrome loaded the unchanged HTML tester with X-Pay/MLE readiness and a source hash matching the local Visa implementation, then validated a new sample locally without sending it to Visa. Auth user/email/authenticator rows and the MFA encryption key matched the pre-pull fingerprints.
+- Freshness for this correction: the executed test module resolves to `backend/catalogue/test_compile.py` in this worktree. The existing Vite/Django processes on **5174/8001** resolve to the same frontend/backend paths; all application source and settings are byte-for-byte unchanged from PR #19 head `f5d2d90`, so no application deployment/restart was required. Tests use a disposable test database; existing accounts, MFA keys and SMTP settings were not changed.
 - Account → editor navigation was checked during an exploratory integration, then removed in accordance with the final scope. That check is not proof of mounted account routes on this branch. The board-code reconciliation was likewise removed; its exploratory tests do not describe code shipped here.
 
 The earlier real Gmail delivery, phone-generated FRIDAY code, and Visa IDX response are recorded in [TODO_WILLIAM.md](../../TODO_WILLIAM.md) and the sanitized [checkout receipt](../evidence/account-checkout-2026-09-19.json). The current integration checks do not resend email or Visa requests. Automated Visa transport is mocked; Elasticsearch/OpenAI live services are not qualified by this test run.
@@ -84,7 +84,7 @@ Reproduce from the repository root:
 ```bash
 ./setup.sh
 (cd backend && uv run python manage.py test visa accounts checkout)
-# The combined suite currently reproduces the five documented cache/test failures:
+# Combined regression suite; the former five cache failures are resolved:
 (cd backend && OPENAI_API_KEY= COMPILE_LIVE_TEST=0 uv run python manage.py test api catalogue visa accounts checkout)
 (cd backend && uv run python manage.py makemigrations --check --dry-run)
 (cd frontend && npm test)
@@ -106,10 +106,10 @@ git status --short --branch
 git diff --check
 git diff --cached
 # After staging and committing the reviewed changes:
-git push -u origin codex/visa-sandbox
+git push -u origin codex/visa-cache-compatibility
 ```
 
-Open a pull request from `codex/visa-sandbox` into `main` to share the integrated work for review. Never push directly to main or force-push over another contributor. Before another upstream update, preserve local edits and reconcile new changes; `git pull --ff-only` is appropriate only when the chosen branch can actually fast-forward.
+Use [PR #21](https://github.com/LeeSinLiang/hackmit2026/pull/21), from `codex/visa-cache-compatibility` into `main`, for review of the integrated work. Never push directly to main or force-push over another contributor. Before another upstream update, preserve local edits and reconcile new changes; `git pull --ff-only` is appropriate only when the chosen branch can actually fast-forward.
 
 Run `node .github/extensions/project-manager/bin.mjs` to open this checkout's committed board snapshot. The user's existing owner-coloured board continues to run from the separate main checkout and its existing branch code. Other machines get the plan snapshot by pulling Git; they do not share this local live file. Stop board writers before Git/manual board updates and restart at the newly printed URL. See the [board guide](../../.github/extensions/project-manager/README.md). Owner-coloured rendering itself still requires the separate board-controls branch.
 

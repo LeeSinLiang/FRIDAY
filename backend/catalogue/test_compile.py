@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest import mock
 
 from django.core.cache import cache
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
 from openai import APITimeoutError, AuthenticationError
 from rest_framework.test import APIClient
 
@@ -251,9 +251,18 @@ class RenderTests(SimpleTestCase):
         self.assertEqual(render(program), ["against the wall", "within 2 ft of the door"])
 
 
+# These endpoint tests need isolated throttle state without database access.
+# Keep the application's persistent auth cache in effect for every other suite.
+@override_settings(CACHES={
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "catalogue-compile-endpoint-tests",
+    },
+})
 class CompileEndpointTests(SimpleTestCase):
     def setUp(self):
         cache.clear()  # throttle counters live in the cache
+        self.addCleanup(cache.clear)
 
     def post(self, body):
         return APIClient().post("/api/compile", body, format="json")

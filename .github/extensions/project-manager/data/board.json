@@ -105,8 +105,8 @@
         {
           "id": "e5258f21-f195-46ce-b869-1df5f4989564",
           "title": "Resolve catalogue test compatibility with the persistent auth cache",
-          "done": false,
-          "owner": "unassigned"
+          "done": true,
+          "owner": "william"
         }
       ],
       "description": "Product records, dimensions, prices, assets, and filtered search."
