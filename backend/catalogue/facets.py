@@ -46,6 +46,18 @@ def fit_filter(fit_mm: int) -> dict:
 HAS_MODEL_FILTER: dict = {"exists": {"field": "model_url"}}
 
 
+# How listings with a 3D model are treated in what search RETURNS. Counting never changes.
+MODELS_ONLY, MODELS_FIRST, MODELS_ALL = "only", "first", "all"
+# Far above any text score, so every listing with a model outranks every listing without one, and
+# text relevance still orders each group.
+MODEL_BOOST = 1000.0
+
+
+def model_boost() -> dict:
+    """A should-clause that lifts listings with a model to the top without excluding the rest."""
+    return {"constant_score": {"filter": HAS_MODEL_FILTER, "boost": MODEL_BOOST}}
+
+
 def hits_filter(fit_mm: int | None, models_only: bool) -> dict | None:
     """What narrows the RETURNED hits without touching what is counted: the width gap and, when asked,
     "has a 3D model". It runs after aggregation, so facets still describe every match."""

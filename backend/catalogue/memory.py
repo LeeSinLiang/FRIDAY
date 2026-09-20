@@ -3,7 +3,7 @@
 from collections.abc import Callable, Sequence
 
 from catalogue.colour import is_near
-from catalogue.facets import memory_facets, without_fit
+from catalogue.facets import MODELS_ALL, MODELS_FIRST, MODELS_ONLY, memory_facets, without_fit
 from catalogue.text import title_words, tokenize
 from catalogue.types import Listing, SearchResponse
 
@@ -39,15 +39,18 @@ def matches(listing: Listing, find: Sequence) -> bool:
 
 
 def search(listings: Sequence[Listing], find: Sequence, limit: int, offset: int,
-           models_only: bool = False) -> SearchResponse:
+           models: str = MODELS_ALL) -> SearchResponse:
     """Filter listings by every find clause (AND), order by id, page, and facet the full hit set.
 
     Id order matches the Elasticsearch backend's tiebreak, so both backends page identically.
-    With models_only, items and total cover only listings that have a 3D model, exactly as
-    Elasticsearch's post_filter does; the facets still describe every match.
+    models="only": items and total cover only listings that have a 3D model, exactly as Elasticsearch's
+    post_filter does. models="first": everything is returned, listings with a model ahead of the rest.
+    The facets describe every match in every mode.
     """
     candidates = [listing for listing in listings if matches(listing, without_fit(find))]
     hits = sorted((listing for listing in candidates if matches(listing, find)), key=lambda l: l.id)
-    returned = [listing for listing in hits if listing.model_url] if models_only else hits
+    returned = [listing for listing in hits if listing.model_url] if models == MODELS_ONLY else hits
+    if models == MODELS_FIRST:
+        returned = sorted(hits, key=lambda l: (not l.model_url, l.id))  # stable: id order inside each group
     return SearchResponse(items=returned[offset:offset + limit], total=len(returned),
                           facets=memory_facets(hits, find, len(candidates)))
