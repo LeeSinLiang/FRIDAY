@@ -255,7 +255,15 @@ def serialize(scene):
             if product:
                 known.add(item['productId'])
                 context['products'].append(product)
-    return {**context, 'instances': scene.instances, 'revision': scene.revision, 'geometryRevision': revision}
+    snapshot = {**context, 'instances': scene.instances, 'revision': scene.revision, 'geometryRevision': revision}
+    # Only replay the agent move for this exact revision. Later manual edits clear it,
+    # while no-op receipts at the same revision must not hide the original move.
+    receipt = SceneCommandReceipt.objects.filter(
+        scene=scene, response__agentMotion__revision=scene.revision,
+    ).order_by('-pk').first()
+    if receipt:
+        snapshot['agentMotion'] = receipt.response['agentMotion']
+    return snapshot
 
 
 def validate_revision(revision):
@@ -324,7 +332,17 @@ def apply_scene_commands(session_key, base_revision, command_id, commands, room_
         else:
             raise SceneError('validation', 'Use add, setPose, or remove with the documented fields.')
         instances = validate_instances(instances, room_id)
+    previous_ids = {item['instanceId'] for item in scene.instances}
     response = {**store(scene, base_revision, instances), 'commandId': command_id}
+    # A user's single-item add gets the same welcome helpers; history restores
+    # and manual moves must not look like a new delivery.
+    if len(commands) == 1 and commands[0].get('type') == 'add':
+        item = commands[0]['instance']
+        if item['instanceId'] not in previous_ids:
+            response['agentMotion'] = {
+                'revision': scene.revision, 'instanceId': item['instanceId'],
+                'fromPose': None, 'toPose': copy.deepcopy(item['pose']),
+            }
     SceneCommandReceipt.objects.create(scene=scene, command_id=command_id, payload_hash=digest, response=response)
     return response
 
@@ -376,5 +394,12 @@ def attempt_placement(session_key, payload, room_id='demo-room'):
         return {'ok': True, 'applied': False, 'validation': {'valid': True, 'issues': [], 'assurance': assurance}, **serialize(scene)}
     changed = instances != scene.instances
     result = {'ok': True, 'applied': changed, 'validation': {'valid': True, 'issues': [], 'assurance': assurance}, **store(scene, payload['baseRevision'], instances), 'commandId': command_id}
+    if changed:
+        result['agentMotion'] = {
+            'revision': scene.revision,
+            'instanceId': item['instanceId'],
+            'fromPose': copy.deepcopy(existing['pose']) if existing else None,
+            'toPose': copy.deepcopy(item['pose']),
+        }
     SceneCommandReceipt.objects.create(scene=scene, command_id=command_id, payload_hash=digest, response=result)
     return result

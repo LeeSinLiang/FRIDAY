@@ -86,8 +86,8 @@ export default function SplatEditor() {
   const callbacks:InteractionCallbacks=useMemo(()=>({onSelect:select,onCommit:commit,onPlace:place,onCancelPlacement:cancelPlacement,onPreview:setPreview,onActiveChange:setActive,onModelStatus,
     onSurfaceStatus:(status,message)=>setSurfaceNote(status==="error" ? message??"Surface reference could not load" : status==="loading" ? "Loading surface reference…" : message ?? "Surface reference ready"),
   }),[select,commit,place,cancelPlacement,onModelStatus]);
-  const state:InteractionState|null=useMemo(()=>room?({room,products,instances,selectedId,pendingProductId,editingEnabled:ready && !captureOpen,snap,mode,view,retries,showSurface}):null,
-    [room,products,instances,selectedId,pendingProductId,ready,captureOpen,snap,mode,view,retries,showSurface]);
+  const state:InteractionState|null=useMemo(()=>room?({room,products,instances,selectedId,pendingProductId,editingEnabled:ready && !captureOpen,snap,mode,view,retries,showSurface,agentMotion:snapshot?.agentMotion}):null,
+    [room,products,instances,selectedId,pendingProductId,ready,captureOpen,snap,mode,view,retries,showSurface,snapshot?.agentMotion]);
   useEffect(()=>{if(selectedId && snapshot && !snapshot.instances.some(i=>i.instanceId===selectedId)){setSelectedId(null);setPreview(null);}},[snapshot,selectedId]);
   useEffect(()=>{if(!notice)return;const timeout=setTimeout(()=>setNotice(""),5500);return()=>clearTimeout(timeout);},[notice]);
   const remove=useCallback(async()=>{if(!selectedId||!ready||active)return;const ok=await session.submit({type:"remove",instanceId:selectedId});if(ok){setSelectedId(null);setPreview(null);setMode("explore");setPanel("catalogue");}},[selectedId,ready,active,session.submit]);

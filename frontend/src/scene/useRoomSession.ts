@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import type { Instance, Product, Room, SceneEdit } from "./types";
+import type { AgentMotion } from "./playcanvas/angelMotion";
 import { validInlineProduct } from "./products";
 
-export type RoomSnapshot = { room: Room; products: Product[]; instances: Instance[]; revision: number; geometryRevision?: string };
+export type RoomSnapshot = { room: Room; products: Product[]; instances: Instance[]; revision: number; geometryRevision?: string; agentMotion?: AgentMotion };
 export type RoomSessionState = {
   snapshot: RoomSnapshot | null;
   status: "loading" | "ready" | "saving" | "offline" | "conflict";
@@ -65,12 +66,18 @@ export function parseRoomSnapshot(value: unknown, roomId: string): RoomSnapshot 
         !item.pose || ![item.pose.xCm,item.pose.zCm,item.pose.yawRad].every(Number.isFinite)) throw Error("The saved layout contains an invalid object.");
     ids.add(item.instanceId);
   }
+  const motion = s.agentMotion;
+  const validPose = (pose: unknown): pose is Instance["pose"] => !!pose && typeof pose === "object" &&
+    ["xCm", "zCm", "yawRad"].every(key => Number.isFinite((pose as Record<string, unknown>)[key]));
+  const agentMotion = motion && motion.revision === s.revision && ids.has(motion.instanceId) &&
+    validPose(motion.toPose) && (motion.fromPose === null || validPose(motion.fromPose)) ? motion : undefined;
   // Keep catalogue metadata for history/restore, but the API product list is authoritative.
   const instances = s.instances.map(item => ({ ...item,
     ...(item.product === undefined ? {} : { product: s.products.find(product => product.productId === item.productId)! }),
   }));
   return structuredClone({room:s.room,products:s.products,instances,revision:s.revision,
-    ...(s.geometryRevision === undefined ? {} : {geometryRevision:s.geometryRevision})});
+    ...(s.geometryRevision === undefined ? {} : {geometryRevision:s.geometryRevision}),
+    ...(agentMotion ? {agentMotion} : {})});
 }
 
 type Transport = { fetch?: typeof fetch; csrf?: () => string; id?: () => string };

@@ -1,3 +1,5 @@
+import { createAngelMovers } from "./angelMovers";
+import { planAngelMove, type AgentMotion } from "./angelMotion";
 import * as pc from "playcanvas";
 import type { Instance, Pose, Product } from "../types";
 import { validatePlacement } from "../placement";
@@ -54,6 +56,7 @@ type Gesture =
 /** Owns only transient previews. Accepted edits and history remain with the application. */
 export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: InteractionState, callbacks: InteractionCallbacks) {
   let state = initial;
+  let pendingMotion: AgentMotion | null = null;
   let disposed = false;
   let gesture: Gesture | null = null;
   let ghost: Instance | null = null;
@@ -70,6 +73,7 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
   const furniture = createFurnitureLayer(runtime, runtime.contentRoot, (id, status) => {
     if (id !== ghost?.instanceId) callbacks.onModelStatus(id, status);
   });
+  const angels = createAngelMovers(runtime, (id, pose) => furniture.preview(id, pose));
   const overlays = createPlacementOverlays(runtime, runtime.contentRoot);
   const surface = createSurfaceReference(runtime, callbacks.onSurfaceStatus);
   const navigation = createNavigation(runtime, initial, () => busy || !!gesture && gesture.kind !== "look" || !!state.pendingProductId);
@@ -245,9 +249,17 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
   };
   const focus = (event: FocusEvent) => { if (isTextEntry(event.target)) cancelGesture(); };
   const visibility = () => { if (document.hidden) cancel(); };
-  const frame = () => {
+  const frame = (dt: number) => {
     if (runtime.capturing) { if (gesture) cancelGesture(); return; }
     runtime.roomRoot.enabled = state.view !== "top";
+    if (pendingMotion && !busy && !ghost && (!gesture || gesture.kind === "look")) {
+      const cameraPosition = runtime.camera.getPosition();
+      const motion = planAngelMove(pendingMotion, state.room, state.products, state.instances,
+        {xCm:sceneToCm(cameraPosition.x),zCm:sceneToCm(cameraPosition.z)});
+      pendingMotion = null;
+      if (motion && state.view !== "top") angels.start(motion);
+    }
+    angels.update(dt, state.view !== "top" && !ghost && (!gesture || gesture.kind === "look") && !busy);
   };
   runtime.app.on("update", frame);
   canvas.addEventListener("pointerdown", down);
@@ -263,6 +275,7 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
   const update = (next: InteractionState) => {
     const prior = state;
     state = next;
+    if (JSON.stringify(next.instances) !== JSON.stringify(prior.instances)) angels.stop();
     const activeGesture = gesture;
     const activeInstance = activeGesture?.kind === "drag" ? next.instances.find(item => item.instanceId === activeGesture.instanceId) : null;
     if (gesture && (next.mode !== prior.mode || next.view !== prior.view || !next.editingEnabled ||
@@ -281,6 +294,7 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
       syncFurniture();
       if (ghost) { const rect = canvas.getBoundingClientRect(); updateGhost(rect.left + rect.width / 2, rect.top + rect.height * 0.66); }
     } else syncFurniture(gesture?.kind === "drag" ? gesture.instanceId : undefined);
+    if (next.agentMotion?.revision !== prior.agentMotion?.revision) pendingMotion = next.agentMotion ?? null;
     if (ghost && ghostHasFloor) reportPreview(validate(ghost, ghost.pose));
     else if (ghost) reportPreview({ instanceId: ghost.instanceId, pose: ghost.pose, valid: false, reason: "Point at the floor to place furniture", collidingIds: [] });
     else if (gesture?.kind === "drag") {
@@ -299,7 +313,7 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
       if (disposed) return;
       cancelGesture(); disposed = true; token++;
       runtime.app.off("update", frame);
-      navigation.dispose(); overlays.dispose(); surface.dispose(); furniture.dispose();
+      navigation.dispose(); overlays.dispose(); surface.dispose(); angels.dispose(); furniture.dispose();
       canvas.style.cursor = ""; canvas.style.touchAction = originalTouchAction;
       canvas.removeEventListener("pointerdown", down); window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", pointerCancel);

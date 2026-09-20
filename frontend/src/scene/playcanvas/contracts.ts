@@ -1,3 +1,4 @@
+import type { AgentMotion } from "./angelMotion";
 import type { CameraMode, Instance, Pose, Product, Room } from "../types";
 
 export type InteractionMode = "explore" | "walk" | "place";
@@ -22,6 +23,7 @@ export type InteractionState = {
   view: CameraMode;
   retries: Record<string, number>;
   showSurface?: boolean;
+  agentMotion?: AgentMotion;
 };
 export type InteractionCallbacks = {
   onSelect: (id: string | null) => void;

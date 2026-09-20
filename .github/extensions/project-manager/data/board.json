@@ -83,6 +83,12 @@
           "title": "Provide verified room bundle import for collaborators",
           "owner": "sin",
           "done": true
+        },
+        {
+          "id": "6deef908-66df-407a-af40-677f43e25ccb",
+          "title": "Animate AI furniture moves with halo blobs",
+          "done": true,
+          "owner": "sin"
         }
       ]
     },

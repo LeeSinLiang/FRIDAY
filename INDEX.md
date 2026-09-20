@@ -19,6 +19,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Frontend
 
+- [AI furniture movers](docs/frontend/angel-movers/README.md) — approved halo-blob concept, AI moves, user-add choreography and rendering integration.
+
 - [Team room setup](docs/frontend/room-capture/team-room-setup.md) — one-command checked import of the prepared room, packaging and sharing instructions.
 
 | Document | Purpose |

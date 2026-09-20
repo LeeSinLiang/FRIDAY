@@ -8,3 +8,7 @@ import "./playcanvas/runtime.test";
 import "./playcanvas/room.test";
 import "./playcanvas/interaction.test";
 import "./useRoomSession.test";
+
+import "./playcanvas/angelMotion.test";
+
+import "./agentMotionSnapshot.test";
