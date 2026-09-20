@@ -119,6 +119,24 @@
           "title": "Verify skyscraper scale and floor-surface dragging",
           "done": false,
           "owner": "william"
+        },
+        {
+          "id": "249c277a-49db-40be-873b-8016838ccc80",
+          "title": "Prepare and verify the shared Haussmann room locally",
+          "done": false,
+          "owner": "sin"
+        },
+        {
+          "id": "bc6e41b1-9ef8-406d-9ce6-daeac8b8ec6f",
+          "title": "Prepare and verify the shared Haussmann room locally",
+          "done": false,
+          "owner": "saketh"
+        },
+        {
+          "id": "34722434-8cff-41aa-9ebb-297ea475345b",
+          "title": "Prepare and verify the shared Haussmann room locally",
+          "done": false,
+          "owner": "adelle"
         }
       ]
     },
@@ -363,7 +381,7 @@
       "tasks": [
         {
           "id": "aa3279ee-e155-4920-a5e4-f51eba493418",
-          "title": "Connect room, catalogue, and user input to the agent",
+          "title": "Connect room, catalogue, and user input to the OpenAI API agent",
           "done": false,
           "owner": "unassigned"
         },
@@ -398,7 +416,7 @@
           "owner": "saketh"
         }
       ],
-      "description": "End-to-end checks, deployment, documentation, and the demo journey."
+      "description": "OpenAI API and OpenAI Agents SDK orchestration, room and catalogue tools, and end-to-end agent checks."
     },
     {
       "id": "50f20b5f-745e-4a44-b262-fdad56a9303d",
@@ -410,7 +428,8 @@
           "done": false,
           "owner": "unassigned"
         }
-      ]
+      ],
+      "description": "Demo journey, presentation, OpenAI API integration, and Codex-assisted development."
     }
   ],
   "schemaVersion": 2

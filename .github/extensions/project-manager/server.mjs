@@ -369,7 +369,7 @@ function renderHtml() {
 <body>
 <header>
   <h1 id="board-title">Project Manager</h1>
-  <span style="font-size:12px;color:var(--text-color-muted,#656d76);">Columns show project areas. Drag cards to change priority or component.</span>
+  <span style="font-size:12px;color:var(--text-color-muted,#656d76);">FRIDAY uses the OpenAI API · Built with Codex. Drag cards to change priority or component.</span>
 </header>
 <div id="owner-legend" class="owner-legend" aria-label="Task owners"></div>
 <p id="board-status" role="status" aria-live="polite">Loading board…</p>
