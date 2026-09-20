@@ -55,10 +55,25 @@ def cart(shopping, user=None):
             available = False
         items.append({'id': str(item.id), 'roomId': item.room_id, 'instanceId': item.instance_id,
                       **product, 'available': available})
+    # The amount covers what can be priced, and the counts say so: "48 items · 31 priced · $12,480".
+    priced = [item for item in items if item['available'] and item['priced']]
     return {'id': str(shopping.pk), 'revision': shopping.revision, 'items': items,
-            'amount': sum(item['unit_amount'] for item in items), 'currency': 'USD', 'sandbox': True,
+            'item_count': len(items), 'priced_count': len(priced),
+            'amount': sum(item['unit_amount'] for item in priced), 'currency': 'USD', 'sandbox': True,
             'owned': shopping.owner_id is not None,
             **({'account': account_status(user)} if user is not None else {})}
+
+
+def bill_lines(items):
+    """One line per product. A partial bill is honest, not a bug: a piece whose price nobody knows is still listed,
+    with no amount (None, never 0), and adds nothing to the total or to what Visa is asked for."""
+    grouped = {}
+    for item in items:
+        line = grouped.setdefault(item['product_id'], {'product_id': item['product_id'], 'name': item['name'],
+            'priced': item['priced'], 'unit_amount': item['unit_amount'] if item['priced'] else None, 'quantity': 0})
+        line['quantity'] += 1
+        line['line_amount'] = line['quantity'] * line['unit_amount'] if line['priced'] else None
+    return list(grouped.values())
 
 
 def assert_editable(shopping):
@@ -171,15 +186,10 @@ def checkout(shopping, user, revision):
     state = cart(shopping)
     if not state['items'] or any(not i['available'] for i in state['items']):
         raise SceneError('validation', 'Choose available furniture before checkout.')
-    if any(not i['priced'] for i in state['items']):
-        # Never bill an unknown price as 0. Until the bill can list unpriced pieces apart from the amount, say so.
-        raise SceneError('validation', 'Some pieces in your cart have no known price yet, so this cart cannot be checked out.')
-    grouped = {}
-    for item in state['items']:
-        line = grouped.setdefault(item['product_id'], {k: item[k] for k in ('product_id', 'name', 'unit_amount')})
-        line['quantity'] = line.get('quantity', 0) + 1
-        line['line_amount'] = line['quantity'] * line['unit_amount']
-    snapshot = {'vendor': VENDOR, 'items': list(grouped.values()), 'amount': state['amount'],
+    if not state['priced_count']:
+        raise SceneError('validation', 'Nothing in your cart has a known price yet, so there is nothing to check out.')
+    snapshot = {'vendor': VENDOR, 'items': bill_lines(state['items']), 'item_count': state['item_count'],
+                'priced_count': state['priced_count'], 'amount': state['amount'],
                 'currency': 'USD', 'exponent': 2, 'sandbox': True}
     if state['amount'] > 1000000:
         raise SceneError('validation', 'Cart exceeds the sandbox total limit.')

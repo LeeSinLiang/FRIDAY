@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { request } from '../auth/api'
 
 export type CartItem = { id: string; roomId: string; instanceId: string; product_id: string; name: string; unit_amount: number; priced: boolean; thumbnail: string; available: boolean }
-export type Cart = { id: string; revision: number; items: CartItem[]; amount: number; currency: string; owned: boolean }
+export type Cart = { id: string; revision: number; items: CartItem[]; item_count: number; priced_count: number; amount: number; currency: string; owned: boolean }
 export async function cartRequest<T>(path = '', method = 'GET', body?: unknown): Promise<T> {
   const result = await request('/api/cart/' + path, method, body)
   if (result.status >= 400) throw new Error((result as unknown as {error?: {message: string}}).error?.message || result.errors?.[0]?.message || 'Your cart could not be updated. Try again.')

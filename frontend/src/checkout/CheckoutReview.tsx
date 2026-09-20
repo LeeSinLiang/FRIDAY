@@ -3,7 +3,7 @@ import { assertSuccess, request } from '../auth/api'
 import CartReady from '../shopping/CartReady'
 import ApprovalForm from './ApprovalForm'
 import SandboxReceipt from './SandboxReceipt'
-import { money, type Checkout } from './types'
+import { billLine, isPriced, money, type Checkout } from './types'
 
 export default function CheckoutReview() {
   const id = new URLSearchParams(location.search).get('checkout')
@@ -28,13 +28,17 @@ export default function CheckoutReview() {
     } finally {setBusy(false)}
   }
   if (!id) return <CartReady/>
+  const lines = checkout?.snapshot.items ?? []
+  const quantity = (wanted: boolean) => lines.filter(line => isPriced(line) === wanted).reduce((sum, line) => sum + line.quantity, 0)
+  const counts = { items: checkout?.snapshot.item_count ?? quantity(true) + quantity(false), priced: checkout?.snapshot.priced_count ?? quantity(true) }
   return <section className="auth-panel checkout-panel">
     <p className="eyebrow">Visa sandbox</p><h1>Review your checkout</h1>
     <p className="muted">Your selected furniture, priced by the server. No real purchase or vendor order will be placed.</p>
     {checkout ? <>
       <p><strong>{checkout.snapshot.vendor.name}</strong></p>
-      <ul className="checkout-items">{checkout.snapshot.items.map(item=><li key={item.product_id}><span>{item.name}<small>Quantity {item.quantity}</small></span><strong>{money(item.line_amount)}</strong></li>)}</ul>
-      <p className="checkout-total"><span>Total · USD</span><strong>{money(checkout.snapshot.amount)}</strong></p>
+      <ul className="checkout-items">{checkout.snapshot.items.map(item=><li key={item.product_id}><span>{item.name}<small>Quantity {item.quantity}</small></span><strong>{isPriced(item) ? money(item.line_amount!) : 'price unavailable'}</strong></li>)}</ul>
+      <p className="muted">{billLine(counts.items, counts.priced, checkout.snapshot.amount)}</p>
+      <p className="checkout-total"><span>{counts.priced < counts.items ? 'Total of priced items · USD' : 'Total · USD'}</span><strong>{money(checkout.snapshot.amount)}</strong></p>
       {checkout.state==='draft' && <ApprovalForm checkout={checkout} onApproved={setCheckout}/>}
       {checkout.state==='approved' && <><p className="notice">MFA approval recorded for this checkout.</p><button disabled={busy || !checkout.visa?.ready} onClick={()=>void submit()}>{busy?'Waiting for Visa…':'Send approved request to Visa sandbox'}</button></>}
       {checkout.state==='superseded' ? <p role="status">Your cart changed. Return to your cart for a new review and approval.</p> : !['draft','approved'].includes(checkout.state) && <SandboxReceipt checkout={checkout}/>}
