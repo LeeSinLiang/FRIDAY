@@ -1,0 +1,36 @@
+{
+  "productId": "oak-platform-bed",
+  "modelUrl": "/models/furniture/oak-platform-bed/model.glb",
+  "thumbnailUrl": "/models/furniture/oak-platform-bed/thumbnail.png",
+  "widthCm": 172,
+  "depthCm": 188.2,
+  "heightCm": 84.9,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "demo-oak-platform-bed",
+  "matchType": "generic_visual_proxy",
+  "source": {
+    "product": "No real product. An invented low oak platform bed with linen bedding, backing a synthetic stub listing.",
+    "generation": "Four-view turnaround generated with the codex-image skill, cropped at detected gutter boundaries into front/three-quarter/side/rear, then Higgsfield multi_image_to_3d (Meshy) with should_texture=true and enable_pbr=true",
+    "postProcessing": "Uniform scale 0.990914 fitting width to 172 cm plus a floor-pivot translation, applied through an inserted root node; then gltf-transform resize --width 1024 --height 1024. Resize only: textures were NOT re-encoded to a lossy codec and geometry was NOT simplified, so every vertex is the generator's own. 10.1 MB to 3.42 MB.",
+    "dimensionsVerifiedAt": "Not a retail product, so there is nothing external to verify against. The listing declares what the mesh measures: 172.0000 x 188.2225 x 84.8659 cm, rounded to 172 x 188.2 x 84.9.",
+    "priceVerifiedAt": "None. price_cents on the stub listing is invented demo data, not a real price."
+  },
+  "measured": {
+    "triangles": 44334,
+    "bytes": 3417096,
+    "materials": 1,
+    "textures": 4,
+    "textureMaps": ["baseColor", "metallicRoughness", "normal"],
+    "exactCm": [172.0, 188.2225, 84.8659]
+  },
+  "knownLimitations": [
+    "44334 triangles is over the 30000 budget, so backend/api/test_furniture_assets.py grants it a named exception pinned to this exact count. Simplifying the mesh was tested and rejected: this model's realism is carried almost entirely by the duvet folds and pillow geometry, and decimating them is the one change that visibly hurts. Textures were resized instead, which is not visible at the distance a bed occupies in the editor.",
+    "At 188.2 cm the frame is short for its 172 cm width: the implied mattress is roughly 180 cm long. Depth is the least constrained axis in image-to-3D. Reaching a 212 cm queen would need 12.65 percent anisotropy, over the 10 percent cap, so no per-axis fit was applied and the listing declares the honest measured size instead of a distorted one.",
+    "Single merged mesh with one material: frame, mattress, duvet and pillows are not separately addressable.",
+    "No manual Blender inspection pass; the underside and the plinth recess are unverified.",
+    "Faint speckle is present in the linen base colour. It comes from the generator's own texture, not from the resize: a lossless resize and a lossy re-encode were compared and the speckle is identical in both, and it is present in the original 10.1 MB file."
+  ]
+}

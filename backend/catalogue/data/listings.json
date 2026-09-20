@@ -2645,6 +2645,28 @@
         "plastic",
         "metal"
       ]
+    },
+    {
+      "id": "demo-oak-platform-bed",
+      "source": "stub",
+      "title": "Oak platform bed, oatmeal linen",
+      "category": "bed",
+      "price_cents": 89900,
+      "dims_mm": {
+        "w": 1720,
+        "d": 1882,
+        "h": 849
+      },
+      "model_url": "/models/furniture/oak-platform-bed/model.glb",
+      "thumb_url": "/models/furniture/oak-platform-bed/thumbnail.png",
+      "colour_hex": [
+        "#c9a77c",
+        "#e9e4d8"
+      ],
+      "materials": [
+        "oak",
+        "linen"
+      ]
     }
   ]
 }
