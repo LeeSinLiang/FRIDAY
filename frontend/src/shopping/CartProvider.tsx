@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { request } from '../auth/api'
 
-export type CartItem = { id: string; roomId: string; instanceId: string; product_id: string; name: string; unit_amount: number; thumbnail: string; available: boolean }
+export type CartItem = { id: string; roomId: string; instanceId: string; product_id: string; name: string; unit_amount: number; priced: boolean; thumbnail: string; available: boolean }
 export type Cart = { id: string; revision: number; items: CartItem[]; amount: number; currency: string; owned: boolean }
 export async function cartRequest<T>(path = '', method = 'GET', body?: unknown): Promise<T> {
   const result = await request('/api/cart/' + path, method, body)

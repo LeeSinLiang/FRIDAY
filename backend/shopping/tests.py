@@ -134,3 +134,39 @@ class ShoppingTests(AccountTestCase):
         self.assertEqual(draft.status_code,201,draft.content)
         self.assertEqual(draft.json()['snapshot']['items'][0]['quantity'],2)
         self.assertEqual(draft.json()['snapshot']['amount'],self.listing.price_cents*2)
+
+    def unpriced(self):
+        """A real product with a real model and no known price: every Amazon Berkeley Objects listing."""
+        listing = next(i for i in load_catalogue() if i.source == 'abo' and i.category == 'decor')
+        self.assertEqual((listing.price_cents, bool(listing.model_url)), (0, True))
+        instance = {'instanceId':'vase-one','productId':listing.id,'product':catalogue_product(listing.id),'pose':{'xCm':300,'zCm':300,'yawRad':0}}
+        return listing, {'roomId':'empty-room','instance':instance,'baseRevision':0,'cartRevision':0,'operationId':'unpriced'}
+
+    def test_a_piece_with_a_model_and_no_known_price_goes_in_the_cart_without_an_amount(self):
+        listing, data = self.unpriced()
+        response = self.send('/api/cart/confirm-placement/',data)
+        self.assertEqual(response.status_code,200,response.content)
+        item = response.json()['cart']['items'][0]
+        self.assertEqual((item['product_id'],item['available'],item['priced'],item['unit_amount']),(listing.id,True,False,0))
+        self.assertRegex(listing.model_url,'[A-Z]','its folder is abo-<ASIN>: capitals must count as a deployed model')
+        # A priced piece beside it: the amount is the priced piece alone, never padded with a guess.
+        self.data['baseRevision'],self.data['cartRevision'] = response.json()['scene']['revision'],response.json()['cart']['revision']
+        cart = self.place()['cart']
+        self.assertEqual(sorted(i['priced'] for i in cart['items']),[False,True])
+        self.assertEqual(cart['amount'],self.listing.price_cents)
+
+    def test_a_listing_without_a_deployed_model_still_cannot_go_in_the_cart(self):
+        listing = next(i for i in load_catalogue() if not i.model_url and i.price_cents > 0)
+        data = deepcopy(self.data); data['instance'].update(productId=listing.id,product=catalogue_product(listing.id))
+        response = self.send('/api/cart/confirm-placement/',data)
+        self.assertEqual(response.status_code,400,response.content)
+        self.assertEqual(CartItem.objects.count(),0)
+
+    def test_a_cart_holding_an_unpriced_piece_is_refused_at_checkout_in_plain_words(self):
+        _,data = self.unpriced()
+        result = self.send('/api/cart/confirm-placement/',data).json()
+        self.enrolled(); self.send('/api/cart/claim/',{})
+        response = self.send('/api/cart/checkout/',{'revision':result['cart']['revision']})
+        self.assertEqual(response.status_code,400,response.content)
+        self.assertIn('no known price',response.json()['error']['message'])
+        self.assertEqual(Checkout.objects.count(),0)

@@ -9,6 +9,7 @@ import { openingsFor, portalsFor } from "../region/roomOpenings";
 import { useRegion } from "../region/useRegion";
 import { validatePlacement } from "../scene/placement";
 import { createPendingGhost, type PendingGhost } from "../scene/playcanvas/pendingGhost";
+import { priceLabel } from "./price";
 import { createRegionOverlay, type RegionOverlay } from "../scene/playcanvas/regionOverlay";
 import type { PlayCanvasRuntime } from "../scene/playcanvas/runtime";
 import type { Instance, Product, Room, SceneEdit } from "../scene/types";
@@ -159,7 +160,7 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
       canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} onClose={onCloseShelf} />}
     {shopping && armed && <section className="purchase-confirm" aria-label="Preview furniture"><p>Click the lit floor, or use a suggested position.</p><button className="button" disabled={!ready || locked || !fitting.length} onClick={previewSuggested}>Preview a fitting position</button><button className="button" onClick={()=>setArmed(null)}>Cancel</button></section>}
     {shopping && purchase && unconfirmed && <section className="purchase-confirm" aria-label="Confirm furniture placement">
-      <p className="eyebrow">Placement preview</p><h2>{purchase.title}</h2><p>${(purchase.price_cents/100).toFixed(2)} USD · sandbox</p>
+      <p className="eyebrow">Placement preview</p><h2>{purchase.title}</h2><p>{priceLabel(purchase.price_cents, cents => `$${(cents/100).toFixed(2)} USD`)} · sandbox</p>
       <p>{purchase.dims_mm.w/10} × {purchase.dims_mm.d/10} × {purchase.dims_mm.h/10} cm</p>
       <div className="coordinate-row">{(['xCm','zCm'] as const).map(axis=><label key={axis}>{axis==='xCm'?'X':'Z'} position (cm)<input type="number" step="5" value={unconfirmed.pose[axis]} disabled={saving || locked || status!=='ready'} onChange={e=>adjustPreview(axis,Number(e.target.value))}/></label>)}</div>
       <button className="button" disabled={saving || locked || status!=='ready'} onClick={()=>adjustPreview('yawRad',unconfirmed.pose.yawRad+Math.PI/2)}>Rotate preview 90°</button>
