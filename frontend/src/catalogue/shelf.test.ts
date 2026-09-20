@@ -34,6 +34,10 @@ test("the count line keeps the catalogue-wide number on screen when only listing
   assert.equal(countLine(40, 1006, 12), "1,006 matches in the catalogue · 40 ready in 3D, showing 12");
   assert.equal(countLine(0, 25, 0), "25 matches in the catalogue · none has a 3D model yet");
   assert.equal(countLine(1, null, 1), "1 match");
+  // Models-first mode: nothing is excluded, so total equals matches; the 3D ones are on top.
+  assert.equal(countLine(1006, 1006, 12, 1), "1,006 matches · 1 ready in 3D, shown first");
+  assert.equal(countLine(1006, 1006, 12, 12), "1,006 matches, showing 12", "a page that is ALL models cannot know how many more there are");
+  assert.equal(countLine(1006, 1006, 12, 0), "1,006 matches, showing 12");
 });
 
 test("catalogue import restores the window global before room-session tests run", () => {

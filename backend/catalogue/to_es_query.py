@@ -6,7 +6,7 @@ Structured constraints go in filter context (cached, unscored). Only free text g
 from collections.abc import Callable, Sequence
 
 from catalogue.colour import is_near
-from catalogue.facets import es_aggs, fit_filter, fit_width_mm, hits_filter, without_fit
+from catalogue.facets import MODELS_ALL, MODELS_FIRST, MODELS_ONLY, es_aggs, fit_filter, fit_width_mm, hits_filter, model_boost, without_fit
 from catalogue.pricing import MIN_KNOWN_PRICE_CENTS
 from catalogue.text import tokenize
 
@@ -62,7 +62,7 @@ def to_es_bool(find: Sequence, palette: Sequence[str]) -> dict:
     return {"bool": {"must": must, "filter": filters}}
 
 
-def to_es_query(find: Sequence, palette: Sequence[str], limit: int, offset: int, models_only: bool = False) -> dict:
+def to_es_query(find: Sequence, palette: Sequence[str], limit: int, offset: int, models: str = MODELS_ALL) -> dict:
     """Build the full search body.
 
     Args:
@@ -70,15 +70,25 @@ def to_es_query(find: Sequence, palette: Sequence[str], limit: int, offset: int,
         palette: every colour hex present in the index, used to expand colour clauses.
         limit: page size.
         offset: page start.
-        models_only: return only listings that have a 3D model. Aggregations still cover every match.
+        models: "only" returns just the listings that have a 3D model; "first" returns everything with those
+            ranked first, as a shop does with what is in stock; "all" is plain. Aggregations cover every match
+            in all three.
     """
     fit_mm = fit_width_mm(find)
-    after_aggs = hits_filter(fit_mm, models_only)
+    after_aggs = hits_filter(fit_mm, models == MODELS_ONLY)
+    query = to_es_bool(without_fit(find), palette)
+    if models == MODELS_FIRST:
+        # A boolean query with nothing required matches ONLY documents that satisfy an optional clause,
+        # whatever minimum_should_match says, so an empty search would quietly become models-only (the live
+        # index returned 7 of 12,045). Something must be required: match_all when nothing else is.
+        required = query["bool"]["must"] or query["bool"]["filter"]
+        query["bool"].update({"should": [model_boost()], "minimum_should_match": 0,
+                              **({} if required else {"must": [{"match_all": {}}]})})
     return {
         # post_filter narrows hits AFTER aggregation and does not affect scoring, so one request both
         # counts the whole catalogue (what fits, and what it was chosen from) and returns only what
         # the shopper can be shown.
-        "query": to_es_bool(without_fit(find), palette),
+        "query": query,
         **({} if after_aggs is None else {"post_filter": after_aggs}),
         "from": offset,
         "size": limit,
