@@ -1,4 +1,4 @@
-import { Application, Color, Entity, FILLMODE_NONE, RESOLUTION_AUTO, TONEMAP_ACES2, TONEMAP_LINEAR, type EventHandle } from "playcanvas";
+import { Application, Color, GSPLATDATA_LARGE, Entity, FILLMODE_NONE, RESOLUTION_AUTO, TONEMAP_ACES2, TONEMAP_LINEAR, type EventHandle } from "playcanvas";
 import type { FirstPersonCamera, Room } from "../types";
 import { cmToScene } from "../units";
 import { AssetCache } from "./assets";
@@ -73,6 +73,8 @@ export function createPlayCanvasRuntime(canvas: HTMLCanvasElement, options: {
   const app = new Application(canvas, {
     graphicsDeviceOptions: { antialias: room.scan.visualFormat === "glb", alpha: false, powerPreference: "high-performance", preserveDrawingBuffer: false },
   });
+  // Compact unified storage smears this SH2 asset at reverse headings; matched PLY/SOG captures verify large storage.
+  if (room.roomId === "haussmann-apartment") app.scene.gsplat.dataFormat = GSPLATDATA_LARGE;
   // The two-million-splat laptop proof sustains motion at this render resolution.
   // Agent captures still render at their independently requested pixel dimensions.
   app.graphicsDevice.maxPixelRatio = Math.min(window.devicePixelRatio || 1, room.scan.visualFormat === "glb" ? 1.5 : 1);

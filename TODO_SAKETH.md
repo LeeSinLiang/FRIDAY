@@ -4,6 +4,10 @@ Record all agent work here when working for Saketh. Include status, file paths, 
 
 Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`. Feature doc: [docs/backend/catalogue.md](docs/backend/catalogue.md).
 
+## Shared room test download
+
+- Use [HAUSSMANN APARTMENT](https://superspl.at/scene/4de797f4) as the shared Gaussian room test download. SuperSplat login may be required. Credit Stéphane Agullo (sa3d), CC BY 4.0; retain the downloaded license. This is an authored test scene with assumed scale, not a measured room.
+
 ## In progress
 
 - None. Storage work is in review. Next, in order: the merge-discipline block for `AGENTS.md` (requested mid-task, to apply at this boundary), Deepgram transcription, then wiring Adele's chair if its scale and pivot are fixed.

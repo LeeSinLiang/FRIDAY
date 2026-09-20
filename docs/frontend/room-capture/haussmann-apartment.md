@@ -1,58 +1,58 @@
-# HAUSSMANN APARTMENT Gaussian candidate
+# HAUSSMANN APARTMENT test fixture
 
-2026-09-19 · Gaussian workstream · Work log: TODO_SIN.md
+2026-09-19 · Owner: Sin · Work log: TODO_SIN.md
 
-## Decision and current gate
+## Decision
 
-Prioritize this ready-made room over training a conversion. **Candidate only; not integrated or accepted.** The actual local splat download is still required. The hosted viewer is not a substitute for a delivered asset or FRIDAY verification.
+**Go for an optional shared test download; no-go for the completed photographic room or default replacement.** The full asset is available and the local integration works, but final downward/ceiling captures still have visible smearing and window artifacts. Keep the mesh fallback. The evaluation card remains incomplete until these views are resolved and retested. No original Blender conversion is claimed.
 
-- Creator: **sa3d**.
-- Source and download: [HAUSSMANN APARTMENT](https://superspl.at/scene/4de797f4).
-- Source page explicitly lists **CC BY 4.0**, a Download button and **41.57 MB**. Retain the downloaded package's license and attribution; verify they match before preparation.
-- Creator describes an authored 3ds Max / Corona scene rendered from 644 cameras, with depth and normal passes, trained with LichtFeld Studio.
-- Creator also links a [public source dataset ZIP](https://drive.google.com/file/d/1VV6-yuZKz1pMUitN63o-lQ9FY027E_o7/view). This is a dataset, not yet verified to contain a finished splat. Google Drive reports it too large to preview.
-- Clicking SuperSplat Download in the current unauthenticated browser displays “Please log in to download this splat.” User was asked to download through their account and provide the local file path. No login gate was bypassed; no account created, contact information submitted or terms accepted.
+All four owner TODO files point to [HAUSSMANN APARTMENT](https://superspl.at/scene/4de797f4). SuperSplat download may require login. The user supplied `~/Downloads/HAUSSMANN APARTMENT.zip`; its bundled license credits **Stéphane Agullo (sa3d)** under **CC BY 4.0**, including commercial reuse with attribution. Preserve `shared/rooms/haussmann-apartment/license.txt` and the runtime credit.
 
-## Initial visual inspection
+## Actual asset and reproducible preparation
 
-Inspected the live SuperSplat renderer, paused the camera animation, and changed headings using camera drags. Observed bright neutral walls, herringbone wood floor, ceiling/crown moulding, multiple tall windows, closed panel doors, and a largely empty floor. This is substantially closer to the requested appearance than furnished Studio 11. Some window/door edges are soft.
+The creator ZIP is 455,283,594 bytes and contains `scene.ply` (455,283,057 bytes) plus its license. The binary PLY has **2,995,277 Gaussians**, scales, opacity, quaternions, DC color and 24 higher-order SH properties (SH2). It is not a positions-only point cloud.
 
-These are preliminary heading checks in the creator's viewer, not a translation-coverage test. No claim is made yet about nearby trim, occluded corners, ceiling completeness, wall solidity, collision accuracy or visibility behind doors. Do not infer adjoining rooms behind the closed doors. Authored metric scale and source transforms have not been obtained. The displayed 41.57 MB is a website figure, not a locally measured asset size.
+Source SHA-256: `167fbe4c98379cb92b9f36c91463a3fb4ead84dc91cccf0dac58d82365a69e38`.
 
-## Other routes checked
+From the repository root, after `./setup.sh`:
 
-| Route | Finding | Decision |
-| --- | --- | --- |
-| [Apartment_SH3](https://superspl.at/scene/1e56ea8e) | Creator lists CC BY 4.0 and downloadable synthetic apartment | Lower priority; empty-floor fit not established |
-| [InteriorGS](https://huggingface.co/datasets/spatialverse/InteriorGS) | Actual compressed Gaussian PLY scenes, structure and occupancy annotations; gated contact-sharing and custom terms | Not an immediately available unrestricted download; no access request submitted |
-| [EA Mesh2Splat](https://github.com/electronicarts/mesh2splat) | Direct surface conversion; official build instructions cover Windows/Linux | Mac compatibility unverified; material sampling alone does not establish clean Cycles lighting fidelity |
-| [Brush](https://github.com/ArthurBrussee/brush) | Official macOS support and known-camera COLMAP/Nerfstudio training inputs | Viable research fallback for original Blender multi-camera renders; no local training/runtime benchmark yet |
+```sh
+python3 scripts/gaussian_room/prepare_haussmann.py "$HOME/Downloads/HAUSSMANN APARTMENT.zip"
+python3 scripts/gaussian_room/review_surface.py
+BACKEND_PORT=8222 FRONTEND_PORT=5222 ./run-local.sh
+```
 
-Search included public web queries and SuperSplat's Downloadable filter. Its “empty” results did not produce a suitable interior; “interior” produced this candidate. This is a bounded search, not a claim that no other suitable free assets exist.
+Open `http://localhost:5222/?room=haussmann-apartment`; append `&perf=1` for the development observer. Preparation uses the pinned SplatTransform 3.4.2, checks the exact reviewed source hash and license, preserves all Gaussians without cropping/decimation, and produces a complete SOG plus a separate 5 cm voxel-shell reference GLB. It refuses to overwrite an existing immutable SOG; preserve existing assets before repeating. Generated binary assets are ignored by Git. Each teammate must run preparation locally after downloading the ZIP. The existing Cg Arch room importer is specific to that room and cannot import this fixture.
 
-## Preparation and integration ownership
+Generated files under `shared/rooms/haussmann-apartment/assets/`:
 
-Implementation references below describe the coordinator’s separate, unmerged working checkout as of 2026-09-19. This documentation merge does not ship that renderer, room assets, preparation scripts or asset-serving configuration. Recheck availability and server state before integration.
+- `room-full-167fbe4c9837.sog`: 43,110,214 bytes in the reviewed run, SHA-256 `babdd467cfb303f3af58cd1d5d0e2544f0fd7bf630d28685d9b175a6e969b54c`.
+- `surface-full-167fbe4c9837.collision.glb`: approximately 4.6 MB, 137,028 vertices / 268,534 triangles. This is a reference shell, not automatically approved traversable geometry.
+- `preparation.json`: archive/source/output hashes, exact byte counts, tool version and calibration caveat. Compression may be platform-dependent; the source hash is the review identity.
 
-Use `scripts/gaussian_room/` for candidate preparation, local `.room-preparation/gaussian-room/` (ensure it is ignored before generating files) for inspection outputs, and proposed unique fixture ID `haussmann-apartment`. Do not create a served room manifest until its referenced assets and spatial metadata are real and verified; the shared build validates every room directory.
+## Transform and reviewed space
 
-Coordinator confirmed the existing frontend at `http://127.0.0.1:5180` and backend on port 8002. Do not launch duplicate servers. Shared renderer/query selection remains coordinator-owned until a concrete fixture is ready. Mesh task is finishing its separate Lightmapper cabinet proof; coordinate before heavy conversion/training or final measurements.
+Source units are **assumed meters**, not independently measured. Calibration stays `synthetic_demo`; do not make real-world fit claims. Visual transform is rotation `(0,0,180)` degrees, scale 1, translation `(-140,0,145)` cm: API coordinates in meters are `(-source.x-1.4, -source.y, source.z+1.45)`. The voxel GLB is already converted to PlayCanvas Y-up by SplatTransform, so its loader applies the translation without the splat's extra 180-degree rotation.
 
-After download:
+Room envelope is 660 × 940 × 390 cm; default eye-level camera `(400,160,200)` cm, yaw π, pitch 0, FOV 65°. Geometry revision is `haussmann-reviewed-demo-v1`. The floor/body review projects the generated shell at 5 cm and verifies every committed free-area cell has floor support and no body obstruction. Approved interior is x=40…480, z=60…870 cm, with six unsupported 5 cm cells deliberately removed: `(31,85), (32,85), (52,52), (54,77), (54,78), (85,136)` in grid coordinates. Fifteen rectangles encode that union; unknown space remains rejected.
 
-1. Inventory the archive without executing contents; retain license, source URL, creator and SHA-256. Verify Gaussian attributes or complete supported SOG package, not just PLY positions.
-2. Inspect source bounds, axes and floor. Establish a reproducible exact transform; distinguish authored/calibrated dimensions from assumptions. Never adjust the real sofa's 270 × 86.4 × 76.4 cm dimensions to hide scale errors.
-3. Prepare immutable visual filenames. Preserve full source visual coverage; any decimation requires comparison. Generate/reference surface geometry separately from reviewed placement geometry. Empty-looking pixels are not evidence of free floor.
-4. Review a conservative supported floor region, walls, closed-door limits and fixed obstacles. Keep all unreviewed space unknown. Record camera spawn, safe bounds and geometry revision.
-5. Coordinate `?room=haussmann-apartment` integration; retain centimeter API and configurable 5 cm grid. Use only one current capture worker for the room/session.
+The window wall/recesses are fixed. Closed doors are not portals to adjoining rooms, and nothing beyond windows/doors is accepted as free floor. The shell is not a physics engine or a watertight reconstruction. Placement and walking continue to use the existing centimeter contracts and reviewed regions, including furniture obstacles and the configurable 5 cm grid.
 
-## Acceptance evidence still required
+## Integration and verification evidence
 
-- Actual local supported SOG/PLY package and repeatable preparation.
-- Multi-position first-person views: forward/back, up/down, corners, close trim and windows; short walkthrough.
-- Aligned reviewed geometry and calibration status.
-- Correctly scaled/grounded actual sofa, front/behind fixed-surface occlusion where applicable, one valid placement and one rejected invalid placement.
-- Local asset bytes, load-to-ready time, 30-second moving-camera frame measurements with viewport/resolution and concurrent heavy jobs excluded.
-- Existing-contract first-person PNG and schematic top PNG.
+Work is isolated in `/private/tmp/HackMIT2026-haussmann` on `codex/haussmann-gaussian`, based on local main `9641a99`. Shared integration is limited to the room selector in `frontend/src/SplatEditor.tsx` and a Haussmann-only `GSPLATDATA_LARGE` setting in `frontend/src/scene/playcanvas/runtime.ts`. The latter improves reverse headings that smear with compact unified storage. Original PLY and packed SOG standalone reverse renders were clean; this is a renderer-path issue, not justification for cropping the room. No shared backend, mesh preparation, furniture dimensions, dependencies or default room changes.
 
-**Current recommendation:** go for asset acquisition and local inspection; no-go for promoting this candidate as the completed room until those gates pass. Original Cg Arch source, default assets, mesh bake scripts, shared renderer/backend and couch worktree remain untouched by this workstream.
+Local ignored evidence is under `.scratch/gaussian/`:
+
+- `haussmann-reverse-large.png`, `haussmann-windows-large.png`, `haussmann-sofa-large.png`: multi-position views with the real GLB sofa.
+- `haussmann-floor-final.png`, `haussmann-ceiling-final.png`, `haussmann-trim-final.png`, `haussmann-window-close-final2.png`: final coverage checks. Floor/ceiling and glass-edge artifacts remain a quality blocker; close trim is soft. Do not use only the clean reverse screenshot as proof of complete coverage.
+- `haussmann-plan-large.png`: existing-contract 1024 × 768 schematic top capture. Perspective captures also use the existing contract, revision 1, with explicit first-person cameras and ready image results.
+- `walkthrough.gif`: 33.9-second sampled recording of actual camera drags and W/S inputs, 29 frames. It is a sampled coverage record, not a full-frame-rate video benchmark.
+- `motion-performance.txt` and `.png`: final full-heading motion run, **23.7 frame-event FPS, p95 84.8 ms, 710 samples over 30.0 s**, canvas **1280 × 720**, warm load-to-ready **647 ms**. A separate mostly downward run measured 28.7 FPS / 55.3 ms p95. No heavy mesh or conversion job was running during either measurement; screenshots and browser automation add overhead. GPU time and cold-network load were not measured. Do not claim steady 30/60 FPS.
+- `placement-results.json` and `invalid-final.json`: actual 270 × 86.4 × 76.4 cm sofa placed at `(250,600,0)`; moving its center to `(500,600,0)` rejected as `fixed_obstacle`, revision unchanged. Furniture was not rescaled. Floor contact appears aligned in eye-level views. No legal free-standing fixed obstacle exists for a behind-obstacle example; behind-wall/window positions are invalid. Full occlusion quality is not accepted while photographic capture defects remain.
+
+Use only one current room/session capture worker. QA used separate development ports 5222/8222 and an ignored settings override with a unique session-cookie name to avoid other localhost stacks replacing the QA session. This is test isolation, not a runtime configuration change.
+
+## Earlier search evidence
+
+The creator-linked public 2.6 GB dataset was inspected via bounded ZIP ranges: 1,951 entries include RGB/depth/normal images, COLMAP and XYZ/RGB point clouds, not a ready trained splat. The first PLY header lacked Gaussian attributes; no license file appeared in that inventory. The authenticated SuperSplat asset supplied by the user resolved acquisition instead. The original Blender/Brush training route and Mesh2Splat were researched but not performed. Studio 11 remains a compatibility baseline, not the chosen visual target.

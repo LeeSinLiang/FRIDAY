@@ -2,6 +2,10 @@
 
 Record all agent work here when working for William. Include status, file paths, verification, and blockers or handoff notes.
 
+## Shared room test download
+
+- Use [HAUSSMANN APARTMENT](https://superspl.at/scene/4de797f4) as the shared Gaussian room test download. SuperSplat login may be required. Credit Stéphane Agullo (sa3d), CC BY 4.0; retain the downloaded license. This is an authored test scene with assumed scale, not a measured room.
+
 ## In progress
 
 - None.

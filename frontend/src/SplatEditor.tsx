@@ -52,7 +52,7 @@ export default function SplatEditor() {
   const runtime=useRef<PlayCanvasRuntime|null>(null);
   const requestedRoom = new URLSearchParams(window.location.search).get("room");
   const defaultRoom = import.meta.env.VITE_DEFAULT_ROOM_ID === "cg-arch-interior" ? "cg-arch-interior" : "empty-room";
-  const session=useRoomSession(requestedRoom === "studio-11" || requestedRoom === "empty-room" || requestedRoom === "cg-arch-interior" || requestedRoom === "cg-arch-lightmapper-proof" ? requestedRoom : defaultRoom,active || !!pendingProductId);
+  const session=useRoomSession(requestedRoom === "haussmann-apartment" || requestedRoom === "studio-11" || requestedRoom === "empty-room" || requestedRoom === "cg-arch-interior" || requestedRoom === "cg-arch-lightmapper-proof" ? requestedRoom : defaultRoom,active || !!pendingProductId);
   const snapshot=session.snapshot;
   const room=snapshot?.room;
   const products=snapshot?.products ?? [];
