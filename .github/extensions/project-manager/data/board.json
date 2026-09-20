@@ -77,6 +77,12 @@
           "title": "Integrate the PlayCanvas mesh editor checkpoint into main",
           "done": true,
           "owner": "sin"
+        },
+        {
+          "id": "b8e453c9-88bb-4c82-8aa4-17082e844ddf",
+          "title": "Provide verified room bundle import for collaborators",
+          "owner": "sin",
+          "done": true
         }
       ]
     },
