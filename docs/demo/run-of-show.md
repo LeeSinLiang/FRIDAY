@@ -31,7 +31,7 @@ Everything so far has been seen only in headless Chrome on software WebGL. Repor
 1. **The lit floor.** Hover HERRÅKRA in the Cg Arch room. Is the region **green**, readable at first-person eye level, steady? Not white or washed out, not shimmering or z-fighting with the floor as you look around. If it looks different from `.scratch`-style screenshots in the PRs (#36), **that is the top bug on the board**: tell Saketh at once, with a screenshot.
 2. **Room load.** Does the Cg Arch room appear, and how many seconds from pressing Enter to a drawn room (68 MB from local disk)?
 3. **The windows.** PlayCanvas supports the glass's transmission extension and the editor enables it. Does the big glazing read as a window from inside, or as a flat pale panel? (In software rendering it looks like a pale panel.)
-4. **Frame rate** with the room and three or four placed items, looking around. Chrome: DevTools → Rendering → *Frame rendering stats*. Anything under 30 fps, say so.
+4. **Frame rate** with the room and three or four placed items, looking around. Chrome: DevTools → Rendering → *Frame rendering stats*. Anything under 30 fps, say so. **If it is bad, transmission is the first lever to pull.** The glass costs one full-screen copy of the rendered scene per camera per frame (not one per pane): it is switched on by the single line `camera.camera!.requestSceneColorMap(true)` in `frontend/src/scene/playcanvas/runtime.ts`. Without it the windows go flat, which is a trade we would take over a stuttering demo. That file is Sin's; tell him and Saketh the number before anyone changes it. The 4.3 fps seen in headless testing was software rendering and means nothing.
 5. **Microphone**, with permission already granted in that profile: press, speak, press. With `?dev=1` the panel must say `ANSWERED BY: deepgram`.
 6. **A save.** Place a chair: header says *Saved*, reload the page, the chair is still there.
 
@@ -40,7 +40,7 @@ Everything so far has been seen only in headless Chrome on software WebGL. Repor
 - **The model is slow or down:** the sentence still returns a search of its content words, never an error. Browsing, hovering and placing need no model at all.
 - **Deepgram is down, or the key is missing:** the microphone falls back to the browser's own speech recognition; typing always works.
 - **Elasticsearch is down:** search falls back to the in-memory catalogue with identical results. `X-Search-Backend` says which answered.
-- **A save hiccups:** the chair stays where it was dropped, as a plain box until the server accepts it, and the save is retried by itself. The header may read *Disconnected* for a second or two; do not press anything. (Needs #39.)
+- **A save hiccups:** the chair stays where it was dropped, as a plain box until the server accepts it, and the save is retried by itself. The header may read *Disconnected* for a second or two; do not press anything.
 - **`?dev=1`** adds raw per-rotation counts to the panel, for us, not for judges.
 
 ## Voice, on the demo machine
