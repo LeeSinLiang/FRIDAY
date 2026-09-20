@@ -134,3 +134,13 @@ The corrected lobby, mezzanine, 32 tower floor metadata and current editor UI ar
 ## Scene designer test release — 2026-09-20
 
 PR #103 (`5afe392`) is published as the matching pair recorded in [public test release](../demo/public-test-release.md). The live source identity is `778d7e434fa26ce392a6a4179af5ed496bac83053f345e6cd119173e9664b1bd`. Hosted AI support placement, manual parent movement/rotation and undo/redo passed; the original test floor was restored. The later lighting merge `46930f6` is not included in this deployed snapshot.
+
+## Haussmann public room replacement — 2026-09-20
+
+PR [#114](https://github.com/LeeSinLiang/hackmit2026/pull/114) merged at `0e7e7c6`, replacing the unavailable public Cg Arch gallery card with the CC BY Haussmann apartment. The main commit advanced to `3f842fb` through a documentation-only merge and retained the same runtime source identity, `1ff59315b695d95c2f0582df91af8f7c59beb5d912e32b801db8e5b93ecc14ac`.
+
+| Environment | Frontend deployment | API deployment | Runtime source identity |
+| --- | --- | --- | --- |
+| [Production Haussmann room](https://friday-hackmit.vercel.app/room/haussmann-apartment) | `dpl_7pebQ1buMCAyefRMLb5PHzhDuQhE` | `dpl_3hNCVy83CMJaQoKfWZKcsyvkutSR` | `1ff59315b695d95c2f0582df91af8f7c59beb5d912e32b801db8e5b93ecc14ac` |
+
+Both deployments reported `READY`. The frontend `data-build`, direct API and rewritten API `X-Friday-Build` matched. Public asset HEAD requests returned 200 for the 43,111,562-byte SOG, 4,867,408-byte collision GLB and 71,628-byte gallery preview; the London GLB remained HTTP 200. In the public browser, `/rooms` offered the Haussmann apartment without an unavailable label and `/room/haussmann-apartment` rendered its empty parquet room with Stéphane Agullo/CC BY credit. The isolated local browser also saved a HERRÅKRA chair, showed it on the floor plan and incremented the cart. Screenshots are in `.scratch/haussmann-production-{gallery,room}.png` in the merged verification checkout. Fresh merged-main checks reported `Ran 393 tests in 14.320s / OK (skipped=5)`, 209 scene and 25 packaging/auth frontend tests passed, and Vercel-mode `npm run build` finished in 3.82 seconds. Scale remains assumed; the manifest labels it `synthetic_demo`. Automatic GitHub-to-Vercel deployment remains issue #74, so this was a manual production release.

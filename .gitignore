@@ -72,3 +72,9 @@ backend/runtime_shared/
 !shared/rooms/london-skyscraper-test/assets/
 shared/rooms/london-skyscraper-test/assets/*
 !shared/rooms/london-skyscraper-test/assets/building.glb
+
+# Redistributable CC BY room shipped with the public gallery.
+!shared/rooms/haussmann-apartment/assets/
+shared/rooms/haussmann-apartment/assets/*
+!shared/rooms/haussmann-apartment/assets/room-full-167fbe4c9837.sog
+!shared/rooms/haussmann-apartment/assets/surface-full-167fbe4c9837.collision.glb

@@ -2,6 +2,7 @@
 // Everything the port needs lives here, so the editor itself only has to mount this one component.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { PlaceClause } from "../lib/dsl/schema";
 import type { Listing } from "../lib/types";
 import { instanceFromListing } from "../region/boundary";
@@ -10,11 +11,13 @@ import { useRegion } from "../region/useRegion";
 import { attachmentTarget, attachAt, moveWithAttachments, resolveAttachments } from "../scene/supports";
 import { validatePlacement } from "../scene/placement";
 import { createPendingGhost, type PendingGhost } from "../scene/playcanvas/pendingGhost";
-import { priceLabel } from "./price";
+import { cardPrice } from "./cardCopy";
 import { createRegionOverlay, type RegionOverlay } from "../scene/playcanvas/regionOverlay";
 import type { PlayCanvasRuntime } from "../scene/playcanvas/runtime";
 import type { Instance, Product, Room, SceneEdit } from "../scene/types";
+import type { BrowseCategory } from "./browse";
 import CatalogueShelf from "./CatalogueShelf";
+import type { VoicePhase } from "./transcribe";
 import { saveQuietly } from "./quietSave";
 import { FREE } from '../region/types';
 
@@ -37,16 +40,22 @@ type Props = {
   shopping?: boolean;
   showShelf?: boolean;
   onCloseShelf?: () => void;
+  shelfTarget?: HTMLElement | null;
+  voiceRequest?: number;
+  voiceCancelRequest?: number;
+  onVoicePhaseChange?: (phase: VoicePhase) => void;
+  browseCategory?: BrowseCategory | null;
   confirm?: (instance:Instance) => Promise<boolean>;
 };
 
 /** The engine's own drag threshold (interaction.ts): a press that moves this far is a look, not a click. */
 const LOOK_THRESHOLD_PX = 4;
 
-export default function SplatCatalogueLayer({ getRuntime, room, sceneRevision, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, showShelf = true, onCloseShelf, confirm, onDesign, designMessage }: Props) {
+export default function SplatCatalogueLayer({ getRuntime, room, sceneRevision, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, showShelf = true, onCloseShelf, shelfTarget, voiceRequest, voiceCancelRequest, onVoicePhaseChange, browseCategory = null, confirm, onDesign, designMessage }: Props) {
   const [hovered, setHovered] = useState<Listing | null>(null);
   const [armed, setArmed] = useState<Listing | null>(null);
   useEffect(() => { if (!showShelf) { setHovered(null); setArmed(null); } }, [showShelf]);
+  useEffect(() => { setHovered(null); setArmed(null); }, [browseCategory]);
   const [place, setPlace] = useState<PlaceClause[]>([]);
   const [yawChoice, setYawChoice] = useState<number | null>(null);
   const overlay = useRef<RegionOverlay | null>(null);
@@ -196,14 +205,18 @@ export default function SplatCatalogueLayer({ getRuntime, room, sceneRevision, p
     setUnconfirmed(next);ghost.current?.show(next.product!,next.pose);
   }
   const verdict = unconfirmed ? validatePlacement(room,known,[...instances,unconfirmed],unconfirmed.instanceId,unconfirmed.pose) : null;
+  const purchasePrice = purchase ? cardPrice(purchase.price_cents) : null;
   return <>
-    {showShelf && <CatalogueShelf roomId={room.roomId} sceneRevision={sceneRevision} region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
+    {shelfTarget !== undefined ? shelfTarget && createPortal(<CatalogueShelf embedded active={showShelf} browseCategory={browseCategory} voiceRequest={voiceRequest} voiceCancelRequest={voiceCancelRequest} onVoicePhaseChange={onVoicePhaseChange} roomId={room.roomId} sceneRevision={sceneRevision} region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
+      canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} designMessage={designMessage}
+      onDesign={onDesign ? text => !ready || locked || !!unconfirmed
+        ? Promise.resolve("Confirm or cancel the current placement before asking the designer.") : onDesign(text) : undefined}/>, shelfTarget) : showShelf && <CatalogueShelf roomId={room.roomId} sceneRevision={sceneRevision} region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
       canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} onClose={onCloseShelf} designMessage={designMessage}
       onDesign={onDesign ? text => !ready || locked || !!unconfirmed
-        ? Promise.resolve("Confirm or cancel the current placement before asking the designer.") : onDesign(text) : undefined} />}
+        ? Promise.resolve("Confirm or cancel the current placement before asking the designer.") : onDesign(text) : undefined}/>}
     {shopping && armed && <section className="purchase-confirm" aria-label="Preview furniture"><p>Click the lit floor, or use a suggested position.</p><button className="button" disabled={!ready || locked || !fitting.length} onClick={previewSuggested}>Preview a fitting position</button><button className="button" onClick={()=>setArmed(null)}>Cancel</button></section>}
     {shopping && purchase && unconfirmed && <section className="purchase-confirm" aria-label="Confirm furniture placement">
-      <p className="eyebrow">Placement preview</p><h2>{purchase.title}</h2><p>{priceLabel(purchase.price_cents, cents => `$${(cents/100).toFixed(2)} USD`)} · sandbox</p>
+      <p className="eyebrow">Placement preview</p><h2>{purchase.title}</h2><p>{purchasePrice ? `${purchasePrice} USD` : "Price unavailable"} · sandbox</p>
       <p>{purchase.dims_mm.w/10} × {purchase.dims_mm.d/10} × {purchase.dims_mm.h/10} cm</p>
       <div className="coordinate-row">{(['xCm','zCm'] as const).map(axis=><label key={axis}>{axis==='xCm'?'X':'Z'} position (cm)<input type="number" step="5" value={unconfirmed.pose[axis]} disabled={saving || locked || status!=='ready'} onChange={e=>adjustPreview(axis,Number(e.target.value))}/></label>)}</div>
       <button className="button" disabled={saving || locked || status!=='ready'} onClick={()=>adjustPreview('yawRad',unconfirmed.pose.yawRad+Math.PI/2)}>Rotate preview 90°</button>

@@ -95,6 +95,38 @@ class EndpointTests(SimpleTestCase):
         self.assertEqual(has_model, sorted(has_model, reverse=True), "every listing with a model comes before every one without")
         self.assertEqual([i["id"] for i in boosted.json()["items"] if i["model_url"]], [i["id"] for i in only.json()["items"]])
 
+    @mock.patch.dict(os.environ, {"SEARCH_BACKEND": "memory", "SEARCH_RESULTS_REQUIRE_MODEL": "0"})
+    def test_category_browser_requests_only_models_without_changing_other_searches(self):
+        client = APIClient()
+        plain = client.get("/api/search?category=lamp&limit=20")
+        response = client.get("/api/search?category=lamp&limit=20&models=only")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["X-Search-Results"], "with-model")
+        expected = sum(1 for item in load_catalogue() if item.category == "lamp" and item.model_url)
+        self.assertGreater(expected, 0)
+        self.assertEqual(response.json()["total"], expected)
+        self.assertTrue(all(item["model_url"] for item in response.json()["items"]))
+        self.assertEqual(response.json()["facets"], plain.json()["facets"])
+        self.assertEqual(client.get("/api/search?category=lamp&limit=20").json(), plain.json())
+        capped = client.get("/api/search?limit=20&models=only").json()
+        self.assertEqual(len(capped["items"]), 20)
+        self.assertGreater(capped["total"], 20)
+        self.assertEqual(client.get("/api/search?category=rug&models=only").json()["items"], [])
+
+    def test_model_filter_rejects_invalid_modes(self):
+        response = APIClient().get("/api/search?models=anything")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"], "invalid_search_params")
+
+    @mock.patch.dict(os.environ, {"SEARCH_BACKEND": "elastic", "SEARCH_RESULTS_REQUIRE_MODEL": "0"})
+    @mock.patch("catalogue.views.es.search")
+    def test_request_model_filter_reaches_elasticsearch(self, search):
+        search.return_value = memory.search(load_catalogue(), [], 20, 0, models="only")
+        response = APIClient().get("/api/search?limit=20&models=only")
+        search.assert_called_once_with([], 20, 0, "only")
+        self.assertEqual(response["X-Search-Backend"], "elastic")
+        self.assertEqual(response["X-Search-Results"], "with-model")
+
 
 class ModelsFirstTests(SimpleTestCase):
     def test_memory_puts_models_first_keeps_id_order_inside_each_group_and_pages_over_everything(self):

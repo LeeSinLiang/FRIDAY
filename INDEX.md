@@ -23,6 +23,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 - [FRIDAY entrance and room gallery](docs/frontend/design/friday-entry-gallery.md) — minimal entrance, original preview shuffle, accessibility, and browser verification.
 - [Furniture lighting migration](docs/frontend/room-capture/furniture-lighting-migration.md) — room-specific GLB illumination, attachment-aware shadows and matched visual acceptance.
+- [AI recommends sidebar](docs/frontend/ai-recommends-sidebar.md) — existing Elasticsearch search inside the right furniture panel, exact-model thumbnails, dictation shortcut and verification limitations.
 
 - [AI furniture movers](docs/frontend/angel-movers/README.md) — approved halo-blob concept, AI moves, user-add choreography and rendering integration.
 - [Full skyscraper GLB test](docs/frontend/room-capture/skyscraper-glb-test.md) — preserved complete building, entrance lobby, mezzanine and 32 tower floors with measured outlines, existing floor arrows, public gallery/deployment, reference placement and agent context reader.

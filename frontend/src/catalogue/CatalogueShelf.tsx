@@ -8,14 +8,23 @@ import type { Listing } from "../lib/types";
 import type { Region } from "../region/useRegion";
 import { ROOM_CHOICES, ROOM_ID } from "../scene/fixtures";
 import { compileSentence, searchCatalogue, type Compiled } from "./api";
-import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend } from "./transcribe";
+import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend, type VoicePhase } from "./transcribe";
 import "./shelf.css";
-import { priceLabel } from "./price";
 import { designerInstruction, isDoItNowCue } from "../scene/designerIntent";
+import ListingImage from "./ListingImage";
+import ListingCardCopy from "./ListingCardCopy";
+import { cardCopy } from "./cardCopy";
+import { browseCatalogue, type BrowseCategory } from "./browse";
 
 type Props = {
   roomId?: string;
   sceneRevision?: number;
+  embedded?: boolean;
+  active?: boolean;
+  voiceRequest?: number;
+  voiceCancelRequest?: number;
+  onVoicePhaseChange?: (phase: VoicePhase) => void;
+  browseCategory?: BrowseCategory | null;
   region: Region | null;
   yawIndex: number;
   armedId: string | null;
@@ -32,10 +41,6 @@ type Props = {
   onDesign?: (text: string) => Promise<string>;
   designMessage?: string;
 };
-
-// Display only. Everything on the wire stays integer cents and millimetres.
-const dollars = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: cents % 100 ? 2 : 0 })}`;
-const size = (listing: Listing) => `${listing.dims_mm.w / 10} × ${listing.dims_mm.d / 10} × ${listing.dims_mm.h / 10} cm`;
 
 // ?dev=1 shows the raw per-rotation sample counts. A shopper needs "it fits" or "it doesn't, and why";
 // "8,961 spots" sounds precise and means nothing.
@@ -62,19 +67,20 @@ export function countLine(total: number, matches: number | null, shown: number, 
 function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: number; armed: boolean }) {
   if (!region) return <p className="shelf-status">Hover a piece to see where it fits.</p>;
   const { solution, product } = region;
+  const name = cardCopy({ id: product.productId, title: product.name }).name;
   if (solution.bestYawIndex < 0)
-    return <p className="shelf-status refused"><strong>{product.name} won’t fit</strong> — {solution.whyNothingFits}.</p>;
+    return <p className="shelf-status refused"><strong>{name} won’t fit</strong> — {solution.whyNothingFits}.</p>;
   const turns = solution.legalCounts.filter((count) => count > 0).length;
   return (
     <p className="shelf-status">
-      <strong>{product.name} fits.</strong>{" "}
+      <strong>{name} fits.</strong>{" "}
       {armed ? `Click the lit floor to place it${turns > 1 ? " · R turns it" : ""} · Esc cancels.` : "The lit floor is where it can go. Click it to pick it up."}
       {DEV && <><br /><code>{TURNS[yawIndex]}: {solution.legalCounts[yawIndex]} centres · all turns: {solution.legalCounts.join(" / ")}</code></>}
     </p>
   );
 }
 
-export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose, onDesign, designMessage }: Props) {
+export default function CatalogueShelf({ roomId, sceneRevision, embedded = false, active = true, voiceRequest = 0, voiceCancelRequest = 0, onVoicePhaseChange, browseCategory = null, region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose, onDesign, designMessage }: Props) {
   const currentRevision = useRef(sceneRevision); currentRevision.current=sceneRevision;
   const [sentence, setSentence] = useState("an armchair");
   const [compiled, setCompiled] = useState<Compiled | null>(null);
@@ -93,11 +99,38 @@ export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex
       if (designMessage) setDesignerReply(designMessage);
     }
   }, [designMessage]);
+  const [browse, setBrowse] = useState<{ category: BrowseCategory; items: Listing[]; total: number | null; error: string } | null>(null);
+  const browsing = browseCategory !== null;
+  const currentCategory = useRef(browseCategory);
+  currentCategory.current = browseCategory;
+  const currentBrowse = browse?.category === browseCategory ? browse : null;
+  const shownItems = browsing ? currentBrowse?.items ?? [] : items;
+  const shownTotal = browsing ? currentBrowse?.total ?? null : total;
+  const shownError = browsing ? currentBrowse?.error ?? "" : error;
+  const shownBusy = browsing ? !currentBrowse : busy;
+  useEffect(() => {
+    // Restore the AI request's constraints on returning; category browsing has no place clauses.
+    onPlace(browseCategory ? [] : compiled?.program.place ?? []);
+    if (!browseCategory) return;
+    const controller = new AbortController();
+    setBrowse(null);
+    void browseCatalogue(browseCategory, controller.signal).then(result => {
+      if (!controller.signal.aborted) setBrowse({ category: browseCategory, ...result, error: "" });
+    }).catch((caught: Error) => {
+      if (!controller.signal.aborted) setBrowse({ category: browseCategory, items: [], total: null, error: caught.message });
+    });
+    return () => controller.abort();
+  }, [browseCategory]);
   const request = useRef<AbortController | null>(null);
   const lastPrompt = useRef("");
   const lastExecuted = useRef("");
   const [voice, setVoice] = useState<TranscribeBackend>("browser");
   const [listening, setListening] = useState<Listening | null>(null);
+  const voiceSession = useRef<Listening | null>(null);
+  const voiceEpoch = useRef(0);
+  const voiceStarting = useRef(false);
+  const [startingVoice, setStartingVoice] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [heardBy, setHeardBy] = useState<Heard | null>(null);
   useEffect(() => { const controller = new AbortController(); void fetchBackend(controller.signal).then(setVoice); return () => controller.abort(); }, []);
 
@@ -123,10 +156,13 @@ export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex
       const result = await compileSentence(text, controller.signal, roomId && sceneRevision !== undefined ? {roomId,sceneRevision} : undefined);
       const found = await searchCatalogue(result.program.find, controller.signal);
       if (result.sceneRevision !== undefined && result.sceneRevision !== currentRevision.current) throw Error("The room changed. Describe the placement again.");
+      if (controller.signal.aborted) return;
       setCompiled(result); setItems(found.items); setTotal(found.total); setError("");
       setMatches(found.facets ? found.facets.category.reduce((sum, bucket) => sum + bucket.count, 0) : null);
-      onHover(null); // the card under the pointer is a different listing now
-      onPlace(result.program.place);
+      if (currentCategory.current === null) {
+        onHover(null); // the card under the pointer is a different listing now
+        onPlace(result.program.place);
+      }
     } catch (caught) {
       if ((caught as Error).name !== "AbortError") setError((caught as Error).message);
     } finally {
@@ -135,13 +171,21 @@ export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex
   };
   useEffect(() => { void run(sentence); return () => request.current?.abort(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Press to talk, press again to stop. What was heard lands in the box and is searched like typed text.
+  // Speak starts recording; finish transcribes and searches, while cancel discards the recording.
   const talk = async () => {
-    if (listening) { listening.stop(); return; }
+    if (voiceSession.current) { voiceSession.current.stop(); setListening(null); setTranscribing(true); return; }
+    if (voiceStarting.current) return;
+    if (!canListen(voice)) { setError("Voice is unavailable in this browser. You can still type your request."); return; }
+    voiceStarting.current = true; setStartingVoice(true); setError("");
+    const epoch = ++voiceEpoch.current;
     try {
       const session = await listen(voice);
-      setListening(session);
+      // Closing or switching floors while permission is pending must release the new stream.
+      if (epoch !== voiceEpoch.current) { session.cancel(); void session.result.catch(() => undefined); return; }
+      voiceSession.current = session; setListening(session);
+      voiceStarting.current = false; setStartingVoice(false);
       const heard = await session.result;
+      if (epoch !== voiceEpoch.current) return;
       setHeardBy(heard);
       const text = heard.text.trim();
       if (text) {
@@ -150,17 +194,53 @@ export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex
       }
       else setError("Didn’t catch that. Try again, or type it.");
     } catch (caught) {
-      setError((caught as Error).message);
+      if (epoch === voiceEpoch.current) setError((caught as Error).message);
     } finally {
-      setListening(null);
+      if (epoch === voiceEpoch.current) {
+        voiceSession.current = null; voiceStarting.current = false;
+        setListening(null); setStartingVoice(false); setTranscribing(false);
+      }
     }
   };
+  const cancelVoice = () => {
+    voiceEpoch.current++;
+    voiceStarting.current = false;
+    const session = voiceSession.current;
+    voiceSession.current = null;
+    session?.cancel();
+    void session?.result.catch(() => undefined);
+    setListening(null); setStartingVoice(false); setTranscribing(false);
+  };
+  useEffect(() => {
+    if (!active || browsing) { setListening(null); setStartingVoice(false); setTranscribing(false); }
+    return () => {
+      voiceEpoch.current++; voiceStarting.current = false;
+      voiceSession.current?.cancel(); voiceSession.current = null;
+    };
+  }, [active, browsing]);
+  const handledVoiceRequest = useRef(0);
+  useEffect(() => {
+    if (!active || browsing || voiceRequest === 0 || handledVoiceRequest.current === voiceRequest) return;
+    handledVoiceRequest.current = voiceRequest;
+    void talk();
+  }, [voiceRequest, active, browsing]); // Explicit button/chord only, never on mount or backend changes.
+  const handledCancelRequest = useRef(0);
+  useEffect(() => {
+    if (voiceCancelRequest === 0 || handledCancelRequest.current === voiceCancelRequest) return;
+    handledCancelRequest.current = voiceCancelRequest;
+    cancelVoice();
+  }, [voiceCancelRequest]);
+  useEffect(() => {
+    if (!embedded) return;
+    onVoicePhaseChange?.(!active || browsing ? "idle" : startingVoice ? "connecting" : listening ? "listening" : transcribing ? "transcribing" : "idle");
+  }, [active, browsing, embedded, startingVoice, listening, transcribing, onVoicePhaseChange]);
+  useEffect(() => () => onVoicePhaseChange?.("idle"), [onVoicePhaseChange]);
 
   const submit = (event: FormEvent) => { event.preventDefault(); onPick(null); void run(sentence); };
   const dropped = region?.solution.dropped ?? [];
 
   return (
-    <aside className="glass shelf" aria-label="Catalogue" onPointerLeave={() => onHover(null)}>
+    <aside className={embedded ? "shelf shelf-embedded" : "glass shelf"} aria-label={browseCategory ? `${browseCategory} catalogue` : embedded ? "AI recommendations" : "Catalogue"} onPointerLeave={() => onHover(null)}>
       {onClose && <button type="button" className="shelf-close" aria-label="Close catalogue search" onClick={()=>{onPick(null);onHover(null);onClose();}}>Close search</button>}
       {showRooms && (
         <nav className="shelf-rooms" aria-label="Room">
@@ -176,13 +256,14 @@ export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex
           })}
         </nav>
       )}
-      <form onSubmit={submit}>
+      {!browsing && <><form onSubmit={submit}>
         <input value={sentence} onChange={(event) => { setSentence(event.target.value); if (!isDoItNowCue(event.target.value)) lastPrompt.current=event.target.value; }} maxLength={300}
           aria-label="Describe what you are looking for" placeholder={onDesign ? "Find a chair, or place a chair beside the table" : "a reading chair by the window, under $400"} />
-        {canListen(voice) && (
-          <button type="button" className="mic" onClick={() => void talk()} disabled={busy && !listening} aria-pressed={listening !== null}
-            aria-label={listening ? "Stop listening" : "Say what you are looking for"} title={listening ? "Stop" : "Speak"}>
-            {listening ? "■" : "🎙"}
+        {!embedded && canListen(voice) && (
+          <button type="button" className="mic" onClick={() => void talk()} aria-pressed={listening !== null} disabled={startingVoice}
+            aria-keyshortcuts="Meta+Shift+D Control+Shift+D"
+            aria-label={listening ? "Stop listening" : "Say what you are looking for"} title={listening ? "Stop listening (⌘⇧D)" : "Speak (⌘⇧D)"}>
+            {listening ? "■" : <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v4m-4 0h8"/></svg>}
           </button>
         )}
         <button className="go" disabled={busy}>{busy ? "…" : "Find"}</button>
@@ -193,7 +274,8 @@ export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex
       {DEV && (
         <p className="shelf-status"><code>voice configured: {voice}{heardBy ? ` · last transcript ANSWERED BY: ${heardBy.answeredBy}${heardBy.note ? ` (${heardBy.note})` : ""}` : " · nothing transcribed yet"}</code></p>
       )}
-      {error && <p className="shelf-status refused" role="alert">{error}</p>}
+      </>}
+      {shownError && <p className="shelf-status refused" role="alert">{shownError}</p>}
       {/* One fixed-height slot for everything that changes on hover. The panel is bottom-anchored and usually
           at its max height, so a taller explanation used to shrink the list from the top, and the card under a
           still pointer became a different card. */}
@@ -205,23 +287,21 @@ export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex
           </ul>
         )}
       </div>
-      <ul className="shelf-results">
-        {items.map((listing) => (
+      <ul key={browseCategory ?? "recommendations"} className={`shelf-results${embedded ? " recommendation-cards" : ""}`} aria-label={browseCategory ? `${browseCategory} results` : "Recommended furniture"} aria-busy={shownBusy}>
+        {browsing && shownBusy && <li className="shelf-empty" role="status">Loading {browseCategory.toLowerCase()}…</li>}
+        {!shownBusy && shownTotal === 0 && <li className="shelf-empty">{browseCategory ? `No ${browseCategory.toLowerCase()} with 3D models yet. Choose another category.` : "No matching pieces. Try a different material, size, or budget."}</li>}
+        {shownItems.map((listing) => (
           <li key={listing.id}>
-            <button aria-pressed={armedId === listing.id} disabled={disabled || (purchasableOnly && !canPickInShop(listing))}
+            <button className="catalogue-product-card" aria-pressed={armedId === listing.id} disabled={disabled || (purchasableOnly && !canPickInShop(listing))}
               onPointerEnter={() => onHover(listing)} onFocus={() => onHover(listing)}
               onClick={() => onPick(armedId === listing.id ? null : listing)}>
-              <img src={listing.thumb_url} alt="" />
-              <span>
-                <strong>{listing.title}</strong>
-                <small>{priceLabel(listing.price_cents, dollars)} · {size(listing)}</small>
-                {purchasableOnly && !canPickInShop(listing) && <small>No 3D model yet</small>}
-              </span>
+              <ListingImage listing={listing} preferModelPreview={browsing}/>
+              <ListingCardCopy listing={listing}/>
             </button>
           </li>
         ))}
       </ul>
-      {total !== null && <p className="shelf-status">{countLine(total, matches, items.length, items.filter((item) => item.model_url).length)}</p>}
+      {shownTotal !== null && <p className="shelf-status">{browsing ? `${shownTotal} pieces ready in 3D${shownTotal > shownItems.length ? ` · showing first ${shownItems.length}` : ""}` : countLine(shownTotal, matches, shownItems.length, shownItems.filter((item) => item.model_url).length)}</p>}
     </aside>
   );
 }

@@ -7,15 +7,16 @@
 // The server says which one to use; if it cannot be asked, or the recording fails, it is "browser".
 
 export type TranscribeBackend = "deepgram" | "browser";
+export type VoicePhase = "idle" | "connecting" | "listening" | "transcribing";
 /** What was heard, and which backend ACTUALLY produced it (after any fallback), for the dev indicator. */
 export type Heard = { text: string; answeredBy: TranscribeBackend; note?: string };
-export type Listening = { stop: () => void; result: Promise<Heard> };
+export type Listening = { stop: () => void; cancel: () => void; result: Promise<Heard> };
 
 type SpeechRecognitionLike = {
   lang: string; interimResults: boolean; maxAlternatives: number;
   onresult: ((event: { results: { 0: { transcript: string } }[] }) => void) | null;
   onerror: ((event: { error: string }) => void) | null; onend: (() => void) | null;
-  start: () => void; stop: () => void;
+  start: () => void; stop: () => void; abort?: () => void;
 };
 const speechRecognition = (): (new () => SpeechRecognitionLike) | undefined => {
   const scope = window as unknown as Record<string, unknown>;
@@ -38,6 +39,7 @@ export const canListen = (backend: TranscribeBackend): boolean =>
 async function listenWithDeepgram(): Promise<Listening> {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   const recorder = new MediaRecorder(stream);
+  let cancelled = false;
   const chunks: Blob[] = [];
   recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
   // A shadow listener for THIS press only. If the server cannot reach Deepgram the recording cannot be
@@ -48,6 +50,11 @@ async function listenWithDeepgram(): Promise<Listening> {
   const result = new Promise<Heard>((resolve, reject) => {
     recorder.onstop = async () => {
       stream.getTracks().forEach((track) => track.stop()); // release the microphone at once
+      if (cancelled) {
+        shadow?.cancel();
+        reject(new DOMException("Recording cancelled", "AbortError"));
+        return;
+      }
       shadow?.stop();
       try {
         const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
@@ -62,12 +69,16 @@ async function listenWithDeepgram(): Promise<Listening> {
     };
   });
   recorder.start();
-  return { stop: () => { if (recorder.state !== "inactive") recorder.stop(); }, result };
+  return {
+    stop: () => { if (recorder.state !== "inactive") recorder.stop(); },
+    cancel: () => { cancelled = true; if (recorder.state !== "inactive") recorder.stop(); },
+    result,
+  };
 }
 
 function listenWithBrowser(): Listening {
   const Recognition = speechRecognition();
-  if (!Recognition) return { stop: () => {}, result: Promise.reject(new Error("This browser cannot listen. Type it instead.")) };
+  if (!Recognition) return { stop: () => {}, cancel: () => {}, result: Promise.reject(new Error("This browser cannot listen. Type it instead.")) };
   const recognition = new Recognition();
   recognition.lang = "en-US"; recognition.interimResults = false; recognition.maxAlternatives = 1;
   let heard = "";
@@ -77,7 +88,7 @@ function listenWithBrowser(): Listening {
     recognition.onend = () => resolve({ text: heard, answeredBy: "browser" });
   });
   recognition.start();
-  return { stop: () => recognition.stop(), result };
+  return { stop: () => recognition.stop(), cancel: () => (recognition.abort ?? recognition.stop).call(recognition), result };
 }
 
 /** Start listening. Call `stop()` when the speaker is done; `result` resolves to what was heard. */

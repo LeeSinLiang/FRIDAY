@@ -25,3 +25,4 @@ import "./playcanvas/materialize.test";
 import "./supports.test";
 
 import "./playcanvas/furnitureFinish.test";
+import "../catalogue/recommendations.test";

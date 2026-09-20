@@ -388,6 +388,18 @@
           "title": "Download missing Haussmann assets automatically in the web app",
           "done": true,
           "owner": "sin"
+        },
+        {
+          "id": "75083e4f-47c2-4d47-9c20-75e6fca18b3d",
+          "title": "Integrate AI recommends into the furniture sidebar",
+          "done": true,
+          "owner": "william"
+        },
+        {
+          "id": "aaea8ec5-c380-46e9-8df2-16f5e46465f7",
+          "title": "Publish a redistributable third room on Vercel",
+          "done": true,
+          "owner": "william"
         }
       ],
       "description": "React app shell, product browsing, constraint chips, and conversation."
