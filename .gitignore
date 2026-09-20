@@ -78,3 +78,5 @@ shared/rooms/london-skyscraper-test/assets/*
 shared/rooms/haussmann-apartment/assets/*
 !shared/rooms/haussmann-apartment/assets/room-full-167fbe4c9837.sog
 !shared/rooms/haussmann-apartment/assets/surface-full-167fbe4c9837.collision.glb
+
+docs/demo/*
