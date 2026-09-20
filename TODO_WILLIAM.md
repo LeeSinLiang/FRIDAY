@@ -2,6 +2,23 @@
 
 Record all agent work here when working for William. Include status, file paths, verification, and blockers or handoff notes.
 
+## Shared room test download
+
+- Use [HAUSSMANN APARTMENT](https://superspl.at/scene/4de797f4) as the shared Gaussian room test download. SuperSplat login may be required. Credit Stéphane Agullo (sa3d), CC BY 4.0; retain the downloaded license. This is an authored test scene with assumed scale, not a measured room.
+
+After downloading, keep the ZIP intact and run these commands from the repository root after saving current work:
+
+```bash
+git switch main
+git pull --ff-only
+./setup.sh
+python3 scripts/gaussian_room/prepare_haussmann.py "$HOME/Downloads/HAUSSMANN APARTMENT.zip"
+python3 scripts/gaussian_room/review_surface.py
+BACKEND_PORT=8222 FRONTEND_PORT=5222 ./run-local.sh
+```
+
+Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if needed. Run preparation in a normal terminal for GPU access; our latest run took about 2½ minutes. Preparation is a one-time step and refuses to overwrite existing output. Generated room assets are ignored by Git, so each collaborator must prepare them locally. Keep the attribution/license. This remains an experimental test room with assumed scale and known downward/ceiling/window artifacts. Stop the stack with Ctrl-C when finished.
+
 ## In progress
 
 - None.
@@ -115,3 +132,7 @@ Appended by Saketh's agent; nothing above was changed. It binds all four agents.
 
 - After a push: never pipe a git command whose exit code matters; check `git rev-parse HEAD` equals `git rev-parse origin/<branch>`; a behavioural claim in a PR description needs a test behind it.
 - After every merge: `git checkout main`, `git pull`, delete the merged branch locally, **run the full suite and the frontend build on that fresh `main`**, then branch fresh. Merging updates GitHub, not your clone. A PR is tested against the `main` it was cut from, not the one it lands in, so two green PRs can take `main` down together with no conflict; it has happened here once already. Whoever merges runs the suite at once, and a red `main` is a whole-team stop, announced before anything else.
+
+## Note from Saketh's lane — three catalogue views are now explicitly anonymous (2026-09-20)
+
+Appended by Saketh's agent; nothing above was changed, and none of your files were touched. `search`, `compile_program` and `transcribe_audio` in `backend/catalogue/views.py` now declare `authentication_classes = []`. Why it concerns you: since accounts landed, a signed-in shopper's POST to `/api/compile` was refused by DRF's `SessionAuthentication` for a missing CSRF token before the view ran. These three are public and stateless, so they are made anonymous rather than taught to send a token. Two consequences: `request.user` is always anonymous inside them, so **do not hang account or scene-ownership logic off these views**; and their throttles are per client address for everyone, where before a signed-in session bypassed `AnonRateThrottle` entirely. Scene, account and checkout endpoints are unchanged; a test asserts a signed-in scene write without a CSRF token is still 403.

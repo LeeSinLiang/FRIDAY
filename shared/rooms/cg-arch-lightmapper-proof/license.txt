@@ -1,0 +1,8 @@
+Empty Interior Scene 2 by Cg Arch
+Source: https://www.blendkit.com/asset-gallery-detail/e58113ed-e234-4bc9-a75a-8a5bb3d5396e/
+Asset base ID: e58113ed-e234-4bc9-a75a-8a5bb3d5396e
+License: Blendkit Royalty Free
+Terms: https://www.blendkit.com/docs/licenses/
+Retrieved 2026-09-19 through the official Blendkit add-on.
+This third-party asset is not CC0 and is not covered by the project code license.
+Source and converted binaries remain local, outside version control.

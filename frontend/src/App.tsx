@@ -27,6 +27,7 @@ import type { ModelStatus } from "./Scene";
 import type { PerformanceSample } from "./scene/PerformanceProbe";
 const Scene = lazy(() => import("./Scene"));
 const SceneCaptureWorker = lazy(() => import("./scene/SceneCapture"));
+const SplatEditor = lazy(() => import("./SplatEditor"));
 const QA_PRODUCTS: Product[] =
   import.meta.env.DEV && new URLSearchParams(location.search).has("testAssets")
     ? [
@@ -142,7 +143,7 @@ function Coordinate({
     </label>
   );
 }
-export default function App() {
+function LegacyApp() {
   const editor = useSceneEditor(catalogue);
   const { instances, selectedId, select, edit, undo, redo, canUndo, canRedo, replace } =
     editor;
@@ -662,7 +663,7 @@ export default function App() {
         </p>
         {notice.startsWith("No free space") && <p role="alert">{notice}</p>}
         <div className="catalogue-grid">
-          {catalogue.map((item) => (
+          {catalogue.filter(item => item.catalogueVisible !== false || QA_PRODUCTS.length > 0).map((item) => (
             <button
               className="catalogue-card"
               key={item.productId}
@@ -698,4 +699,9 @@ export default function App() {
       </div>
     </main>
   );
+}
+
+export default function App() {
+  if (new URLSearchParams(location.search).has("legacy") || new URLSearchParams(location.search).has("testAssets")) return <LegacyApp/>;
+  return <Suspense fallback={<div className="canvas-loading">Opening your room…</div>}><SplatEditor/></Suspense>;
 }

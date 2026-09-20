@@ -63,3 +63,55 @@ test("full room, too large model, invalid step yield no placement; tiny steps st
   const found = findOpenPose(room, [sofa], [item], sofa, pose, 0.00001);
   assert.ok(found);
 });
+
+const scannedRoom = (): Room => ({ ...room,
+  scan: { geometryRevision: "fixed-v1", calibration: { status: "synthetic_demo", note: "Unmeasured test fixture" },
+    visualUrl: "/room.sog", positionCm: [0, 0, 0], rotationDeg: [0, 0, 0], scale: 1,
+    defaultCamera: { kind: "firstPerson", xCm: 300, yCm: 160, zCm: 300, yawRad: 0, pitchRad: 0, fovDeg: 60 },
+    attribution: { title: "Fixture", author: "Test", url: "", license: "CC0", licenseUrl: "" } },
+  spatial: { freeAreas: [{ minXcm: 50, maxXcm: 550, minZcm: 50, maxZcm: 450 }], obstacles: [] },
+});
+
+test("scanned room requires reviewed floor and rejects unconfirmed scale with explicit codes", () => {
+  const scan = scannedRoom();
+  const accepted = validatePlacement(scan, [sofa], [item], "one", pose);
+  assert.equal(accepted.valid, true);
+  assert.equal(accepted.assurance, "synthetic_demo");
+  assert.equal(accepted.reason, "Fits in synthetic demo");
+  assert.equal(validatePlacement(scan, [sofa], [item], "one", { ...pose, xCm: 120 }).code, "unknown_area");
+  scan.spatial!.freeAreas = [];
+  assert.equal(validatePlacement(scan, [sofa], [item], "one", pose).code, "unknown_area");
+  scan.scan!.calibration.status = "unconfirmed";
+  assert.equal(validatePlacement(scan, [sofa], [item], "one", pose).code, "scale_unconfirmed");
+  assert.equal(findOpenPose(scan, [sofa], [], sofa, pose, 5), null);
+  scan.scan!.calibration.status = "confirmed";
+  scan.spatial!.freeAreas = [{ minXcm: 0, maxXcm: NaN, minZcm: 0, maxZcm: 500 }];
+  assert.equal(validatePlacement(scan, [sofa], [item], "one", pose).code, "unknown_area");
+});
+
+test("fixed scanned furniture blocks placement with SAT while touching/separated footprints are accepted", () => {
+  const scan = scannedRoom();
+  scan.spatial!.obstacles = [{ obstacleId: "fixed-sofa", label: "scanned sofa", xCm: 200, zCm: 200, widthCm: 200, depthCm: 50, yawRad: Math.PI / 4 }];
+  const diagonal = { ...pose, yawRad: Math.PI / 4 };
+  const collision = validatePlacement(scan, [sofa], [item], "one", diagonal);
+  assert.equal(collision.code, "fixed_obstacle");
+  assert.deepEqual(collision.collidingIds, ["fixed-sofa"]);
+  const separated = { ...diagonal, xCm: 200 + 60 / Math.sqrt(2), zCm: 200 + 60 / Math.sqrt(2) };
+  assert.equal(validatePlacement(scan, [sofa], [item], "one", separated).valid, true);
+});
+
+test("reviewed rectangle union covers the whole rotated footprint without accepting internal unknown gaps", () => {
+  const scan = scannedRoom();
+  const diagonal = { ...pose, yawRad: Math.PI / 4 };
+  scan.spatial!.freeAreas = [{ minXcm: 0, maxXcm: 200, minZcm: 0, maxZcm: 500 }, { minXcm: 200, maxXcm: 600, minZcm: 0, maxZcm: 500 }];
+  assert.equal(validatePlacement(scan, [sofa], [item], "one", diagonal).valid, true);
+  scan.spatial!.freeAreas[1].minXcm = 201;
+  assert.equal(validatePlacement(scan, [sofa], [item], "one", diagonal).code, "unknown_area");
+  scan.spatial!.freeAreas = [
+    { minXcm: 0, maxXcm: 190, minZcm: 0, maxZcm: 500 },
+    { minXcm: 210, maxXcm: 600, minZcm: 0, maxZcm: 500 },
+    { minXcm: 190, maxXcm: 210, minZcm: 0, maxZcm: 190 },
+    { minXcm: 190, maxXcm: 210, minZcm: 210, maxZcm: 500 },
+  ];
+  assert.equal(validatePlacement(scan, [sofa], [item], "one", diagonal).code, "unknown_area");
+});

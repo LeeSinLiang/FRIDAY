@@ -1,0 +1,46 @@
+{
+  "room": {
+    "roomId": "haussmann-apartment",
+    "revision": 1,
+    "widthCm": 660,
+    "depthCm": 940,
+    "heightCm": 390,
+    "scan": {
+      "geometryRevision": "haussmann-reviewed-demo-v1",
+      "calibration": {
+        "status": "synthetic_demo",
+        "note": "Authored scene; source units assumed meters, not independently measured. Reviewed 5 cm voxel-shell floor support and body exclusion; six unobserved cells remain holes. Closed doors/windows fixed; outside reviewed region rejects placement."
+      },
+      "visualUrl": "/rooms/haussmann-apartment/assets/room-full-167fbe4c9837.sog",
+      "positionCm": [
+        -140,
+        0,
+        145
+      ],
+      "rotationDeg": [
+        0,
+        0,
+        180
+      ],
+      "scale": 1,
+      "defaultCamera": {
+        "kind": "firstPerson",
+        "xCm": 400,
+        "yCm": 160,
+        "zCm": 200,
+        "yawRad": 3.14159265,
+        "pitchRad": 0,
+        "fovDeg": 65
+      },
+      "attribution": {
+        "title": "HAUSSMANN APARTMENT",
+        "author": "St\u00e9phane Agullo",
+        "url": "https://superspl.at/scene/4de797f4",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "surfaceUrl": "/rooms/haussmann-apartment/assets/surface-full-167fbe4c9837.collision.glb"
+    }
+  },
+  "spatialFile": "spatial.json"
+}

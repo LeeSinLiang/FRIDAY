@@ -5,6 +5,8 @@ export type PlacementResult = {
   valid: boolean;
   reason: string;
   collidingIds: string[];
+  code?: "fixed_obstacle" | "unknown_area" | "scale_unconfirmed";
+  assurance?: "fixture" | "confirmed" | "synthetic_demo";
 };
 const EPSILON_CM = 1e-6;
 type Axis = [number, number];
@@ -13,7 +15,7 @@ const positive = (values: number[]) => values.every(n => Number.isFinite(n) && n
 const validPose = (pose: Pose) => !!pose && [pose.xCm, pose.zCm, pose.yawRad].every(Number.isFinite);
 const validRoom = (room: Room) => positive([room.widthCm, room.depthCm, room.heightCm]);
 const validProduct = (product: Product) => positive([product.widthCm, product.depthCm, product.heightCm]);
-const invalid = (reason: string, collidingIds: string[] = []): PlacementResult => ({ valid: false, reason, collidingIds });
+const invalid = (reason: string, collidingIds: string[] = [], code?: PlacementResult["code"]): PlacementResult => ({ valid: false, reason, collidingIds, ...(code ? { code } : {}) });
 
 function footprint(product: Product, pose: Pose): Footprint {
   const c = Math.cos(pose.yawRad), s = Math.sin(pose.yawRad);
@@ -33,6 +35,64 @@ function overlaps(a: Footprint, b: Footprint): boolean {
   return true;
 }
 
+function polygon(box: Footprint): Axis[] {
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sz]) => [
+    box.x + sx * box.half[0] * box.axes[0][0] + sz * box.half[1] * box.axes[1][0],
+    box.z + sx * box.half[0] * box.axes[0][1] + sz * box.half[1] * box.axes[1][1],
+  ]);
+}
+
+function clipPolygon(points: Axis[], axis: 0 | 1, boundary: number, keepGreater: boolean): Axis[] {
+  const result: Axis[] = [];
+  if (!points.length) return result;
+  const inside = (point: Axis) => keepGreater ? point[axis] >= boundary : point[axis] <= boundary;
+  let previous = points[points.length - 1];
+  for (const current of points) {
+    if (inside(current) !== inside(previous)) {
+      const ratio = (boundary - previous[axis]) / (current[axis] - previous[axis]);
+      result.push([previous[0] + ratio * (current[0] - previous[0]), previous[1] + ratio * (current[1] - previous[1])]);
+    }
+    if (inside(current)) result.push(current);
+    previous = current;
+  }
+  return result;
+}
+
+const polygonArea = (points: Axis[]) => Math.abs(points.reduce((sum, point, index) => {
+  const next = points[(index + 1) % points.length];
+  return sum + point[0] * next[1] - next[0] * point[1];
+}, 0)) / 2;
+
+/** Subtract the reviewed rectangle union, including gaps hidden inside the footprint. */
+function coveredByFreeAreas(box: Footprint, areas: NonNullable<Room["spatial"]>["freeAreas"]): boolean {
+  let remaining = [polygon(box)];
+  for (const area of areas) {
+    const next: Axis[][] = [];
+    const boundaries: [0 | 1, number, boolean][] = [[0, area.minXcm, true], [0, area.maxXcm, false], [1, area.minZcm, true], [1, area.maxZcm, false]];
+    for (const fragment of remaining) {
+      let inside = fragment;
+      for (const [axis, boundary, greater] of boundaries) {
+        const outside = clipPolygon(inside, axis, boundary, !greater);
+        if (polygonArea(outside) > EPSILON_CM) next.push(outside);
+        inside = clipPolygon(inside, axis, boundary, greater);
+        if (polygonArea(inside) <= EPSILON_CM) break;
+      }
+    }
+    remaining = next;
+    if (!remaining.length) return true;
+  }
+  return !remaining.length;
+}
+
+function validSpatial(room: Room): boolean {
+  const spatial = room.spatial;
+  if (!spatial || spatial.freeAreas.length > 256 || spatial.obstacles.length > 512) return false;
+  return spatial.freeAreas.every(area => [area.minXcm, area.maxXcm, area.minZcm, area.maxZcm].every(Number.isFinite) &&
+    area.minXcm >= 0 && area.maxXcm <= room.widthCm && area.minXcm < area.maxXcm &&
+    area.minZcm >= 0 && area.maxZcm <= room.depthCm && area.minZcm < area.maxZcm) &&
+    spatial.obstacles.every(obstacle => validPose(obstacle) && positive([obstacle.widthCm, obstacle.depthCm]));
+}
+
 /** Floor-footprint validation only: no mesh-level collisions or clearance claims. */
 export function validatePlacement(room: Room, products: Product[], instances: Instance[], instanceId: string, pose: Pose): PlacementResult {
   if (!validRoom(room)) return invalid("Invalid room dimensions");
@@ -45,6 +105,15 @@ export function validatePlacement(room: Room, products: Product[], instances: In
   const target = footprint(product, pose);
   if (target.x - target.extentX < -EPSILON_CM || target.z - target.extentZ < -EPSILON_CM ||
     target.x + target.extentX > room.widthCm + EPSILON_CM || target.z + target.extentZ > room.depthCm + EPSILON_CM) return invalid("Outside room");
+  if (room.scan) {
+    if (!["confirmed", "synthetic_demo"].includes(room.scan.calibration.status)) return invalid("Room scale is unconfirmed", [], "scale_unconfirmed");
+    if (!validSpatial(room)) return invalid("Room geometry is unavailable", [], "unknown_area");
+    for (const obstacle of room.spatial?.obstacles ?? []) {
+      const box = footprint({ ...product, widthCm: obstacle.widthCm, depthCm: obstacle.depthCm }, obstacle);
+      if (overlaps(target, box)) return invalid(`Overlaps fixed ${obstacle.label}`, [obstacle.obstacleId], "fixed_obstacle");
+    }
+    if (!coveredByFreeAreas(target, room.spatial?.freeAreas ?? [])) return invalid("Unverified area", [], "unknown_area");
+  }
   const collidingIds: string[] = [];
   const names: string[] = [];
   for (const other of instances) {
@@ -56,7 +125,8 @@ export function validatePlacement(room: Room, products: Product[], instances: In
       names.push(otherProduct.name);
     }
   }
-  return collidingIds.length ? invalid(`Overlaps ${[...new Set(names)].join(", ")}`, collidingIds) : { valid: true, reason: "Ready to place", collidingIds: [] };
+  const assurance = room.scan?.calibration.status === "synthetic_demo" ? "synthetic_demo" : room.scan ? "confirmed" : "fixture";
+  return collidingIds.length ? invalid(`Overlaps ${[...new Set(names)].join(", ")}`, collidingIds) : { valid: true, reason: assurance === "synthetic_demo" ? "Fits in synthetic demo" : "Ready to place", collidingIds: [], assurance };
 }
 
 /** Deterministic nearest free grid slot; search density is bounded for large rooms. */
@@ -64,6 +134,7 @@ export function findOpenPose(room: Room, products: Product[], instances: Instanc
   if (!validRoom(room) || !validProduct(product) || !validPose(preferred) || !Number.isFinite(stepCm) || stepCm <= 0) return null;
   if (!products.some(p => p.productId === product.productId)) return null;
   if (product.heightCm > room.heightCm + EPSILON_CM) return null;
+  if (room.scan && (room.scan.calibration.status === "unconfirmed" || !validSpatial(room) || !room.spatial?.freeAreas.length)) return null;
   const box = footprint(product, preferred);
   if (box.extentX * 2 > room.widthCm + EPSILON_CM || box.extentZ * 2 > room.depthCm + EPSILON_CM) return null;
   let candidateId = "__placement_candidate__";

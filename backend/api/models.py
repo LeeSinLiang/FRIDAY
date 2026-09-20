@@ -3,10 +3,15 @@ from django.db import models
 
 
 class SceneLayout(models.Model):
-    session_key = models.CharField(max_length=40, unique=True)
+    session_key = models.CharField(max_length=40)
+    room_id = models.CharField(max_length=128, default='demo-room')
+    geometry_revision = models.CharField(max_length=128, default='')
     instances = models.JSONField(default=list)
     revision = models.PositiveIntegerField(default=0)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['session_key', 'room_id'], name='unique_session_room')]
 
 
 class SceneCommandReceipt(models.Model):
@@ -28,6 +33,7 @@ class SceneCapture(models.Model):
     snapshot = models.JSONField()
     revision = models.PositiveIntegerField()
     view = models.CharField(max_length=16)
+    representation = models.CharField(max_length=32, default='photographic')
     camera = models.JSONField(null=True)
     width = models.PositiveIntegerField()
     height = models.PositiveIntegerField()

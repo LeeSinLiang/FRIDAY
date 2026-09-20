@@ -1,6 +1,6 @@
 # Scene persistence and agent command contract
 
-Implemented on `feat/3d-engine-frontend`, 2026-09-19. The browser and Django use `shared/scene-fixtures.json` for room dimensions and product metadata. Poses are centimeters plus radians; renderer scale is independent.
+Updated on `codex/gaussian-splatting`, 2026-09-19. Both renderers use centimeter poses plus radians; renderer scale is independent. Product metadata comes from `shared/scene-fixtures.json`. Prepared room geometry comes from `shared/rooms/<room-id>/manifest.json` and its `spatialFile`.
 
 ## The principle: storage may delay a save, never refuse a placement
 
@@ -14,9 +14,9 @@ Implemented on `feat/3d-engine-frontend`, 2026-09-19. The browser and Django use
 
 ## Session and transport
 
-`GET /api/scene/` initializes an empty, database-persisted room for the current Django session and sets session/CSRF cookies. Returns `{room, products, instances, revision}`. Room revision is metadata; the top-level revision controls edits. Send cookies and `X-CSRFToken` on every write. Vite preserves the original Host (`changeOrigin: false`) so Django can enforce same-origin checks through the development proxy. These are anonymous demo sessions, not user accounts or shareable room IDs. Losing the session cookie loses access to its room. Other REST endpoints retain their authentication defaults.
+`GET /api/scene/` initializes an empty, database-persisted room for the current Django session and sets session/CSRF cookies. Append `?roomId=studio-11` to every scene, command, placement and capture URL to select the prepared room. Omission selects the legacy `demo-room`. Layouts and receipts are isolated by session and room. Returns `{room, products, instances, revision, geometryRevision}`; prepared room data includes `scan` and `spatial`. Room revision is metadata; the top-level revision controls edits. Send cookies and `X-CSRFToken` on every write. Vite preserves the original Host (`changeOrigin: false`) so Django can enforce same-origin checks through the development proxy. These are anonymous demo sessions, not user accounts or shareable room IDs. Losing the session cookie loses access to its room. Other REST endpoints retain their authentication defaults.
 
-`PUT /api/scene/` accepts `{baseRevision, instances}` and returns the complete saved snapshot. Changed snapshots increment revision once; identical snapshots do not. Stale revisions return 409. The browser restores before editing, debounces saves by 400 ms, and polls clean scenes every two seconds. Local dirty state is never silently replaced. Conflicts stop autosaving and expose **Reload saved room**, which explicitly discards local changes. Network failures retain local edits with retry. Initial load failure requires retry before editing. Changes not yet saved are not durable across browser closure.
+`PUT /api/scene/` accepts `{baseRevision, instances}` and returns the complete saved snapshot. Changed snapshots increment revision once; identical snapshots do not. Stale revisions return 409. The legacy browser restores before editing, debounces saves by 400 ms, and polls clean scenes every two seconds. The PlayCanvas editor submits atomic commands immediately, installs only server-accepted snapshots/history, and polls every 2.5 seconds. Its undo/redo submits a complete remove/add command batch. Local dirty state is never silently replaced. Conflicts stop autosaving and expose **Reload saved room**, which explicitly discards local changes. Network failures retain local edits with retry. Initial load failure requires retry before editing. Changes not yet saved are not durable across browser closure.
 
 See [spatial engine tools](spatial-engine-tools.md) for explicit placement attempts, dry runs, and top/3D screenshots with agent-ready image data.
 
@@ -35,11 +35,11 @@ See [spatial engine tools](spatial-engine-tools.md) for explicit placement attem
 }
 ```
 
-Also supports `{type: "remove", instanceId}`. Success returns the full snapshot plus `commandId`. A batch is atomic: any invalid command rolls back everything. Each intermediate state must be valid, so move obstructing pieces away before moving into their positions. At most 100 commands and 100 instances. IDs are nonempty strings of at most 128 characters; products must be in the shared catalogue.
+Also supports `{type: "remove", instanceId}`. Success returns the full snapshot plus `commandId`. A batch is atomic: any invalid command rolls back everything. Each intermediate state must be valid, so move obstructing pieces away before moving into their positions. At most 200 commands and 100 instances at every intermediate state. IDs are nonempty strings of at most 128 characters; products must be in the shared catalogue.
 
 Retry an uncertain command with the exact same command ID, base revision, and payload. Its stored response is replayed even if the scene has changed afterward. Reusing an ID with a different payload returns 409. Read the latest snapshot before a new command; never install an old replay response over a newer scene.
 
-Server-side agent tools can call `api.scene_service.apply_scene_commands(session_key, base_revision, command_id, commands)` and `save_scene(session_key, base_revision, instances)`. The trusted adapter must derive the session from the originating request, never from model-supplied arguments. The OpenAI/voice agent itself is a teammate integration; this change supplies its validated service and HTTP path. A clean browser picks up agent changes through polling and resets local undo history.
+Server-side agent tools can call `api.scene_service.apply_scene_commands(session_key, base_revision, command_id, commands)` and `save_scene(session_key, base_revision, instances)`. The trusted adapter must derive the session from the originating request, never from model-supplied arguments. The OpenAI/voice agent itself is a teammate integration; this change supplies its validated service and HTTP path. Each Python service accepts an optional final `room_id` argument; use `room_id="studio-11"` for the prepared room. A clean browser picks up agent changes through polling and resets local undo history. During a preview it instead reports a conflict; explicit Retry restores connectivity without discarding an unchanged preview/history.
 
 ## Catalogue products (added by Saketh's lane, 2026-09-19)
 
@@ -65,12 +65,12 @@ An instance may carry its product inline, so a scene no longer depends on `share
 
 ## Placement and failures
 
-Both engines check rotated rectangular footprints using separating axes, room bounds, height, finite numbers, and known dimensions. Touching edges are allowed (1e-6 cm tolerance). This is conservative metadata geometry, not mesh collision, walking clearance, door swing, or a feasible-space overlay. New manual pieces find the nearest free grid slot; dragging previews green/red, and invalid drops restore the last committed pose.
+Both engines check rotated rectangular footprints using separating axes, room bounds, height, finite numbers, and known dimensions. Touching edges are allowed (1e-6 cm tolerance). Prepared rooms additionally require the entire footprint to be covered by the union of reviewed `freeAreas`, reject overlaps with fixed obstacle rectangles, and reject unconfirmed calibration. Unknown areas are not free. This is conservative metadata geometry, not mesh collision or door-swing analysis. In PlayCanvas, a new piece follows the pointer and confirms only on a valid click; no hidden free-slot search occurs. Previews use green/red/amber and invalid drops preserve the committed pose. The legacy editor retains its nearest-free-slot insertion.
 
 Errors use `{error: {code, message}, revision?}` for scene validation and CSRF failures: 400 invalid input/placement, 403 CSRF, 409 stale revision or reused command ID, 503 busy storage. Generic framework errors such as malformed JSON may use DRF's standard error body. No partial mutation occurs on rejected requests.
 
 ## Operations and checks
 
-Run `backend/.venv/bin/python backend/manage.py migrate` before starting the existing full-stack launcher. Migration `api/0001_initial.py` creates session layouts and command receipts. Deployment must include the root `shared/` directory alongside `backend/`.
+Run `backend/.venv/bin/python backend/manage.py migrate` before starting the existing full-stack launcher. Migration `api/0001_initial.py` creates session layouts and command receipts; `0004_prepared_rooms.py` scopes layouts to `(session_key, room_id)`, stores geometry revision and adds capture representation. Existing layouts remain `demo-room`. Changing geometry under an existing layout returns `geometry_conflict`; activate a new room identity instead. Deployment must include the root `shared/` directory alongside `backend/`.
 
 Run `backend/.venv/bin/python backend/manage.py test api`, `npm --prefix frontend test`, and `npm --prefix frontend run build`. Backend tests cover CSRF, session isolation, persistence, revision checks, geometry, rollback, limits, and idempotency. Development `?testAssets=1` stays local so diagnostic products cannot enter the production catalogue.

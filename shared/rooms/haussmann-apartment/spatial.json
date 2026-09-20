@@ -1,0 +1,105 @@
+{
+  "freeAreas": [
+    {
+      "minXcm": 40,
+      "maxXcm": 155,
+      "minZcm": 60,
+      "maxZcm": 870
+    },
+    {
+      "minXcm": 165,
+      "maxXcm": 260,
+      "minZcm": 60,
+      "maxZcm": 870
+    },
+    {
+      "minXcm": 265,
+      "maxXcm": 270,
+      "minZcm": 60,
+      "maxZcm": 870
+    },
+    {
+      "minXcm": 275,
+      "maxXcm": 425,
+      "minZcm": 60,
+      "maxZcm": 870
+    },
+    {
+      "minXcm": 430,
+      "maxXcm": 480,
+      "minZcm": 60,
+      "maxZcm": 870
+    },
+    {
+      "minXcm": 425,
+      "maxXcm": 430,
+      "minZcm": 60,
+      "maxZcm": 680
+    },
+    {
+      "minXcm": 425,
+      "maxXcm": 430,
+      "minZcm": 685,
+      "maxZcm": 870
+    },
+    {
+      "minXcm": 270,
+      "maxXcm": 275,
+      "minZcm": 60,
+      "maxZcm": 385
+    },
+    {
+      "minXcm": 270,
+      "maxXcm": 275,
+      "minZcm": 395,
+      "maxZcm": 870
+    },
+    {
+      "minXcm": 260,
+      "maxXcm": 265,
+      "minZcm": 60,
+      "maxZcm": 260
+    },
+    {
+      "minXcm": 260,
+      "maxXcm": 265,
+      "minZcm": 265,
+      "maxZcm": 870
+    },
+    {
+      "minXcm": 160,
+      "maxXcm": 165,
+      "minZcm": 60,
+      "maxZcm": 425
+    },
+    {
+      "minXcm": 160,
+      "maxXcm": 165,
+      "minZcm": 430,
+      "maxZcm": 870
+    },
+    {
+      "minXcm": 155,
+      "maxXcm": 160,
+      "minZcm": 60,
+      "maxZcm": 425
+    },
+    {
+      "minXcm": 155,
+      "maxXcm": 160,
+      "minZcm": 430,
+      "maxZcm": 870
+    }
+  ],
+  "obstacles": [
+    {
+      "obstacleId": "window-wall",
+      "label": "Fixed window wall and recessed frames",
+      "xCm": 595,
+      "zCm": 470,
+      "widthCm": 110,
+      "depthCm": 940,
+      "yawRad": 0
+    }
+  ]
+}

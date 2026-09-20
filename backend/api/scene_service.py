@@ -52,6 +52,26 @@ def fixtures(room_id=None):
     return data
 
 
+def room_context(room_id='demo-room'):
+    data = fixtures()
+    if room_id and room_id != data['room']['roomId']:
+        presets = room_presets()
+        if room_id in presets:
+            data['room'] = presets[room_id]['room']
+        else:
+            from .room_context import prepared_room
+            data['room'] = prepared_room(room_id)
+    return data
+
+
+def geometry_revision(room):
+    return room.get('scan', {}).get('geometryRevision', str(room['revision']))
+
+
+def placement_assurance(room):
+    return room.get('scan', {}).get('calibration', {}).get('status', 'fixture')
+
+
 def number(value):
     if not isinstance(value, (int, float)) or isinstance(value, bool):
         return False
@@ -109,10 +129,73 @@ def resolve_product(item, products):
     return authoritative
 
 
-def validate_instances(instances, room_id=None):
+def polygon(box):
+    return [[box['center'][axis] + sx * box['half'][0] * box['axes'][0][axis] + sz * box['half'][1] * box['axes'][1][axis]
+             for axis in range(2)] for sx, sz in [(-1, -1), (1, -1), (1, 1), (-1, 1)]]
+
+
+def clip_polygon(points, axis, boundary, keep_greater):
+    """Clip a convex footprint to one half-plane, retaining exact intersections."""
+    result = []
+    if not points:
+        return result
+    previous = points[-1]
+    previous_inside = previous[axis] >= boundary if keep_greater else previous[axis] <= boundary
+    for current in points:
+        current_inside = current[axis] >= boundary if keep_greater else current[axis] <= boundary
+        if current_inside != previous_inside:
+            ratio = (boundary - previous[axis]) / (current[axis] - previous[axis])
+            result.append([previous[i] + ratio * (current[i] - previous[i]) for i in range(2)])
+        if current_inside:
+            result.append(current)
+        previous, previous_inside = current, current_inside
+    return result
+
+
+def polygon_area(points):
+    return abs(sum(points[i][0] * points[(i + 1) % len(points)][1] - points[(i + 1) % len(points)][0] * points[i][1]
+                   for i in range(len(points)))) / 2 if points else 0
+
+
+def covered_by_free_areas(box, areas):
+    # Subtract the union of reviewed rectangles from the entire rotated footprint.
+    # Checking only its corners would incorrectly accept holes and narrow unknown gaps.
+    remaining = [polygon(box)]
+    for area in areas:
+        next_remaining = []
+        boundaries = [(0, area['minXcm'], True), (0, area['maxXcm'], False), (1, area['minZcm'], True), (1, area['maxZcm'], False)]
+        for fragment in remaining:
+            inside = fragment
+            for axis, boundary, greater in boundaries:
+                outside = clip_polygon(inside, axis, boundary, not greater)
+                if polygon_area(outside) > EPSILON:
+                    next_remaining.append(outside)
+                inside = clip_polygon(inside, axis, boundary, greater)
+                if polygon_area(inside) <= EPSILON:
+                    break
+        remaining = next_remaining
+        if not remaining:
+            return True
+    return not remaining
+
+
+def validate_fixed_geometry(room, box, identifier):
+    if not room.get('scan'):
+        return
+    if placement_assurance(room) not in ('confirmed', 'synthetic_demo'):
+        raise SceneError('placement', 'Room scale is unconfirmed. Calibrate before placing furniture.', details={'issues': [{'code': 'scale_unconfirmed', 'instanceId': identifier}]})
+    spatial = room.get('spatial', {})
+    for obstacle in spatial.get('obstacles', []):
+        if overlaps(box, footprint(obstacle, obstacle)):
+            raise SceneError('placement', f"Overlaps fixed {obstacle['label']}.", details={'issues': [{'code': 'fixed_obstacle', 'instanceId': identifier, 'obstacleIds': [obstacle['obstacleId']]}]})
+    if not covered_by_free_areas(box, spatial.get('freeAreas', [])):
+        raise SceneError('placement', 'Unverified area. The entire furniture footprint must stay on reviewed floor.', details={'issues': [{'code': 'unknown_area', 'instanceId': identifier}]})
+
+
+def validate_instances(instances, room_id='demo-room'):
     if not isinstance(instances, list) or len(instances) > 100:
         raise SceneError('validation', 'Provide at most 100 furniture instances.')
-    data = fixtures(room_id)
+    data = room_context(room_id)
     room = data['room']
     products = {p['productId']: p for p in data['products']}
     seen, boxes = set(), []
@@ -133,6 +216,7 @@ def validate_instances(instances, room_id=None):
         box = footprint(product, pose)
         if any(box['center'][i] - box['extents'][i] < -EPSILON or box['center'][i] + box['extents'][i] > room[key] + EPSILON for i, key in enumerate(['widthCm', 'depthCm'])):
             raise SceneError('placement', 'Outside room.', details={'issues': [{'code': 'out_of_bounds', 'instanceId': identifier, 'bounds': {'minX': box['center'][0] - box['extents'][0], 'maxX': box['center'][0] + box['extents'][0], 'minZ': box['center'][1] - box['extents'][1], 'maxZ': box['center'][1] + box['extents'][1]}, 'roomBounds': {'minX': 0, 'maxX': room['widthCm'], 'minZ': 0, 'maxZ': room['depthCm']}}]})
+        validate_fixed_geometry(room, box, identifier)
         for previous, previous_product, previous_id in boxes:
             if overlaps(box, previous):
                 raise SceneError('placement', f"Overlaps {previous_product['name']}.", details={'issues': [{'code': 'overlap', 'instanceId': identifier, 'conflictingInstanceIds': [previous_id]}]})
@@ -146,27 +230,32 @@ def validate_instances(instances, room_id=None):
     return stored
 
 
-def scene_for_session(session_key):
+def scene_for_session(session_key, room_id='demo-room'):
     if not isinstance(session_key, str) or not session_key:
         raise SceneError('session', 'A session is required.', 403)
-    room_id = room_id_of(session_key)
-    # A preset room starts furnished, once. After that the layout is the user's.
-    seeded = copy.deepcopy(room_presets()[room_id].get('instances', [])) if room_id else []
-    return SceneLayout.objects.get_or_create(session_key=session_key, defaults={'instances': seeded})[0]
+    context = room_context(room_id)
+    # Preset rooms seed furniture only when a new per-room layout is created.
+    seeded = copy.deepcopy(room_presets().get(room_id, {}).get('instances', []))
+    return SceneLayout.objects.get_or_create(
+        session_key=session_key, room_id=room_id,
+        defaults={'geometry_revision': geometry_revision(context['room']), 'instances': seeded},
+    )[0]
 
 
 def serialize(scene):
-    data = fixtures(room_id_of(scene.session_key))
-    known = {product['productId'] for product in data['products']}
-    # Catalogue items placed in this scene join the product list, from the server's catalogue rather
-    # than the client's copy, so every consumer that looks products up by id keeps working.
+    context = room_context(scene.room_id)
+    revision = geometry_revision(context['room'])
+    if scene.geometry_revision and scene.geometry_revision != revision:
+        raise SceneError('geometry_conflict', 'The fixed room geometry changed. Activate a new room ID to preserve this layout.', 409, scene.revision)
+    known = {product['productId'] for product in context['products']}
+    # All catalogue dimensions and rendering metadata stay server-authoritative.
     for item in scene.instances:
         if item['productId'] not in known:
             product = catalogue_product(item['productId'])
             if product:
                 known.add(item['productId'])
-                data['products'].append(product)
-    return {**data, 'instances': scene.instances, 'revision': scene.revision}
+                context['products'].append(product)
+    return {**context, 'instances': scene.instances, 'revision': scene.revision, 'geometryRevision': revision}
 
 
 def validate_revision(revision):
@@ -187,26 +276,26 @@ def store(scene, revision, instances):
 
 
 @transaction.atomic
-def save_scene(session_key, base_revision, instances):
+def save_scene(session_key, base_revision, instances, room_id='demo-room'):
     validate_revision(base_revision)
-    scene = scene_for_session(session_key)
+    scene = scene_for_session(session_key, room_id)
     scene = SceneLayout.objects.select_for_update().get(pk=scene.pk)
-    return store(scene, base_revision, validate_instances(instances, room_id_of(session_key)))
+    return store(scene, base_revision, validate_instances(instances, room_id))
 
 
 @transaction.atomic
-def apply_scene_commands(session_key, base_revision, command_id, commands):
+def apply_scene_commands(session_key, base_revision, command_id, commands, room_id='demo-room'):
     validate_revision(base_revision)
     if not isinstance(command_id, str) or not command_id.strip() or len(command_id) > 128:
         raise SceneError('validation', 'commandId must be a nonempty string up to 128 characters.')
-    if not isinstance(commands, list) or not 1 <= len(commands) <= 100:
-        raise SceneError('validation', 'Provide between 1 and 100 commands.')
+    if not isinstance(commands, list) or not 1 <= len(commands) <= 200:
+        raise SceneError('validation', 'Provide between 1 and 200 commands; at most 100 furniture instances may exist at any step.')
     try:
         encoded = json.dumps({'baseRevision': base_revision, 'commands': commands}, sort_keys=True, separators=(',', ':'), allow_nan=False)
     except (ValueError, TypeError):
         raise SceneError('validation', 'Commands must contain finite JSON values.')
     digest = hashlib.sha256(encoded.encode()).hexdigest()
-    scene = scene_for_session(session_key)
+    scene = scene_for_session(session_key, room_id)
     scene = SceneLayout.objects.select_for_update().get(pk=scene.pk)
     receipt = SceneCommandReceipt.objects.filter(scene=scene, command_id=command_id).first()
     if receipt:
@@ -234,14 +323,14 @@ def apply_scene_commands(session_key, base_revision, command_id, commands):
                 target['pose'] = command['pose']
         else:
             raise SceneError('validation', 'Use add, setPose, or remove with the documented fields.')
-        instances = validate_instances(instances, room_id_of(session_key))
+        instances = validate_instances(instances, room_id)
     response = {**store(scene, base_revision, instances), 'commandId': command_id}
     SceneCommandReceipt.objects.create(scene=scene, command_id=command_id, payload_hash=digest, response=response)
     return response
 
 
 @transaction.atomic
-def attempt_placement(session_key, payload):
+def attempt_placement(session_key, payload, room_id='demo-room'):
     """Trusted agent entry point. Callers must supply the browser's scoped session."""
     required = {'baseRevision', 'commandId', 'instance'}
     if not isinstance(payload, dict) or not required <= set(payload) or set(payload) - required - {'dryRun'}:
@@ -255,12 +344,12 @@ def attempt_placement(session_key, payload):
     item = payload['instance']
     # Validate the proposed object's structure before indexing its fields.
     try:
-        validate_instances([item], room_id_of(session_key))
+        item = validate_instances([item], room_id)[0]
     except SceneError as error:
         if error.details is None:
             error.details = {'issues': [{'code': 'invalid_instance', 'message': error.message}]}
         raise
-    scene = scene_for_session(session_key)
+    scene = scene_for_session(session_key, room_id)
     scene = SceneLayout.objects.select_for_update().get(pk=scene.pk)
     existing = next((i for i in scene.instances if i['instanceId'] == item['instanceId']), None)
     # A stable upsert payload hash makes retries independent of whether the first
@@ -281,10 +370,11 @@ def attempt_placement(session_key, payload):
         instances.append(copy.deepcopy(item))
     # Validate target last so any collision identifies the attempted object and
     # names the existing obstacle, without changing persisted object order.
-    validate_instances([i for i in instances if i['instanceId'] != item['instanceId']] + [item], room_id_of(session_key))
+    validate_instances([i for i in instances if i['instanceId'] != item['instanceId']] + [item], room_id)
+    assurance = placement_assurance(room_context(room_id)['room'])
     if payload.get('dryRun', False):
-        return {'ok': True, 'applied': False, 'validation': {'valid': True, 'issues': []}, **serialize(scene)}
+        return {'ok': True, 'applied': False, 'validation': {'valid': True, 'issues': [], 'assurance': assurance}, **serialize(scene)}
     changed = instances != scene.instances
-    result = {'ok': True, 'applied': changed, 'validation': {'valid': True, 'issues': []}, **store(scene, payload['baseRevision'], instances), 'commandId': command_id}
+    result = {'ok': True, 'applied': changed, 'validation': {'valid': True, 'issues': [], 'assurance': assurance}, **store(scene, payload['baseRevision'], instances), 'commandId': command_id}
     SceneCommandReceipt.objects.create(scene=scene, command_id=command_id, payload_hash=digest, response=result)
     return result
