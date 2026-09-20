@@ -38,6 +38,11 @@ const DEV = new URLSearchParams(window.location.search).has("dev");
 const TURNS = ["back to the north wall", "back to the west wall", "back to the south wall", "back to the east wall"];
 
 /** "392 in the catalogue · 1 ready in 3D" when search returned fewer than it counted; the plain count otherwise. */
+// In the shop a piece can be picked up if its model is deployed with the app. Its PRICE is a separate fact: a listing
+// whose price nobody knows (every Amazon Berkeley Objects product) is still a real piece with a real model, so it can be
+// placed and carted, and its card says "price unavailable" where the price would be.
+export const canPickInShop = (listing: Pick<Listing, "model_url">): boolean => !!listing.model_url?.startsWith("/models/furniture/");
+
 export function countLine(total: number, matches: number | null, shown: number, readyShown = 0): string {
   const plural = (n: number) => `${n.toLocaleString()} match${n === 1 ? "" : "es"}`;
   const showing = total > shown ? `, showing ${shown}` : "";
@@ -170,14 +175,14 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
       <ul className="shelf-results">
         {items.map((listing) => (
           <li key={listing.id}>
-            <button aria-pressed={armedId === listing.id} disabled={disabled || (purchasableOnly && (!listing.model_url?.startsWith('/models/furniture/') || listing.price_cents <= 0))}
+            <button aria-pressed={armedId === listing.id} disabled={disabled || (purchasableOnly && !canPickInShop(listing))}
               onPointerEnter={() => onHover(listing)} onFocus={() => onHover(listing)}
               onClick={() => onPick(armedId === listing.id ? null : listing)}>
               <img src={listing.thumb_url} alt="" />
               <span>
                 <strong>{listing.title}</strong>
                 <small>{priceLabel(listing.price_cents, dollars)} · {size(listing)}</small>
-                {purchasableOnly && (!listing.model_url?.startsWith('/models/furniture/') || listing.price_cents <= 0) && <small>Preview model unavailable</small>}
+                {purchasableOnly && !canPickInShop(listing) && <small>No 3D model yet</small>}
               </span>
             </button>
           </li>

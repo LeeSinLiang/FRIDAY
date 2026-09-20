@@ -7,18 +7,29 @@ from accounts.policy import account_status
 from api.scene_service import SceneError, apply_scene_commands, scene_for_session, serialize
 from api.shared_data import shared_root
 from catalogue.feed import load_catalogue
+from catalogue.pricing import has_price
 from checkout.catalogue import VENDOR
 from checkout.models import Checkout
 from visa.schema import payload_hash
 from .models import ShoppingSession, CartItem, ShoppingOperation
 
 
-def priced_product(product_id):
+# Packaged furniture only. Amazon Berkeley Objects folders are abo-<ASIN>, and an ASIN has capitals.
+DEPLOYED_MODEL = re.compile(r'/models/furniture/[A-Za-z0-9-]+/model\.glb')
+
+
+def cart_product(product_id):
+    """A piece that can go in the cart: a catalogue listing whose model is deployed with approved metadata.
+
+    Whether it can be PRICED is a separate question, answered by `priced`. A price of 0 means nobody knows the
+    price (every Amazon Berkeley Objects listing), not that the piece is free or not for sale: it is real, it
+    was placed at its true size, and a bill has to be able to list it. Its amount is simply not known.
+    """
     listing = next((item for item in load_catalogue() if item.id == product_id), None)
-    if listing is None or not listing.model_url or listing.price_cents <= 0:
+    if listing is None or not listing.model_url:
         raise SceneError('unavailable_product', 'This furniture is not available for checkout.', 400)
     # Only packaged furniture can be bought in this demo; remote/unmapped models are excluded.
-    if not re.fullmatch(r'/models/furniture/[a-z0-9-]+/model\.glb', listing.model_url):
+    if not DEPLOYED_MODEL.fullmatch(listing.model_url):
         raise SceneError('unavailable_product', 'This furniture has no deployed model.', 400)
     metadata_path = shared_root() / listing.model_url.lstrip('/').replace('/model.glb', '/metadata.json')
     try:
@@ -27,8 +38,9 @@ def priced_product(product_id):
             raise ValueError()
     except (OSError, ValueError):
         raise SceneError('unavailable_product', 'This furniture has no approved model metadata.', 400)
-    return {'product_id': listing.id, 'name': listing.title, 'unit_amount': listing.price_cents,
-            'thumbnail': metadata.get('thumbnailUrl', listing.thumb_url), 'model_url': listing.model_url}
+    priced = has_price(listing)
+    return {'product_id': listing.id, 'name': listing.title, 'unit_amount': listing.price_cents if priced else 0,
+            'priced': priced, 'thumbnail': metadata.get('thumbnailUrl', listing.thumb_url), 'model_url': listing.model_url}
 
 
 def cart(shopping, user=None):
@@ -36,10 +48,10 @@ def cart(shopping, user=None):
     items = []
     for item in shopping.items.filter(selected=True, present=True).order_by('room_id', 'instance_id'):
         try:
-            product = priced_product(item.product_id)
+            product = cart_product(item.product_id)
             available = True
         except SceneError:
-            product = {'product_id': item.product_id, 'name': item.product_id, 'unit_amount': 0, 'thumbnail': ''}
+            product = {'product_id': item.product_id, 'name': item.product_id, 'unit_amount': 0, 'priced': False, 'thumbnail': ''}
             available = False
         items.append({'id': str(item.id), 'roomId': item.room_id, 'instanceId': item.instance_id,
                       **product, 'available': available})
@@ -107,7 +119,7 @@ def confirm(shopping, data):
     if shopping.revision != data['cartRevision']:
         raise SceneError('cart_conflict', 'Your cart changed. Refresh it before confirming.', 409)
     instance = data['instance']
-    priced_product(instance.get('productId'))
+    cart_product(instance.get('productId'))
     scene = scene_for_session(shopping.scene_key, data['roomId'])
     scene = type(scene).objects.select_for_update().get(pk=scene.pk)
     if scene.revision != data['baseRevision']:
@@ -159,6 +171,9 @@ def checkout(shopping, user, revision):
     state = cart(shopping)
     if not state['items'] or any(not i['available'] for i in state['items']):
         raise SceneError('validation', 'Choose available furniture before checkout.')
+    if any(not i['priced'] for i in state['items']):
+        # Never bill an unknown price as 0. Until the bill can list unpriced pieces apart from the amount, say so.
+        raise SceneError('validation', 'Some pieces in your cart have no known price yet, so this cart cannot be checked out.')
     grouped = {}
     for item in state['items']:
         line = grouped.setdefault(item['product_id'], {k: item[k] for k in ('product_id', 'name', 'unit_amount')})

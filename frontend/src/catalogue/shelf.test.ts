@@ -57,3 +57,20 @@ test("a listing with no known price says so, and never reads $0", async () => {
     assert.doesNotMatch(text, /\{dollars\((listing|item)\.price_cents\)\}/, `${file} must not print a raw price`);
   }
 });
+
+test("in the shop a piece is pickable for its deployed model; an unknown price does not lock the card", async t => {
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  t.after(() => {
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
+    else Reflect.deleteProperty(globalThis, "window");
+  });
+  (globalThis as { window?: unknown }).window ??= { location: { search: "" } };
+  const { canPickInShop } = await import("./CatalogueShelf");
+  assert.equal(canPickInShop({ model_url: "/models/furniture/abo-B082BLFMRC/model.glb" }), true, "an Amazon Berkeley Objects chair: model, capitals, no price");
+  assert.equal(canPickInShop({ model_url: "/models/furniture/herrakra-armchair-diseroed-dark-yellow/model.glb" }), true);
+  assert.equal(canPickInShop({ model_url: null }), false, "no model deployed: nothing to place");
+  assert.equal(canPickInShop({ model_url: "https://elsewhere.example/model.glb" }), false, "only models packaged with the app");
+  const tsx = await source("CatalogueShelf.tsx");
+  assert.doesNotMatch(tsx, /price_cents <= 0/, "the price must not decide whether a card can be picked");
+  assert.doesNotMatch(tsx, /Preview model unavailable/, "that label was false for a piece that has a model and no known price");
+});
