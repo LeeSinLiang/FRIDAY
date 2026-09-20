@@ -76,7 +76,11 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
   const angels = createAngelMovers(runtime, (id, pose) => furniture.preview(id, pose));
   const overlays = createPlacementOverlays(runtime, runtime.contentRoot);
   const surface = createSurfaceReference(runtime, callbacks.onSurfaceStatus);
-  const navigation = createNavigation(runtime, initial, () => busy || !!gesture && gesture.kind !== "look" || !!state.pendingProductId);
+  // A piece in hand suspends walking and jumping, NOT looking: a moved press turns the camera, a plain click places.
+  const holding = () => !!state.pendingProductId || !!runtime.externalHold;
+  const navigation = createNavigation(runtime, initial,
+    () => busy || !!gesture && gesture.kind !== "look" || holding(),
+    () => holding() && !busy && (!gesture || gesture.kind === "look" || gesture.kind === "pending"));
   const unavailable = () => disposed || runtime.disposed || runtime.capturing || busy;
   const productFor = (id: string) => state.products.find(product => product.productId === id);
   const reportActive = (active: boolean) => {
@@ -191,9 +195,14 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
       if (hit) callbacks.onSelect(hit.instance.instanceId);
       return;
     }
-    if (ghost && state.editingEnabled) {
+    if (runtime.externalHold) {
+      // The catalogue panel holds a piece: its own click handler places it. Here a press can only become a look.
+      gesture = { kind: "look", pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false, hitId: null };
+      navigation.beginLook(event.clientX, event.clientY); canvas.style.cursor = "grabbing";
+    } else if (ghost && state.editingEnabled) {
       updateGhost(event.clientX, event.clientY);
       gesture = { kind: "pending", pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
+      navigation.beginLook(event.clientX, event.clientY); // inert unless the press moves; see move()
     } else {
       const hit = hitAt(event.clientX, event.clientY);
       if (state.mode === "walk" && !hit) void canvas.requestPointerLock().catch(() => { /* Keep drag-look when pointer lock is unavailable. */ });
@@ -229,7 +238,10 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
     if (gesture.kind === "drag") updateDrag(event, gesture);
     else {
       if (Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) >= 4) gesture.moved = true;
-      if (gesture.kind === "look") navigation.moveLook(event.clientX, event.clientY);
+      // With a piece in hand a press only becomes a look once it has moved: a click with a little hand tremor places
+      // exactly where it was aimed, without the view twitching under it. The ghost stays put during the look.
+      if (gesture.kind === "look") { if (!runtime.externalHold || gesture.moved) navigation.moveLook(event.clientX, event.clientY); }
+      else if (gesture.moved) { navigation.moveLook(event.clientX, event.clientY); canvas.style.cursor = "grabbing"; }
       else updateGhost(event.clientX, event.clientY);
     }
   };
@@ -240,7 +252,7 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
     if (current.kind === "drag") updateDrag(event, current);
     gesture = null; navigation.stop(); release(event.pointerId); canvas.style.cursor = "";
     if (current.kind === "look") {
-      if (!current.moved && (current.hitId || state.mode !== "walk")) callbacks.onSelect(current.hitId);
+      if (!runtime.externalHold && !current.moved && (current.hitId || state.mode !== "walk")) callbacks.onSelect(current.hitId);
     }
     else if (current.kind === "pending") {
       if (!current.moved && ghost) void confirm(ghost, ghost.pose, true);

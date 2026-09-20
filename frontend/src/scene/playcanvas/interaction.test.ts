@@ -140,6 +140,43 @@ test("Walk input jumps onto a placed sofa, stays there, then falls when walking 
   }
 });
 
+test("a piece in hand suspends walking and jumping but not looking", () => {
+  const old = (["window", "document", "HTMLElement"] as const).map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)] as const);
+  const listeners = new Map<string, (event: any) => void>();
+  Object.defineProperty(globalThis, "window", { configurable: true, value: { addEventListener: (name: string, listener: (event: any) => void) => listeners.set(name, listener), removeEventListener: (name: string) => listeners.delete(name) } });
+  Object.defineProperty(globalThis, "document", { configurable: true, value: { activeElement: null, hidden: false, addEventListener() {}, removeEventListener() {} } });
+  Object.defineProperty(globalThis, "HTMLElement", { configurable: true, value: class {} });
+  const open: Room = { ...scanned, spatial: { freeAreas: [{ minXcm: 0, maxXcm: 600, minZcm: 0, maxZcm: 500 }], obstacles: [] } };
+  const key = (code: string) => listeners.get("keydown")?.({ key: code === "Space" ? " " : "w", code, repeat: false, preventDefault() {}, metaKey: false, ctrlKey: false, altKey: false });
+  try {
+    // "walk" is the search panel's flow (the mode never changes); "place" is what choosing a piece from the rail sets.
+    for (const mode of ["walk", "place"] as const) {
+      const camera = new pc.Entity(`hold-test-camera-${mode}`);
+      camera.setPosition(cmToScene(300), cmToScene(160), cmToScene(340));
+      let frame: (dt: number) => void = () => { throw new Error("Update handler not attached"); };
+      const app = { on: (_name: string, callback: (dt: number) => void) => { frame = callback; }, off() {} } as unknown as pc.Application;
+      let inHand = true;
+      const navigation = createNavigation({ app, camera, capturing: false, disposed: false },
+        { room: open, mode, view: "perspective", instances: [], products: [] }, () => true, () => inHand);
+      const yaw = () => Math.atan2(-camera.forward.x, -camera.forward.z);
+      const start = camera.getPosition().clone();
+      navigation.beginLook(400, 300); navigation.moveLook(100, 300);
+      assert.ok(Math.abs(yaw() - 300 * 0.003) < 1e-3, `${mode}: a 300 px drag to the left turns the camera 0.9 rad to the left`);
+      key("KeyW"); key("Space");
+      for (let i = 0; i < 10; i++) frame(0.05);
+      assert.ok(camera.getPosition().distance(start) < 1e-6, `${mode}: walking and jumping stay suspended`);
+      // The control: the same suspension with nothing in hand (a furniture drag, a save in flight) still blocks looking.
+      inHand = false; navigation.stop();
+      const held = yaw();
+      navigation.beginLook(400, 300); navigation.moveLook(100, 300);
+      assert.equal(yaw(), held, `${mode}: suspended with nothing in hand, a drag does not turn the camera`);
+      navigation.dispose(); camera.destroy();
+    }
+  } finally {
+    for (const [name, descriptor] of old) { if (descriptor) Object.defineProperty(globalThis, name, descriptor); else Reflect.deleteProperty(globalThis, name); }
+  }
+});
+
 test("walking sweeps across thin fixed obstacles and slides along their edge", () => {
   const blocked: Room = { ...scanned, spatial: { freeAreas: [{ minXcm: 0, maxXcm: 600, minZcm: 0, maxZcm: 500 }], obstacles: [{ obstacleId: "wall", label: "wall", xCm: 300, zCm: 250, widthCm: 2, depthCm: 500, yawRad: 0 }] } };
   const next = advanceWalk(blocked, { xCm: 275, zCm: 200 }, 70, 30);
