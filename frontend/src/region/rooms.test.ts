@@ -71,6 +71,16 @@ test("the overlay writes uniforms through the live material, and leaves no GPU s
     assert.ok(source.includes(setting), `texture ${setting} must be explicit`);
 });
 
+test("the PlayCanvas overlay stays outside the region module, and is the only other file that may touch a renderer for it", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(new URL("regionOverlay.ts", `file://${process.cwd()}/src/scene/playcanvas/`), "utf8");
+  assert.ok(source.includes(["from", '"playcanvas"'].join(" ")), "this is the file that imports the engine"); // spelled in two parts so the guard above does not flag this test
+  assert.match(source, /from "\.\.\/\.\.\/region\/(grid|types)"/, "it consumes the region module's mask; the dependency points one way");
+  for (const setting of ["minFilter: pc.FILTER_NEAREST", "magFilter: pc.FILTER_NEAREST", "mipmaps: false", "addressU: pc.ADDRESS_CLAMP_TO_EDGE", "addressV: pc.ADDRESS_CLAMP_TO_EDGE"])
+    assert.ok(source.includes(setting), `texture ${setting} must be explicit`);
+  assert.match(source, /!== FREE\) continue/, "only free samples are lit; unknown and blocked stay transparent");
+});
+
 const cgRoom = { ...(cgArch.room as unknown as Room), spatial: cgArchSpatial as Room["spatial"] };
 const cgScene: Scene = { room: cgRoom, products: [], instances: [] };
 
