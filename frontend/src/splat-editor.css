@@ -181,3 +181,9 @@
 .splat-product-photo {width:100%;height:100%;object-fit:contain;border-radius:12px;}
 
 .splat-header a.splat-reset { color: inherit; text-decoration: none; }
+
+.splat-catalogue-slot {height:100%;min-height:0;}
+.splat-catalogue-slot[hidden],.furn-recommendations[hidden] {display:none;}
+.furn-recommendations {flex:1;min-height:0;}
+.furn-categories .furn-rail-mic {min-height:48px;margin-bottom:5px;color:#934329;}
+@media(prefers-reduced-motion:reduce){.splat-panel,.splat-panel-toggle {transition:none;}}

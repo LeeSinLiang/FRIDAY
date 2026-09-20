@@ -32,3 +32,27 @@
 .shelf button.mic[aria-pressed=true] { background: var(--accent); color: #fff; border-color: var(--accent); animation: shelf-pulse 1.1s ease-in-out infinite; }
 @keyframes shelf-pulse { 50% { opacity: 0.6; } }
 @media (prefers-reduced-motion: reduce) { .shelf button.mic[aria-pressed=true] { animation: none; } }
+
+/* The same search/fit workflow, docked inside the existing furniture rail. */
+.shelf-embedded {position:relative;inset:auto;z-index:auto;width:100%;height:100%;max-height:none;min-height:0;padding:4px 16px 14px;gap:9px;border-radius:0;background:transparent;box-sizing:border-box;}
+.shelf-embedded form {gap:6px;}
+.shelf-embedded input {font-size:12px;padding:10px;}
+.shelf-embedded button.go {font-size:12px;padding:9px 11px;}
+.shelf-embedded button.mic {width:36px;flex:none;display:grid;place-items:center;}
+.shelf-embedded .shelf-voice-hint {margin:0;font-size:10px;color:#756351;}
+.shelf-embedded .shelf-chips {gap:4px;max-height:64px;overflow-y:auto;}
+.shelf-embedded .shelf-chips span {font-size:10px;padding:3px 7px;}
+.shelf-embedded .shelf-status {font-size:11px;line-height:1.45;}
+.shelf-embedded .shelf-explain {height:48px;}
+.shelf-embedded .shelf-explain.dev {height:82px;}
+.shelf-embedded .recommendation-cards {flex:1;align-content:start;gap:9px;scrollbar-width:thin;}
+.shelf-embedded .recommendation-cards button {grid-template-columns:1fr;gap:7px;padding:10px;border:2px solid transparent;background:#fffdfa;border-radius:18px;}
+.shelf-embedded .recommendation-cards button:hover,.shelf-embedded .recommendation-cards button:focus-visible,.shelf-embedded .recommendation-cards button[aria-pressed=true] {border-color:#a5663d;}
+.shelf-embedded .recommendation-cards button:disabled {opacity:.65;cursor:not-allowed;}
+.shelf-embedded .recommendation-cards img {width:100%;height:126px;object-fit:contain;border-radius:10px;}
+.recommendation-copy {min-width:0;}
+.shelf-embedded .recommendation-copy strong {display:block;font-size:12px;line-height:1.35;font-weight:600;overflow-wrap:anywhere;}
+.shelf-embedded .recommendation-copy small {font-size:11px;margin-top:3px;line-height:1.4;}
+.listing-image-unavailable {display:grid;place-items:center;min-height:44px;font-size:9px;text-align:center;color:#887565;background:#ede7df;border-radius:10px;}
+.shelf-embedded .listing-image-unavailable {height:100px;font-size:11px;}
+.shelf-empty {padding:18px 4px;font-size:12px;color:#756351;line-height:1.5;}

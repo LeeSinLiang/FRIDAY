@@ -2,6 +2,7 @@
 // Everything the port needs lives here, so the editor itself only has to mount this one component.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { PlaceClause } from "../lib/dsl/schema";
 import type { Listing } from "../lib/types";
 import { instanceFromListing } from "../region/boundary";
@@ -33,13 +34,15 @@ type Props = {
   shopping?: boolean;
   showShelf?: boolean;
   onCloseShelf?: () => void;
+  shelfTarget?: HTMLElement | null;
+  voiceRequest?: number;
   confirm?: (instance:Instance) => Promise<boolean>;
 };
 
 /** The engine's own drag threshold (interaction.ts): a press that moves this far is a look, not a click. */
 const LOOK_THRESHOLD_PX = 4;
 
-export default function SplatCatalogueLayer({ getRuntime, room, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, showShelf = true, onCloseShelf, confirm }: Props) {
+export default function SplatCatalogueLayer({ getRuntime, room, products, instances, ready, locked, submit, retry, status, onNotice, shopping = false, showShelf = true, onCloseShelf, shelfTarget, voiceRequest, confirm }: Props) {
   const [hovered, setHovered] = useState<Listing | null>(null);
   const [armed, setArmed] = useState<Listing | null>(null);
   useEffect(() => { if (!showShelf) { setHovered(null); setArmed(null); } }, [showShelf]);
@@ -183,8 +186,10 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
   }
   const verdict = unconfirmed ? validatePlacement(room,known,[...instances,unconfirmed],unconfirmed.instanceId,unconfirmed.pose) : null;
   return <>
-    {showShelf && <CatalogueShelf region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
-      canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} onClose={onCloseShelf} />}
+    {shelfTarget !== undefined ? shelfTarget && createPortal(<CatalogueShelf embedded active={showShelf} voiceRequest={voiceRequest} region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
+      canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace}/>, shelfTarget) : showShelf && <CatalogueShelf region={region} yawIndex={yawIndex} armedId={armed?.id ?? null} disabled={!ready || locked || !!unconfirmed} purchasableOnly={shopping}
+      canSwitchRooms showRooms={false} onHover={setHovered} onPick={setArmed} onPlace={setPlace} onClose={onCloseShelf}/>}
+
     {shopping && armed && <section className="purchase-confirm" aria-label="Preview furniture"><p>Click the lit floor, or use a suggested position.</p><button className="button" disabled={!ready || locked || !fitting.length} onClick={previewSuggested}>Preview a fitting position</button><button className="button" onClick={()=>setArmed(null)}>Cancel</button></section>}
     {shopping && purchase && unconfirmed && <section className="purchase-confirm" aria-label="Confirm furniture placement">
       <p className="eyebrow">Placement preview</p><h2>{purchase.title}</h2><p>{priceLabel(purchase.price_cents, cents => `$${(cents/100).toFixed(2)} USD`)} · sandbox</p>

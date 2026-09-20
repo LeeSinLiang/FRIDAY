@@ -11,8 +11,12 @@ import { compileSentence, searchCatalogue, type Compiled } from "./api";
 import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend } from "./transcribe";
 import "./shelf.css";
 import { priceLabel } from "./price";
+import ListingImage from "./ListingImage";
 
 type Props = {
+  embedded?: boolean;
+  active?: boolean;
+  voiceRequest?: number;
   region: Region | null;
   yawIndex: number;
   armedId: string | null;
@@ -69,7 +73,7 @@ function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: 
   );
 }
 
-export default function CatalogueShelf({ region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose }: Props) {
+export default function CatalogueShelf({ embedded = false, active = true, voiceRequest = 0, region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose }: Props) {
   const [sentence, setSentence] = useState("an armchair");
   const [compiled, setCompiled] = useState<Compiled | null>(null);
   const [items, setItems] = useState<Listing[]>([]);
@@ -82,6 +86,10 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
   const request = useRef<AbortController | null>(null);
   const [voice, setVoice] = useState<TranscribeBackend>("browser");
   const [listening, setListening] = useState<Listening | null>(null);
+  const voiceSession = useRef<Listening | null>(null);
+  const voiceEpoch = useRef(0);
+  const voiceStarting = useRef(false);
+  const [startingVoice, setStartingVoice] = useState(false);
   const [heardBy, setHeardBy] = useState<Heard | null>(null);
   useEffect(() => { const controller = new AbortController(); void fetchBackend(controller.signal).then(setVoice); return () => controller.abort(); }, []);
 
@@ -93,6 +101,7 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
       // compile() never fails on a bad sentence: at worst it returns a plain text search.
       const result = await compileSentence(text, controller.signal);
       const found = await searchCatalogue(result.program.find, controller.signal);
+      if (controller.signal.aborted) return;
       setCompiled(result); setItems(found.items); setTotal(found.total); setError("");
       setMatches(found.facets ? found.facets.category.reduce((sum, bucket) => sum + bucket.count, 0) : null);
       onHover(null); // the card under the pointer is a different listing now
@@ -107,27 +116,51 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
 
   // Press to talk, press again to stop. What was heard lands in the box and is searched like typed text.
   const talk = async () => {
-    if (listening) { listening.stop(); return; }
+    if (voiceSession.current) { voiceSession.current.stop(); return; }
+    if (voiceStarting.current) return;
+    if (!canListen(voice)) { setError("Voice is unavailable in this browser. You can still type your request."); return; }
+    voiceStarting.current = true; setStartingVoice(true); setError("");
+    const epoch = ++voiceEpoch.current;
     try {
       const session = await listen(voice);
-      setListening(session);
+      // Closing or switching floors while permission is pending must release the new stream.
+      if (epoch !== voiceEpoch.current) { session.stop(); void session.result.catch(() => undefined); return; }
+      voiceSession.current = session; setListening(session);
+      voiceStarting.current = false; setStartingVoice(false);
       const heard = await session.result;
+      if (epoch !== voiceEpoch.current) return;
       setHeardBy(heard);
       const text = heard.text.trim();
       if (text) { setSentence(text); onPick(null); void run(text); }
       else setError("Didn’t catch that. Try again, or type it.");
     } catch (caught) {
-      setError((caught as Error).message);
+      if (epoch === voiceEpoch.current) setError((caught as Error).message);
     } finally {
-      setListening(null);
+      if (epoch === voiceEpoch.current) {
+        voiceSession.current = null; voiceStarting.current = false;
+        setListening(null); setStartingVoice(false);
+      }
     }
   };
+  useEffect(() => {
+    if (!active) { setListening(null); setStartingVoice(false); }
+    return () => {
+      voiceEpoch.current++; voiceStarting.current = false;
+      voiceSession.current?.stop(); voiceSession.current = null;
+    };
+  }, [active]);
+  const handledVoiceRequest = useRef(0);
+  useEffect(() => {
+    if (!active || voiceRequest === 0 || handledVoiceRequest.current === voiceRequest) return;
+    handledVoiceRequest.current = voiceRequest;
+    void talk();
+  }, [voiceRequest, active]); // Explicit button/chord only, never on mount or backend changes.
 
   const submit = (event: FormEvent) => { event.preventDefault(); onPick(null); void run(sentence); };
   const dropped = region?.solution.dropped ?? [];
 
   return (
-    <aside className="glass shelf" aria-label="Catalogue" onPointerLeave={() => onHover(null)}>
+    <aside className={embedded ? "shelf shelf-embedded" : "glass shelf"} aria-label={embedded ? "AI recommendations" : "Catalogue"} onPointerLeave={() => onHover(null)}>
       {onClose && <button type="button" className="shelf-close" aria-label="Close catalogue search" onClick={()=>{onPick(null);onHover(null);onClose();}}>Close search</button>}
       {showRooms && (
         <nav className="shelf-rooms" aria-label="Room">
@@ -146,14 +179,16 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
       <form onSubmit={submit}>
         <input value={sentence} onChange={(event) => setSentence(event.target.value)} maxLength={300}
           aria-label="Describe what you are looking for" placeholder="a reading chair by the window, under $400" />
-        {canListen(voice) && (
-          <button type="button" className="mic" onClick={() => void talk()} aria-pressed={listening !== null}
-            aria-label={listening ? "Stop listening" : "Say what you are looking for"} title={listening ? "Stop" : "Speak"}>
-            {listening ? "■" : "🎙"}
+        {(embedded || canListen(voice)) && (
+          <button type="button" className="mic" onClick={() => void talk()} aria-pressed={listening !== null} disabled={startingVoice}
+            aria-keyshortcuts="Meta+Shift+D Control+Shift+D"
+            aria-label={listening ? "Stop listening" : "Say what you are looking for"} title={listening ? "Stop listening (⌘⇧D)" : "Speak (⌘⇧D)"}>
+            {listening ? "■" : <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v4m-4 0h8"/></svg>}
           </button>
         )}
         <button className="go" disabled={busy}>{busy ? "…" : "Find"}</button>
       </form>
+      {embedded && <p className="shelf-voice-hint" role="status">{startingVoice ? "Connecting microphone…" : listening ? "Listening… press ⌘⇧D to finish" : "Describe a piece, or speak with ⌘⇧D"}</p>}
       {compiled && compiled.chips.length > 0 && (
         <div className="shelf-chips">{compiled.chips.map((chip) => <span key={chip}>{chip}</span>)}</div>
       )}
@@ -172,14 +207,15 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
           </ul>
         )}
       </div>
-      <ul className="shelf-results">
+      <ul className={`shelf-results${embedded ? " recommendation-cards" : ""}`} aria-label="Recommended furniture" aria-busy={busy}>
+        {!busy && total === 0 && <li className="shelf-empty">No matching pieces. Try a different material, size, or budget.</li>}
         {items.map((listing) => (
           <li key={listing.id}>
             <button aria-pressed={armedId === listing.id} disabled={disabled || (purchasableOnly && !canPickInShop(listing))}
               onPointerEnter={() => onHover(listing)} onFocus={() => onHover(listing)}
               onClick={() => onPick(armedId === listing.id ? null : listing)}>
-              <img src={listing.thumb_url} alt="" />
-              <span>
+              <ListingImage listing={listing}/>
+              <span className="recommendation-copy">
                 <strong>{listing.title}</strong>
                 <small>{priceLabel(listing.price_cents, dollars)} · {size(listing)}</small>
                 {purchasableOnly && !canPickInShop(listing) && <small>No 3D model yet</small>}

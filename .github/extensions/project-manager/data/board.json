@@ -346,6 +346,12 @@
           "title": "Editor fixes before the demo: rail add carries its product, walk keys respect a held piece, search panel open on load, floor map above the panel",
           "done": true,
           "owner": "saketh"
+        },
+        {
+          "id": "75083e4f-47c2-4d47-9c20-75e6fca18b3d",
+          "title": "Integrate AI recommends into the furniture sidebar",
+          "done": false,
+          "owner": "william"
         }
       ],
       "description": "React app shell, product browsing, constraint chips, and conversation."

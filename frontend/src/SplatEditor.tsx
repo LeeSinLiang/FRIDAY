@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "./Icons";
 import FurnitureCatalogue from "./FurnitureCatalogue";
+import { isDictationShortcut } from "./catalogue/dictationShortcut";
 import FloorMap from "./scene/FloorMap";
 import SplatCatalogueLayer from "./catalogue/SplatCatalogueLayer";
 import { useRoomSession, type RoomSnapshot } from "./scene/useRoomSession";
@@ -47,11 +48,25 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   const [selectedId,setSelectedId]=useState<string|null>(null);
   const [pendingProductId,setPendingProductId]=useState<string|null>(null);
   const [panel,setPanel]=useState<"catalogue"|"inspector">("catalogue");
-  const [panelOpen,setPanelOpen]=useState(false);
-  // The language search panel (sentence box, microphone, lit floor). It starts open on every route: the gallery's
-  // /room/<id> (shopping mode) is the route we demo, and with the panel closed the sentence box was three interactions
-  // deep. Close search closes it and it stays closed; the furniture rail's "Search purchasable catalogue" reopens it.
+  const [panelOpen,setPanelOpen]=useState(true);
+  const [catalogueTarget,setCatalogueTarget]=useState<HTMLDivElement|null>(null);
+  const [voiceRequest,setVoiceRequest]=useState(0);
+  // Search now occupies AI recommends in the existing right panel.
   const [shopSearchOpen,setShopSearchOpen]=useState(true);
+  const openRecommendations=useCallback(()=>{
+    if(document.pointerLockElement)document.exitPointerLock();
+    setPanel("catalogue");setPanelOpen(true);setMode("explore");setShopSearchOpen(true);
+  },[]);
+  const requestVoice=useCallback(()=>{openRecommendations();setVoiceRequest(value=>value+1);},[openRecommendations]);
+  useEffect(()=>{
+    if(observation)return;
+    const onKey=(event:KeyboardEvent)=>{
+      if(!isDictationShortcut(event))return;
+      event.preventDefault();event.stopImmediatePropagation();requestVoice();
+    };
+    window.addEventListener("keydown",onKey,true);
+    return ()=>window.removeEventListener("keydown",onKey,true);
+  },[requestVoice,observation]);
   const [snap,setSnap]=useState(true);
   const [showSurface,setShowSurface]=useState(false);
   const [surfaceNote,setSurfaceNote]=useState("");
@@ -85,7 +100,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
     if(!next||!ready||locked||pendingProductId||runtime.current?.capturing)return;
     if(document.pointerLockElement===runtime.current?.canvas)document.exitPointerLock();
     setSelectedId(null);setPreview(null);setMode("explore");setPanel("catalogue");setShopSearchOpen(false);
-    setActiveRoomId(next.roomId);
+    setVoiceRequest(0);setActiveRoomId(next.roomId);
     const url=new URL(window.location.href);url.searchParams.set("floor",next.floorId);
     window.history.replaceState(null,"",url);
   };
@@ -207,7 +222,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   return <main className={`splat-editor ${panelOpen?"has-panel":""}`}>
     <div className="splat-room" aria-label="First-person room editor">
       {state && <Suspense fallback={null}><PlayCanvasScene state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}
-      {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen} onCloseShelf={()=>setShopSearchOpen(false)} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
+      {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen&&panelOpen&&panel==="catalogue"} shelfTarget={catalogueTarget} voiceRequest={voiceRequest} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
       {runtimeStatus.phase!=="ready" && <div className="splat-loading" role="status">
         <div className="glass splat-loading-card"><span className="loading-orbit"/><h1>{runtimeStatus.phase==="error"?"Room unavailable":"Come on in."}</h1><p>{runtimeStatus.message}</p>
           {runtimeStatus.progress!==undefined && <progress max={1} value={runtimeStatus.progress} aria-label="Room loading progress"/>}
@@ -235,7 +250,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
     {view==="top"&&<div className="glass splat-plan-label">Schematic floor plan · shaded areas are unreviewed</div>}
     <button type="button" className={`splat-panel-toggle ${panelOpen?"is-open":"is-collapsed"}`} aria-label={panelOpen?"Collapse furniture panel":"Expand furniture panel"} aria-controls="furniture-panel" aria-expanded={panelOpen} disabled={!ready||locked} onClick={()=>{if(panelOpen)setPanel("catalogue");setPanelOpen(open=>!open);}}><Icon name="chevron" size={20}/></button>
     <aside id="furniture-panel" className={`glass splat-panel ${panel==="catalogue"?"is-catalogue":""} ${panelOpen?"":"is-collapsed"}`} aria-label={panel==="catalogue"?"Furniture catalogue":"Furniture properties"}>
-      {panel==="catalogue" ? <FurnitureCatalogue products={products} ready={ready} locked={locked} onChoose={choose} onOpenLiveCatalogue={()=>{setPanelOpen(false);setMode("explore");setShopSearchOpen(true);}} collapsed={!panelOpen} onExpand={()=>setPanelOpen(true)}/> : <>
+      <div className="splat-catalogue-slot" hidden={panel!=="catalogue"}><FurnitureCatalogue products={products} ready={ready} locked={locked} onChoose={choose} onOpenLiveCatalogue={openRecommendations} recommendationsActive={shopSearchOpen} onBrowseCategory={()=>setShopSearchOpen(false)} recommendationTargetRef={setCatalogueTarget} onVoice={requestVoice} collapsed={!panelOpen} onExpand={()=>setPanelOpen(true)}/></div>{panel!=="catalogue" && <>
       <div className="splat-panel-heading"><h1>Your furniture</h1></div>
       {product ? <>
         <button className="splat-back" disabled={locked||!!pendingProductId} onClick={()=>{setPanel("catalogue");setPanelOpen(true);}}><Icon name="chevron" size={14}/>All furniture</button>
@@ -256,7 +271,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
       <div className="splat-room-note"><span>{room?.roomId === "cg-arch-lightmapper-proof" ? "Lighting proof · partial room" : room?.roomId === "cg-arch-interior" ? "Living-room placement zone" : room?.scan?.visualFormat === "glb" ? "Authored room · exact dimensions" : "Test room · assumed scale"}</span><label><input type="checkbox" checked={showSurface} onChange={e=>setShowSurface(e.target.checked)} disabled={!ready||locked}/>Surface reference</label>{showSurface&&surfaceNote&&<p>{surfaceNote}</p>}</div>
       </>}
     </aside>
-    {room&&view==="perspective"&&<FloorMap room={room} getCamera={getCamera} onFloorChange={changeFloor} floorChangeDisabled={!ready||locked||!!pendingProductId} compact={shopSearchOpen}/>}
+    {room&&view==="perspective"&&<FloorMap room={room} getCamera={getCamera} onFloorChange={changeFloor} floorChangeDisabled={!ready||locked||!!pendingProductId}/>}
     {view==="top"&&room?.scan&&<div className="splat-bottom-left"><p className="splat-attribution"><a href={room.scan.attribution.url} target="_blank" rel="noreferrer">{room.scan.attribution.title} · {room.scan.attribution.author}</a><span> · </span><a href={room.scan.attribution.licenseUrl} target="_blank" rel="noreferrer">{room.scan.attribution.license}</a></p></div>}
     <div className="splat-bottom-center"><p className="glass splat-help" aria-live="polite">{notice || (session.status!=="ready"&&session.status!=="loading"?session.message:help)}</p><nav className="glass splat-edit-tools" aria-label="Furniture tools">
       <button aria-pressed={mode==="place"} disabled={!ready||locked||!selected||!!pendingProductId} onClick={()=>setMode("place")}><Icon name="move" size={18}/>Move</button>
