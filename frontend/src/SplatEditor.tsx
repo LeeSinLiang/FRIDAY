@@ -213,7 +213,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
     {mode==="walk"&&pointerLocked&&<span className="splat-crosshair" aria-hidden="true"/>}
     <header className="glass splat-header">
       <a className="wordmark" href="/" aria-label="FRIDAY room editor">FRIDAY<span className="wordmark-dot">.</span></a>
-      {shopping && <><a href="/rooms">Rooms</a><a href="/cart">Cart ({cart?.items.length ?? 0})</a></>}
+      <a href="/rooms">Rooms</a><a href="/cart">Cart ({cart?.items.length ?? 0})</a>
       <span className="splat-title">{room?.scan?.attribution.title ?? "Empty room"}<span>{room?.scan?.visualFormat === "glb" ? "Interior · mesh room" : "Living space"}</span></span>
       <span className={`splat-save save-${session.status}`} role="status">{session.status==="ready"?"Saved":session.status==="saving"?"Saving…":session.status==="loading"?"Connecting…":session.status==="conflict"?"Layout changed":"Disconnected"}</span>
       {(session.status==="offline"||session.status==="conflict")&&<button className="button" onClick={()=>void(session.status==="conflict"?session.reload():session.retry())}>{session.status==="conflict"?"Reload layout":"Retry"}</button>}

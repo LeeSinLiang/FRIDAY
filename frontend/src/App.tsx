@@ -13,11 +13,12 @@ function Route() {
   if (query.has('cartPreview')) return <CartPreview/>
   if (query.has('legacy') || query.has('testAssets')) return <Legacy/>
   if (location.pathname === '/' && (query.has('roomId') || query.has('room'))) return <Editor/>
-  if (location.pathname === '/') return <Editor roomId="haussmann-apartment" shopping/>
+  // The gallery is the homepage. Opening a room directly here depended on Haussmann's assets being on the machine.
+  if (location.pathname === '/') { location.replace('/rooms'); return null }
   if (location.pathname === '/rooms') return <RoomSelection/>
   if (location.pathname === '/cart' || location.pathname === '/checkout' || location.pathname.startsWith('/account')) return <Account/>
   const match = /^\/room\/([a-zA-Z0-9_-]+)\/?$/.exec(location.pathname)
-  if (match && rooms.some(room => room.id === galleryRoomId(match[1]))) return <Editor roomId={match[1]} shopping/>
+  if (match && rooms.some(room => room.packaged && room.id === galleryRoomId(match[1]))) return <Editor roomId={match[1]} shopping/>
   return <RoomUnavailable/>
 }
 
