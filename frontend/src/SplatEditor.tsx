@@ -45,7 +45,10 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
   const [pendingProductId,setPendingProductId]=useState<string|null>(null);
   const [panel,setPanel]=useState<"catalogue"|"inspector">("catalogue");
   const [panelOpen,setPanelOpen]=useState(false);
-  const [shopSearchOpen,setShopSearchOpen]=useState(false);
+  // The language search panel (sentence box, microphone, lit floor). In shopping mode it opens from the furniture
+  // catalogue; on the plain editor route (/?room=…) it starts open, because that route IS the search-and-fit demo and
+  // there was otherwise no control on it that could ever open the panel.
+  const [shopSearchOpen,setShopSearchOpen]=useState(!shopping);
   const [snap,setSnap]=useState(true);
   const [showSurface,setShowSurface]=useState(false);
   const [surfaceNote,setSurfaceNote]=useState("");
@@ -206,7 +209,7 @@ export default function SplatEditor({roomId, shopping = false}:{roomId?:string; 
     {view==="top"&&<div className="glass splat-plan-label">Schematic floor plan · shaded areas are unreviewed</div>}
     <button type="button" className={`splat-panel-toggle ${panelOpen?"is-open":"is-collapsed"}`} aria-label={panelOpen?"Collapse furniture panel":"Expand furniture panel"} aria-controls="furniture-panel" aria-expanded={panelOpen} disabled={!ready||locked} onClick={()=>setPanelOpen(open=>!open)}><Icon name="chevron" size={20}/></button>
     <aside id="furniture-panel" className={`glass splat-panel ${panel==="catalogue"?"is-catalogue":""} ${panelOpen?"":"is-collapsed"}`} aria-label={panel==="catalogue"?"Furniture catalogue":"Furniture properties"} aria-hidden={!panelOpen} inert={!panelOpen}>
-      {panel==="catalogue" ? <FurnitureCatalogue products={products} ready={ready} locked={locked} onChoose={choose} onOpenLiveCatalogue={shopping?()=>{setPanelOpen(false);setMode("explore");setShopSearchOpen(true);}:undefined}/> : <>
+      {panel==="catalogue" ? <FurnitureCatalogue products={products} ready={ready} locked={locked} onChoose={choose} onOpenLiveCatalogue={()=>{setPanelOpen(false);setMode("explore");setShopSearchOpen(true);}}/> : <>
       <div className="splat-panel-heading"><h1>Your furniture</h1></div>
       {product ? <>
         <button className="splat-back" disabled={locked||!!pendingProductId} onClick={()=>{setPanel("catalogue");setPanelOpen(true);}}><Icon name="chevron" size={14}/>All furniture</button>
