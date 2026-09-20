@@ -7,10 +7,12 @@ import type { Listing } from "../lib/types";
 import { instanceFromListing } from "../region/boundary";
 import { useRegion } from "../region/useRegion";
 import { validatePlacement } from "../scene/placement";
+import { createPendingGhost, type PendingGhost } from "../scene/playcanvas/pendingGhost";
 import { createRegionOverlay, type RegionOverlay } from "../scene/playcanvas/regionOverlay";
 import type { PlayCanvasRuntime } from "../scene/playcanvas/runtime";
 import type { Instance, Product, Room, SceneEdit } from "../scene/types";
 import CatalogueShelf from "./CatalogueShelf";
+import { saveQuietly } from "./quietSave";
 
 type Props = {
   /** The engine handle, once it exists. Read lazily: the editor keeps it in a ref. */
@@ -21,49 +23,74 @@ type Props = {
   ready: boolean;
   locked: boolean;
   submit: (edit: SceneEdit) => Promise<boolean>;
+  /** The session's own retry and status. A save that fails uncertainly is retried from here, quietly. */
+  retry: () => Promise<unknown> | undefined;
+  status: string;
   onNotice?: (message: string) => void;
 };
 
-export default function SplatCatalogueLayer({ getRuntime, room, products, instances, ready, locked, submit, onNotice }: Props) {
+export default function SplatCatalogueLayer({ getRuntime, room, products, instances, ready, locked, submit, retry, status, onNotice }: Props) {
   const [hovered, setHovered] = useState<Listing | null>(null);
   const [armed, setArmed] = useState<Listing | null>(null);
   const [place, setPlace] = useState<PlaceClause[]>([]);
   const [yawChoice, setYawChoice] = useState<number | null>(null);
   const overlay = useRef<RegionOverlay | null>(null);
+  const ghost = useRef<PendingGhost | null>(null);
+  const [unconfirmed, setUnconfirmed] = useState<Instance | null>(null);
+  const statusNow = useRef(status);
+  statusNow.current = status;
+  const alive = useRef(true);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  // An unconfirmed item still stands on the floor as far as the solver is concerned.
+  const standing = useMemo(() => (unconfirmed && !instances.some((i) => i.instanceId === unconfirmed.instanceId) ? [...instances, unconfirmed] : instances), [instances, unconfirmed]);
+  const known = useMemo(() => (unconfirmed?.product && !products.some((p) => p.productId === unconfirmed.productId) ? [...products, unconfirmed.product] : products), [products, unconfirmed]);
 
-  const region = useRegion(armed ?? hovered, room, products, instances, place);
+  const region = useRegion(armed ?? hovered, room, known, standing, place);
   const fitting = useMemo(() => region ? region.solution.legalCounts.flatMap((count, index) => (count > 0 ? [index] : [])) : [], [region]);
   const yawIndex = yawChoice !== null && fitting.includes(yawChoice) ? yawChoice : Math.max(region?.solution.bestYawIndex ?? 0, 0);
   const owner = armed?.id ?? hovered?.id ?? null;
   useEffect(() => setYawChoice(null), [owner]);
 
-  // The overlay belongs to one engine instance; a room change makes a new one.
+  // The overlay belongs to one engine instance; a room change makes a new one. Latched rather than
+  // keyed on `ready`, which drops while a save is being retried: exactly when the ghost must stay.
+  const [engineUp, setEngineUp] = useState(false);
+  useEffect(() => setEngineUp(false), [room.roomId]);
+  useEffect(() => { if (ready) setEngineUp(true); }, [ready, room.roomId]);
   useEffect(() => {
-    if (!ready) return;
+    if (!engineUp) return;
     const runtime = getRuntime();
     if (!runtime) return;
     const created = createRegionOverlay(runtime);
-    overlay.current = created;
-    return () => { created.dispose(); overlay.current = null; };
-  }, [ready, getRuntime, room.roomId]);
+    const createdGhost = createPendingGhost(runtime);
+    overlay.current = created; ghost.current = createdGhost;
+    return () => { created.dispose(); createdGhost.dispose(); overlay.current = null; ghost.current = null; };
+  }, [engineUp, getRuntime, room.roomId]);
 
-  useEffect(() => { overlay.current?.setMask(region ? region.solution.masks[yawIndex] : null); }, [region, yawIndex, ready]);
+  useEffect(() => { overlay.current?.setMask(region ? region.solution.masks[yawIndex] : null); }, [region, yawIndex, engineUp]);
 
   // While an item is in hand, a click on lit floor places it. Captured before the engine's own
   // handlers so its drag and selection logic never sees a click that belongs to this placement.
   useEffect(() => {
     const canvas = getRuntime()?.canvas;
-    if (!armed || !canvas || locked) return;
+    if (!armed || !canvas || locked || !ready) return;
     const onClick = async (event: MouseEvent) => {
       const pose = overlay.current?.poseAt(event.clientX, event.clientY);
       event.stopPropagation(); event.preventDefault();
       if (!pose) return; // outside the lit region: nothing happens, and that is the message
       const instance = instanceFromListing(armed, crypto.randomUUID(), pose);
-      const verdict = validatePlacement(room, [...products, instance.product!], [...instances, instance], instance.instanceId, pose);
+      const verdict = validatePlacement(room, [...known, instance.product!], [...standing, instance], instance.instanceId, pose);
       if (!verdict.valid) { console.error("region solver lit a pose the editor refuses", pose, verdict.reason); return; }
       const listing = armed;
       setArmed(null); setHovered(null);
-      onNotice?.(await submit({ type: "add", instance }) ? `${listing.title} placed` : `${listing.title} could not be saved yet`);
+      // On the floor at once, and it stays there through a storage hiccup. Only a definite refusal removes it.
+      setUnconfirmed(instance); ghost.current?.show(instance.product!, pose);
+      const outcome = await saveQuietly({
+        submit: () => submit({ type: "add", instance }), retry, status: () => statusNow.current,
+        sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)), cancelled: () => !alive.current,
+      });
+      if (outcome === "cancelled") return;
+      ghost.current?.hide(); setUnconfirmed(null);
+      onNotice?.(outcome === "saved" ? `${listing.title} placed` : `${listing.title} could not be placed there`);
     };
     const swallow = (event: Event) => event.stopPropagation();
     canvas.addEventListener("click", onClick, true);
@@ -72,7 +99,7 @@ export default function SplatCatalogueLayer({ getRuntime, room, products, instan
       canvas.removeEventListener("click", onClick, true);
       for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup"]) canvas.removeEventListener(type, swallow, true);
     };
-  }, [armed, getRuntime, instances, locked, onNotice, products, room, submit]);
+  }, [armed, getRuntime, standing, known, locked, ready, onNotice, room, submit, retry]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
