@@ -29,7 +29,7 @@ Two Vercel projects in `williamxu070s-projects`:
 | `friday-hackmit` | `frontend` | Vite build, `dist`, room/model assets, API/allauth rewrites |
 | `friday-hackmit-api` | `backend` | Django WSGI entrypoint, shared JSON metadata, no visual assets/private runtime files |
 
-Both projects are configured to include source files outside their root. `.vercelignore` excludes local environments, databases, keys, runtime files and scratch data from uploads. Python function exclusions separately omit large visual assets. Hosted packaging remains to be verified before release.
+Both projects are configured to include source files outside their root. `.vercelignore` excludes local environments, databases, keys, runtime files and scratch data from uploads. Python function exclusions separately omit large visual assets. Hosted room and catalogue loading verified the packaged metadata successfully.
 
 Vercel flattens the Python project root to `/var/task`. `backend/build.py` copies the room allowlist, scene fixtures, public room manifest/spatial metadata and furniture metadata into generated `runtime_shared/`; `api/shared_data.py` selects that location only on Vercel. No GLB, splat or private runtime data enters that package. Reading `BASE_DIR.parent/shared` on Vercel is incorrect even when monorepo source access is enabled.
 
@@ -58,3 +58,18 @@ Preview now passes hosted room loading, secure guest cookies, anonymous CSRF ref
 Deployment lessons: Vercel automatically promoted the first deployment of each new project even with an explicit Preview target; those initial artifacts were removed. The upstream author's Hobby access gate was resolved with a genuine local implementation commit under William's existing Git identity. External rewrites require explicit trailing-slash variants for Django API endpoints. Runtime JSON must be packaged beside Django, not accessed from a parent directory.
 
 Release identity: `scripts/source_identity.py` hashes all tracked/trackable runtime sources, including uncommitted edits. Set `FRIDAY_BUILD_ID` on the backend and `VITE_FRIDAY_BUILD_ID` at frontend build time to that same value. Verify the API health response's `X-Friday-Build` header and the frontend document's `data-build` attribute before handoff. Record the deployment pair and source commit separately.
+
+### Published release — 2026-09-20
+
+Source commit `222311a`; runtime identity `b235edc083748083597f40a20edf259919017952b43cdd7db91908e2eea279e5`.
+
+| Environment | Frontend deployment | API deployment |
+| --- | --- | --- |
+| [Production](https://friday-hackmit.vercel.app) | `dpl_44SpkYFBJXkdiPBrGZHseoojWysU` | `dpl_DwuNhMcMXafRCGPUd38R4hWztnxC` |
+| [Preview](https://friday-hackmit-preview.vercel.app) | `dpl_78cnLUkH3EVfAHL5N62r6jUKPF8Z` | `dpl_Hmo3bUvPSnuoYtbc6d5Buv3HU4ga` |
+
+Both public frontend origins pass secure guest cookies, missing-CSRF refusal, persisted scenes, two concurrent requests producing one cart selection, server pricing and unauthenticated claim rejection. Production frontend DOM and API health expose the identical source hash. Local inbox and developer Visa tester return 404 in production. The hosted browser verifies guest gallery, editor, explicit preview/confirmation, cart count, sign-in/create-account and preserved summary. Final automated run: 229 backend tests (225 passed, 4 optional skips), 138 frontend tests and TypeScript/Vite build passed; existing large-renderer warnings remain.
+
+This is a published sandbox release, not fully signed-off transaction acceptance. Actual inbox delivery, the user's full hosted MFA flow and explicitly approved sandbox submission remain pending. Those task cards stay active. Credentials were not printed or committed; no existing local user or MFA database was uploaded. The agent did not send a real email or Visa request.
+
+Cleanup: six superseded/blocked task-created deployments were removed; the current environment pairs and Neon data remain. Earlier builds are reproducible from the local feature commits. Local test stack and board were stopped, with no listeners remaining on 8211, 5211 or 56777; the owner's 8000/5173 stack was not touched.
