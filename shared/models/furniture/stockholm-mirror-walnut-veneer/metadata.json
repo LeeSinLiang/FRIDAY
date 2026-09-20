@@ -10,6 +10,7 @@
   "frontAxis": "+Z",
   "pivot": "floor-footprint-center",
   "catalogueListingId": "ikea-403.284.34",
+  "matchType": "reconstructed_from_product_photo",
   "source": {
     "product": "IKEA STOCKHOLM mirror, walnut veneer, 31.5in (403.284.34), matches the pre-existing stub catalogue entry",
     "dimensionsVerifiedAt": "https://www.ikea.com/us/en/p/stockholm-mirror-walnut-veneer-20503793/ (80 x 4 x 80 cm)",

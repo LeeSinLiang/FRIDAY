@@ -30,7 +30,10 @@ def totp(secret, offset=0):
     return f"{(struct.unpack('>I', digest[start:start + 4])[0] & 0x7fffffff) % 1000000:06d}"
 
 
-@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+# MFA_TOTP_TOLERANCE=1, IN TESTS ONLY: totp() below reads the wall clock and the server reads it again a few
+# milliseconds later. When a 30-second window ends between the two, the code is one step old and is refused,
+# which failed the suite about once in fifty runs. Production keeps allauth's default of 0. See test_totp_boundary.py.
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend", MFA_TOTP_TOLERANCE=1)
 class AccountTestCase(TestCase):
     def setUp(self):
         cache.clear()
@@ -177,11 +180,12 @@ class AccountWorkflowTests(AccountTestCase):
         self.assertEqual(response.status_code, 401)
         self.assertFalse(self.client.get("/api/accounts/status/").json()["authenticated"])
         self.assertEqual(self.request("auth/2fa/authenticate", {"code": totp(secret, -120)}).status_code, 400)
-        self.assertEqual(self.request("auth/2fa/authenticate", {"code": totp(secret)}).status_code, 200)
+        code = totp(secret)  # the SAME code is replayed below; recomputing it could cross into a new window and be valid
+        self.assertEqual(self.request("auth/2fa/authenticate", {"code": code}).status_code, 200)
         self.assertTrue(self.client.get("/api/accounts/status/").json()["checkout_ready"])
         self.request("auth/session", method="delete")
         self.request("auth/login", {"email": user.email, "password": PASSWORD})
-        self.assertEqual(self.request("auth/2fa/authenticate", {"code": totp(secret)}).status_code, 400)
+        self.assertEqual(self.request("auth/2fa/authenticate", {"code": code}).status_code, 400)
 
     def test_recovery_codes_show_once_and_are_single_use(self):
         user, _ = self.enrolled()

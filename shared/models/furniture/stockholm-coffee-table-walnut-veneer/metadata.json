@@ -10,6 +10,7 @@
   "frontAxis": "+Z",
   "pivot": "floor-footprint-center",
   "catalogueListingId": "ikea-702.397.10",
+  "matchType": "reconstructed_from_product_photo",
   "source": {
     "product": "IKEA STOCKHOLM coffee table, walnut veneer (702.397.10)",
     "dimensionsVerifiedAt": "https://www.ikea.com/us/en/p/stockholm-coffee-table-walnut-veneer-70239710/ (180 x 59 x 40 cm; converted from inches on the page)",

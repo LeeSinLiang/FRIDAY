@@ -111,6 +111,7 @@ class CheckoutWorkflowTests(AccountTestCase):
 
     def test_accepted_login_code_cannot_approve_checkout(self):
         _, secret, checkout = self.draft()
-        self.request("auth/2fa/reauthenticate", {"code": totp(secret)})
+        code = totp(secret)  # the SAME code, replayed: recomputing it could cross into a new window and be valid
+        self.request("auth/2fa/reauthenticate", {"code": code})
         self.assertEqual(self.checkout_request(checkout["id"] + "/approve/", {
-            "snapshot_hash": checkout["snapshot_hash"], "approved": True, "code": totp(secret)}).status_code, 400)
+            "snapshot_hash": checkout["snapshot_hash"], "approved": True, "code": code}).status_code, 400)
