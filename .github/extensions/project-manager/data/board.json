@@ -260,6 +260,12 @@
         {
           "id": "e43d4acb-3e24-4597-9db0-93dc39daf6fd",
           "title": "Integrate local room editor UI with shopping pages and Vercel release",
+          "done": true,
+          "owner": "william"
+        },
+        {
+          "id": "a4577790-c0d7-49fb-b441-a6cfd0c02db5",
+          "title": "Connect existing Vercel projects to GitHub main",
           "done": false,
           "owner": "william"
         }
