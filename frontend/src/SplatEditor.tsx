@@ -51,8 +51,9 @@ export default function SplatEditor() {
   const [statuses,setStatuses]=useState<Record<string,ModelStatus>>({});
   const [retries,setRetries]=useState<Record<string,number>>({});
   const runtime=useRef<PlayCanvasRuntime|null>(null);
-  const requestedRoom = new URLSearchParams(window.location.search).get("room");
-  const defaultRoom = import.meta.env.VITE_DEFAULT_ROOM_ID === "cg-arch-interior" ? "cg-arch-interior" : "empty-room";
+  const roomParams = new URLSearchParams(window.location.search);
+  const requestedRoom = roomParams.get("roomId") ?? roomParams.get("room");
+  const defaultRoom = "haussmann-apartment";
   const session=useRoomSession(requestedRoom === "haussmann-apartment" || requestedRoom === "studio-11" || requestedRoom === "empty-room" || requestedRoom === "cg-arch-interior" || requestedRoom === "cg-arch-lightmapper-proof" ? requestedRoom : defaultRoom,active || !!pendingProductId);
   const snapshot=session.snapshot;
   const room=snapshot?.room;
