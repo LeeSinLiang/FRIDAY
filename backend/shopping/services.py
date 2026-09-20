@@ -8,7 +8,7 @@ from api.scene_service import SceneError, apply_scene_commands, scene_for_sessio
 from api.shared_data import shared_root
 from catalogue.feed import load_catalogue
 from catalogue.pricing import has_price
-from checkout.catalogue import VENDOR
+from checkout.catalogue import VENDOR, vendor_for
 from checkout.models import Checkout
 from visa.schema import payload_hash
 from .models import ShoppingSession, CartItem, ShoppingOperation
@@ -40,7 +40,8 @@ def cart_product(product_id):
         raise SceneError('unavailable_product', 'This furniture has no approved model metadata.', 400)
     priced = has_price(listing)
     return {'product_id': listing.id, 'name': listing.title, 'unit_amount': listing.price_cents if priced else 0,
-            'priced': priced, 'thumbnail': metadata.get('thumbnailUrl', listing.thumb_url), 'model_url': listing.model_url}
+            'priced': priced, 'vendor': vendor_for(listing.source),
+            'thumbnail': metadata.get('thumbnailUrl', listing.thumb_url), 'model_url': listing.model_url}
 
 
 def cart(shopping, user=None):
@@ -51,7 +52,7 @@ def cart(shopping, user=None):
             product = cart_product(item.product_id)
             available = True
         except SceneError:
-            product = {'product_id': item.product_id, 'name': item.product_id, 'unit_amount': 0, 'priced': False, 'thumbnail': ''}
+            product = {'product_id': item.product_id, 'name': item.product_id, 'unit_amount': 0, 'priced': False, 'vendor': None, 'thumbnail': ''}
             available = False
         items.append({'id': str(item.id), 'roomId': item.room_id, 'instanceId': item.instance_id,
                       **product, 'available': available})
@@ -70,7 +71,7 @@ def bill_lines(items):
     grouped = {}
     for item in items:
         line = grouped.setdefault(item['product_id'], {'product_id': item['product_id'], 'name': item['name'],
-            'priced': item['priced'], 'unit_amount': item['unit_amount'] if item['priced'] else None, 'quantity': 0})
+            'vendor': item['vendor'], 'priced': item['priced'], 'unit_amount': item['unit_amount'] if item['priced'] else None, 'quantity': 0})
         line['quantity'] += 1
         line['line_amount'] = line['quantity'] * line['unit_amount'] if line['priced'] else None
     return list(grouped.values())

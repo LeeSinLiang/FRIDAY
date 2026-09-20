@@ -3,7 +3,7 @@ import { assertSuccess, request } from '../auth/api'
 import CartReady from '../shopping/CartReady'
 import ApprovalForm from './ApprovalForm'
 import SandboxReceipt from './SandboxReceipt'
-import { billLine, isPriced, money, type Checkout } from './types'
+import { billLine, isPriced, money, vendorLine, type Checkout } from './types'
 
 export default function CheckoutReview() {
   const id = new URLSearchParams(location.search).get('checkout')
@@ -35,9 +35,9 @@ export default function CheckoutReview() {
     <p className="eyebrow">Visa sandbox</p><h1>Review your checkout</h1>
     <p className="muted">Your selected furniture, priced by the server. No real purchase or vendor order will be placed.</p>
     {checkout ? <>
-      <p><strong>{checkout.snapshot.vendor.name}</strong></p>
-      <ul className="checkout-items">{checkout.snapshot.items.map(item=><li key={item.product_id}><span>{item.name}<small>Quantity {item.quantity}</small></span><strong>{isPriced(item) ? money(item.line_amount!) : 'price unavailable'}</strong></li>)}</ul>
-      <p className="muted">{billLine(counts.items, counts.priced, checkout.snapshot.amount)}</p>
+      <p className="muted">Merchant of record · <strong>{checkout.snapshot.vendor.name}</strong></p>
+      <ul className="checkout-items">{checkout.snapshot.items.map(item=><li key={item.product_id}><span>{item.name}<small>{item.vendor ? item.vendor.name + ' · ' : ''}Quantity {item.quantity}</small></span><strong>{isPriced(item) ? money(item.line_amount!) : 'price unavailable'}</strong></li>)}</ul>
+      <p className="muted">{billLine(counts.items, counts.priced, checkout.snapshot.amount)}{vendorLine(lines) && <><br/>From {vendorLine(lines)}</>}</p>
       <p className="checkout-total"><span>{counts.priced < counts.items ? 'Total of priced items · USD' : 'Total · USD'}</span><strong>{money(checkout.snapshot.amount)}</strong></p>
       {checkout.state==='draft' && <ApprovalForm checkout={checkout} onApproved={setCheckout}/>}
       {checkout.state==='approved' && <><p className="notice">MFA approval recorded for this checkout.</p><button disabled={busy || !checkout.visa?.ready} onClick={()=>void submit()}>{busy?'Waiting for Visa…':'Send approved request to Visa sandbox'}</button></>}

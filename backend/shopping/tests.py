@@ -176,6 +176,9 @@ class ShoppingTests(AccountTestCase):
         lines = {line['product_id']:line for line in snapshot['items']}
         self.assertEqual((lines[unpriced.id]['priced'],lines[unpriced.id]['unit_amount'],lines[unpriced.id]['line_amount']),(False,None,None))
         self.assertEqual((lines[self.listing.id]['priced'],lines[self.listing.id]['line_amount']),(True,self.listing.price_cents))
+        # Each line says who it comes from; the merchant of record is a separate fact and stays FRIDAY's sandbox account.
+        self.assertEqual((lines[unpriced.id]['vendor'],lines[self.listing.id]['vendor']),({'id':'amazon','name':'Amazon'},{'id':'ikea','name':'IKEA'}))
+        self.assertEqual(snapshot['vendor'],{'id':'friday-sandbox','name':'FRIDAY Sandbox Furniture'})
         # Visa is asked for the priced amount and nothing else.
         checkout = draft.json()
         self.send('/api/checkouts/'+checkout['id']+'/approve/',{'snapshot_hash':checkout['snapshot_hash'],'approved':True,'code':totp(secret)})
@@ -183,6 +186,7 @@ class ShoppingTests(AccountTestCase):
             response = self.send('/api/checkouts/'+checkout['id']+'/submit/',{'snapshot_hash':checkout['snapshot_hash']})
         self.assertEqual(response.status_code,200,response.content)
         self.assertEqual(visa.call_args.args[0]['purchaseAmount'],str(self.listing.price_cents))
+        self.assertEqual(visa.call_args.args[0]['merchantName'],'FRIDAY Sandbox Furniture')
 
     def test_a_cart_with_nothing_priced_is_refused_at_checkout_in_plain_words(self):
         _,data = self.unpriced()
