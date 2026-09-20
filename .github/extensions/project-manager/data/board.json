@@ -154,7 +154,7 @@
         {
           "id": "1baafdb6-1a43-4f24-bda1-a1746b5f46fe",
           "title": "Curate product-to-GLB links for placeable demo listings",
-          "done": false,
+          "done": true,
           "owner": "saketh",
           "phase": "mvp"
         }
