@@ -66,9 +66,11 @@ type Props = {
   locked: boolean;
   onChoose: (product: Product) => void;
   onOpenLiveCatalogue?: () => void;
+  collapsed?: boolean;
+  onExpand?: () => void;
 };
 
-export default function FurnitureCatalogue({ products, ready, locked, onChoose, onOpenLiveCatalogue }: Props) {
+export default function FurnitureCatalogue({ products, ready, locked, onChoose, onOpenLiveCatalogue, collapsed = false, onExpand }: Props) {
   const [category, setCategory] = useState<Category>("Sofas");
   const [filter, setFilter] = useState<SofaFilter>("All");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -81,7 +83,7 @@ export default function FurnitureCatalogue({ products, ready, locked, onChoose, 
   }));
   const visible = [...realItems, ...concepts.map((item) => ({ ...item, product: productById.get(item.id) }))].filter((item) => item.category === category && (category !== "Sofas" || filter === "All" || item.group === filter));
   const selected = visible.find((item) => item.id === selectedId) ?? visible[0];
-  const changeCategory = (next: Category) => { setCategory(next); setFilter("All"); setSelectedId(null); setShowDetails(false); };
+  const changeCategory = (next: Category) => { setCategory(next); setFilter("All"); setSelectedId(null); setShowDetails(false); if (collapsed) onExpand?.(); };
   const changeFilter = (next: SofaFilter) => { setFilter(next); setSelectedId(null); setShowDetails(false); };
   const toggleFavorite = (id: string) => setFavorites((current) => {
     const next = new Set(current);
@@ -89,8 +91,8 @@ export default function FurnitureCatalogue({ products, ready, locked, onChoose, 
     return next;
   });
 
-  return <div className="furn-catalogue">
-    <div className="furn-main">
+  return <div className={`furn-catalogue${collapsed ? " is-collapsed" : ""}`}>
+    <div className="furn-main" aria-hidden={collapsed} inert={collapsed}>
       <div className="furn-heading"><h1>{category}</h1></div>
       {showDetails && selected ? <div className="furn-details">
         <button type="button" className="furn-details-back" onClick={() => setShowDetails(false)}><Icon name="chevron" size={16}/>Back to {category.toLowerCase()}</button>
