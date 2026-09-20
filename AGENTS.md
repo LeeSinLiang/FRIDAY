@@ -45,6 +45,13 @@ Pull at task boundaries — at task start and after a merge to `main` — never 
 - If clean `main` is red, **stop and tell your owner.** That is a whole-team problem, not something to work around.
 - When merging a stacked PR, retarget the dependent PR to `main` **before** deleting the base branch. Deleting it first closes the dependent PR instead of retargeting it.
 
+## Clean up after yourself
+
+- **Every process you start, you stop.** Before reporting, verify nothing you started is still listening (`lsof -nP -iTCP:<port> -sTCP:LISTEN`) and say in the report that you checked. No orphaned dev servers, headless browsers or background `npm run dev`.
+- **Use your own ports, never 8000 or 5173.** Those belong to the owner's running stack. Set `BACKEND_PORT` and `FRONTEND_PORT` for anything you launch, e.g. `BACKEND_PORT=8211 FRONTEND_PORT=5211 ./run-local.sh`.
+- **Leave no litter.** Screenshots and scratch files go under `.scratch/` at the repository root, which is gitignored. Never write into the folder that contains the clone.
+- Check that a push succeeded before acting on it. A piped `git push` hides a rejection; use `set -o pipefail`.
+
 ## Git
 
 - Work on a feature branch (default prefix: `codex/`). Do not commit directly to `main`.
