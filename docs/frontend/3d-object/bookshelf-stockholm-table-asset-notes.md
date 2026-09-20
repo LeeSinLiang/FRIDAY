@@ -25,3 +25,11 @@ Same failure mode already documented for the EKTORP sofa and RAMNEFJÄLL bed on 
 ## Do not merge either branch into main without a fix
 
 Both `codex/adelle-sofa-bed-assets` and this branch (`codex/adelle-bookshelf-coffeetable-assets`) contain at least one asset that fails `backend/api/test_furniture_assets.py`. The fix path is the same for all three: regenerate via `multi_image_to_3d` with 2-4 official product angle photos instead of one image.
+
+## Follow-up from the asset lane, 2026-09-20: both landed, the table refitted at the cap
+
+Appended by Saketh's asset-lane agent; nothing above was changed. The warning above was right for the branch as pushed. This is what reached `main` instead.
+
+- **Coffee table: bound, with a recorded miss.** `python3 scripts/fit_glb.py <model> 180 59 40` fits per axis under the 10% stretch cap. Reaching 180 x 59 x 40 cm exactly would need 15.8%, so it stops at the cap: scale 0.9391 / 0.8538 / 0.9098, anisotropy 10.00%, measured 178.31 x 59.00 x 41.69 cm. That is 1.69 cm narrow and 1.69 cm tall, inside the asset check (5.4 cm allowed on the width, 2 cm on the height) with little room left on the height. The residual is in `metadata.json` under `fit` and `backend/api/test_furniture_assets.py` asserts it against the file. Same rule as the RAMNEFJALL bed; the EKTORP sofa stays unbound because at the same cap it is still 6.5 cm out. A regenerated model with the real oval proportions would still be better.
+- **Bookshelf: bound as pushed.** Measured 163.81 x 46.33 x 65.00 cm against its own declared 164 x 46 x 65 cm. It is a generic model behind a synthetic listing (`demo-low-bookshelf-navy-oak`, `source: "stub"`), which is the only kind of listing a generic model may back.
+- **Two listing colours moved onto the catalogue palette.** `backend/catalogue/test_scale.py` requires the hero colours to equal the 30-colour seed palette exactly, or the colour filter's palette aggregation drifts between the two search backends. Table `#6b4a34` became `#7a5235` (nearest palette colour, RGB distance 17). Bookshelf `#1f2733` became `#30475e`, the palette's dark blue: `#2b2b2b` is numerically nearer (15 against 56) but is a grey, the listing says navy, and the original is still "near" `#30475e` under `catalogue/colour.py`.

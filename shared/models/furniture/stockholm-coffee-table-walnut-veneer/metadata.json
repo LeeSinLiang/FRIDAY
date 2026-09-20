@@ -17,8 +17,23 @@
     "generation": "Higgsfield image_to_3d (Meshy), single reference image, should_texture=true, enable_pbr=true, then gltf-transform optimize (--compress false, --texture-compress auto --texture-size 1024, --simplify --simplify-ratio 0.35) to bring an oversized PBR export (13.9MB, 30,686 triangles — over the 30k cap on its own) under budget"
   },
   "knownLimitations": [
-    "FAILS the automated check in backend/api/test_furniture_assets.py as pushed. After fitting to the correct 40cm height, measured box is 155.5 x 40.0 x 53.1 cm against the real STOCKHOLM's 180 x 40 x 59 cm: width off by 24.5cm and depth by 5.9cm, both outside tolerance (~5.4cm / ~2cm). Single-photo reconstruction under-estimated how elongated the oval top really is — not a units/scale bug. Same failure class already flagged and accepted for the EKTORP sofa and RAMNEFJALL bed on branch codex/adelle-sofa-bed-assets; pushed anyway under the same standing direction rather than re-asking.",
+    "SUPERSEDED 2026-09-20: refitted per axis at the 10% cap, see \"fit\"; it now passes the asset check with a 1.69 cm residual. Original note: FAILS the automated check in backend/api/test_furniture_assets.py as pushed. After fitting to the correct 40cm height, measured box is 155.5 x 40.0 x 53.1 cm against the real STOCKHOLM's 180 x 40 x 59 cm: width off by 24.5cm and depth by 5.9cm, both outside tolerance (~5.4cm / ~2cm). Single-photo reconstruction under-estimated how elongated the oval top really is — not a units/scale bug. Same failure class already flagged and accepted for the EKTORP sofa and RAMNEFJALL bed on branch codex/adelle-sofa-bed-assets; pushed anyway under the same standing direction rather than re-asking.",
     "Generated from a single product photo, no additional angles — the woven rattan shelf underneath and thin round legs are also unverified against the real product up close",
     "No manual Blender inspection/correction pass has been done"
-  ]
+  ],
+  "fit": {
+    "appliedBy": "scripts/fit_glb.py <model> 180 59 40",
+    "scale": [
+      0.9391,
+      0.8538,
+      0.9098
+    ],
+    "anisotropyPercent": 10.0,
+    "residualCm": {
+      "width": -1.69,
+      "height": 1.69,
+      "depth": 0.0
+    },
+    "note": "NOT an exact fit. As generated the model was 155.5 x 53.1 x 40.0 cm against the listing's 180 x 59 x 40 cm; reaching the listing exactly needs 15.8% anisotropy, over the 10% cap. At the cap the closest fit is 178.3 x 59.0 x 41.7 cm: 1.69 cm narrow and 1.69 cm tall, inside the asset check (5.4 cm on the width, 2 cm on the height) but with little room on the height. Recorded so nobody later reads this as exact. A regenerated model with the real oval proportions would be better than this one."
+  }
 }
