@@ -47,6 +47,7 @@ export function explainNothingFits(room: Room, product: Product, place: PlaceCla
     const [w, d] = [product.widthCm, product.depthCm].map(round);
     const floor = wallBounds(room), acrossCm = floor.maxX - floor.minX, deepCm = floor.maxZ - floor.minZ;
     const tooBig = Math.min(w, d) > Math.min(acrossCm, deepCm) || Math.max(w, d) > Math.max(acrossCm, deepCm);
+    if (product.heightCm > room.heightCm) return `it is ${round(product.heightCm)} cm tall and the ceiling is ${round(room.heightCm)} cm`;
     return tooBig ? `it is ${w} × ${d} cm and ${room.spatial?.freeAreas.length ? "the usable floor" : "the room"} is ${round(acrossCm)} × ${round(deepCm)} cm`
       : `there is no free floor big enough for its ${w} × ${d} cm footprint`;
   }
