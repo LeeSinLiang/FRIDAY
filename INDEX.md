@@ -21,6 +21,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Frontend
 
+- [FRIDAY entrance and room gallery](docs/frontend/design/friday-entry-gallery.md) — minimal entrance, original preview shuffle, accessibility, and browser verification.
 - [Furniture lighting migration](docs/frontend/room-capture/furniture-lighting-migration.md) — room-specific GLB illumination, attachment-aware shadows and matched visual acceptance.
 
 - [AI furniture movers](docs/frontend/angel-movers/README.md) — approved halo-blob concept, AI moves, user-add choreography and rendering integration.

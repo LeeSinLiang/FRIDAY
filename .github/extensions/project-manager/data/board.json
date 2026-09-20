@@ -370,6 +370,12 @@
           "title": "Editor fixes before the demo: rail add carries its product, walk keys respect a held piece, search panel open on load, floor map above the panel",
           "done": true,
           "owner": "saketh"
+        },
+        {
+          "id": "06c22d38-9093-4a8d-8b34-bfa8db408d48",
+          "title": "Add FRIDAY entrance and animated room preview gallery",
+          "done": true,
+          "owner": "william"
         }
       ],
       "description": "React app shell, product browsing, constraint chips, and conversation."

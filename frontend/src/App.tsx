@@ -11,8 +11,8 @@ function Route() {
   const query = new URLSearchParams(location.search)
   if (query.has('legacy') || query.has('testAssets')) return <Legacy/>
   if (location.pathname === '/' && (query.has('roomId') || query.has('room'))) return <Editor/>
-  // The gallery is the homepage. Opening a room directly here depended on Haussmann's assets being on the machine.
-  if (location.pathname === '/') { location.replace('/rooms'); return null }
+  // A lightweight entrance opens the gallery; room/query deep links still bypass it.
+  if (location.pathname === '/') return <RoomSelection entrance/>
   if (location.pathname === '/rooms') return <RoomSelection/>
   if (location.pathname === '/cart' || location.pathname === '/checkout' || location.pathname.startsWith('/account')) return <Account/>
   const match = /^\/room\/([a-zA-Z0-9_-]+)\/?$/.exec(location.pathname)
