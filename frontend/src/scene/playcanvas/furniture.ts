@@ -3,15 +3,18 @@ import type { Instance, Pose, Product, Room } from "../types";
 import { supportHeightCm } from "../placement";
 import { cmToScene, meterGlbToSceneScale } from "../units";
 import type { ModelStatus } from "./contracts";
-import { animateMaterialization, MATERIALIZE_PREVIEW_EVENT } from "./materialize";
+import { animateMaterialization, MATERIALIZE_DURATION_MS, MATERIALIZE_PREVIEW_EVENT } from "./materialize";
+import type { FurnitureAppearance } from "./furnitureAppearance";
 
 export type FurnitureRuntime = {
   assets: { instantiateContainer(url: string): Promise<pc.Entity> };
   disposed: boolean;
+  furnitureAppearance?: FurnitureAppearance;
 };
 export type FurnitureVisual = {
   entity: pc.Entity;
   ready: Promise<string | undefined>;
+  setPose(pose: Pose, supportHeightCm?: number): void;
   materialize(): void;
   dispose(): void;
 };
@@ -92,6 +95,21 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
   let replayVersion = 0;
   let proxy: ReturnType<typeof createProxy> | null = createProxy(product);
   presentation.addChild(proxy.root);
+  let finish = runtime.furnitureAppearance?.dress(proxy.root, product);
+  const contact = runtime.furnitureAppearance?.contact(product);
+  if (contact) entity.addChild(contact);
+  let currentPose = instance.pose, currentHeight = 0;
+  const setPose = (pose: Pose, supportHeightCm = 0) => {
+    if (pose.xCm !== currentPose.xCm || pose.zCm !== currentPose.zCm || pose.yawRad !== currentPose.yawRad || supportHeightCm !== currentHeight)
+      runtime.furnitureAppearance?.invalidateShadows();
+    currentPose = pose; currentHeight = supportHeightCm;
+    applyFurniturePose(entity, pose, supportHeightCm);
+    finish?.setPose(pose, supportHeightCm);
+    // Raised objects receive/cast actual geometry shadows on the lit support.
+    // A baked-floor approximation must never float above that support.
+    if (contact) contact.enabled = supportHeightCm === 0;
+  };
+  setPose(instance.pose);
   let model: pc.Entity | null = null;
   const ready = (async (): Promise<string | undefined> => {
     if (!product.modelUrl) { onStatus?.("proxy"); return `${product.name}: dimensioned preview model`; }
@@ -105,7 +123,10 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
       model.setLocalScale(scale, scale, scale);
       model.addChild(loaded);
       presentation.addChild(model);
+      finish?.dispose();
       proxy?.dispose(); proxy = null;
+      finish = runtime.furnitureAppearance?.dress(loaded, product);
+      setPose(currentPose, currentHeight);
       onStatus?.("ready");
       return undefined;
     } catch (error) {
@@ -114,12 +135,13 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
     }
   })();
   return {
-    entity, ready,
+    entity, ready, setPose,
     materialize() {
       const version = ++replayVersion;
       void ready.then(() => {
         if (disposed || runtime.disposed || version !== replayVersion) return;
         stopAnimation?.();
+        runtime.furnitureAppearance?.invalidateShadows(MATERIALIZE_DURATION_MS + 100);
         stopAnimation = animateMaterialization(presentation,
           () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
       });
@@ -128,9 +150,11 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
       if (disposed) return;
       disposed = true;
       ++replayVersion; stopAnimation?.();
+      finish?.dispose();
       proxy?.dispose(); proxy = null;
       model?.destroy(); model = null;
       entity.destroy();
+      runtime.furnitureAppearance?.invalidateShadows();
     },
   };
 }
@@ -138,7 +162,7 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
 /** Frozen screenshot geometry shares source resources but owns its own hierarchy. */
 export async function createFurnitureEntity(runtime: FurnitureRuntime, instance: Instance, product: Product, baseHeightCm = 0) {
   const visual = createFurnitureVisual(runtime, instance, product);
-  applyFurniturePose(visual.entity, instance.pose, baseHeightCm);
+  visual.setPose(instance.pose, baseHeightCm);
   const warning = await visual.ready;
   return { entity: visual.entity, warning, dispose: visual.dispose };
 }
@@ -170,17 +194,20 @@ export function createFurnitureLayer(runtime: FurnitureRuntime, parent: pc.Entit
           entry = { signature, visual }; entries.set(instance.instanceId, entry);
           if (initialized && isNew) visual.materialize();
         }
-        if (instance.instanceId !== movingId) applyFurniturePose(entry.visual.entity, instance.pose,
+        if (instance.instanceId !== movingId) entry.visual.setPose(instance.pose,
           supportHeightCm(context().room, products, instances, instance.instanceId, instance.pose));
       }
       initialized = true;
     },
     preview(id: string, pose: Pose) {
       const entry = entries.get(id), current = context();
-      if (entry) applyFurniturePose(entry.visual.entity, pose,
+      if (entry) entry.visual.setPose(pose,
         supportHeightCm(current.room, current.products, current.instances, id, pose));
     },
-    setVisible(id: string, visible: boolean) { const entry = entries.get(id); if (entry) entry.visual.entity.enabled = visible; },
+    setVisible(id: string, visible: boolean) {
+      const entry = entries.get(id);
+      if (entry && entry.visual.entity.enabled !== visible) { entry.visual.entity.enabled = visible; runtime.furnitureAppearance?.invalidateShadows(); }
+    },
     dispose() { if (typeof window !== "undefined") window.removeEventListener(MATERIALIZE_PREVIEW_EVENT, replay); for (const entry of entries.values()) entry.visual.dispose(); entries.clear(); },
   };
 }

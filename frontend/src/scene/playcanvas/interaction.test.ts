@@ -54,6 +54,16 @@ test("floor placement does not use a stale point for a horizontal, upward or exc
   assert.deepEqual(intersectFloor({ origin, direction: { x: 0, y: -1, z: 0 } }), { x: 200, y: 0, z: 400 });
 });
 
+test("a small raised object's hit bounds match its rendered support, with no floor-height phantom hit", () => {
+  const vase = { ...product, widthCm: 10.8, depthCm: 10.8, heightCm: 20.3 };
+  const item = { ...instance, pose: { xCm: 445, zCm: 290, yawRad: 0 } };
+  const ray = { origin: { x: 445, y: 85, z: 430 }, direction: { x: 0, y: 0, z: -1 } };
+  assert.ok(furnitureHit(ray, item, vase, 74));
+  assert.equal(furnitureHit({ ...ray, origin: { ...ray.origin, x: 451 } }, item, vase, 74), null);
+  assert.equal(furnitureHit({ ...ray, origin: { ...ray.origin, y: 10 } }, item, vase, 74), null);
+  assert.equal(furnitureHit(ray, item, vase), null);
+});
+
 test("dragging preserves the grabbed surface offset before optional grid snapping", () => {
   const point = { x: 243, y: 40, z: 169 };
   assert.deepEqual(dragPose(point, { x: 20, z: -10 }, 0.3, false), { xCm: 223, zCm: 179, yawRad: 0.3 });

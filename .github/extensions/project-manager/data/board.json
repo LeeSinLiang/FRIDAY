@@ -143,6 +143,12 @@
           "title": "Make furniture stack",
           "done": true,
           "owner": "saketh"
+        },
+        {
+          "id": "7424b217-243e-4f36-8ab4-19d407b83f0a",
+          "title": "Match GLB furniture lighting and support shadows to prepared rooms",
+          "done": false,
+          "owner": "william"
         }
       ]
     },

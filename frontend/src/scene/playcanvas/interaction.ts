@@ -2,7 +2,7 @@ import { createAngelMovers } from "./angelMovers";
 import { planAngelMove, type AgentMotion } from "./angelMotion";
 import * as pc from "playcanvas";
 import type { Instance, Pose, Product } from "../types";
-import { validatePlacement } from "../placement";
+import { supportHeightCm, validatePlacement } from "../placement";
 import { sceneToCm } from "../units";
 import { createFurnitureLayer } from "./furniture";
 import { createNavigation, isTextEntry } from "./navigation";
@@ -22,10 +22,10 @@ export function intersectFloor(ray: SceneRay, heightCm = 0, maxDistanceCm = 3000
 }
 
 /** Oriented catalogue bounds give stable hit targets even while the GLB is loading. */
-export function furnitureHit(ray: SceneRay, instance: Instance, product: Product): { distance: number; point: Point } | null {
+export function furnitureHit(ray: SceneRay, instance: Instance, product: Product, baseHeightCm = 0): { distance: number; point: Point } | null {
   const c = Math.cos(instance.pose.yawRad), s = Math.sin(instance.pose.yawRad);
   const dx = ray.origin.x - instance.pose.xCm, dz = ray.origin.z - instance.pose.zCm;
-  const origin = [c * dx - s * dz, ray.origin.y, s * dx + c * dz];
+  const origin = [c * dx - s * dz, ray.origin.y - baseHeightCm, s * dx + c * dz];
   const direction = [c * ray.direction.x - s * ray.direction.z, ray.direction.y, s * ray.direction.x + c * ray.direction.z];
   const lower = [-product.widthCm / 2, 0, -product.depthCm / 2];
   const upper = [product.widthCm / 2, product.heightCm, product.depthCm / 2];
@@ -74,7 +74,8 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
     if (id !== ghost?.instanceId) callbacks.onModelStatus(id, status);
   }, () => ({ room: state.room, products: state.products, instances: ghost ? [...state.instances, ghost] : state.instances }));
   const angels = createAngelMovers(runtime, (id, pose) => furniture.preview(id, pose));
-  const overlays = createPlacementOverlays(runtime, runtime.contentRoot);
+  const overlays = createPlacementOverlays(runtime, runtime.contentRoot, preview => preview.instanceId
+    ? supportHeightCm(state.room, state.products, ghost ? [...state.instances, ghost] : state.instances, preview.instanceId, preview.pose) : 0);
   const surface = createSurfaceReference(runtime, callbacks.onSurfaceStatus);
   // A piece in hand suspends walking and jumping, NOT looking: a moved press turns the camera, a plain click places.
   const holding = () => !!state.pendingProductId || !!runtime.externalHold;
@@ -112,7 +113,8 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
     let closest: { instance: Instance; point: Point; distance: number } | null = null;
     for (const instance of state.instances) {
       const product = productFor(instance.productId); if (!product) continue;
-      const hit = furnitureHit(ray, instance, product);
+      const hit = furnitureHit(ray, instance, product,
+        supportHeightCm(state.room, state.products, state.instances, instance.instanceId, instance.pose));
       if (hit && (!closest || hit.distance < closest.distance)) closest = { instance, ...hit };
     }
     return closest;
