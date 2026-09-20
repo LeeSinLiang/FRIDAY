@@ -8,6 +8,8 @@ The catalogue compiler remains a search/constraint compiler, now supplied with c
 
 Speech and typing enter the same catalogue sentence box. The microphone transcribes with Deepgram or the existing browser fallback, then passes the final transcript through the same action router as a typed sentence. An imperative such as “place a lamp on the desk” opens the scene designer. “Place a lamp on the desk, do it now” and “Do it now: place a lamp on the desk” do the same. Saying only “do it now” uses the last description entered in that box; an empty or already completed request asks for a new description instead of placing a guessed item. Normal product searches still use the catalogue. The phrase is an action cue, not a product ID or permission to bypass geometry validation.
 
+For the hosted microphone, configure both `DEEPGRAM_API_KEY` and `TRANSCRIBE_BACKEND=deepgram` on the API project, redeploy it, and confirm `GET /api/transcribe` returns `{"backend":"deepgram"}`. A key alone leaves the service on browser speech recognition. Deepgram may include surrounding speech in a recording; the router takes the nearest explicit scene action before “do it now” and ignores trailing chatter. Verify the saved scene and a rendered view after recording, since a transcript alone does not prove placement.
+
 ## Tools and execution
 
 - Inspect the actual room/floor and every placed object; detailed lookup returns authoritative dimensions, transforms and rotated bounds. Resolve ambiguous names by asking; never guess an instance ID. Selection is passed from the editor and checked against this scene.
