@@ -52,7 +52,7 @@ def results_mode() -> str:
 
 def run_search(query: SearchQuery) -> tuple[SearchResponse, str]:
     """Search with the configured backend. Elasticsearch failures fall back to memory, never to an error."""
-    models = results_mode()
+    models = query.models or results_mode()
     if os.getenv("SEARCH_BACKEND", "memory") == "elastic":
         try:
             return es.search(query.find, query.limit, query.offset, models), "elastic"
@@ -74,7 +74,7 @@ def search(request):
     except ValueError as exc:
         return Response({"error": "invalid_search_params", "detail": str(exc)}, status=400)
     result, backend = run_search(query)
-    returned = {MODELS_ONLY: "with-model", MODELS_FIRST: "model-first", MODELS_ALL: "all"}[results_mode()]
+    returned = {MODELS_ONLY: "with-model", MODELS_FIRST: "model-first", MODELS_ALL: "all"}[query.models or results_mode()]
     return Response(to_wire(result), headers={BACKEND_HEADER: backend, RESULTS_HEADER: returned})
 
 

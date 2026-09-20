@@ -29,5 +29,8 @@ async function json<T>(response: Response): Promise<T> {
 export const compileSentence = (text: string, signal: AbortSignal): Promise<Compiled> =>
   fetch("/api/compile", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }), signal }).then((r) => json<Compiled>(r));
 
-export const searchCatalogue = (find: FindClause[], signal: AbortSignal): Promise<SearchResponse> =>
-  fetch(`/api/search?${searchParams(find)}`, { signal }).then((r) => json<SearchResponse>(r));
+export const searchCatalogue = (find: FindClause[], signal: AbortSignal, options: { limit?: number; models?: "only" } = {}): Promise<SearchResponse> => {
+  const params = searchParams(find, options.limit);
+  if (options.models) params.set("models", options.models);
+  return fetch(`/api/search?${params}`, { signal }).then((r) => json<SearchResponse>(r));
+};

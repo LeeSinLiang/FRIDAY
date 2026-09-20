@@ -2,14 +2,16 @@ import { useState } from "react";
 import type { Listing } from "../lib/types";
 import previews from "../../../shared/catalogue-thumbnails.json";
 
-export function listingImageUrl(listing: Pick<Listing, "thumb_url" | "model_url">): string | undefined {
+export function listingImageUrl(listing: Pick<Listing, "thumb_url" | "model_url">, preferModelPreview = false): string | undefined {
+  const preview = listing.model_url ? (previews as Record<string, string>)[listing.model_url] : undefined;
+  if (preferModelPreview && preview) return preview;
   // The feed's generated initial tiles are not product photographs.
   if (listing.thumb_url && !listing.thumb_url.startsWith("data:image/svg")) return listing.thumb_url;
   return listing.model_url ? (previews as Record<string, string>)[listing.model_url] : undefined;
 }
 
-export default function ListingImage({ listing }: { listing: Listing }) {
-  const primary = listingImageUrl(listing);
+export default function ListingImage({ listing, preferModelPreview = false }: { listing: Listing; preferModelPreview?: boolean }) {
+  const primary = listingImageUrl(listing, preferModelPreview);
   const fallback = listing.model_url ? (previews as Record<string, string>)[listing.model_url] : undefined;
   const [failed, setFailed] = useState<string[]>([]);
   const src = [primary, fallback].find(url => url && !failed.includes(url));

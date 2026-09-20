@@ -39,6 +39,22 @@ those exact GLBs using Blender, preserving existing images and model bytes. Run 
 New previews are approximately 6.3 MB total. Cards lazy-load static images, never the GLBs.
 Existing model-folder attribution/license metadata also applies to these derived previews.
 
+## Category browsing
+
+Ordinary tabs use the same catalogue shelf and placement layer instead of the previous literal
+concept cards. Each tab requests `/api/search?category=...&limit=20&models=only`. Chairs combines
+chair + armchair, Tables combines table + desk, and Storage combines storage + shelf; these are
+separate queries because repeated category clauses are ANDed. Results merge in stable ID order
+and are capped at the first 20. The hardcoded thumbnail manifest is preferred for these cards;
+the browser loads static PNGs and loads the GLB only for placement. The list scrolls within the
+existing panel. No model means an explicit empty state, not a fabricated preview.
+
+Category switches cancel stale requests and clear held items/placement constraints. The AI
+sentence, chips and results survive switching back, and its spatial constraints are restored.
+The request-only filter leaves default AI and standalone search behavior unchanged, including
+memory fallback. No Elastic credential is sent to the browser. Runtime must configure
+`SEARCH_BACKEND=elastic` and the existing server-side Elastic credentials to use the live index.
+
 ## Verification, 2026-09-20
 
 - Canonical setup and isolated `BACKEND_PORT=8268 FRONTEND_PORT=5268 ./run-local.sh`.
@@ -63,3 +79,17 @@ Existing model-folder attribution/license metadata also applies to these derived
 Delivery is local to this branch. It has not been pushed, merged or deployed to Vercel. Keep the task
 active until browser-session persistence is resolved or independently verified through the user's
 normal browser. Parent-thread scene-agent work remains separate.
+
+## Category follow-up verification
+
+- Local runtime: canonical `BACKEND_PORT=8279 FRONTEND_PORT=5279 ./run-local.sh`, with the existing Elastic credentials supplied to the process only. `X-Search-Backend: elastic`, `X-Search-Results: with-model`.
+- Live counts: Lighting 11, Chairs 20, Tables 27 (first 20 shown), Storage 13; Rugs and Plants 0 models.
+- Browser: Lighting 11/11 PNGs loaded; Tables 20/20 loaded through scrolling; Chairs 20 cards; Plants empty state. AI `a lamp` query survives category changes. Lamp selection enters the existing fit preview; coordinate adjustment and cancel work. This follow-up does not claim a new persistence or confirmed-placement test.
+- `OPENAI_API_KEY= COMPILE_LIVE_TEST=0 uv run python manage.py test`: `Ran 284 tests in 14.438s`, `OK (skipped=5)`.
+- `npm test`: `tests 187 / pass 187 / fail 0`, plus `tests 25 / pass 25 / fail 0`.
+- `npm run build`: `built in 5.03s`. Existing optional room-asset and bundle-size warnings remain.
+- Board checks: `tests 6 / pass 6 / fail 0`. `git diff --check` passed.
+- Runtime cwd matched this worktree; the source, built and served lamp PNG share SHA-256 `ccce6f37df269621834651b7bad396354a91df8748dec735eac99e5b5431327a`.
+- Screenshots: `.scratch/category-lighting.png`, `.scratch/category-tables-scroll.png`, `.scratch/category-lamp-preview.png`.
+- Cleanup: temporary test tab closed; stack stopped; no listeners on 8279/5279. Other task runtimes were preserved.
+- [Issue #101](https://github.com/LeeSinLiang/hackmit2026/issues/101) remains open for delivery. No push, merge, or Vercel update; the existing sidebar task's browser guest-session persistence limitation remains separate.

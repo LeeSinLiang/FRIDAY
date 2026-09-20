@@ -12,11 +12,13 @@ import { canListen, fetchBackend, listen, type Heard, type Listening, type Trans
 import "./shelf.css";
 import { priceLabel } from "./price";
 import ListingImage from "./ListingImage";
+import { browseCatalogue, type BrowseCategory } from "./browse";
 
 type Props = {
   embedded?: boolean;
   active?: boolean;
   voiceRequest?: number;
+  browseCategory?: BrowseCategory | null;
   region: Region | null;
   yawIndex: number;
   armedId: string | null;
@@ -73,7 +75,7 @@ function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: 
   );
 }
 
-export default function CatalogueShelf({ embedded = false, active = true, voiceRequest = 0, region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose }: Props) {
+export default function CatalogueShelf({ embedded = false, active = true, voiceRequest = 0, browseCategory = null, region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose }: Props) {
   const [sentence, setSentence] = useState("an armchair");
   const [compiled, setCompiled] = useState<Compiled | null>(null);
   const [items, setItems] = useState<Listing[]>([]);
@@ -83,6 +85,28 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
   const [matches, setMatches] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [browse, setBrowse] = useState<{ category: BrowseCategory; items: Listing[]; total: number | null; error: string } | null>(null);
+  const browsing = browseCategory !== null;
+  const currentCategory = useRef(browseCategory);
+  currentCategory.current = browseCategory;
+  const currentBrowse = browse?.category === browseCategory ? browse : null;
+  const shownItems = browsing ? currentBrowse?.items ?? [] : items;
+  const shownTotal = browsing ? currentBrowse?.total ?? null : total;
+  const shownError = browsing ? currentBrowse?.error ?? "" : error;
+  const shownBusy = browsing ? !currentBrowse : busy;
+  useEffect(() => {
+    // Restore the AI request's constraints on returning; category browsing has no place clauses.
+    onPlace(browseCategory ? [] : compiled?.program.place ?? []);
+    if (!browseCategory) return;
+    const controller = new AbortController();
+    setBrowse(null);
+    void browseCatalogue(browseCategory, controller.signal).then(result => {
+      if (!controller.signal.aborted) setBrowse({ category: browseCategory, ...result, error: "" });
+    }).catch((caught: Error) => {
+      if (!controller.signal.aborted) setBrowse({ category: browseCategory, items: [], total: null, error: caught.message });
+    });
+    return () => controller.abort();
+  }, [browseCategory]);
   const request = useRef<AbortController | null>(null);
   const [voice, setVoice] = useState<TranscribeBackend>("browser");
   const [listening, setListening] = useState<Listening | null>(null);
@@ -104,8 +128,10 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
       if (controller.signal.aborted) return;
       setCompiled(result); setItems(found.items); setTotal(found.total); setError("");
       setMatches(found.facets ? found.facets.category.reduce((sum, bucket) => sum + bucket.count, 0) : null);
-      onHover(null); // the card under the pointer is a different listing now
-      onPlace(result.program.place);
+      if (currentCategory.current === null) {
+        onHover(null); // the card under the pointer is a different listing now
+        onPlace(result.program.place);
+      }
     } catch (caught) {
       if ((caught as Error).name !== "AbortError") setError((caught as Error).message);
     } finally {
@@ -143,24 +169,24 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
     }
   };
   useEffect(() => {
-    if (!active) { setListening(null); setStartingVoice(false); }
+    if (!active || browsing) { setListening(null); setStartingVoice(false); }
     return () => {
       voiceEpoch.current++; voiceStarting.current = false;
       voiceSession.current?.stop(); voiceSession.current = null;
     };
-  }, [active]);
+  }, [active, browsing]);
   const handledVoiceRequest = useRef(0);
   useEffect(() => {
-    if (!active || voiceRequest === 0 || handledVoiceRequest.current === voiceRequest) return;
+    if (!active || browsing || voiceRequest === 0 || handledVoiceRequest.current === voiceRequest) return;
     handledVoiceRequest.current = voiceRequest;
     void talk();
-  }, [voiceRequest, active]); // Explicit button/chord only, never on mount or backend changes.
+  }, [voiceRequest, active, browsing]); // Explicit button/chord only, never on mount or backend changes.
 
   const submit = (event: FormEvent) => { event.preventDefault(); onPick(null); void run(sentence); };
   const dropped = region?.solution.dropped ?? [];
 
   return (
-    <aside className={embedded ? "shelf shelf-embedded" : "glass shelf"} aria-label={embedded ? "AI recommendations" : "Catalogue"} onPointerLeave={() => onHover(null)}>
+    <aside className={embedded ? "shelf shelf-embedded" : "glass shelf"} aria-label={browseCategory ? `${browseCategory} catalogue` : embedded ? "AI recommendations" : "Catalogue"} onPointerLeave={() => onHover(null)}>
       {onClose && <button type="button" className="shelf-close" aria-label="Close catalogue search" onClick={()=>{onPick(null);onHover(null);onClose();}}>Close search</button>}
       {showRooms && (
         <nav className="shelf-rooms" aria-label="Room">
@@ -176,7 +202,7 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
           })}
         </nav>
       )}
-      <form onSubmit={submit}>
+      {!browsing && <><form onSubmit={submit}>
         <input value={sentence} onChange={(event) => setSentence(event.target.value)} maxLength={300}
           aria-label="Describe what you are looking for" placeholder="a reading chair by the window, under $400" />
         {(embedded || canListen(voice)) && (
@@ -195,7 +221,8 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
       {DEV && (
         <p className="shelf-status"><code>voice configured: {voice}{heardBy ? ` · last transcript ANSWERED BY: ${heardBy.answeredBy}${heardBy.note ? ` (${heardBy.note})` : ""}` : " · nothing transcribed yet"}</code></p>
       )}
-      {error && <p className="shelf-status refused" role="alert">{error}</p>}
+      </>}
+      {shownError && <p className="shelf-status refused" role="alert">{shownError}</p>}
       {/* One fixed-height slot for everything that changes on hover. The panel is bottom-anchored and usually
           at its max height, so a taller explanation used to shrink the list from the top, and the card under a
           still pointer became a different card. */}
@@ -207,14 +234,15 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
           </ul>
         )}
       </div>
-      <ul className={`shelf-results${embedded ? " recommendation-cards" : ""}`} aria-label="Recommended furniture" aria-busy={busy}>
-        {!busy && total === 0 && <li className="shelf-empty">No matching pieces. Try a different material, size, or budget.</li>}
-        {items.map((listing) => (
+      <ul key={browseCategory ?? "recommendations"} className={`shelf-results${embedded ? " recommendation-cards" : ""}`} aria-label={browseCategory ? `${browseCategory} results` : "Recommended furniture"} aria-busy={shownBusy}>
+        {browsing && shownBusy && <li className="shelf-empty" role="status">Loading {browseCategory.toLowerCase()}…</li>}
+        {!shownBusy && shownTotal === 0 && <li className="shelf-empty">{browseCategory ? `No ${browseCategory.toLowerCase()} with 3D models yet. Choose another category.` : "No matching pieces. Try a different material, size, or budget."}</li>}
+        {shownItems.map((listing) => (
           <li key={listing.id}>
             <button aria-pressed={armedId === listing.id} disabled={disabled || (purchasableOnly && !canPickInShop(listing))}
               onPointerEnter={() => onHover(listing)} onFocus={() => onHover(listing)}
               onClick={() => onPick(armedId === listing.id ? null : listing)}>
-              <ListingImage listing={listing}/>
+              <ListingImage listing={listing} preferModelPreview={browsing}/>
               <span className="recommendation-copy">
                 <strong>{listing.title}</strong>
                 <small>{priceLabel(listing.price_cents, dollars)} · {size(listing)}</small>
@@ -224,7 +252,7 @@ export default function CatalogueShelf({ embedded = false, active = true, voiceR
           </li>
         ))}
       </ul>
-      {total !== null && <p className="shelf-status">{countLine(total, matches, items.length, items.filter((item) => item.model_url).length)}</p>}
+      {shownTotal !== null && <p className="shelf-status">{browsing ? `${shownTotal} pieces ready in 3D${shownTotal > shownItems.length ? ` · showing first ${shownItems.length}` : ""}` : countLine(shownTotal, matches, shownItems.length, shownItems.filter((item) => item.model_url).length)}</p>}
     </aside>
   );
 }

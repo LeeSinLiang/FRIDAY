@@ -14,9 +14,10 @@ test("recommendations dock into the furniture panel and reuse the catalogue plac
   const source = await editor();
   assert.match(source, /shelfTarget=\{catalogueTarget\}/);
   assert.match(source, /recommendationTargetRef=\{setCatalogueTarget\}/);
-  assert.match(source, /showShelf=\{shopSearchOpen&&panelOpen&&panel==="catalogue"\}/);
+  assert.match(source, /showShelf=\{panelOpen&&panel==="catalogue"\}/, "category cards share the active placement layer too");
+  assert.match(source, /browseCategory=\{shopSearchOpen \? null : browseCategory\}/);
   assert.match(source, /onOpenLiveCatalogue=\{openRecommendations\}/);
-  assert.match(source, /onBrowseCategory=\{\(\)=>setShopSearchOpen\(false\)\}/);
+  assert.match(source, /onBrowseCategory=\{category=>\{setBrowseCategory\(category\);setShopSearchOpen\(false\);\}\}/);
 });
 
 test("the floor map keeps its full view now that search is on the right", async () => {

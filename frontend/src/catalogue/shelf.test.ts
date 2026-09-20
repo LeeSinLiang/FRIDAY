@@ -15,7 +15,7 @@ test("what changes on hover sits in a fixed-height slot, so the card under a sti
   const tsx = await source("CatalogueShelf.tsx");
   const open = tsx.indexOf('"shelf-explain dev"');
   const close = tsx.indexOf("</div>", open); // the slot's own closing tag: the first one after it opens
-  const order = [open, tsx.indexOf("<Status "), tsx.indexOf('className="shelf-dropped"'), close, tsx.indexOf('aria-label="Recommended furniture"')];
+  const order = [open, tsx.indexOf("<Status "), tsx.indexOf('className="shelf-dropped"'), close, tsx.indexOf('className={`shelf-results')];
   assert.ok(order.every((at) => at >= 0), "markers present");
   assert.deepEqual(order, [...order].sort((a, b) => a - b), "the status and the set-aside clauses are inside the slot, and the list comes after it");
 });

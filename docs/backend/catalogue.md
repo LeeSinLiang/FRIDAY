@@ -46,6 +46,7 @@ Public (`AllowAny`). Trailing slash optional. All params optional and ANDed toge
 | `colour` | `#rrggbb`; matches listings with a nearby shade, not an exact hex. May repeat |
 | `material` | Case-insensitive substring of a material. May repeat: `material=oak&material=steel` means both |
 | `fits_w_mm` | Integer **mm**; keeps listings whose width is at most this |
+| `models` | `only` returns only listings with a 3D model for category browsing. Omit to retain the configured default. Facets still count all matches. |
 | `limit`, `offset` | Paging. `limit` 1–100, default 24. `offset + limit` at most 10,000 (the Elasticsearch result window) |
 
 Returns `SearchResponse`: `{ items, total, facets }`. Facets describe the whole result set, not the page:
