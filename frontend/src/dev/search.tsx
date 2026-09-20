@@ -5,6 +5,10 @@ import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { FindClause, Program } from '../lib/dsl/schema'
 import type { Category, Listing, SearchResponse } from '../lib/types'
+import { listingToProduct } from '../region/boundary'
+import { DEV_SCENE } from '../region/devScene'
+import { solve } from '../region/solve'
+import { toSvg } from '../region/svg'
 
 const CATEGORIES: Category[] = [
   'sofa', 'armchair', 'chair', 'table', 'desk', 'bed',
@@ -57,6 +61,41 @@ function toQueryString(filters: Filters): string {
     for (const item of values) if (item.trim()) params.append(key, item.trim())
   }
   return params.toString()
+}
+
+const YAW_LABELS = ['back to north', 'back to west', 'back to south', 'back to east']
+const describe = (clause: { k: string; ref: { kind: string; id?: string }; cm?: number }) =>
+  `${clause.k}(${clause.ref.id ?? clause.ref.kind}${clause.cm === undefined ? '' : `, ${clause.cm} cm`})`
+
+// Where the first search result could go in the mock room, given the compiled place[] clauses.
+function Floor({ listing, program }: { listing: Listing; program: Program }) {
+  const [yaw, setYaw] = useState(-1)
+  const product = listingToProduct(listing)
+  const solution = solve(DEV_SCENE, { product }, program.place)
+  const shown = yaw >= 0 ? yaw : Math.max(solution.bestYawIndex, 0)
+  const svg = toSvg(DEV_SCENE, solution.masks[shown], { title: `${product.name} · ${YAW_LABELS[shown]}` })
+  return (
+    <section style={{ border: '1px solid', padding: 8, margin: '8px 0' }}>
+      <strong>floor</strong> · where “{product.name}” ({product.widthCm} × {product.depthCm} cm) may be centred ·{' '}
+      {solution.legalCounts.map((count, index) => (
+        <button key={index} onClick={() => setYaw(index)} style={{ fontWeight: index === shown ? 700 : 400, marginRight: 4 }}>
+          {YAW_LABELS[index]}: {count}
+        </button>
+      ))}
+      {solution.dropped.length > 0 && (
+        <ul style={{ color: 'crimson', fontWeight: 700 }}>
+          {solution.dropped.map((item, index) => (
+            <li key={index}>DROPPED {describe(item.clause)} — {item.reason}</li>
+          ))}
+        </ul>
+      )}
+      {solution.bestYawIndex < 0 && (
+        <p style={{ color: 'crimson', fontWeight: 700, fontSize: 18 }}>nothing fits — {solution.whyNothingFits}</p>
+      )}
+      {/* The SVG string is built by toSvg from numbers and an escaped title, never from user markup. */}
+      <div style={{ maxWidth: 480 }} dangerouslySetInnerHTML={{ __html: svg }} />
+    </section>
+  )
 }
 
 function DevSearch() {
@@ -129,6 +168,7 @@ function DevSearch() {
           </p>
           {/* Dev mode: the only place raw Program syntax is ever shown. */}
           <pre style={{ background: '#eee', padding: 8 }}>{JSON.stringify(compiled.program, null, 2)}</pre>
+          {result?.items[0] && <Floor listing={result.items[0]} program={compiled.program} />}
         </>
       )}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>

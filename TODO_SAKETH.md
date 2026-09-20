@@ -6,7 +6,7 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## In progress
 
-- None. All lane phases A–E are done; Phase F (voice) only if asked.
+- None. Next, each off fresh `main`: catalogue products placeable in a scene; floor overlay on the Three.js scene; Deepgram transcription.
 
 ## Next
 
@@ -18,6 +18,30 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
   - Preserve existing catalogue/compiler code and the Visa HTML tester. Shared cart checkout, guest-room account ownership and the known database-cache test compatibility issue remain separate handoff tasks.
 
 ## Done
+
+- **Shared convention: sync before work (2026-09-19).** Branch `codex/saketh-sync-convention`. Added a "Sync before starting work" section to `AGENTS.md` (pull, `./setup.sh`, tests and build on fresh `main`, branch off `main`, re-read `AGENTS.md` and `INDEX.md`; stop if clean `main` is red; retarget a stacked PR before deleting its base). Scoped per Saketh: pull at task boundaries (task start, after a merge), never mid-task, so Sin's no-mid-task-fetch rule and the sync both stand. Appended a note about the change to `TODO_SIN.md` and `TODO_WILLIAM.md`. `CLAUDE.md` is a symlink, so it follows. Documentation only; links checked.
+
+- **Solver follow-up: fixture room, "nothing fits" reasons, near semantics (2026-09-19).** Branch `codex/saketh-nothing-fits`, off fresh `main` after merging PR #15 (`main`: 123 backend tests, 51 frontend tests, build OK; `AGENTS.md` unchanged).
+  - Dev page and debug script now solve in Sin's 600 × 500 cm fixture room (`DEV_SCENE` in `frontend/src/region/devScene.ts`); the small mock room stays as `MOCK_SCENE` for tests.
+  - `frontend/src/region/explain.ts`: `whyNothingFits` on the solution, derived from the binding constraint (height, footprint vs room, no free floor, wall-clearance span shortfall, or the one clause whose removal makes room). Shown on the dev page.
+  - **Found:** "by the window, 5 feet from any wall" contradicted itself in every room, because the window is on a wall the item must stay 152 cm from and `near` reached only 75 cm. An unstated `near` now reaches `NEAR_DEFAULT_CM` beyond the clearance its target's wall demands; a stated distance stays literal. The hero sentence lights 705 centres in the fixture room and correctly reports `needs 373 cm of depth, this room has 360 cm` in the mock room.
+  - Verification: `npm test` — 54 tests, `npm run build` OK; rendered SVG inspected.
+
+- **Region solver (2026-09-19).** Branch `codex/saketh-region-solver`. Doc: [docs/frontend/region-solver.md](docs/frontend/region-solver.md), linked from `INDEX.md`. Handoff notes appended to `TODO_SIN.md`.
+  - `frontend/src/region/`: `types.ts`, `boundary.ts` (only unit crossing, listing adapter, wall mapping), `grid.ts`, `occupancy.ts`, `invariants.ts` (calls Sin's `validatePlacement` per grid point), `geometry.ts`, `clauses.ts` (six clause rules, every/some split, tunables, `ALLOW_STACKING = false`), `solve.ts`, `svg.ts`, `debugScenes.ts`, `devScene.ts`, `rng.ts`, tests. `frontend/scripts/region-debug.mjs`.
+  - Decisions by Saketh: edge-to-edge distances; `against` fixes yaw with 5 cm tolerance; `near` default 75 cm; door swing always kept free; 90 cm sill is a commented assumption; `on(item)` dropped behind a flag; dropped clauses shown on the dev page.
+  - Dev page solves the compiled sentence against a stub of the mock room and shows the floor, legal counts per rotation and dropped clauses in red.
+  - Shared files touched, additively: `frontend/src/scene/all-tests.ts` (one import), `frontend/package.json` (one script), `INDEX.md`, `TODO_SIN.md` (appended section).
+  - Verification: `npm test` — 51 tests (24 new), `npm run build` OK, backend 123 tests OK. Property tests, seeded, no new dependency: mask equals `validatePlacement` at every grid point over 40 random scenes × 4 rotations; 2,000 snapped drag poses each land on a sample; no lit point overlaps blocked or unknown occupancy; over 60 random scenes with random clauses every lit point (>100,000) is accepted by the editor and clauses only ever narrow. Dev page driven in headless Chrome: dropped `on(sofa-1)` shown with its reason; "nothing fits" shown when 5 ft from every wall is impossible in a 4.2 × 3.6 m room. Debug SVGs inspected by eye.
+
+- **Merge and sync before the solver (2026-09-19).** Merged PR #13 (wall exceptions) to `main`; `any_wall` dual meaning approved by Saketh. Synced `main` after Sin's Three.js editor merge: `./setup.sh` OK, 123 backend tests OK (1 skipped), `npm run build` OK, 27 frontend tests OK. Re-read `AGENTS.md` (one new rule: every doc under `docs/` needs a working `INDEX.md` link before handing back) and `INDEX.md`. Read `docs/frontend/3d-engine-plan.md`, the splatting pivot doc, `docs/backend/contracts/scene-api.md`, and `frontend/src/scene/{types,units,placement,useFurnitureDrag}.ts`. Findings reported to Saketh and decided: sample the mask at grid points so it coincides with drag snap; fixed `CELL_CM = 5`, never derived from `SCENE_UNIT_CM`; emit and accept Sin's `floor-grid-v1`; unknown is never lit; walls west=x0, east=x=width, north=z0, south=z=depth (Sin to confirm); no new test dependency; tests join `all-tests.ts`. Integration blocker raised by Saketh with Sin: the scene accepts only the 3 fixture products, so a catalogue `Listing` cannot be placed yet.
+
+- **compile(): wall exceptions (2026-09-19).** Branch `codex/saketh-wall-exceptions`, off fresh `main` (97 tests green before branching). No schema change.
+  - Bug: "3 feet from all walls except left wall, 2 feet there" compiled to `distance_min(any_wall, 914)` AND `distance_min(w-w, 610)`; `any_wall` covers `w-w`, so the exception was silently erased.
+  - Prompt (`backend/catalogue/dsl/prompt.py`): `any_wall` only for uniform rules; one clause per wall when there is an exception or differing values; left/right mapped to west/east; separate rule for one-wall kinds. Strengthened `fits_w_max` after the longer prompt made the bookcase case drop it.
+  - Code (`backend/catalogue/dsl/compile.py`): `repair_walls()` in `normalise()` makes it deterministic — expands `any_wall` beside a looser per-wall clause, collapses identical per-wall clauses to `any_wall`, turns several walls on `near`/`against`/`on` into `any_wall`; place clauses ordered by room wall order.
+  - Found while checking `clear` and `near`: `clear` had the same bug and the same fix works. `near`/`against` are different: enumerating walls ANDs them into an impossible placement, and an exception there cannot be expressed in the DSL, so it is dropped.
+  - Ninth fixture case added; all nine re-recorded. Verification: `manage.py test api catalogue` — 103 tests OK, 1 skipped, API key blanked. Live: 11 wall phrasings × 8 rounds all correct after the final change; nine-case live fixture passed 4 of 4.
 
 - **Phase D follow-up: fallback, timeout, retry, review fixes (2026-09-19).** Same branch and PR (#11); `main` merged in after #9 landed, one conflict in this file resolved by keeping both entries.
   - Latency DoD revised by Saketh to p50 under 1,500 ms (compile is a submit action). Measured after these changes: p50 1,182 ms, p90 1,667 ms, max 2,392 ms over 24 live calls, 24 of 24 exact. `gpt-4.1-mini` stays.

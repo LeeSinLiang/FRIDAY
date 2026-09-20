@@ -79,3 +79,25 @@ Record all agent work here when working for Sin. Include status, file paths, ver
 ## Blockers / handoff
 
 - Recommend React/TypeScript/Vite + R3F/drei for the confirmed scope. Incoming room format, units, and separately addressable walls still require teammate agreement; these do not block the empty-room fixture.
+
+## Notes from Saketh's lane (catalogue, language, region solver) — 2026-09-19
+
+Appended by Saketh's agent, not Sin's work. Nothing above was changed. Full detail: [docs/frontend/region-solver.md](docs/frontend/region-solver.md).
+
+- **`floor-grid-v1` — implemented exactly as you specced it**, including `unknown`, for both the solver's output masks and an optional `occupancy` input. Unknown floor is never lit; floor outside the grid counts as unknown. Good spec. One addition: masks are sampled at grid points (121 × 101 for the fixture room), so every pose your 5 cm drag snap produces is exactly one sample. `CELL_CM = 5` is fixed and not derived from `SCENE_UNIT_CM`, per your note.
+- **Your `validatePlacement` is the oracle.** The solver calls it for every grid point instead of reimplementing bounds, height or overlap, and property tests assert the lit floor and your drop check agree. If you change `placement.ts`, `npm test` will say whether they still do.
+- **Wall mapping — please confirm or object.** `Room` has no named walls, and compiled sentences say `w-n`, `w-e`, `w-s`, `w-w`. I mapped north = z 0 (your back wall), east = x `widthCm`, south = z `depthCm`, west = x 0 (your side wall). It lives in `frontend/src/region/boundary.ts`. "Left" and "right" stop meaning anything in first person, so the language layer uses compass words.
+- **`openings` proposal.** `near(window)` and `clear(door)` have nothing to bind to until `Room` describes openings. Proposed optional, additive field: `openings?: { id, kind: 'door' | 'window', wall: 'n' | 'e' | 's' | 'w', startCm, widthCm, swingCm? }[]`, with `startCm` along +X for n/s walls and +Z for e/w. The solver already accepts it and degrades without it: those clauses are dropped with a reason and the rest still solve. Your type is untouched.
+- **Stacking is unsupported, so `on(item)` is dropped.** `validatePlacement` rejects an item overlapping its support, so lighting a table top would show floor the drop then refuses. The rule exists behind `ALLOW_STACKING = false` in `frontend/src/region/clauses.ts`. A gap for you to fix or accept.
+- **Units.** Centimetres stay yours, `dims_mm` stays mine. `frontend/src/region/boundary.ts` is the only place they cross (`mmToCm`, `listingToProduct`). Your three `kind`s only pick a stand-in shape, so the 12 catalogue categories fold onto them; neither type changed.
+- **Shared files I touched, additively:** one import line in `frontend/src/scene/all-tests.ts` so `npm test` runs the region tests, and a `region:debug` script in `frontend/package.json`.
+- **Still to come from my side, each as its own PR, and I will extend these notes:** letting a scene accept catalogue products (today only the three in `shared/scene-fixtures.json` can be placed, which blocks integration; it touches `placement.ts` and `scene_service.py`, additively), and a floor overlay component on the current Three.js scene.
+
+## Note from Saketh's lane — `AGENTS.md` changed (2026-09-19)
+
+Appended by Saketh's agent so the edit is not silent; nothing above was changed. `AGENTS.md` has a new section, **Sync before starting work**:
+
+- Pull at task boundaries only — at task start and after a merge to `main` — never mid-task. The existing "do not fetch mid-task unless asked" rule stands and now says so explicitly.
+- At each boundary: `git checkout main && git pull`, `./setup.sh` (other lanes add Python and frontend dependencies), full test suite and frontend build on that fresh `main`, branch off `main` never off a previous feature branch, re-read `AGENTS.md` and `INDEX.md`.
+- If clean `main` is red, stop and tell your owner; it is a whole-team problem.
+- When merging a stacked PR, retarget the dependent PR to `main` before deleting the base branch. Deleting it first closes the dependent PR (it happened to #3).

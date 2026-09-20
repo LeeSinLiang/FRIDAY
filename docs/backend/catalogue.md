@@ -96,6 +96,11 @@ curl -X POST localhost:8000/api/compile -H 'Content-Type: application/json' \
 - **Compile is a submit action, not a keystroke one.** Target p50 under 1,500 ms; measured p50 1,056–1,182 ms, p90 1,336–1,667 ms. A one-word reply from the same API takes about 560 ms from the hackathon network, so the floor is the network and the API, not the model tier. Call it on submit and keep browsing usable without it.
 - One structured-output call through the OpenAI Agents SDK with `Program` as the output type, one turn, no tools. `OPENAI_MODEL` selects the model (default `gpt-4.1-mini`: the cheapest that scores 8 of 8 on the fixture; `gpt-4.1-nano` scored 6–7 and invented placement clauses). Timeout 6 s (normal calls take 0.7–2.6 s), no transport retries.
 - The model sees the Program schema and the room's ids. It never sees the search backend.
+- **`any_wall` means two different things, and the solver must honour both.** For `distance_min` and `clear` it means *every* wall; for `near`, `against` and `on` it means *any one* wall. Clauses are ANDed and the DSL has no OR, so:
+  - A uniform rule is one `any_wall` clause. A rule with an exception ("3 ft from all walls except the left, 2 ft there") is one clause per wall and no `any_wall`, which would otherwise override the exception.
+  - "Near any wall except the east one" cannot be expressed; it compiles to `near(any_wall)` and the exception is dropped.
+  - `normalise()` enforces this after the model: `any_wall` beside a looser per-wall clause is expanded per wall, identical clauses on every wall collapse to `any_wall`, and several walls on a one-wall kind become `any_wall`. Per-wall clauses come out in the room's wall order.
+  - Plans are read north-up: left is west, right is east.
 - Room ids currently come from the dev stub `backend/catalogue/mock/room.py`.
 
 | Path | Purpose |
@@ -103,7 +108,7 @@ curl -X POST localhost:8000/api/compile -H 'Content-Type: application/json' \
 | `backend/catalogue/dsl/compile.py` | `compile_text()`: the call, one retry, normalising, fallback |
 | `backend/catalogue/dsl/prompt.py` | Instructions for the model. Pure |
 | `backend/catalogue/dsl/render.py`, `units.py`, `colours.py` | Program → chips. Pure |
-| `backend/catalogue/dsl/fixtures/compile_cases.json` | 8 sentences, expected Programs and chips, recorded model outputs |
+| `backend/catalogue/dsl/fixtures/compile_cases.json` | 9 sentences, expected Programs and chips, recorded model outputs |
 | `backend/catalogue/test_compile.py` | Offline tests. `COMPILE_LIVE_TEST=1` adds a run against the real model |
 
 ## Search backends

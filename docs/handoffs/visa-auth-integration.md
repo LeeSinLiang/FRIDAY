@@ -4,11 +4,11 @@ Owner: William. Branch: `codex/visa-sandbox`. Updated: 2026-09-19.
 
 ## Baseline and teammates' work
 
-This branch incorporates `origin/main` through [`98ca88d`](https://github.com/LeeSinLiang/hackmit2026/commit/98ca88d). It includes the catalogue/compiler merge from [PR #11](https://github.com/LeeSinLiang/hackmit2026/pull/11), the room-editor merge `3cf1463`, and the first-person Gaussian-splatting research/pivot notes. The latter document planned work; they are not proof of an implemented splat renderer.
+This branch incorporates `origin/main` through [`e6a046e`](https://github.com/LeeSinLiang/hackmit2026/commit/e6a046e). In addition to the earlier `98ca88d` catalogue/editor baseline, it now includes the wall-exception fixes, pure TypeScript region solver, nothing-fits explanations, and task-boundary sync convention from PRs #13, #15, #16 and #17. The Gaussian-splatting research notes still describe planned work rather than an implemented splat renderer. Main was merged into this feature branch; that does not merge the Visa/auth branch into main.
 
 The committed `data/board.json` is a snapshot of the user's current **FRIDAY · Project Plan**, with the six existing components, IDs, task ownership and ordering preserved. Board implementation files remain exactly as they appear in this main baseline. The owner-coloured board UI is on the separate `codex/fix-kanban-controls` branch; the shared data snapshot does not claim that UI has been merged here.
 
-At this reconciliation, `codex/saketh-wall-exceptions` (`11cb6aa`) was separately pushed but not in main. Its wall-exception changes are not included here. The other checkout's uncommitted asset-browser work is also outside this branch.
+The previously separate `codex/saketh-wall-exceptions` work is now included through main. The other checkout's uncommitted asset-browser work remains outside this branch.
 
 ## What this branch adds
 
@@ -58,20 +58,20 @@ These changes are proposed, **not applied to the teammate's editor**:
 ## Remaining integration contracts
 
 1. **Connect the real cart to checkout.** `backend/checkout/catalogue.py` still contains only `sample-sofa` (42500 cents) and `sample-lamp` (7900 cents), a fixture vendor, and USD. The catalogue's `Listing` uses `id`, `title`, `price_cents`, `dims_mm`, `source`, and `model_url`; it does not yet provide an agreed checkout currency, merchant identity or stock contract. A catalogue source label is not a verified merchant. Agree these fields before replacing the fixture adapter. Resolve submitted product IDs and prices on the server, then create the existing immutable checkout snapshot; retain explicit approval and fresh MFA.
-2. **Bridge catalogue and scene units/IDs.** The editor's `Product` has `productId`, `name`, and dimensions in centimetres. Catalogue dimensions are millimetres: divide by ten at the adapter boundary. Persist stable product IDs so placed and unplaced cart items refer to the same authoritative listing. The root editor's test furniture is not automatically a checkout cart.
+2. **Bridge catalogue and scene units/IDs.** The new `frontend/src/region/boundary.ts` already supplies `mmToCm`, `listingToProduct`, clause conversion and wall mapping; reuse it. The editor's `Product` uses centimetres while catalogue dimensions are millimetres. Scene persistence still accepts the fixture product IDs, so a converted catalogue listing is not yet a persistable room item. Persist stable product IDs so placed and unplaced cart items refer to the same authoritative listing. The root editor's test furniture is not automatically a checkout cart.
 3. **Define guest-room and account ownership.** `backend/api/scene_views.py` and `scene_service.py` address scenes by Django session key. Authentication can rotate or replace that key. No transfer from a guest scene to an account is implemented or verified here; decide the transfer/ownership policy before claiming a room survives a first login, logout, or account switch.
-4. **Finish the broader agent/spatial journey.** Compiler/search endpoints and scene tool adapters are available. Full agent orchestration, the complete valid-space overlay, and catalogue-to-checkout wiring remain separate work. Keep their broad board cards open despite completed foundation tasks.
+4. **Finish the broader agent/spatial journey.** Compiler/search endpoints, scene tool adapters and the [region solver](../frontend/region-solver.md) are available. The solver handles placement clauses and optional opening/occupancy inputs with masks and rejection explanations. Rendering its overlay in the editor, making real catalogue products persistable, full agent orchestration and catalogue-to-checkout wiring remain separate work. Keep broad integration cards open despite completed foundations.
 5. **Payment and ordering remain separate.** An IDX Match Key is accepted transaction context, not a card authorization, purchase, or vendor order. No final transaction was performed. Production hosting, HTTPS, production database/cache, provider configuration, and font licensing remain subject to their existing feature documentation.
 6. **Resolve cache/test compatibility with the catalogue owner.** Our account settings use Django `DatabaseCache` for persistent rate limits and used-TOTP markers. Five existing `CompileEndpointTests(SimpleTestCase)` call `cache.clear()` and fail because that test class forbids database access. A database-aware test case or an explicitly isolated cache override is an owner decision. Do not disable production replay/rate-limit protections to hide the test failure. The attempted test-class edit was reverted at William's request.
 
 ## Verification
 
-After both upstream pulls and dependency reconciliation:
+After syncing main through `e6a046e`:
 
-- Canonical `./setup.sh` passed, applied the three scene/capture migrations, and preserved the existing auth key and account database.
-- Final combined backend run: **153 tests, 5 failures, 1 optional live test skipped**. All five failures are the cache/test incompatibility above; all other tests passed. An earlier exploratory run passed after editing those five tests, but that edit was removed and is not the final branch result. Migration drift check: no changes.
-- The scoped `visa accounts checkout` suite passed all **36 tests** independently.
-- Frontend: **27 scene tests and 9 auth/API/routing tests passed**. TypeScript/Vite production build passed; the existing large Three.js furniture chunk warning remains.
+- Canonical `./setup.sh` passed with no new migrations to apply; the existing auth key and account database were preserved.
+- Final combined backend run: **159 tests, 5 failures, 1 optional live test skipped**. All five failures are the same cache/test incompatibility above; all other tests passed. An earlier exploratory run on `98ca88d` passed after editing those five tests, but that edit was removed and is not the final branch result.
+- The scoped `visa accounts checkout` suite previously passed all **36 tests** independently, and these tests pass within the current combined run.
+- Frontend: **54 scene/region tests and 9 auth/API/routing tests passed**. TypeScript/Vite production build passed; the existing large Three.js furniture chunk warning remains.
 - Refreshed this worktree using `./run-local.sh` on **5174/8001**. The independent **5173/8000** checkout was preserved. Chrome loaded the unchanged HTML tester with X-Pay/MLE readiness and a source hash matching the local Visa implementation, then validated a new sample locally without sending it to Visa. Auth user/email/authenticator rows and the MFA encryption key matched the pre-pull fingerprints.
 - Account → editor navigation was checked during an exploratory integration, then removed in accordance with the final scope. That check is not proof of mounted account routes on this branch. The board-code reconciliation was likewise removed; its exploratory tests do not describe code shipped here.
 

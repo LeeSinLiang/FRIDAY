@@ -53,6 +53,12 @@
           "title": "Build mixed splat and mesh asset browser",
           "done": true,
           "owner": "william"
+        },
+        {
+          "id": "47ea390e-1ad5-4333-9d43-e4944248f55d",
+          "title": "Implement region masks, place clauses and nothing-fits explanations",
+          "done": true,
+          "owner": "saketh"
         }
       ]
     },

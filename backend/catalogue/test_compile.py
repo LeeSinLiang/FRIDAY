@@ -53,8 +53,8 @@ def wire(program_dict: dict) -> dict:
 
 
 class FixtureTests(SimpleTestCase):
-    def test_there_are_eight_recorded_cases(self):
-        self.assertEqual(len(CASES), 8)
+    def test_there_are_nine_recorded_cases(self):
+        self.assertEqual(len(CASES), 9)
         self.assertTrue(all("recorded" in case for case in CASES))
 
     def test_recorded_model_outputs_compile_to_the_expected_programs(self):
@@ -173,6 +173,53 @@ class NormaliseTests(SimpleTestCase):
         self.assertEqual(to_wire(result.program), {"find": [
             {"k": "category", "value": "desk"}, {"k": "colour", "hex": "#3f7d4e"}, {"k": "material", "value": "oak"},
         ], "place": []})
+
+
+def place_of(*clauses: dict) -> list[dict]:
+    raw = {"find": [], "place": list(clauses), "qty": None}
+    return to_wire(compile_text("x", REFS, call=replay([raw])).program)["place"]
+
+
+def dist(ref: dict, mm: int, k: str = "distance_min") -> dict:
+    return {"k": k, "ref": ref, "mm": mm}
+
+
+def wall(wall_id: str) -> dict:
+    return {"kind": "wall", "id": wall_id}
+
+
+ANY = {"kind": "any_wall"}
+
+
+class WallRepairTests(SimpleTestCase):
+    """any_wall means every wall for distance_min and clear, and any one wall for near, against, on."""
+
+    def test_an_exception_beside_any_wall_is_not_silently_erased(self):
+        # The original bug: any_wall(914) AND w-w(610) means 914 everywhere.
+        self.assertEqual(place_of(dist(wall("w-w"), 610), dist(ANY, 914)), [
+            dist(wall("w-n"), 914), dist(wall("w-e"), 914), dist(wall("w-s"), 914), dist(wall("w-w"), 610)])
+
+    def test_a_stricter_wall_beside_any_wall_is_already_correct(self):
+        self.assertEqual(place_of(dist(ANY, 500), dist(wall("w-n"), 900)), [dist(ANY, 500), dist(wall("w-n"), 900)])
+
+    def test_the_same_value_on_every_wall_collapses_to_any_wall(self):
+        walls = [dist(wall(w), 1524) for w in ("w-s", "w-n", "w-w", "w-e")]
+        self.assertEqual(place_of({"k": "near", "ref": {"kind": "window", "id": "w1"}, "mm": None}, *walls),
+                         [{"k": "near", "ref": {"kind": "window", "id": "w1"}}, dist(ANY, 1524)])
+
+    def test_different_values_or_a_missing_wall_stay_per_wall_in_room_order(self):
+        self.assertEqual(place_of(dist(wall("w-w"), 610), dist(wall("w-n"), 914), dist(wall("w-e"), 914)),
+                         [dist(wall("w-n"), 914), dist(wall("w-e"), 914), dist(wall("w-w"), 610)])
+
+    def test_clear_gets_the_same_treatment(self):
+        self.assertEqual(place_of(dist(ANY, 1000, "clear"), dist(wall("w-n"), 300, "clear")), [
+            dist(wall("w-n"), 300, "clear"), dist(wall("w-e"), 1000, "clear"),
+            dist(wall("w-s"), 1000, "clear"), dist(wall("w-w"), 1000, "clear")])
+
+    def test_several_walls_for_a_one_wall_kind_become_any_wall(self):
+        against = [{"k": "against", "ref": wall(w)} for w in ("w-n", "w-e", "w-s")]
+        self.assertEqual(place_of(*against), [{"k": "against", "ref": ANY}])
+        self.assertEqual(place_of({"k": "against", "ref": wall("w-e")}), [{"k": "against", "ref": wall("w-e")}])
 
 
 class PromptTests(SimpleTestCase):

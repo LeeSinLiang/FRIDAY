@@ -1,6 +1,8 @@
 # Saketh: Blender MCP-style agent scene context
 
-Requested by William, 2026-09-19. Proposed recipient: Saketh, coordinating shared scene/UI contracts with Sin. Branch: `codex/visa-sandbox`; FRIDAY baseline: `98ca88d` plus the Visa/auth handoff. Kanban: `6ae44373-c5ee-44b4-867c-99e96937aef8`, **open**. This is a researched implementation handoff; no agent, editor, API or HTML tester code was changed.
+Requested by William, 2026-09-19. Proposed recipient: Saketh, coordinating shared scene/UI contracts with Sin. Branch: `codex/visa-sandbox`; FRIDAY baseline refreshed through `e6a046e` plus the Visa/auth handoff. Kanban: `6ae44373-c5ee-44b4-867c-99e96937aef8`, **open**. This is a researched implementation handoff; no agent, editor, API or HTML tester code was changed for the note.
+
+Latest-main update: Saketh's [region solver](../../frontend/region-solver.md) and `frontend/src/region/boundary.ts` now provide placement masks, clause conversion, catalogue-to-scene dimensions, wall mapping and nothing-fits explanations. Reuse those adapters. The solver's optional openings/occupancy are richer than the backend placement service; do not claim its extra rules are enforced on server writes or supplied by a real room scan until wired. Catalogue product persistence and the Three.js overlay remain follow-ups.
 
 ## Requested outcome
 
@@ -75,7 +77,7 @@ Keep `instanceId` for the placed object and `productId` for the catalogue/model 
 | Visual state | Asset reference/type (mesh/splat/proxy), model readiness/warnings, material/color metadata, visibility and selection when known. Mesh topology counts are meaningful only when available; a splat does not have mesh faces. |
 | Shopping metadata | Server catalogue reference, integer price and explicit currency only if known, source/vendor distinction, stock status only when verified. Do not infer checkout readiness from a renderable object. |
 | Provenance | Which values came from fixture/catalogue/renderer/calculation; unknown fields and unsupported operations explicit. A screenshot is not a measurement or stock check. |
-| Spatial relationships | On-demand distances, collisions and relative locations with referenced IDs and stated geometry. Door/window clearance must remain unsupported until geometry for those features is implemented. |
+| Spatial relationships | On-demand distances, collisions and relative locations with referenced IDs and stated geometry. Region-solver door/window rules require real opening inputs; disclose dropped clauses, assumed sill heights and the simpler backend placement enforcement. |
 
 Illustrative **proposed** object tool result, derived from the current `test-sofa` dimensions at a hypothetical pose; this is not an existing endpoint response:
 

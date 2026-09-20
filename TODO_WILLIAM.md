@@ -4,7 +4,7 @@ Record all agent work here when working for William. Include status, file paths,
 
 ## In progress
 
-- None in this documentation handoff scope; implementation follow-ups remain open below and in the relevant owner's TODO.
+- None in this pull scope; the integration follow-ups below remain open.
 
 ## Next
 
@@ -14,6 +14,11 @@ Record all agent work here when working for William. Include status, file paths,
 - Agree on the shared catalogue/cart contract and replace the explicit two-product fixture adapter. Payment authorization and merchant ordering remain separate integrations. Phone-generated FRIDAY MFA verification is now confirmed; the user's original camera-scan action was not replayed by the agent.
 
 ## Done
+
+- 2026-09-19: **Pull latest main and prepare the Visa/auth handoff — second sync** (Kanban `836acd1c-7b85-46c7-bc0c-22d80438eb34`). Fetched `origin/main` at `e6a046e` and merged it into the existing `codex/visa-sandbox` as William requested. This is maintenance of the requested feature branch, not new work branched from an old feature. Included PRs #13/#15/#16/#17: wall-exception fixes, region solver and unit boundary, nothing-fits/near explanations and task-boundary sync instructions. Resolved the only conflict in this TODO by retaining both our handoff and Saketh's appended sync note. Saketh's completed-work history and William-requested Blender MCP TODO were both preserved. Incoming catalogue/editor/region implementation is unchanged from main; the original Visa HTML and all Visa/auth/checkout implementation are unchanged from the prior feature commit.
+- Updated `docs/handoffs/visa-auth-integration.md`, `docs/account-mfa-checkout.md` and `docs/backend/contracts/blender-mcp-agent-handoff.md` to reference the new baseline, reuse the implemented `region/boundary.ts` adapter, and distinguish frontend solver rules from backend enforcement and unfinished overlay/catalogue persistence. Recorded the verified solver foundation on the shared board while keeping broader integration tasks open. Existing INDEX links and new upstream solver-doc index entry were preserved.
+- Verification: canonical `./setup.sh` passed with no new migrations and preserved the private key. Backend: **159 tests, the same 5 catalogue DatabaseCache/SimpleTestCase failures, 1 optional live skip**; all others passed. Frontend: **54 scene/region tests + 9 auth tests passed**; TypeScript/Vite build passed with the existing bundle-size warning. No teammate test or security configuration was changed to suppress the failures.
+- Runtime: refreshed canonical 5174/8001 stack (Vite 95944, Django 95948; paths resolve to this worktree). Chrome loaded the updated dev catalogue with 12,040 results and the unchanged HTML tester; a synthetic sample validated locally without a Visa submission. Direct/proxied source hashes match `dbb448fea881aab1fee800168e37ad86d027237f0ca2e420a4bd9e73e01042b8`. Account/email/MFA rows and encryption-key fingerprints are unchanged. Preserved main checkout asset work, 5173/8000 servers, and the existing board server. No external email/IDX call was made. This pull creates a local feature-branch merge; it does not push either branch or merge Visa work into main. The previously pushed feature head remains `e11f450` until a later push.
 
 - 2026-09-19: **Prepare Saketh's Blender MCP agent-context handoff.** Added `docs/backend/contracts/blender-mcp-agent-handoff.md`, indexed it, and added William's requested follow-up under `TODO_SAKETH.md` → Next. Open Saketh-owned Kanban card: `6ae44373-c5ee-44b4-867c-99e96937aef8`, **Add Blender MCP-style scene and object context to the agent**. The note distinguishes official Blender Lab MCP (`ff54e4d8`) from community MCP for Blender (`6f992ffb`), describes actual model-facing dictionary/JSON-text/image returns, maps all 26 official and 31 community tools, and specifies stable object IDs, coordinates, units, bounds, metadata/provenance, scene revisions, action/capture feedback, implementation order and acceptance checks. Inspected primary source via the official project's API and GitHub, plus current FRIDAY scene/engine/catalogue contracts. Verified complete tool-name coverage, relative links/indexing, example JSON and its bounds. Documentation and board snapshot only; no live Blender/agent test, application code change, HTML change or runtime refresh needed. Publish on `codex/visa-sandbox` only; the implementation card remains open for Saketh.
 
@@ -70,3 +75,12 @@ Record all agent work here when working for William. Include status, file paths,
 - Delivery source is the `codex/visa-sandbox` feature branch and its isolated checkout; main is not merged or pushed by this work. The shared board snapshot and handoff travel with the branch. See `docs/handoffs/visa-auth-integration.md` for the current baseline and integration steps.
 - The new editor's account routes/proxy remain unwired by request, and the combined suite has the five documented catalogue cache/test failures. These are explicit handoff tasks, not completed integration claims.
 - Account/MFA and sample checkout are implemented and locally verified. External email delivery to William's Gmail and acceptance of its new code are now verified. General-recipient email delivery, physical authenticator-app scanning, the shared catalogue/cart, production deployment, payment authorization, and merchant ordering have not been verified or delivered. The separate developer tester checkbox remains distinct from the new account checkout MFA. Live IDX acceptance does not establish DCAP eligibility, issuer authorization, or visibility into Visa's internal stored fields.
+
+## Note from Saketh's lane — `AGENTS.md` changed (2026-09-19)
+
+Appended by Saketh's agent so the edit is not silent; nothing above was changed. `AGENTS.md` has a new section, **Sync before starting work**:
+
+- Pull at task boundaries only — at task start and after a merge to `main` — never mid-task. The existing "do not fetch mid-task unless asked" rule stands and now says so explicitly.
+- At each boundary: `git checkout main && git pull`, `./setup.sh` (other lanes add Python and frontend dependencies), full test suite and frontend build on that fresh `main`, branch off `main` never off a previous feature branch, re-read `AGENTS.md` and `INDEX.md`.
+- If clean `main` is red, stop and tell your owner; it is a whole-team problem.
+- When merging a stacked PR, retarget the dependent PR to `main` before deleting the base branch. Deleting it first closes the dependent PR (it happened to #3).
