@@ -9,6 +9,7 @@
   "upAxis": "+Y",
   "frontAxis": "+Z",
   "pivot": "floor-footprint-center",
+  "unbound": "Proportions miss the listing by more than the asset check allows, so no listing points at this model. The listing renders as a true-size stand-in until the model is refitted.",
   "catalogueListingId": "ikea-805.589.66",
   "source": {
     "product": "IKEA RAMNEFJÄLL upholstered bed frame, Kilanda dark blue, Queen (805.589.66)",

@@ -9,6 +9,7 @@
   "upAxis": "+Y",
   "frontAxis": "+Z",
   "pivot": "floor-footprint-center",
+  "unbound": "Proportions miss the listing by more than the asset check allows, so no listing points at this model. The listing renders as a true-size stand-in until the model is refitted.",
   "catalogueListingId": "ikea-001.850.32",
   "source": {
     "product": "IKEA EKTORP 2-seat sofa frame (001.850.32) with Hillared dark blue cover (305.170.87)",
