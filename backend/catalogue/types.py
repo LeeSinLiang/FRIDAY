@@ -16,7 +16,7 @@ Category = Literal[
 ]
 CATEGORIES: tuple[str, ...] = Category.__args__
 
-Source = Literal["ikea", "stub", "seed"]
+Source = Literal["ikea", "stub", "seed", "abo"]  # abo: Amazon Berkeley Objects, a real product with its own 3D model
 
 
 class DimsMm(BaseModel):
