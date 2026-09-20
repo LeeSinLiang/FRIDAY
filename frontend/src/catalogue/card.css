@@ -1,0 +1,10 @@
+.catalogue-card-copy {display:grid;gap:8px;min-width:0;text-align:left;}
+.catalogue-card-name {font-size:14px;line-height:1.35;font-weight:650;letter-spacing:-.015em;color:var(--ink);overflow-wrap:break-word;}
+.catalogue-card-footer {display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-top:9px;margin-top:2px;border-top:1px solid #e9e1d8;}
+.catalogue-card-provider {min-width:0;font-size:12px;line-height:1.35;color:#746658;overflow-wrap:break-word;}
+.catalogue-card-price {display:inline-flex;align-items:baseline;gap:5px;white-space:nowrap;font-size:16px;line-height:1.25;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink);}
+.catalogue-card-currency {font-size:10px;font-weight:500;letter-spacing:.04em;color:#827364;}
+.catalogue-card-price-unknown {font-size:11px;line-height:1.4;color:#827364;}
+.shelf-embedded .recommendation-cards .catalogue-product-card {gap:10px;padding:12px;}
+.shelf-embedded .recommendation-cards .catalogue-product-card img {height:112px;}
+.shelf-embedded .recommendation-cards .catalogue-product-card:focus-visible {outline:2px solid var(--accent);outline-offset:-2px;}

@@ -15,7 +15,7 @@ test("what changes on hover sits in a fixed-height slot, so the card under a sti
   const tsx = await source("CatalogueShelf.tsx");
   const open = tsx.indexOf('"shelf-explain dev"');
   const close = tsx.indexOf("</div>", open); // the slot's own closing tag: the first one after it opens
-  const order = [open, tsx.indexOf("<Status "), tsx.indexOf('className="shelf-dropped"'), close, tsx.indexOf('className="shelf-results"')];
+  const order = [open, tsx.indexOf("<Status "), tsx.indexOf('className="shelf-dropped"'), close, tsx.indexOf('className={`shelf-results')];
   assert.ok(order.every((at) => at >= 0), "markers present");
   assert.deepEqual(order, [...order].sort((a, b) => a - b), "the status and the set-aside clauses are inside the slot, and the list comes after it");
 });
@@ -50,15 +50,23 @@ test("a listing with no known price says so, and never reads $0", async () => {
   assert.deepEqual([hasPrice(0), hasPrice(1), hasPrice(14900)], [false, true, true]);
   assert.equal(priceLabel(14900, dollars), "$149");
   assert.equal(priceLabel(0, dollars), "price unavailable");
-  // Both places that print a price go through it.
-  for (const file of ["CatalogueShelf.tsx", "../dev/search.tsx"]) {
+  // Product cards format integer cents consistently; unknown prices never become a zero-dollar offer.
+  const { cardPrice } = await import("./cardCopy");
+  assert.equal(cardPrice(14900), "$149.00");
+  assert.equal(cardPrice(44999), "$449.99");
+  assert.equal(cardPrice(124900), "$1,249.00");
+  assert.equal(cardPrice(1), "$0.01");
+  assert.equal(cardPrice(0), null);
+  assert.equal(cardPrice(NaN), null);
+  // The development search still uses the shared unknown-price guard.
+  for (const file of ["../dev/search.tsx"]) {
     const text = await source(file);
     assert.match(text, /priceLabel\((listing|item)\.price_cents, dollars\)/, `${file} prints prices through priceLabel`);
     assert.doesNotMatch(text, /\{dollars\((listing|item)\.price_cents\)\}/, `${file} must not print a raw price`);
   }
   // The placement-confirm panel printed "$0.00 USD" for a piece whose price nobody knows.
   const layer = await source("SplatCatalogueLayer.tsx");
-  assert.match(layer, /priceLabel\(purchase\.price_cents,/, "the confirm panel prints its price through priceLabel");
+  assert.match(layer, /cardPrice\(purchase\.price_cents\)/, "the confirm panel uses the same dollar formatting as Elastic cards");
   assert.doesNotMatch(layer, /\$\{\(purchase\.price_cents\/100\)\.toFixed\(2\)\} USD/, "never a raw price in the confirm panel");
 });
 
