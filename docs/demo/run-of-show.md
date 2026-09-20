@@ -21,6 +21,13 @@ Everything else in the catalogue places as a true-scale box or cylinder in its l
 - **A save hiccups:** the chair stays where it was dropped and the status line says it is saving. Nothing is shown over the room, and room switching reopens after two failed saves.
 - **`?dev=1`** adds raw per-rotation counts to the panel, for us, not for judges.
 
+## Voice, on the demo machine
+
+- **Set `TRANSCRIBE_BACKEND=deepgram` and `DEEPGRAM_API_KEY` in the demo machine's `.env`.** The default is `browser`. If it is left at the default we demo the Web Speech API in front of the Deepgram judges.
+- **Prove it on stage with `?dev=1`.** The panel then shows `voice configured: deepgram · last transcript ANSWERED BY: deepgram`. If Deepgram hiccups, that press is answered by the browser and says so; the next press goes back to Deepgram.
+- **The microphone needs a secure context.** `getUserMedia` works on `localhost` / `127.0.0.1` and over HTTPS. It is **blocked on a plain-HTTP LAN address** such as `http://192.168.x.x:5173`. Present from the machine running the stack. If another machine must be the screen, tunnel with HTTPS or mirror the display; do not browse to the demo laptop's IP.
+- Accept the microphone permission prompt once, ahead of time, in the browser profile you will present from.
+
 ## Before going on
 
 `git status` clean on the tag; `./setup.sh`; both suites and `npm run build` green; `python3 scripts/hammer_storage.py http://127.0.0.1:<port>` reports no server errors.
