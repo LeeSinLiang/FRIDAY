@@ -41,6 +41,7 @@
 - The user handles `git fetch` and will tell agents when updates are available. Do not fetch or pull mid-task unless explicitly asked: the ground must not shift under work in progress. The sync below happens only at task boundaries. At task start and before committing, inspect local branch status and diffs. Before each edit, re-read the relevant files; refresh again after interruptions, changes in scope, or user-reported updates. Preserve teammates' work and reconcile changes before proceeding.
 - Prefer the simplest working solution. Check existing code before adding dependencies or patterns.
 - Run checks appropriate to the change and record what passed, failed, or could not run in the owner's TODO file.
+- **Symmetric test cases cannot detect a mirror.** Anything drawn from data (an overlay, a heat map, a hit area) is verified by acting on a SMALL, OFF-CENTRE target in the least ambiguous view, in both directions: acting on the drawn thing works, acting just beside it does not. The lit floor was once drawn mirrored front to back for hours: every check passed because large regions overlap their own mirror and the test room was symmetric, until a small patch by the window was drawn where a click did nothing. "It looks right" and "flaky" are both hypotheses, not diagnoses.
 - Keep secrets out of the repo. Checkout is sandbox-only and requires explicit user approval in the application.
 
 ## Sync before starting work
