@@ -1,5 +1,11 @@
 [
   {
+    "id": "haussmann-apartment",
+    "title": "The Haussmann apartment",
+    "description": "A Parisian apartment with parquet floors, tall windows and ornate mouldings.",
+    "thumbnail": "/room-previews/haussmann-apartment.png"
+  },
+  {
     "id": "empty-room",
     "title": "The light-filled studio",
     "description": "An open room, ready for your first arrangement.",

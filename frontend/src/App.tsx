@@ -16,7 +16,7 @@ function Route() {
   if (location.pathname === '/rooms') return <RoomSelection/>
   if (location.pathname === '/cart' || location.pathname === '/checkout' || location.pathname.startsWith('/account')) return <Account/>
   const match = /^\/room\/([a-zA-Z0-9_-]+)\/?$/.exec(location.pathname)
-  if (match && rooms.some(room => room.packaged && room.id === galleryRoomId(match[1]))) return <Editor roomId={match[1]} shopping/>
+  if (match && rooms.some(room => (room.packaged || room.downloadable) && room.id === galleryRoomId(match[1]))) return <Editor roomId={match[1]} shopping/>
   return <RoomUnavailable/>
 }
 

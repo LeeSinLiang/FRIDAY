@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent } from 'react'
 import { useCart } from './CartProvider'
 import './shopping.css'
 import './room-selection.css'
+import { getHaussmannPreload, preloadHaussmann, subscribeHaussmannPreload } from './haussmannPreload'
 
-export type RoomChoice = { id: string; title: string; description: string; thumbnail: string; packaged: boolean }
+export type RoomChoice = { id: string; title: string; description: string; thumbnail: string; packaged: boolean; downloadable?: boolean }
+const available = (room: RoomChoice) => room.packaged || room.downloadable
 export const rooms: RoomChoice[] = import.meta.env.VITE_PUBLIC_ROOMS || []
 
 export function RoomUnavailable() {
@@ -26,8 +28,16 @@ export default function RoomSelection({ entrance = false }: { entrance?: boolean
   const { cart } = useCart()
   const reducedMotion = useReducedMotion()
   const [phase, setPhase] = useState<'entrance' | 'opening' | 'gallery'>(entrance ? 'entrance' : 'gallery')
+  const download = useSyncExternalStore(subscribeHaussmannPreload, getHaussmannPreload)
+  useEffect(() => {
+    if (phase !== 'gallery' || !rooms.some(room => room.id === 'haussmann-apartment')) return
+    const resume = () => { void preloadHaussmann() }
+    resume()
+    window.addEventListener('pageshow', resume)
+    return () => window.removeEventListener('pageshow', resume)
+  }, [phase])
   const [order, setOrder] = useState(() => {
-    const first = rooms.find(room => room.packaged)
+    const first = rooms.find(available)
     return first ? [first.id, ...rooms.filter(room => room !== first).map(room => room.id)] : rooms.map(room => room.id)
   })
   const [outgoing, setOutgoing] = useState<string | null>(null)
@@ -75,7 +85,7 @@ export default function RoomSelection({ entrance = false }: { entrance?: boolean
   }
 
   function choose(room: RoomChoice) {
-    if (!room.packaged || room.id === selected?.id) return
+    if (!available(room) || room.id === selected?.id) return
     if (shuffleTimer.current) clearTimeout(shuffleTimer.current)
     setOutgoing(reducedMotion ? null : selected?.id ?? null)
     setOrder(current => [room.id, ...current.filter(id => id !== room.id)])
@@ -83,13 +93,13 @@ export default function RoomSelection({ entrance = false }: { entrance?: boolean
   }
 
   function moveSelection(key: string) {
-    const available = rooms.filter(room => room.packaged)
-    if (!available.length) return
-    const current = available.findIndex(room => room.id === selected?.id)
-    const index = key === 'Home' ? 0 : key === 'End' ? available.length - 1
-      : (current + (key === 'ArrowDown' || key === 'ArrowRight' ? 1 : -1) + available.length) % available.length
-    choose(available[index])
-    roomButtons.current.get(available[index].id)?.focus()
+    const choices = rooms.filter(available)
+    if (!choices.length) return
+    const current = choices.findIndex(room => room.id === selected?.id)
+    const index = key === 'Home' ? 0 : key === 'End' ? choices.length - 1
+      : (current + (key === 'ArrowDown' || key === 'ArrowRight' ? 1 : -1) + choices.length) % choices.length
+    choose(choices[index])
+    roomButtons.current.get(choices[index].id)?.focus()
   }
 
   return <div className={`friday-gallery friday-gallery--${phase}`}>
@@ -104,7 +114,7 @@ export default function RoomSelection({ entrance = false }: { entrance?: boolean
           <div className="friday-room-options">{rooms.map((room, index) => <button
             key={room.id}
             ref={element => { if (element) roomButtons.current.set(room.id, element); else roomButtons.current.delete(room.id) }}
-            className="friday-room-option" type="button" disabled={!room.packaged}
+            className="friday-room-option" type="button" disabled={!available(room)}
             aria-pressed={selected?.id === room.id} aria-controls="friday-selected-room"
             onClick={() => choose(room)}
             onKeyDown={event => {
@@ -115,7 +125,7 @@ export default function RoomSelection({ entrance = false }: { entrance?: boolean
             <span className="friday-room-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
             <span className="friday-room-marker" aria-hidden="true"/>
             <span className="friday-room-option-copy"><span>{room.title}</span>
-              <small>{!room.packaged ? 'Unavailable on this machine' : room.id === 'london-skyscraper' ? '34 levels' : 'One room'}</small>
+              <small>{!available(room) ? 'Unavailable on this machine' : room.id === 'haussmann-apartment' && download.phase === 'loading' ? `Preparing in background${download.total ? ` · ${Math.floor(download.loaded / download.total * 100)}%` : '…'}` : room.id === 'london-skyscraper' ? '34 levels' : 'One room'}</small>
             </span>
           </button>)}</div>
         </section>
@@ -139,9 +149,17 @@ export default function RoomSelection({ entrance = false }: { entrance?: boolean
             <div className="friday-preview-description" aria-live="polite" aria-atomic="true">
               <p className="friday-space-number">SPACE {String(selectedIndex + 1).padStart(2, '0')}</p>
               <h2>{selected.title}</h2>
-              <p>{selected.packaged ? selected.description : 'Import this room’s licensed model to open it.'}</p>
+              <p>{available(selected) ? selected.description : 'Import this room’s licensed model to open it.'}</p>
+              {selected.id === 'haussmann-apartment' && download.phase === 'loading' && <div className="friday-room-download">
+                <span>{download.message}</span>
+                <progress aria-label="Apartment download" max={download.total || 1} value={download.total ? download.loaded : undefined}/>
+                <small>You can browse the room list while this one gets ready.</small>
+              </div>}
+              {selected.id === 'haussmann-apartment' && download.phase === 'error' && <div className="friday-room-download" role="status">
+                <p>{download.message}</p><button type="button" onClick={() => void preloadHaussmann(true)}>Retry download</button>
+              </div>}
             </div>
-            {selected.packaged && <a className="friday-enter-space" href={`/room/${selected.id}`}>Enter space <span aria-hidden="true">↗</span></a>}
+            {available(selected) && <a className="friday-enter-space" href={`/room/${selected.id}`}>Enter space <span aria-hidden="true">↗</span></a>}
           </div>
         </section> : <p role="status">No rooms are available yet. Please check back shortly.</p>}
       </main>

@@ -2,6 +2,7 @@ import { Entity, StandardMaterial, TEXTURETYPE_RGBM, type RenderComponent } from
 import type { Room } from "../types";
 import { cmToScene, meterGlbToSceneScale } from "../units";
 import type { AssetCache, AssetProgress } from "./assets";
+import { prepareHaussmann } from "./haussmannDownload";
 
 type RoomVisual = Entity & { bakedExposureScale?: number };
 
@@ -73,7 +74,12 @@ export async function loadSplatRoom(assets: AssetCache, root: Entity, room: Room
     root.addChild(model);
     return model;
   }
-  const asset = await assets.load(room.scan.visualUrl, "gsplat", progress);
+  const prepared = room.roomId === "haussmann-apartment"
+    ? await prepareHaussmann(room.scan.visualUrl, progress ?? (() => {}), signal)
+    : { url: room.scan.visualUrl, release: () => {} };
+  let asset;
+  try { asset = await assets.load(prepared.url, "gsplat", progress, prepared); }
+  finally { prepared.release(); }
   if (signal?.aborted) throw new Error("Loading the room was cancelled");
   const splat = new Entity(`Fixed scan · ${room.roomId}`);
   const { positionCm, rotationDeg, scale } = room.scan;

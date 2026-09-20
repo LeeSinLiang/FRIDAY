@@ -36,6 +36,7 @@ test("fresh checkout omits unavailable local rooms without changing the Gaussian
   assert.equal(result.defaultRoomId, "haussmann-apartment");
   assert.deepEqual([...result.packages.keys()], ["empty-room"]);
   assert.equal(result.warnings.length, 3);
+  assert.equal(result.metadataPackages.get('haussmann-apartment')?.size, 3, 'metadata and attribution ship even without binaries');
   assert.ok(result.warnings.some(warning => /Room haussmann-apartment is not packaged: local assets are missing/.test(warning)));
 }));
 
@@ -115,4 +116,10 @@ test("the gallery lists every public room and marks the ones this machine cannot
   const listed = galleryRooms([room("empty-room"), room("cg-arch-interior")], new Set(["empty-room"]));
   assert.deepEqual(listed.map(entry => [entry.id, entry.packaged]), [["empty-room", true], ["cg-arch-interior", false]],
     "an unprovisioned room stays in the list, so its card can say so instead of the room vanishing or opening into nothing");
+});
+
+test('Haussmann stays selectable for automatic download on a checkout without its binaries', () => {
+  const listed = galleryRooms([{ id: 'haussmann-apartment', title: 'Haussmann', description: '', thumbnail: '' }], new Set());
+  assert.equal(listed[0].packaged, false);
+  assert.equal(listed[0].downloadable, true);
 });
