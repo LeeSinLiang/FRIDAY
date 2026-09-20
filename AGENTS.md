@@ -64,6 +64,7 @@ Pushing and merging both change the remote. Neither tells you the truth about it
 
 - Never pipe a git command whose exit code matters. Read `push`, `merge`, `pull` and `fetch` output directly; a pipe reports the last command's status and hides a rejection.
 - Verify the remote, not the terminal: `git rev-parse HEAD` must equal `git rev-parse origin/<branch>`.
+- **A chain that runs tests, builds or git commands stops on the first failure.** Join steps with `&&`, never `;`. In a script, `set -euo pipefail` at the top. Never a pipe that eats an exit code (`npm test | tail` reports `tail`'s success); write to a log file and read it. Do not assume `set -e` works in the shell your tool gives you: one agent's did not, and a chain ran past a failed merge and deleted a branch. A red test has been pushed twice here because a chain kept going.
 - A behavioural claim in a PR description needs a test behind it. A PR once merged describing behaviour its branch did not contain, because the push carrying it had been rejected, and nothing went red.
 
 **After every merge, no exceptions.** Merging happens on GitHub. It updates `main` on the remote. It does not update your clone, your branch or your working tree, and you are now behind by everything the other lanes merged while you worked.
@@ -75,6 +76,14 @@ Pushing and merging both change the remote. Neither tells you the truth about it
 5. Branch fresh for the next task
 
 Step 4 is the one that is not optional and the one that gets skipped. A PR is tested against the `main` it was cut from, never the `main` it lands in: two green PRs can merge with no textual conflict and take `main` down together. That has already happened here, when a database-backed cache met another lane's database-free tests. **Whoever merges runs the suite on fresh `main` at once, and if it is red tells the team before doing anything else.** A red `main` is a whole-team stop, not something to fix quietly on your next branch.
+
+## Merging close to the demo
+
+- **Small PRs, one concern each.** A big merge at this hour is how a working demo dies.
+- **The full suite runs on fresh `main` after every merge**, by whoever merged, as above. It has already caught `main` red once from a PR merged without it.
+- **A clean textual merge is not a working merge.** After resolving a conflict in a shared file, run the thing, not just the tests. Especially anything that touches the editor.
+- Never force-push, never rebase anything already pushed.
+- **`main` freezes once the demo has been rehearsed end to end on the machine we present from.** From that moment, the only changes allowed are fixes to something that breaks the rehearsed run. No polish, no refactors, no "while I'm in here". The way this goes wrong is a reasonable change landing an hour before the demo and breaking the exact path we practised. If you are unsure whether the freeze has started, ask before merging.
 
 ## Clean up after yourself
 

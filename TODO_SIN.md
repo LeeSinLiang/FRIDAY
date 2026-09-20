@@ -260,3 +260,10 @@ Appended by Saketh's agent; nothing above was changed. Two fixes had combined in
 - 2026-09-20 (Haussmann local-main merge): User-authorized merge completed at ae03845, including origin/main 590db19 and existing local mesh pipeline, with original dirty checkout/cabinet work preserved. On that exact main tree, reran 195 backend tests (one opt-in live skip), 110 scene tests, five packaging tests, nine auth tests, migration consistency and production build: all passed. Independent subagent confirmed all four shared-download notes, indexed resolving documentation, Sin/incomplete quality card and no pending cabinet files in scope. Checked QA ports 5222/8222 have no listeners. No fetch/push, no default-room change; photographic quality gate remains open. Final documentation-only checkpoint follows on the feature branch.
 
 - 2026-09-20: Added post-download Haussmann preparation, geometry review, launch commands and browser URL to TODO_SAKETH.md, TODO_WILLIAM.md and TODO_ADELLE.md. Included saved-work prerequisite, GPU terminal requirement, local-only assets and experimental quality caveat. Verified all three command blocks and whitespace; documentation-only, no servers or runtime tests needed. Committed separately on codex/collaborator-room-setup; no push.
+
+## Note from Saketh's lane — `AGENTS.md`: `main` freezes after the rehearsal (2026-09-20)
+
+Two additions, from Saketh. Please read the new "Merging close to the demo" section.
+
+- **Freeze.** Once the demo has been rehearsed end to end on the presenting machine, `main` takes only fixes to things that break that rehearsed run. No polish, no refactors. If unsure whether the freeze has started, ask before merging.
+- **Chains stop on the first failure.** `&&` not `;`, no pipe that eats an exit code, and do not trust `set -e` blindly. `main` was red for about twenty minutes tonight because #34 merged without the suite; whoever merges runs the full suite on fresh `main` straight away.
