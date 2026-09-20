@@ -27,6 +27,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 | [docs/frontend/3d-engine-plan.md](docs/frontend/3d-engine-plan.md) | Current 3D foundation scope, contracts, multi-agent build plan, and quality gates |
 | [docs/frontend/rendering-and-furniture-workflow.md](docs/frontend/rendering-and-furniture-workflow.md) | Rendering-engine comparison and furniture asset workflow research |
 | [docs/frontend/3d-object/collaborator-handoff.md](docs/frontend/3d-object/collaborator-handoff.md) | Furniture collaborator instructions, GLB deliverables, dimensions, and acceptance checks |
+| [docs/frontend/3d-object/herrakra-chair-asset-notes.md](docs/frontend/3d-object/herrakra-chair-asset-notes.md) | HERRÅKRA armchair asset delivery notes, sourcing, and known limitations vs. the handoff spec |
 | [docs/frontend/design/visual-directions.md](docs/frontend/design/visual-directions.md) | Three futuristic furniture-editor concepts, saved images, and generation prompts |
 | [docs/frontend/design/selected-direction.md](docs/frontend/design/selected-direction.md) | Selected warm ivory/terracotta Atelier liquid glass, Noir room-box, Japandi/wabi-sabi materials, PP Mori, and motion guidance |
 
