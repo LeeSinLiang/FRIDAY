@@ -3,6 +3,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import Room from "./Room";
 import Grid from "./Grid";
 import Furniture from "./Furniture";
+import { supportHeightCm } from "./placement";
 import SceneLighting from "./SceneLighting";
 import type { ModelStatus } from "./FurnitureModel";
 import type { Instance, Product } from "./types";
@@ -17,9 +18,9 @@ class CaptureBoundary extends Component<{ children: ReactNode; onError: () => vo
   render() { return this.state.failed ? null : this.props.children; }
 }
 
-function CaptureItem({ instance, product, report }: { instance: Instance; product: Product; report: (id: string, status: ModelStatus) => void }) {
+function CaptureItem({ instance, product, report, baseHeightCm }: { instance: Instance; product: Product; report: (id: string, status: ModelStatus) => void; baseHeightCm: number }) {
   const onStatus = useCallback((status: ModelStatus) => report(instance.instanceId, status), [instance.instanceId, report]);
-  return <Furniture instance={instance} product={product} selected={false} groupRef={noop} onPointerDown={noop} onModelStatus={onStatus} />;
+  return <Furniture instance={instance} product={product} selected={false} groupRef={noop} onPointerDown={noop} onModelStatus={onStatus} baseHeightCm={baseHeightCm} />;
 }
 
 function ReadCapture({ settled, onResult, warnings, width, height }: { settled: boolean; onResult: (result: CaptureResult) => void; warnings: string[]; width: number; height: number }) {
@@ -90,7 +91,8 @@ function CaptureContents({ job, onResult }: { job: CaptureJob; onResult: (result
     <SceneLighting mode={job.view} />
     <Room room={room} mode={job.view} onFloorClick={noop} />
     <Grid room={room} />
-    {instances.map(instance => <CaptureItem key={instance.instanceId} instance={instance} product={products.find(product => product.productId === instance.productId)!} report={report} />)}
+    {instances.map(instance => <CaptureItem key={instance.instanceId} instance={instance} product={products.find(product => product.productId === instance.productId)!} report={report}
+      baseHeightCm={supportHeightCm(room, products, instances, instance.instanceId, instance.pose)} />)}
     <ReadCapture settled={settled} onResult={onResult} warnings={warnings} width={job.width} height={job.height} />
   </>;
 }

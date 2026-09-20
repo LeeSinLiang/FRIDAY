@@ -32,6 +32,40 @@ const dot = (a: Axis, b: Axis) => a[0] * b[0] + a[1] * b[1];
 export const FLAT_MAX_CM = 3;
 const isFlat = (product: Product): boolean => product.heightCm <= FLAT_MAX_CM + EPSILON_CM;
 
+/** A single upright item may rest on a floor-standing table/desk. Only catalogue categories
+ * marked supportSurface (and the fixture table) count; Product.kind is only a proxy silhouette.
+ * A support cannot itself be stacked, so height is unambiguous without a stored parent or y. */
+function supportedBy(room: Room, candidate: Product, box: Footprint, support: Product, top: Footprint): boolean {
+  if (isFlat(candidate) || isFlat(support) || candidate.supportSurface || support.supportSurface !== true ||
+      candidate.heightCm + support.heightCm > room.heightCm + EPSILON_CM) return false;
+  for (const corner of polygon(box)) {
+    const relative: Axis = [corner[0] - top.x, corner[1] - top.z];
+    if (Math.abs(dot(relative, top.axes[0])) > top.half[0] + EPSILON_CM ||
+        Math.abs(dot(relative, top.axes[1])) > top.half[1] + EPSILON_CM) return false;
+  }
+  return true;
+}
+
+/** The clause resolver uses this same predicate; it must never light an unsupported pose. */
+export function canPlaceOnSupport(room: Room, candidate: Product, pose: Pose, support: Product, supportPose: Pose): boolean {
+  return validProduct(candidate) && validProduct(support) && validPose(pose) && validPose(supportPose) &&
+    supportedBy(room, candidate, footprint(candidate, pose), support, footprint(support, supportPose));
+}
+
+/** Base height for rendering and previews. Pose remains horizontal and server-compatible. */
+export function supportHeightCm(room: Room, products: Product[], instances: Instance[], instanceId: string, pose: Pose): number {
+  const item = instances.find(instance => instance.instanceId === instanceId);
+  const product = item && productOf(item, products);
+  if (!product || !validProduct(product) || !validPose(pose)) return 0;
+  const box = footprint(product, pose);
+  for (const other of instances) {
+    if (other.instanceId === instanceId || !validPose(other.pose)) continue;
+    const support = productOf(other, products);
+    if (support && validProduct(support) && supportedBy(room, product, box, support, footprint(support, other.pose))) return support.heightCm;
+  }
+  return 0;
+}
+
 function overlaps(a: Footprint, b: Footprint): boolean {
   const delta: Axis = [b.x - a.x, b.z - a.z];
   for (const axis of [...a.axes, ...b.axes]) {
@@ -128,7 +162,10 @@ export function validatePlacement(room: Room, products: Product[], instances: In
     const otherProduct = productOf(other, products);
     if (!otherProduct || !validProduct(otherProduct) || !validPose(other.pose)) return invalid("Cannot validate an existing object");
     if (isFlat(product) || isFlat(otherProduct)) continue;
-    if (overlaps(target, footprint(otherProduct, other.pose))) {
+    const otherBox = footprint(otherProduct, other.pose);
+    if (supportedBy(room, product, target, otherProduct, otherBox) ||
+        supportedBy(room, otherProduct, otherBox, product, target)) continue;
+    if (overlaps(target, otherBox)) {
       collidingIds.push(other.instanceId);
       names.push(otherProduct.name);
     }

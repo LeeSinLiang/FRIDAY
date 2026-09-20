@@ -162,6 +162,10 @@ function LegacyApp() {
   const [yawChoice, setYawChoice] = useState<number | null>(null);
   const sceneProducts = useMemo(() => productsWith(catalogue, instances), [instances]);
   const region = useRegion(armedListing ?? hoveredListing, ROOM, sceneProducts, instances, placeClauses);
+  const onTargetRef = placeClauses.find(clause => clause.k === "on" && clause.ref.kind === "instance")?.ref;
+  const onTargetId = onTargetRef?.kind === "instance" ? onTargetRef.id : null;
+  const onTarget = onTargetId ? instances.find(instance => instance.instanceId === onTargetId) : undefined;
+  const supportHeightCm = onTarget ? productOf(onTarget, sceneProducts)?.heightCm ?? 0 : 0;
   const fitting = region ? region.solution.legalCounts.map((count, index) => (count > 0 ? index : -1)).filter((index) => index >= 0) : [];
   const yawIndex = yawChoice !== null && fitting.includes(yawChoice) ? yawChoice : Math.max(region?.solution.bestYawIndex ?? 0, 0);
   // A chosen turn belongs to the item in hand. Hovering other cards, or moving the pointer from the
@@ -350,7 +354,7 @@ function LegacyApp() {
               instances={instances}
               products={sceneProducts}
               overlay={
-                <FloorOverlay mask={region ? region.solution.masks[yawIndex] : null} armed={armedListing !== null} onPlace={placeListing} />
+                <FloorOverlay mask={region ? region.solution.masks[yawIndex] : null} armed={armedListing !== null} onPlace={placeListing} supportHeightCm={supportHeightCm} />
               }
               selectedId={selectedId}
               mode={mode}
@@ -693,6 +697,10 @@ function LegacyApp() {
         onHover={setHoveredListing}
         onPick={setArmedListing}
         onPlace={setPlaceClauses}
+        supports={instances.flatMap(instance => {
+          const product = productOf(instance, sceneProducts);
+          return product?.supportSurface ? [{ id: instance.instanceId, name: product.name }] : [];
+        })}
       />
       <div className="placement-notice" role="status" aria-live="polite">
         {notice}

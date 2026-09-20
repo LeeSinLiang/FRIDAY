@@ -1,5 +1,6 @@
 import * as pc from "playcanvas";
-import type { Instance, Pose, Product } from "../types";
+import type { Instance, Pose, Product, Room } from "../types";
+import { supportHeightCm } from "../placement";
 import { cmToScene, meterGlbToSceneScale } from "../units";
 import type { ModelStatus } from "./contracts";
 import { animateMaterialization, MATERIALIZE_PREVIEW_EVENT } from "./materialize";
@@ -15,8 +16,8 @@ export type FurnitureVisual = {
   dispose(): void;
 };
 
-export function applyFurniturePose(entity: pc.Entity, pose: Pose) {
-  entity.setLocalPosition(cmToScene(pose.xCm), 0, cmToScene(pose.zCm));
+export function applyFurniturePose(entity: pc.Entity, pose: Pose, baseHeightCm = 0) {
+  entity.setLocalPosition(cmToScene(pose.xCm), cmToScene(baseHeightCm), cmToScene(pose.zCm));
   entity.setLocalEulerAngles(0, pose.yawRad * pc.math.RAD_TO_DEG, 0);
 }
 
@@ -135,14 +136,16 @@ export function createFurnitureVisual(runtime: FurnitureRuntime, instance: Insta
 }
 
 /** Frozen screenshot geometry shares source resources but owns its own hierarchy. */
-export async function createFurnitureEntity(runtime: FurnitureRuntime, instance: Instance, product: Product) {
+export async function createFurnitureEntity(runtime: FurnitureRuntime, instance: Instance, product: Product, baseHeightCm = 0) {
   const visual = createFurnitureVisual(runtime, instance, product);
+  applyFurniturePose(visual.entity, instance.pose, baseHeightCm);
   const warning = await visual.ready;
   return { entity: visual.entity, warning, dispose: visual.dispose };
 }
 
 export function createFurnitureLayer(runtime: FurnitureRuntime, parent: pc.Entity,
-  status: (id: string, status: ModelStatus) => void) {
+  status: (id: string, status: ModelStatus) => void,
+  context: () => { room: Room; products: Product[]; instances: Instance[] }) {
   const entries = new Map<string, { signature: string; visual: FurnitureVisual }>();
   let initialized = false;
   const replay = (event: Event) => {
@@ -167,11 +170,16 @@ export function createFurnitureLayer(runtime: FurnitureRuntime, parent: pc.Entit
           entry = { signature, visual }; entries.set(instance.instanceId, entry);
           if (initialized && isNew) visual.materialize();
         }
-        if (instance.instanceId !== movingId) applyFurniturePose(entry.visual.entity, instance.pose);
+        if (instance.instanceId !== movingId) applyFurniturePose(entry.visual.entity, instance.pose,
+          supportHeightCm(context().room, products, instances, instance.instanceId, instance.pose));
       }
       initialized = true;
     },
-    preview(id: string, pose: Pose) { const entry = entries.get(id); if (entry) applyFurniturePose(entry.visual.entity, pose); },
+    preview(id: string, pose: Pose) {
+      const entry = entries.get(id), current = context();
+      if (entry) applyFurniturePose(entry.visual.entity, pose,
+        supportHeightCm(current.room, current.products, current.instances, id, pose));
+    },
     setVisible(id: string, visible: boolean) { const entry = entries.get(id); if (entry) entry.visual.entity.enabled = visible; },
     dispose() { if (typeof window !== "undefined") window.removeEventListener(MATERIALIZE_PREVIEW_EVENT, replay); for (const entry of entries.values()) entry.visual.dispose(); entries.clear(); },
   };

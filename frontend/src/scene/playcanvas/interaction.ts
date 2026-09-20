@@ -72,7 +72,7 @@ export function createSceneInteraction(runtime: PlayCanvasRuntime, initial: Inte
   canvas.style.touchAction = "none";
   const furniture = createFurnitureLayer(runtime, runtime.contentRoot, (id, status) => {
     if (id !== ghost?.instanceId) callbacks.onModelStatus(id, status);
-  });
+  }, () => ({ room: state.room, products: state.products, instances: ghost ? [...state.instances, ghost] : state.instances }));
   const angels = createAngelMovers(runtime, (id, pose) => furniture.preview(id, pose));
   const overlays = createPlacementOverlays(runtime, runtime.contentRoot);
   const surface = createSurfaceReference(runtime, callbacks.onSurfaceStatus);

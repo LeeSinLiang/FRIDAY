@@ -10,7 +10,7 @@ from catalogue.feed import load_catalogue
 
 DIMENSION_TOLERANCE_CM = 0.05
 PRODUCT_KEYS = {'productId', 'name', 'widthCm', 'depthCm', 'heightCm', 'color', 'kind'}
-OPTIONAL_PRODUCT_KEYS = {'modelUrl'}
+OPTIONAL_PRODUCT_KEYS = {'modelUrl', 'supportSurface'}
 
 # The scene's kind only picks a stand-in shape. Mirrors KIND_BY_CATEGORY in frontend/src/region/boundary.ts.
 KIND_BY_CATEGORY = {
@@ -41,6 +41,8 @@ def catalogue_product(product_id):
     }
     if listing.model_url:
         product['modelUrl'] = listing.model_url
+    if listing.category in ('table', 'desk'):
+        product['supportSurface'] = True
     return product
 
 
@@ -60,9 +62,11 @@ def well_formed(carried, product_id):
     finite = lambda value: isinstance(value, (int, float)) and not isinstance(value, bool) and value == value and abs(value) != float('inf')
     return (carried['productId'] == product_id and text(carried['name']) and text(carried['color']) and carried['kind'] in SCENE_KINDS
             and ('modelUrl' not in carried or text(carried['modelUrl']))
+            and ('supportSurface' not in carried or isinstance(carried['supportSurface'], bool))
             and all(finite(carried[key]) and carried[key] > 0 for key in ('widthCm', 'depthCm', 'heightCm')))
 
 
 def agrees_with_catalogue(carried, authoritative):
     """True when a client-carried product states the catalogue's dimensions."""
-    return all(abs(carried[key] - authoritative[key]) <= DIMENSION_TOLERANCE_CM for key in ('widthCm', 'depthCm', 'heightCm'))
+    return (all(abs(carried[key] - authoritative[key]) <= DIMENSION_TOLERANCE_CM for key in ('widthCm', 'depthCm', 'heightCm'))
+            and ('supportSurface' not in carried or carried['supportSurface'] is authoritative.get('supportSurface', False)))

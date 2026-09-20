@@ -137,6 +137,12 @@
           "title": "Prepare and verify the shared Haussmann room locally",
           "done": false,
           "owner": "adelle"
+        },
+        {
+          "id": "8e505c36-df02-4a34-a994-72e273100164",
+          "title": "Make furniture stack",
+          "done": true,
+          "owner": "saketh"
         }
       ]
     },

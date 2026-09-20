@@ -11,6 +11,7 @@ import { compileSentence, searchCatalogue, type Compiled } from "./api";
 import { canListen, fetchBackend, listen, type Heard, type Listening, type TranscribeBackend } from "./transcribe";
 import "./shelf.css";
 import { priceLabel } from "./price";
+import { resolveLiveSupport } from "./liveSupport";
 
 type Props = {
   region: Region | null;
@@ -25,6 +26,7 @@ type Props = {
   onHover: (listing: Listing | null) => void;
   onPick: (listing: Listing | null) => void;
   onPlace: (place: PlaceClause[]) => void;
+  supports?: { id: string; name: string }[];
   onClose?: () => void;
 };
 
@@ -69,7 +71,7 @@ function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: 
   );
 }
 
-export default function CatalogueShelf({ region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose }: Props) {
+export default function CatalogueShelf({ region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, supports = [], onClose }: Props) {
   const [sentence, setSentence] = useState("an armchair");
   const [compiled, setCompiled] = useState<Compiled | null>(null);
   const [items, setItems] = useState<Listing[]>([]);
@@ -96,7 +98,7 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
       setCompiled(result); setItems(found.items); setTotal(found.total); setError("");
       setMatches(found.facets ? found.facets.category.reduce((sum, bucket) => sum + bucket.count, 0) : null);
       onHover(null); // the card under the pointer is a different listing now
-      onPlace(result.program.place);
+      onPlace(resolveLiveSupport(text, result.program.place, supports));
     } catch (caught) {
       if ((caught as Error).name !== "AbortError") setError((caught as Error).message);
     } finally {

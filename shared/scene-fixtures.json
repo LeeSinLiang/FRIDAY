@@ -19,6 +19,7 @@
     },
     {
       "productId": "test-table",
+      "supportSurface": true,
       "name": "Stone coffee table",
       "widthCm": 120,
       "depthCm": 60,
