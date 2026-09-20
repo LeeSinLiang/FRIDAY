@@ -2,6 +2,14 @@
 
 Implemented on `feat/3d-engine-frontend`, 2026-09-19. The browser and Django use `shared/scene-fixtures.json` for room dimensions and product metadata. Poses are centimeters plus radians; renderer scale is independent.
 
+## The principle: storage may delay a save, never refuse a placement
+
+**The room is authoritative in the browser during interaction; the server is where it durably lands.** A user drops a chair and the chair is there. Whether the server has written it yet is a separate question with a separate answer, and the two never meet in the room view.
+
+- A save that fails for a reason that can clear on its own (any 5xx, such as "Scene storage is busy", or a network blink) is **retried quietly with backoff**: 0.5 s, 1 s, 2 s, 4 s, then every 8 s, for as long as it takes. The placed item is never taken back. No status code is ever shown. For the first four attempts the status line only says it is saving; after that it says the room is still saving and is safe in this browser, and offers a retry button that saves immediately.
+- A save the server **refuses** (4xx: invalid placement, CSRF) is not retried, because it cannot succeed, and a 409 still stops autosaving and asks for a reload, exactly as before.
+- A sign-in, a compile and a placement share one SQLite file but must never block one another. `backend/config/settings.py` sets `transaction_mode: IMMEDIATE` (a deferred transaction that reads then writes fails *instantly* on contention and ignores the busy timeout, which is what produced the 503s), `journal_mode=WAL` so readers and the writer do not block each other, and a 20 s busy timeout. `python3 scripts/hammer_storage.py <base-url>` runs scene saves, compile throttle writes and sign-in attempts concurrently against a running server and fails on any 5xx: before this change 2,297 of 3,297 saves returned 503; after it, 0 of 1,733.
+
 ## Session and transport
 
 `GET /api/scene/` initializes an empty, database-persisted room for the current Django session and sets session/CSRF cookies. Returns `{room, products, instances, revision}`. Room revision is metadata; the top-level revision controls edits. Send cookies and `X-CSRFToken` on every write. Vite preserves the original Host (`changeOrigin: false`) so Django can enforce same-origin checks through the development proxy. These are anonymous demo sessions, not user accounts or shareable room IDs. Losing the session cookie loses access to its room. Other REST endpoints retain their authentication defaults.

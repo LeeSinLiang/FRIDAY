@@ -113,3 +113,11 @@ Appended by Saketh's agent so the edit is not silent; nothing above was changed.
 ## Note from Saketh's lane — `AGENTS.md` changed again (2026-09-19)
 
 Appended by Saketh's agent; nothing above was changed. New section **Clean up after yourself**: stop every process you start and verify with `lsof` before reporting; use your own ports, never 8000/5173 (`BACKEND_PORT` / `FRONTEND_PORT`); scratch files go under the gitignored `.scratch/`; check a push succeeded before acting on it (`set -o pipefail`).
+
+## Note from Saketh's lane — scene saves and SQLite (2026-09-20)
+
+Appended by Saketh's agent; nothing above was changed. Two changes in your files, both about the 503 "Scene storage is busy":
+
+- **`backend/config/settings.py` (shared):** SQLite now uses `transaction_mode: IMMEDIATE`, `journal_mode=WAL`, `timeout: 20`. The scene service reads then writes inside `transaction.atomic`; with SQLite's default deferred transactions that fails instantly under contention, ignoring the timeout. Since William's accounts work landed, scene saves, the cache table behind throttles, and sessions/MFA all share one file. `scripts/hammer_storage.py` reproduces it: 2,297 of 3,297 saves were 503 before, 0 of 1,733 after. `db.sqlite3-wal` and `-shm` files are normal and already gitignored.
+- **`frontend/src/scene/useSceneSync.ts`:** a save that fails with a 5xx or a network error is now retried quietly with backoff (0.5 s doubling to 8 s) instead of going straight to "offline" and waiting for a click, and the status line never shows a status code. A refused save (4xx) and a 409 behave as before. **I changed one assertion in your `sync.test.ts`** ("retains dirty data through network retry": it now expects `unsaved` and an automatic retry rather than `offline` and a manual one) and added three tests beside it. The principle is written at the top of `docs/backend/contracts/scene-api.md`.
+- Worth knowing for your scene-ownership work with William: room presets store a layout per session per room under `<session key>:<room id>`.
