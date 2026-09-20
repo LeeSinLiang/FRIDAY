@@ -35,14 +35,14 @@ export function solve(scene: Scene, candidate: Candidate, place: PlaceClause[]):
   const { masks, dropped, legalCounts } = solveOnce(scene, candidate, place);
   const most = Math.max(...legalCounts);
   if (most > 0) return { masks, dropped, legalCounts, bestYawIndex: legalCounts.indexOf(most) };
-  const whyNothingFits = explainNothingFits(scene.room, candidate.product, place, (fewer) => solveOnce(scene, candidate, fewer));
+  const whyNothingFits = explainNothingFits(scene.room, candidate.product, place, (fewer) => solveOnce(scene, candidate, fewer), scene.portals);
   return { masks, dropped, legalCounts, bestYawIndex: -1, whyNothingFits };
 }
 
 function solveOnce(scene: Scene, candidate: Candidate, place: PlaceClause[]): Pick<Solution, "masks" | "dropped" | "legalCounts"> {
   const rules: Rule[] = [doorSwingRule(scene)], dropped: Dropped[] = [], ignore = [...(candidate.ignoreInstanceIds ?? [])];
   const clauses = placeToCm(place), clearances = wallClearances(clauses);
-  const region = floorRegion(scene.room); // once per solve, not once per clause or per grid point
+  const region = floorRegion(scene.room, scene.portals); // once per solve, not once per clause or per grid point
   for (const clause of clauses) {
     const resolved = resolveClause(scene, candidate.product, clause, clearances, region);
     if ("dropped" in resolved) { dropped.push({ clause, reason: resolved.dropped }); continue; }

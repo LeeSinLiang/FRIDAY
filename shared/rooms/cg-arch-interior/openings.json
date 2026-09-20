@@ -4,6 +4,16 @@
   "convention": "startCm runs along the wall from that wall's own low corner, which for a prepared room is the edge of its free floor (wallBounds): the north wall starts at x = 787 cm, so 806.5 - 787 = 19.5. The glazing itself stands at z = 150 cm, 30 cm behind the free floor's z-min edge at 180 cm.",
   "notListed": "Three glass doors (nodes 'Room Glass Door', 'Room glass Door', 'Room glass door', x 0.37..5.38 m at z 4.2 m) open onto floor outside the free rectangle, so no placement can reach them.",
   "openings": [
-    { "id": "w1", "kind": "window", "wall": "n", "startCm": 19.5, "widthCm": 280, "sillCm": 7.5, "headCm": 212.5 }
-  ]
+    {
+      "id": "w1",
+      "kind": "window",
+      "wall": "n",
+      "startCm": 19.5,
+      "widthCm": 280,
+      "sillCm": 7.5,
+      "headCm": 212.5
+    }
+  ],
+  "portals": [],
+  "portalsNote": "EMPTY ON PURPOSE, pending Saketh's decision. Measured from assets/room.glb (tall vertical faces in 'Room Baked fixed architecture'): the partition on the west side has faces at x = 727 and 741 and runs only from z = 0 to z = 420. From z = 420 to z = 760 nothing tall stands near the free floor's x = 787 edge: that stretch is open into the adjoining space. The honest entry is {\"id\": \"p-west\", \"from\": [787, 420], \"to\": [787, 760], \"leadsTo\": \"adjoining space\"}. It is not applied because it changes two rehearsed demo numbers: '4 feet from any wall' alone would leave more than 220 / 265 positions, and '5 feet from any wall' would no longer answer 'needs 371 cm of width, this room has 334 cm', because beside the opening it does fit. The full hero sentence is unaffected (60 / 75 / 60 / 75): its patch lies beside the solid stretch. frontend/src/region/floor.test.ts pins all three consequences."
 }

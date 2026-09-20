@@ -6,9 +6,13 @@ import fixtures from "../../../shared/scene-fixtures.json";
 import type { PlaceClause } from "../lib/dsl/schema";
 import type { Product, Room } from "../scene/types";
 import { wallBounds } from "./boundary";
-import { floorRegion, longestSpans, wallEdges } from "./floor";
+import { floorRegion, longestSpans, wallEdges, type Portal } from "./floor";
 import { footprintRect, pointCm } from "./grid";
 import { invariantMask } from "./invariants";
+import { openingsFor, portalsFor } from "./roomOpenings";
+import feed from "../../../backend/catalogue/data/listings.json";
+import type { Listing } from "../lib/types";
+import { listingToProduct } from "./boundary";
 import { seeded } from "./rng";
 import { solve } from "./solve";
 import { FREE, YAW_BINS, type Scene, type WallSide } from "./types";
@@ -131,4 +135,65 @@ test("PROPERTY: on rectangular floors, derived walls equal rectangle arithmetic 
     });
   }
   assert.ok(compared > 1_000_000 && lit > 10_000, `compared ${compared}, lit ${lit}`);
+});
+
+// ---- Portals: a stretch of boundary that is open rather than solid. Authored data, never a guess. ----
+
+const OPEN_WEST: Portal[] = [{ id: "p1", from: [0, 200], to: [0, 500], leadsTo: "hall" }];
+
+test("a portal relabels part of the boundary; it adds and removes no floor, and it is never a wall", () => {
+  const room = fixtures.room as Room;
+  const plain = floorRegion(room), opened = floorRegion(room, OPEN_WEST);
+  assert.deepEqual([...opened.inside], [1, 1], "the portal's end splits the grid, nothing more");
+  assert.equal(plain.inside.length, 1);
+  const west = opened.edges.filter((edge) => edge.side === "w").map((edge) => [edge.portalId ?? "wall", edge.rect.minZ, edge.rect.maxZ]);
+  assert.deepEqual(west, [["wall", 0, 200], ["p1", 200, 500]]);
+  assert.deepEqual(wallEdges(opened, "w").map((edge) => edge.rect), [{ minX: 0, maxX: 0, minZ: 0, maxZ: 200 }]);
+  assert.equal(wallEdges(opened).length, 4, "north, east, south, and the solid part of the west");
+});
+
+test("any_wall measures only to walls: beside a portal an item may stand at the floor's edge, and the wall's end is rounded", () => {
+  const clause: PlaceClause[] = [{ k: "distance_min", ref: { kind: "any_wall" }, mm: 1000 }];
+  const at = (mask: { data: Uint8Array; shape: [number, number] }, x: number, z: number) => mask.data[Math.round(z / 5) * mask.shape[0] + Math.round(x / 5)];
+  const walled = solve({ room: fixtures.room as Room, products: [], instances: [] }, { product: box }, clause).masks[0];
+  const opened = solve({ room: fixtures.room as Room, products: [], instances: [], portals: OPEN_WEST }, { product: box }, clause).masks[0];
+  assert.equal(at(walled, 20, 350), 2, "20 cm from a west WALL is too close");
+  assert.equal(at(opened, 20, 350), 1, "the same spot beside the opening is fine: nothing solid is within 100 cm");
+  assert.equal(at(opened, 20, 150), 2, "further up, the solid part of the west wall still counts");
+  // The wall ends at (0, 200). A box centred (20, 290) has its corner 70 cm below it; one centred (20, 325) is 105 cm away.
+  assert.equal(at(opened, 20, 290), 2);
+  assert.equal(at(opened, 20, 325), 1);
+  assert.equal(at(opened, 20, 480), 2, "and the south wall is a wall");
+});
+
+test("a side that is all portal has no wall to be against, and says so; nothing-fits stops quoting a width", () => {
+  const wholeWest: Portal[] = [{ id: "p1", from: [0, 0], to: [0, 500] }];
+  const scene: Scene = { room: fixtures.room as Room, products: [], instances: [], portals: wholeWest };
+  assert.deepEqual(solve(scene, { product: box }, [{ k: "against", ref: { kind: "wall", id: "w-w" } }]).dropped.map((d) => d.reason),
+    ["this room has no wall on that side, only an opening"]);
+  const huge: PlaceClause[] = [{ k: "distance_min", ref: { kind: "any_wall" }, mm: 4000 }];
+  assert.match(solve({ ...scene, portals: [] }, { product: box }, huge).whyNothingFits!, /^needs 840 cm of width, this room has 600 cm$/);
+  assert.match(solve(scene, { product: box }, huge).whyNothingFits!, /^these can't all hold here/, "beside an opening 'item plus both clearances' would be a false sentence");
+});
+
+test("a portal through open floor changes no wall: it is a threshold between rooms, for the component model to use", () => {
+  const threshold: Portal[] = [{ id: "t1", from: [300, 0], to: [300, 500] }];
+  assert.deepEqual(wallEdges(floorRegion(fixtures.room as Room, threshold)).map((edge) => edge.side).sort(), ["e", "n", "s", "w"]);
+  assert.equal(floorRegion(fixtures.room as Room, threshold).edges.filter((edge) => edge.portalId).length, 0);
+});
+
+test("DEMO ROOM: no portal is applied, and this is what the measured one would do if it were", () => {
+  const room = { ...prepared, spatial: cgArchSpatial as Room["spatial"] };
+  const herrakra = listingToProduct((feed as unknown as { items: Listing[] }).items.find((l) => l.id === "ikea-405.355.47")!);
+  assert.deepEqual(portalsFor("cg-arch-interior"), [], "empty on purpose: see portalsNote in the room's openings.json");
+  // Measured from the model: the west partition ends at z = 420; from there to z = 760 the x = 787 edge is open.
+  const measured: Portal[] = [{ id: "p-west", from: [787, 420], to: [787, 760], leadsTo: "adjoining space" }];
+  const counts = (portals: Portal[], place: PlaceClause[]) =>
+    solve({ room, products: [], instances: [], openings: openingsFor("cg-arch-interior"), portals }, { product: herrakra }, place).legalCounts;
+  const feet = (mm: number): PlaceClause => ({ k: "distance_min", ref: { kind: "any_wall" }, mm });
+  const hero: PlaceClause[] = [{ k: "near", ref: { kind: "window", id: "w1" } }, feet(1219)];
+  assert.deepEqual([counts([], [feet(1219)]), counts([], hero), counts([], [feet(1524)])], [[220, 265, 220, 265], [60, 75, 60, 75], [0, 0, 0, 0]]);
+  assert.deepEqual(counts(measured, hero), [60, 75, 60, 75], "the hero patch lies beside the solid stretch, so it would not move");
+  assert.deepEqual(counts(measured, [feet(1219)]), [496, 519, 496, 519], "four feet alone would more than double");
+  assert.deepEqual(counts(measured, [feet(1524)]), [3, 6, 3, 6], "and five feet would FIT, which ends the 'needs 371 cm of width' beat");
 });

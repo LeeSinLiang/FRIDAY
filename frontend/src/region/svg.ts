@@ -41,7 +41,7 @@ export type SvgOptions = { title?: string; candidate?: { product: Product; pose:
 export function toSvg(scene: Scene, mask: Mask, options: SvgOptions = {}): string {
   const { widthCm: w, depthCm: d } = scene.room;
   // Every boundary piece of the floor: solid for a wall, dashed for a portal. Not a rectangle, unless the floor is one.
-  const boundary = floorRegion(scene.room).edges.map((edge) => `<line x1="${edge.rect.minX}" y1="${edge.rect.minZ}" x2="${edge.rect.maxX}" y2="${edge.rect.maxZ}" stroke="${COLOURS.wall}" stroke-width="6"${edge.portalId ? ' stroke-dasharray="14 10" stroke-opacity="0.5"' : ""}/>`).join("");
+  const boundary = floorRegion(scene.room, scene.portals).edges.map((edge) => `<line x1="${edge.rect.minX}" y1="${edge.rect.minZ}" x2="${edge.rect.maxX}" y2="${edge.rect.maxZ}" stroke="${COLOURS.wall}" stroke-width="6"${edge.portalId ? ' stroke-dasharray="14 10" stroke-opacity="0.5"' : ""}/>`).join("");
   const product = (instance: Instance) => scene.products.find((p) => p.productId === instance.productId);
   const items = scene.instances.map((instance) => {
     const found = product(instance);

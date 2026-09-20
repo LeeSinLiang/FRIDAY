@@ -4,7 +4,7 @@
 import type { PlaceClause } from "../lib/dsl/schema";
 import type { Product, Room } from "../scene/types";
 import { placeToCm, wallBounds, type PlaceCm } from "./boundary";
-import { floorRegion, longestSpans } from "./floor";
+import { floorRegion, longestSpans, type Portal } from "./floor";
 import { wallClearances } from "./clauses";
 import { footprintRect } from "./grid";
 import { YAW_BINS } from "./types";
@@ -17,9 +17,13 @@ const total = (counts: number[]) => counts.reduce((sum, n) => sum + n, 0);
 /** Simple arithmetic first: the item plus the wall clearances asked for, against the longest unbroken
  *  run of floor each way. For a rectangle that is its width and depth; for any other shape it is the most
  *  generous reading, so "needs more than this" is always true when it is said. */
-function spanShortfall(room: Room, product: Product, place: PlaceCm[]): string | null {
+function spanShortfall(room: Room, product: Product, place: PlaceCm[], portals: Portal[]): string | null {
+  const region = floorRegion(room, portals);
+  // Beside an opening there is no wall to keep clear of, so "item plus both clearances" overstates what is
+  // needed and the sentence would be false. With any portal in the room, leave it to the general explanation.
+  if (region.edges.some((edge) => edge.portalId !== undefined)) return null;
   const need = wallClearances(place);
-  const { acrossCm, deepCm } = longestSpans(floorRegion(room));
+  const { acrossCm, deepCm } = longestSpans(region);
   let best: { axis: string; needs: number; has: number } | null = null;
   for (const yawRad of YAW_BINS.slice(0, 2)) {
     const rect = footprintRect(product, { xCm: 0, zCm: 0, yawRad });
@@ -44,7 +48,7 @@ const describe = (clause: PlaceCm) => `${clause.cm === undefined ? "" : `${round
  *   place: the clauses that produced nothing.
  *   solveWith: re-runs the solver with a different clause list (injected to keep this file pure).
  */
-export function explainNothingFits(room: Room, product: Product, place: PlaceClause[], solveWith: Solver): string {
+export function explainNothingFits(room: Room, product: Product, place: PlaceClause[], solveWith: Solver, portals: Portal[] = []): string {
   const openFloor = total(solveWith([]).legalCounts);
   if (openFloor === 0) {
     const [w, d] = [product.widthCm, product.depthCm].map(round);
@@ -54,7 +58,7 @@ export function explainNothingFits(room: Room, product: Product, place: PlaceCla
     return tooBig ? `it is ${w} × ${d} cm and ${room.spatial?.freeAreas.length ? "the usable floor" : "the room"} is ${round(acrossCm)} × ${round(deepCm)} cm`
       : `there is no free floor big enough for its ${w} × ${d} cm footprint`;
   }
-  const span = spanShortfall(room, product, placeToCm(place));
+  const span = spanShortfall(room, product, placeToCm(place), portals);
   if (span) return span;
   // Otherwise find the one request that, if given up, makes room. Costs one solve per clause, only on failure.
   const culprits = place.map((_, index) => ({ index, freed: total(solveWith(place.filter((__, i) => i !== index)).legalCounts) }))
