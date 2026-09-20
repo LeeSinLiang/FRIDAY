@@ -260,6 +260,12 @@
           "title": "Add a scene screenshot tool",
           "done": false,
           "owner": "unassigned"
+        },
+        {
+          "id": "6ae44373-c5ee-44b4-867c-99e96937aef8",
+          "title": "Add Blender MCP-style scene and object context to the agent",
+          "done": false,
+          "owner": "saketh"
         }
       ],
       "description": "End-to-end checks, deployment, documentation, and the demo journey."

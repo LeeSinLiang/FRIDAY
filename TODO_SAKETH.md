@@ -10,6 +10,12 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## Next
 
+- **Add Blender MCP-style scene and object context to the agent** — requested by William, 2026-09-19; Kanban `6ae44373-c5ee-44b4-867c-99e96937aef8`, open. Handoff on `codex/visa-sandbox`: [reference, response contracts and implementation steps](docs/backend/contracts/blender-mcp-agent-handoff.md). This is a requested follow-up, not a claim Saketh has started or completed it.
+  - Match Blender MCP's scene-summary → detailed-object → action → image/result loop. Each placed object needs a stable instance ID plus product ID, precise location/orientation, dimensions/world bounds, units/axes/pivot, known asset/material metadata, hierarchy/visibility where supported, provenance and current scene revision.
+  - Inspect the pinned official Blender Lab and community sources linked in the handoff to see exactly what JSON/text and PNG content reach the model. Account for all component families in the capability map; explicitly mark unsupported Blender/provider operations.
+  - Reuse current scene/placement/capture services; coordinate shared read schemas and UI metadata with Sin. Register agent tools with trusted session context, preserve revision/idempotency and placement checks, and pass real screenshot pixels through the agent adapter.
+  - Build summary/detail tools first, then wire edits and capture feedback. Verify duplicate-product instances, more than ten objects, rotation/units, rejected and stale edits, missing metadata and actual model-visible image content. Record successful/rejected traces before marking done.
+  - Preserve existing catalogue/compiler code and the Visa HTML tester. Shared cart checkout, guest-room account ownership and the known database-cache test compatibility issue remain separate handoff tasks.
 
 ## Done
 

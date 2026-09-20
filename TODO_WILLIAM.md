@@ -4,7 +4,7 @@ Record all agent work here when working for William. Include status, file paths,
 
 ## In progress
 
-- None in this handoff scope; remaining integration work is listed below and remains open on the board.
+- None in this documentation handoff scope; implementation follow-ups remain open below and in the relevant owner's TODO.
 
 ## Next
 
@@ -14,6 +14,8 @@ Record all agent work here when working for William. Include status, file paths,
 - Agree on the shared catalogue/cart contract and replace the explicit two-product fixture adapter. Payment authorization and merchant ordering remain separate integrations. Phone-generated FRIDAY MFA verification is now confirmed; the user's original camera-scan action was not replayed by the agent.
 
 ## Done
+
+- 2026-09-19: **Prepare Saketh's Blender MCP agent-context handoff.** Added `docs/backend/contracts/blender-mcp-agent-handoff.md`, indexed it, and added William's requested follow-up under `TODO_SAKETH.md` → Next. Open Saketh-owned Kanban card: `6ae44373-c5ee-44b4-867c-99e96937aef8`, **Add Blender MCP-style scene and object context to the agent**. The note distinguishes official Blender Lab MCP (`ff54e4d8`) from community MCP for Blender (`6f992ffb`), describes actual model-facing dictionary/JSON-text/image returns, maps all 26 official and 31 community tools, and specifies stable object IDs, coordinates, units, bounds, metadata/provenance, scene revisions, action/capture feedback, implementation order and acceptance checks. Inspected primary source via the official project's API and GitHub, plus current FRIDAY scene/engine/catalogue contracts. Verified complete tool-name coverage, relative links/indexing, example JSON and its bounds. Documentation and board snapshot only; no live Blender/agent test, application code change, HTML change or runtime refresh needed. Publish on `codex/visa-sandbox` only; the implementation card remains open for Saketh.
 
 - 2026-09-19: **Pull latest main and prepare the Visa/auth handoff** (Kanban `836acd1c-7b85-46c7-bc0c-22d80438eb34`). Pulled main through `44daea7` and then the newly pushed `98ca88d`; retained catalogue/compile, the room editor, capture contracts, and Gaussian research docs. Reconciled our additive backend settings/routes/dependencies, setup, configuration template and documentation. Added `docs/handoffs/visa-auth-integration.md`, indexed it, updated README and account/Visa docs, and copied the current six-component FRIDAY Project Plan into this branch. Delivery is on `codex/visa-sandbox`, not a direct change to main; William explicitly requested the feature-branch push.
 - Final scope: per William's correction, removed exploratory edits to the teammate's App, Vite proxy, catalogue tests and board implementation. All are identical to `98ca88d`. The existing HTML tester is byte-for-byte identical to the pre-pull checkpoint (SHA-256 `ed0e0e1b7b9491a88e531a22f95efb46037968174e1851b267be59d10a52e9db`). Account/checkout components and APIs remain available as source for integration; the new editor does not mount their routes. The handoff explains routing, same-origin CSRF/proxy setup, account state, cart contracts, units, approval, and tests.

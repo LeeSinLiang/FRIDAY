@@ -31,6 +31,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 ### Backend
 
+- [Blender MCP-style scene and object context: Saketh handoff](docs/backend/contracts/blender-mcp-agent-handoff.md) — pinned official/community references, model-facing metadata/images, complete capability map, implementation order, and acceptance checks.
+
 - [Spatial engine tools and screenshots](docs/backend/contracts/spatial-engine-tools.md) — explicit placement results, dry runs, selectable cameras, revision-specific PNGs, and Python agent adapters.
 
 - [Scene persistence and agent command API](docs/backend/contracts/scene-api.md) — session storage, validation, revisions, CSRF, and agent adapter handoff.
