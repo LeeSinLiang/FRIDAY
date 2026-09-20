@@ -16,7 +16,7 @@ export type FurnitureVisual = {
 };
 
 export function applyFurniturePose(entity: pc.Entity, pose: Pose) {
-  entity.setLocalPosition(cmToScene(pose.xCm), 0, cmToScene(pose.zCm));
+  entity.setLocalPosition(cmToScene(pose.xCm), cmToScene(pose.yCm ?? 0), cmToScene(pose.zCm));
   entity.setLocalEulerAngles(0, pose.yawRad * pc.math.RAD_TO_DEG, 0);
 }
 

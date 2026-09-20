@@ -25,7 +25,7 @@ export const WINDOW_ZONE_CM = 50;
 export const APPROACH_CM = 60;
 /** One line to enable if the editor ever accepts an item overlapping its support. Until then a lit
  *  region on a table top would be refused on drop, which is worse than no region. */
-export const ALLOW_STACKING = false;
+export const ALLOW_STACKING = true;
 
 /** The clearance each wall demands, from every distance_min and clear clause naming it or any_wall. */
 export function wallClearances(place: PlaceCm[]): Record<WallSide, number> {
@@ -76,6 +76,7 @@ function targets(scene: Scene, clause: PlaceCm, region: FloorRegion): Target[] |
     return instance && product ? [{ rect: footprintRect(product, instance.pose), instanceId: instance.instanceId }]
       : `nothing called "${ref.id}" is in the room`;
   }
+  if (ref.kind === "surface" || ref.kind === "compartment") return "Use on or inside for a reviewed support target";
   const openings = (scene.openings ?? []).filter((o) => o.kind === ref.kind && (ref.id === undefined || o.id === ref.id));
   if (!scene.openings?.length) return `the room does not describe its ${ref.kind}s yet`;
   if (!openings.length) return ref.id ? `the room has no ${ref.kind} "${ref.id}"` : `the room has no ${ref.kind}`;
@@ -113,9 +114,7 @@ function ruleFor(scene: Scene, product: Product, clause: PlaceCm, target: Target
     return "a wall cannot be blocked";
   }
   if (k === "on" && target.instanceId) {
-    if (!ALLOW_STACKING) return "the editor cannot place one item on another yet, so this would light floor the drop then refuses";
-    const support = target.rect;
-    return (pose) => pose.xCm >= support.minX && pose.xCm <= support.maxX && pose.zCm >= support.minZ && pose.zCm <= support.maxZ;
+    return "Supported placement is validated in the selected surface frame";
   }
   return `"${k}" does not apply to a ${clause.ref.kind}`;
 }

@@ -1,5 +1,5 @@
 import type { AgentMotion } from "./angelMotion";
-import type { CameraMode, Instance, Pose, Product, Room } from "../types";
+import type { Attachment, CameraMode, Instance, Pose, Product, Room } from "../types";
 
 export type InteractionMode = "explore" | "walk" | "place";
 export type ModelStatus = "loading" | "ready" | "error" | "proxy";
@@ -27,8 +27,8 @@ export type InteractionState = {
 };
 export type InteractionCallbacks = {
   onSelect: (id: string | null) => void;
-  onCommit: (instanceId: string, pose: Pose) => Promise<boolean>;
-  onPlace: (productId: string, pose: Pose) => Promise<boolean>;
+  onCommit: (instanceId: string, pose: Pose, attachment?: Attachment) => Promise<boolean>;
+  onPlace: (productId: string, pose: Pose, attachment?: Attachment) => Promise<boolean>;
   onCancelPlacement: () => void;
   onPreview: (preview: PlacementPreview | null) => void;
   onActiveChange: (active: boolean) => void;

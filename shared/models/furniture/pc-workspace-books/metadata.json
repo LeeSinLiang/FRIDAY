@@ -1,0 +1,20 @@
+{
+  "productId": "pc-workspace-books",
+  "catalogueListingId": "pc-workspace-books",
+  "modelUrl": "/models/furniture/pc-workspace-books/model.glb",
+  "widthCm": 24,
+  "depthCm": 18,
+  "heightCm": 26,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "license": "CC0-1.0",
+  "creator": "Kenney",
+  "sourceUrl": "https://kenney.nl/assets/furniture-kit",
+  "originalFile": "books.glb",
+  "dimensionBasis": "Authored demo size, not manufacturer measurements",
+  "modelSha256": "e12dcf8f9b2e960a7f070577b8dd47acbed176f2c862736f1c74cbfe24c504b5",
+  "matchType": "generic_visual_proxy",
+  "matchNote": "CC0 Kenney model at authored demo dimensions; this is a synthetic catalogue item, not a retail product match."
+}

@@ -10,6 +10,7 @@ import uuid
 
 from .capture_service import enqueue_capture, get_capture, metadata
 from .scene_service import SceneError, footprint
+from .supports import resolve_attachments
 
 
 def _camera(state, target_id, preview):
@@ -17,12 +18,18 @@ def _camera(state, target_id, preview):
     if not target_id:
         return camera
     target = state.object(target_id)
+    # Attachment-local coordinates and the reviewed profile are authoritative;
+    # a caller's cached world pose may still describe the child's old support.
+    if target['type'] == 'furniture':
+        products = {item['productId']: state.product(item['productId']) for item in state.instances}
+        resolved = resolve_attachments(state.instances, products)
+        target = {**target, 'pose': next(item['pose'] for item in resolved if item['instanceId'] == target['referenceId'])}
     if not camera or camera.get('kind') != 'firstPerson':
         raise SceneError('unsupported_camera', 'Target-focused views require the interior first-person renderer. Use an untargeted view in this room.')
     dx = target['pose']['xCm'] - camera['xCm']
     dz = target['pose']['zCm'] - camera['zCm']
     height = target['dimensionsCm'].get('heightCm')
-    target_y = height / 2 if height is not None else camera['yCm']
+    target_y = target['pose'].get('yCm', 0) + height / 2 if height is not None else camera['yCm']
     camera['yawRad'] = math.atan2(-dx, -dz)
     camera['pitchRad'] = max(-1.3, min(1.3, math.atan2(target_y - camera['yCm'], max(1, math.hypot(dx, dz)))))
     return camera
@@ -63,10 +70,14 @@ def request_view(state, trusted_session, request_id, view='perspective', target_
 
 def _objects(snapshot):
     products = {p['productId']: p for p in snapshot['products']}
+    # The capture queue freezes poses after authoritative attachment resolution.
+    # Preserve that historical geometry on read: resolving against a subsequently
+    # edited support profile would change metadata without changing its PNG.
     for item in snapshot['instances']:
         product = products[item['productId']]
         yield {'referenceId': item['instanceId'], 'name': product['name'],
-               'pose': item['pose'], 'dimensions': product, 'type': 'furniture'}
+               'pose': item['pose'], 'dimensions': product, 'type': 'furniture',
+               'attachment': item.get('attachment')}
     for obstacle in snapshot['room'].get('spatial', {}).get('obstacles', []):
         yield {'referenceId': 'fixed:' + obstacle['obstacleId'], 'name': obstacle['label'],
                'pose': obstacle, 'dimensions': obstacle, 'type': 'fixed'}
@@ -131,11 +142,18 @@ def project_objects(job):
     else:
         return {**result, 'method': 'unavailable', 'reason': 'Legacy orbit projection is not supplied; use a top view for object mapping.'}
     for item in _objects(job.snapshot):
-        entry = {'referenceId': item['referenceId'], 'name': item['name'], 'type': item['type']}
+        base_y = item['pose'].get('yCm', 0)
+        entry = {'referenceId': item['referenceId'], 'name': item['name'], 'type': item['type'],
+                 'pose': copy.deepcopy(item['pose'])}
+        if item.get('attachment'):
+            entry.update(attachment=copy.deepcopy(item['attachment']),
+                         parentReferenceId=item['attachment']['parentInstanceId'])
+        if 'heightCm' in item['dimensions']:
+            entry['verticalIntervalCm'] = {'minY': base_y, 'maxY': base_y + item['dimensions']['heightCm']}
         if job.view == 'perspective' and 'heightCm' not in item['dimensions']:
             result['objects'].append({**entry, 'projectionStatus': 'unknown_height'})
             continue
-        levels = (0, item['dimensions']['heightCm']) if job.view == 'perspective' else (0,)
+        levels = (base_y, base_y + item['dimensions']['heightCm']) if job.view == 'perspective' else (base_y,)
         points = [project(x, y, z) for x, z in _corners(item) for y in levels]
         if any(p is None for p in points):
             result['objects'].append({**entry, 'projectionStatus': 'clipped_depth_range'})

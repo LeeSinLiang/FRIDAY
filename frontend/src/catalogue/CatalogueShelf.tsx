@@ -14,6 +14,8 @@ import { priceLabel } from "./price";
 import { isDesignerRequest } from "../scene/designerIntent";
 
 type Props = {
+  roomId?: string;
+  sceneRevision?: number;
   region: Region | null;
   yawIndex: number;
   armedId: string | null;
@@ -72,7 +74,8 @@ function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: 
   );
 }
 
-export default function CatalogueShelf({ region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose, onDesign, designMessage }: Props) {
+export default function CatalogueShelf({ roomId, sceneRevision, region, yawIndex, armedId, disabled, canSwitchRooms, showRooms = true, purchasableOnly = false, onHover, onPick, onPlace, onClose, onDesign, designMessage }: Props) {
+  const currentRevision = useRef(sceneRevision); currentRevision.current=sceneRevision;
   const [sentence, setSentence] = useState("an armchair");
   const [compiled, setCompiled] = useState<Compiled | null>(null);
   const [items, setItems] = useState<Listing[]>([]);
@@ -109,8 +112,9 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
         return;
       }
       // compile() never fails on a bad sentence: at worst it returns a plain text search.
-      const result = await compileSentence(text, controller.signal);
+      const result = await compileSentence(text, controller.signal, roomId && sceneRevision !== undefined ? {roomId,sceneRevision} : undefined);
       const found = await searchCatalogue(result.program.find, controller.signal);
+      if (result.sceneRevision !== undefined && result.sceneRevision !== currentRevision.current) throw Error("The room changed. Describe the placement again.");
       setCompiled(result); setItems(found.items); setTotal(found.total); setError("");
       setMatches(found.facets ? found.facets.category.reduce((sum, bucket) => sum + bucket.count, 0) : null);
       onHover(null); // the card under the pointer is a different listing now

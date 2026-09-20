@@ -4,7 +4,7 @@
 
 William requests a working FRIDAY in-app agent that inspects the current model and places or moves furniture relative to existing objects. Use the current catalogue sentence input and editor notices. Normal catalogue searches remain searches. Commands operate only on the current session and floor, use centimetres/radians and stable instance/product IDs, and preserve existing undo, retries, floor isolation and cart/checkout locks.
 
-The current language compiler intentionally has no tools and uses a mock-room reference. Keep that compiler intact. Add a scene designer that calls the existing `scene_service` validation/atomic commands and browser capture queue. The [earlier Blender MCP handoff](../contracts/blender-mcp-agent-handoff.md) already identifies these gaps.
+The catalogue compiler remains a search/constraint compiler, now supplied with current scene references when the editor provides a room and revision. The separate scene designer calls existing `scene_service` validation/atomic commands and the browser capture queue. The [earlier Blender MCP handoff](../contracts/blender-mcp-agent-handoff.md) already identifies these gaps.
 
 ## Tools and execution
 
@@ -15,7 +15,9 @@ The current language compiler intentionally has no tools and uses a mock-room re
 - Supply real perspective and top PNGs before planning. The model can request target-focused or staged-preview views. Projected object ID boxes ground references; occlusion remains explicitly unknown. Before commit, require a staged preview of the exact proposed layout and a second model acceptance; revised layouts receive a fresh preview. Capture the accepted revision for a final visual review. Report saved geometry and visual review separately.
 - Measure rotated footprint edge clearance and 3D bounding-prism distances using authoritative dimensions. Fixed obstacles without heights return unavailable vertical measurements. Scene inspection includes complete free regions, outline holes, source-to-floor transform and verified catalogue materials; it never invents window, cavity or mesh-material metadata.
 
-Floor placement is supported. Tabletop support, cabinet interiors, editable architectural meshes and unlabelled features inferred from pictures remain unsupported; the agent must say so instead of inventing coordinates or heights.
+Floor placement and reviewed support targets are supported. `place_supported` accepts a stable parent/target reference, profile revision, on/inside relation and parent-local X/Z/yaw. The shared support engine derives Y, checks full rotated bounds and compartment headroom, and tests solid panel collisions. Parent moves/rotations carry children; deleting a loaded parent is refused. Undo removes children first and restores parents first. Unknown tabletop/cavity geometry, nested attachments, closed-door insertion and architectural mesh editing remain unsupported.
+
+`shared/placement-profiles.json` contains reviewed targets, collision proxies and source model hashes. PC-workspace assets are CC0 Kenney models at authored demo dimensions, explicitly marked generic visual proxies rather than retail-product matches. The desk has a conservative filled collision envelope; the authored open cabinet has separate solid panel boxes. A support target is a reviewed region, not an automatically inferred mesh feature. Frozen capture workers resolve attachments before rendering, and projection metadata reports actual elevated bounds.
 
 ## Resumable HTTP execution
 
@@ -34,3 +36,7 @@ The [community Blender MCP tools](https://github.com/ahujasid/mcp-for-blender/bl
 ## Acceptance
 
 Test duplicate names/IDs, rotation and exact edge clearance, self-exclusion during moves, fixed obstacles, holes, unknown references, cross-floor/session isolation, stale revisions, repeated requests, mixed-batch rollback, renderer capture failures and real image input. Replay a real in-app command that adds a GLB next to another GLB, move it by reference, reject a collision, and undo. Record tool trace, persisted revision, screenshot and live-model status in TODO_WILLIAM.md. Until those checks pass, this is implementation in progress.
+
+## Integration status
+
+The floor-relative live loop has passed placement, measured clearance, target/preview/after capture, collision refusal, reload during reasoning, undo and redo. The support implementation is integrated from the existing `codex/supported-placement` worktree without modifying that source checkout. Its earlier manual proof is in [supported placement verification](../../frontend/3d-object/supported-placement-verification.md). Live monitor/desk and cabinet acceptance plus the combined release are in progress; prior worktree test counts do not verify this integration.

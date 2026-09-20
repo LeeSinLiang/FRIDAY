@@ -34,7 +34,10 @@ place[] describes WHERE it goes, using only refs from the room below:
 - against(ref): "against", "along", "up against".
 - distance_min(ref, mm): "at least X from", "X away from", "X from".
 - clear(ref, mm): "keep X clear of", "leave X in front of".
-- on(ref): "on", "on top of".
+- on(ref): "on", "on top of". For furniture, select a surface ref from the room.
+- inside(ref): "inside", "in the cabinet", "on the middle shelf". Use the specific compartment ref.
+  Compartment labels and IDs refer to real measured shelf spaces. Never use an instance ref for inside.
+  Do not invent target IDs or substitute a floor placement when a requested target is missing.
 - not_blocking(ref): "don't block", "not in front of", "without blocking".
 Walls, for distance_min and clear (rules that must hold for EVERY wall; clauses are ANDed):
 - One value for every wall, no exceptions ("5 feet from any wall", "away from the walls") -> ONE clause with any_wall.

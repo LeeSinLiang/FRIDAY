@@ -34,7 +34,7 @@ export function furnitureTopAt(xCm: number, zCm: number, instance: Instance, pro
 export function walkRoomAtHeight(room: Room, instances: Instance[], products: Product[], feetCm: number): Room {
   const placedObstacles = instances.flatMap(instance => {
     const product = productOf(instance, products);
-    return product && product.heightCm > Math.max(3, feetCm + 0.5) ? [
+    return product && (instance.pose.yCm ?? 0) + product.heightCm > Math.max(3, feetCm + 0.5) ? [
       { obstacleId: instance.instanceId, label: product.name, ...instance.pose, widthCm: product.widthCm, depthCm: product.depthCm },
     ] : [];
   });
@@ -190,7 +190,7 @@ export function createNavigation(runtime: NavigationRuntime, initial: Navigation
     const next = forward || right ? advanceWalk(walkRoom, { xCm: sceneToCm(current.x), zCm: sceneToCm(current.z) },
       (-Math.sin(yaw) * forward + Math.cos(yaw) * right) * step,
       (-Math.cos(yaw) * forward - Math.sin(yaw) * right) * step) : { xCm: sceneToCm(current.x), zCm: sceneToCm(current.z) };
-    const supports = furniture.filter(({ instance, product }) => furnitureTopAt(next.xCm, next.zCm, instance, product)).map(({ product }) => product.heightCm);
+    const supports = furniture.filter(({ instance, product }) => furnitureTopAt(next.xCm, next.zCm, instance, product)).map(({ instance, product }) => (instance.pose.yCm ?? 0) + product.heightCm);
     if (jumping) supports.push(vertical.feetCm);
     vertical = advanceVertical(vertical, dt, jumping, maxFeetCm, supports);
     camera.setPosition(cmToScene(next.xCm), cmToScene(eyeHeightCm + vertical.feetCm), cmToScene(next.zCm));

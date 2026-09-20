@@ -1,4 +1,4 @@
-"""Read-only, bounded scene projection and deterministic floor measurements.
+"""Read-only, bounded scene projection and deterministic bounding measurements.
 
 These helpers expose the same centimetre geometry that validates edits. They do
 not derive architectural semantics, support surfaces or visibility from a mesh
@@ -12,6 +12,7 @@ from catalogue.feed import load_catalogue
 
 from .designer_geometry import FRAME
 from .scene_service import EPSILON, SceneError, footprint, geometry_revision, number, polygon
+from .supports import profile_of
 
 
 MAX_CONTEXT_BYTES = 512 * 1024
@@ -25,12 +26,12 @@ def _footprint(obj):
 def _object_context(state, reference_id, listings):
     original = state.object(reference_id)
     result = {key: copy.deepcopy(original[key]) for key in
-              ('referenceId', 'type', 'name', 'pose', 'dimensionsCm', 'boundsCm', 'modelUrl', 'productId')
+              ('referenceId', 'type', 'name', 'pose', 'dimensionsCm', 'boundsCm', 'modelUrl', 'productId', 'attachment')
               if key in original}
     result.update({
         'footprintCm': polygon(_footprint(original)),
-        'parentReferenceId': None,
-        'children': [],
+        'parentReferenceId': original.get('parentReferenceId'),
+        'children': copy.deepcopy(original.get('children', [])),
         'visibility': 'unknown_until_captured',
         'supportSurfaces': {'status': 'unavailable'},
         'cavities': {'status': 'unavailable'},
@@ -38,12 +39,19 @@ def _object_context(state, reference_id, listings):
     if original['type'] == 'furniture':
         product = state.product(original['productId'])
         listing = listings.get(original['productId'])
+        profile = profile_of(product)
+        targets = original.get('supportReferences', [])
+        for field, kind in (('supportSurfaces', 'surface'), ('cavities', 'compartment')):
+            reviewed = [copy.deepcopy(target) for target in targets if target['kind'] == kind]
+            if reviewed:
+                result[field] = {'status': 'available', 'source': 'reviewed_placement_profile', 'targets': reviewed}
         result.update({
-            'positionCm': [original['pose']['xCm'], 0, original['pose']['zCm']],
+            'positionCm': [original['pose']['xCm'], original['pose'].get('yCm', 0), original['pose']['zCm']],
             'rotationRad': [0, original['pose']['yawRad'], 0],
             'instanceScale': [1, 1, 1],
             'geometrySource': 'authoritative_scene_product',
-            'collisionRepresentation': 'oriented_floor_rectangle',
+            'collisionRepresentation': 'reviewed_solid_boxes' if profile else 'product_bounding_box',
+            'collisionPolicy': 'Floor pairs use footprints; supported pairs also use vertical solid intervals.',
             'asset': {'modelUrl': product.get('modelUrl'),
                       'representation': 'glb' if product.get('modelUrl') else 'dimensioned_proxy',
                       'loadStatus': 'unknown_until_captured'},
@@ -109,6 +117,7 @@ def inspect_context(state):
         'camera': copy.deepcopy(state.camera), 'selectedId': state.selected_id,
         'stagedChanges': len(state.commands), 'stateKind': 'staged' if state.commands else 'saved',
         'floor': floor, 'objects': objects, 'objectCount': len(objects),
+        'supportReferences': state.support_references(),
         'fixedReferences': fixed, 'fixedReferenceCount': len(fixed), 'truncated': False,
         'architecture': {
             'visualAsset': {key: scan[key] for key in ('visualFormat', 'visualUrl', 'surfaceUrl') if key in scan},
@@ -116,8 +125,9 @@ def inspect_context(state):
             'materials': {'status': 'unavailable'},
         },
         'unavailable': ['renderer_visibility', 'mesh_material_assignments', 'architectural_semantic_anchors',
-                        'tabletop_support_surfaces', 'cabinet_cavities', 'vertical_placement'],
-        'measurementScope': 'Horizontal authoritative footprints; not mesh-surface, support or containment measurements.',
+                        'unreviewed_supports', 'nested_attachments', 'closed_door_insertion'],
+        'capabilities': ['floor_placement', 'relative_placement', 'reviewed_surface_placement', 'reviewed_compartment_placement'],
+        'measurementScope': 'Authoritative horizontal footprints and resolved vertical bounding intervals; not triangle-mesh measurements. Support fit is validated separately.',
     }
     if len(json.dumps(result, allow_nan=False).encode()) > MAX_CONTEXT_BYTES:
         raise SceneError('context_limit', 'The complete scene context exceeds the supported payload size.')
@@ -136,7 +146,7 @@ def _point_edge_distance(point, start, end):
 
 
 def _vertical_measurement(first, second, horizontal_distance, edge_distance, footprint_overlap):
-    """The current write contract only has floor furniture, with pivot Y = 0.
+    """Use resolved floor or attachment bases and authoritative product heights.
 
     A fixed obstacle has an XZ footprint but no authoritative height. Neither a
     label nor the room's ceiling height can supply its missing vertical extent.
@@ -145,8 +155,9 @@ def _vertical_measurement(first, second, horizontal_distance, edge_distance, foo
     unavailable = []
     for obj in (first, second):
         height = obj['dimensionsCm'].get('heightCm')
-        known = obj['type'] == 'furniture' and number(height) and height > 0
-        intervals.append({'minY': 0, 'maxY': height} if known else None)
+        base = obj['pose'].get('yCm', 0)
+        known = obj['type'] == 'furniture' and number(height) and height > 0 and number(base)
+        intervals.append({'minY': base, 'maxY': base + height} if known else None)
         if not known:
             unavailable.append(obj['referenceId'])
     vertical = {'status': 'unavailable' if unavailable else 'available',
@@ -156,14 +167,14 @@ def _vertical_measurement(first, second, horizontal_distance, edge_distance, foo
               'boundingPrismOverlap': None, 'vertical': vertical}
     if unavailable:
         vertical.update({'unavailableReferenceIds': unavailable,
-                         'reason': 'No authoritative floor pivot and height for these references.'})
+                         'reason': 'No authoritative vertical base and height for these references.'})
         return result
     a, b = intervals
     dy = (b['minY'] + b['maxY'] - a['minY'] - a['maxY']) / 2
     clearance = max(0, b['minY'] - a['maxY'], a['minY'] - b['maxY'])
     overlap = max(0, min(a['maxY'], b['maxY']) - max(a['minY'], b['minY']))
     vertical.update({'centerDeltaCm': dy, 'clearanceCm': clearance, 'overlapDepthCm': overlap,
-                     'source': 'authoritative_product_height_and_floor_pivot'})
+                     'source': 'authoritative_product_height_and_resolved_base'})
     result.update({'centerDistance3dCm': math.hypot(horizontal_distance, dy),
                    'boundingPrismDistanceCm': math.hypot(edge_distance, clearance),
                    'boundingPrismOverlap': footprint_overlap and overlap > EPSILON})
@@ -216,8 +227,8 @@ def measure(state, reference_a, reference_b, frame='room'):
         'touching': not overlapping and clearance <= EPSILON,
         **_vertical_measurement(first, second, distance, clearance, overlapping),
         'geometry': 'authoritative_oriented_floor_rectangles', 'collisionPolicyApplied': False,
-        'threeDimensionalGeometry': 'floor_pivoted_product_bounding_prisms_when_heights_available',
-        'limitations': ['Does not measure triangle mesh surfaces, support or containment.',
-                        'All current furniture has floor pivot Y = 0; 3D distances use product bounding prisms.',
+        'threeDimensionalGeometry': 'resolved_product_bounding_prisms_when_heights_available',
+        'limitations': ['Does not measure triangle mesh surfaces; support and containment fit use separate reviewed profiles.',
+                        '3D distances use product bounding prisms at their resolved floor or support base.',
                         'Footprint overlap is independent of flat-rug collision exemptions.'],
     }

@@ -1,6 +1,6 @@
 # Minimal supported placement with AI references
 
-The full-building floor-test milestone is implemented locally; see [reproduction and verification](../room-capture/skyscraper-glb-test.md). Table/cabinet attachments and live AI integration remain planned. Originally prepared against source `13297be8c637f0669660a434282f20af1b3d2b97` on 2026-09-20. Owner: William. [Geometry research](supported-object-placement.md) explains the underlying support and containment rules.
+Historical implementation plan. The local support/containment implementation and actual verification are recorded in [supported placement verification](supported-placement-verification.md). The existing editor controls were retained; the proposed target selector below was superseded by direct surface picking. Live provider extraction remains unverified without an OpenAI key. Owner: William. [Geometry research](supported-object-placement.md) records the design rationale.
 
 ## 1. Skyscraper workflow is the first acceptance test
 

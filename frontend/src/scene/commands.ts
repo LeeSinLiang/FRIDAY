@@ -1,3 +1,4 @@
+import { moveWithAttachments } from "./supports";
 import { validInlineProduct } from "./products";
 import type { Instance, Pose, Product, SceneEdit } from "./types";
 
@@ -14,7 +15,7 @@ export const initialHistory = (): EditorHistory => ({
 export const validPose = (pose: Pose) =>
   !!pose && [pose.xCm, pose.zCm, pose.yawRad].every(Number.isFinite);
 const samePose = (a: Pose, b: Pose) =>
-  a.xCm === b.xCm && a.zCm === b.zCm && a.yawRad === b.yawRad;
+  a.xCm === b.xCm && a.zCm === b.zCm && a.yawRad === b.yawRad && (a.yCm ?? 0) === (b.yCm ?? 0);
 const validProduct = (product: Product) =>
   [product.widthCm, product.depthCm, product.heightCm].every(
     (n) => Number.isFinite(n) && n > 0,
@@ -46,15 +47,13 @@ export function applyEdit(
   }
   const index = instances.findIndex((i) => i.instanceId === command.instanceId);
   if (index < 0) return instances;
-  if (command.type === "remove") return instances.filter((_, i) => i !== index);
+  if (command.type === "remove") return instances.some(i => i.attachment?.parentInstanceId === command.instanceId) ? instances : instances.filter((_, i) => i !== index);
   if (
     command.type === "setPose" &&
     validPose(command.pose) &&
-    !samePose(instances[index].pose, command.pose)
+    (!samePose(instances[index].pose, command.pose) || command.attachment !== undefined)
   ) {
-    return instances.map((item, i) =>
-      i === index ? { ...item, pose: { ...command.pose } } : item,
-    );
+    try { return moveWithAttachments(instances, products, command.instanceId, command.pose, command.attachment); } catch { return instances; }
   }
   return instances;
 }

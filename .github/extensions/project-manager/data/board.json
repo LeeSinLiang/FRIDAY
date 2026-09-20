@@ -137,6 +137,12 @@
           "title": "Prepare and verify the shared Haussmann room locally",
           "done": false,
           "owner": "adelle"
+        },
+        {
+          "id": "39c4231e-4a28-446a-b81c-5ca7d331df07",
+          "title": "Replace low-poly workstation props with textured GLBs",
+          "done": false,
+          "owner": "william"
         }
       ]
     },
@@ -439,6 +445,12 @@
           "title": "Evaluate ElevenLabs narration for the demo video",
           "done": false,
           "owner": "unassigned"
+        },
+        {
+          "id": "25675e31-aaa6-43d7-a563-b94360fc6706",
+          "title": "Publish integrated FRIDAY test release and record demo",
+          "done": false,
+          "owner": "william"
         }
       ],
       "description": "Demo journey, presentation, OpenAI API integration, and Codex-assisted development."

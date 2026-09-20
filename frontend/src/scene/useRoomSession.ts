@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import type { FirstPersonCamera, Instance, Product, Room, SceneEdit } from "./types";
 import type { AgentMotion } from "./playcanvas/angelMotion";
+import { resolveAttachments } from "./supports";
 import { validInlineProduct } from "./products";
 
 export type RoomSnapshot = { room: Room; products: Product[]; instances: Instance[]; revision: number; geometryRevision?: string; agentMotion?: AgentMotion };
@@ -18,7 +19,10 @@ const fingerprint = (items: Instance[]) => JSON.stringify(items.map(item => ({
     widthCm: item.product.widthCm, depthCm: item.product.depthCm, heightCm: item.product.heightCm,
     color: item.product.color, kind: item.product.kind, modelUrl: item.product.modelUrl,
     thumbnailUrl: item.product.thumbnailUrl, catalogueVisible: item.product.catalogueVisible } } : {}),
-  pose: { xCm: item.pose.xCm, zCm: item.pose.zCm, yawRad: item.pose.yawRad },
+  pose: {xCm:item.pose.xCm,zCm:item.pose.zCm,yawRad:item.pose.yawRad,...(item.pose.yCm===undefined?{}:{yCm:item.pose.yCm})},
+  ...(item.attachment ? {attachment: {parentInstanceId:item.attachment.parentInstanceId,profileRevision:item.attachment.profileRevision,
+    target:{kind:item.attachment.target.kind,id:item.attachment.target.id},
+    localPose:{xCm:item.attachment.localPose.xCm,zCm:item.attachment.localPose.zCm,yawRad:item.attachment.localPose.yawRad}}} : {}),
 })));
 export function parseRoomSnapshot(value: unknown, roomId: string): RoomSnapshot {
   if (!value || typeof value !== "object") throw Error("The server returned an invalid room.");
@@ -64,7 +68,7 @@ export function parseRoomSnapshot(value: unknown, roomId: string): RoomSnapshot 
   for (const item of s.instances) {
     if (!item || typeof item.instanceId !== "string" || !item.instanceId.trim() || item.instanceId.length > 128 || ids.has(item.instanceId) || !productIds.has(item.productId) ||
         (item.product !== undefined && !validInlineProduct(item.product, item.productId)) ||
-        !item.pose || ![item.pose.xCm,item.pose.zCm,item.pose.yawRad].every(Number.isFinite)) throw Error("The saved layout contains an invalid object.");
+        !item.pose || ![item.pose.xCm,item.pose.zCm,item.pose.yawRad,item.pose.yCm ?? 0].every(Number.isFinite)) throw Error("The saved layout contains an invalid object.");
     ids.add(item.instanceId);
   }
   const motion = s.agentMotion;
@@ -73,7 +77,7 @@ export function parseRoomSnapshot(value: unknown, roomId: string): RoomSnapshot 
   const agentMotion = motion && motion.revision === s.revision && ids.has(motion.instanceId) &&
     validPose(motion.toPose) && (motion.fromPose === null || validPose(motion.fromPose)) ? motion : undefined;
   // Keep catalogue metadata for history/restore, but the API product list is authoritative.
-  const instances = s.instances.map(item => ({ ...item,
+  const instances = resolveAttachments(s.instances, s.products).map(item => ({ ...item,
     ...(item.product === undefined ? {} : { product: s.products.find(product => product.productId === item.productId)! }),
   }));
   return structuredClone({room:s.room,products:s.products,instances,revision:s.revision,
@@ -222,7 +226,7 @@ export function createRoomSession(roomId: string, transport: Transport = {}) {
   const restore = (kind: "undo"|"redo") => {
     const target = kind==="undo" ? past.at(-1) : future[0];
     if (!target || !state.snapshot) return Promise.resolve(false);
-    const commands: SceneEdit[] = [...state.snapshot.instances.map(i=>({type:"remove" as const,instanceId:i.instanceId})),...target.map(instance=>({type:"add" as const,instance}))];
+    const commands: SceneEdit[] = [...[...state.snapshot.instances].sort((a,b)=>Number(!!b.attachment)-Number(!!a.attachment)).map(i=>({type:"remove" as const,instanceId:i.instanceId})),...[...target].sort((a,b)=>Number(!!a.attachment)-Number(!!b.attachment)).map(instance=>({type:"add" as const,instance}))];
     return submit(commands,kind);
   };
   return {

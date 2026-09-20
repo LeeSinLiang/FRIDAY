@@ -1,5 +1,7 @@
 import logging
 import os
+import re
+from types import SimpleNamespace
 
 from django.db import DatabaseError
 from elasticsearch import ApiError, TransportError
@@ -129,14 +131,39 @@ def compile_program(request):
     if not isinstance(text, str) or len(text) > MAX_INPUT_CHARS:
         return Response({"error": "invalid_text", "detail": f"text must be a string of at most {MAX_INPUT_CHARS} characters"},
                         status=400)
-    # The mock room stands in until the space lane ships a Room; only its ids reach the model.
-    refs = room_refs(MOCK_ROOM)
+    room_id = request.data.get("roomId")
+    if room_id is not None:
+        from api.scene_service import SceneError, scene_for_session, serialize
+        from api.support_context import scene_references
+        if not isinstance(room_id, str):
+            return Response({"detail": "Invalid room reference."}, status=400)
+        from django.contrib.auth import get_user
+        from shopping.identity import current
+        # Compile stays public/CSRF-free and throttled as before. Resolve the
+        # same stable shopping identity as scene reads, including claimed carts;
+        # DRF's PUBLIC authentication deliberately masks request.user here.
+        identity_request = SimpleNamespace(_request=request._request, COOKIES=request.COOKIES,
+                                           session=request.session, user=get_user(request._request))
+        try:
+            snapshot = serialize(scene_for_session(current(identity_request).scene_key, room_id))
+        except (SceneError, ValueError) as error:
+            return Response({"detail": str(error)}, status=400)
+        if request.data.get("sceneRevision") != snapshot['revision']:
+            return Response({"detail": "The room changed. Describe the placement again."}, status=409)
+        refs = scene_references(snapshot)
+    else:
+        # Compatibility for the standalone catalogue, which has no active editor session.
+        refs = room_refs(MOCK_ROOM)
     result = compile_text(text, refs, text_search_has_results)
+    if room_id is not None and re.search(r"\b(inside|on top of|(?:in|on) (?:the |a |this )?(?:table|cabinet|shelf|middle shelf|upper shelf|lower shelf))\b", text, re.I):
+        if not any(c.k == 'inside' or (c.k == 'on' and c.ref.kind in ('surface','instance')) for c in result.program.place):
+            return Response({"detail": "I could not resolve that support. Name an available tabletop or cabinet shelf."}, status=422)
     return Response({
         "program": to_wire(result.program),
         "chips": render(result.program, refs),
         "source": result.source,
         "ms": result.ms,
+        **({"roomId": room_id, "sceneRevision": snapshot["revision"]} if room_id is not None else {}),
     })
 
 

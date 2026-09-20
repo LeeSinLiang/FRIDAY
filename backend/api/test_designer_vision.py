@@ -2,10 +2,12 @@ import copy
 import math
 import uuid
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from django.test import TestCase
 
 from shopping.models import CartItem, ShoppingSession
+from .catalogue_products import catalogue_product
 from .capture_service import claim_capture, complete_capture, enqueue_capture
 from .designer_geometry import DesignState
 from .designer_vision import project_objects, read_view, request_view
@@ -191,3 +193,79 @@ class DesignerVisionTests(TestCase):
         self.assertFalse(result['ok'])
         self.assertEqual(result['status'], 'failed')
         self.assertNotIn('imageDataUrl', result)
+
+    def test_monitor_preview_resolves_desktop_height_and_aims_at_elevated_center(self):
+        state = self.state('empty-room')
+        desk = {'instanceId': 'desk', 'productId': 'pc-workspace-desk',
+                'product': catalogue_product('pc-workspace-desk'),
+                'pose': {'xCm': 220, 'zCm': 220, 'yawRad': .45}}
+        monitor = {'instanceId': 'monitor', 'productId': 'pc-workspace-display',
+                   'product': catalogue_product('pc-workspace-display'),
+                   # This world pose is deliberately stale/untrusted. The support
+                   # target supplies both the position and the 75 cm base height.
+                   'pose': {'xCm': 540, 'zCm': 420, 'yawRad': 0, 'yCm': 999},
+                   'attachment': {'parentInstanceId': 'desk', 'profileRevision': '1',
+                       'target': {'kind': 'surface', 'id': 'top'},
+                       'localPose': {'xCm': 25, 'zCm': -15, 'yawRad': .1}}}
+        state.instances = [desk, monitor]
+        before = serialize(scene_for_session(self.session, 'empty-room'))
+        before_cart = list(CartItem.objects.values())
+        result = request_view(state, self.session, 'desktop-preview', target_id='monitor', preview=True)
+        job = SceneCapture.objects.get(pk=result['captureId'])
+        captured = next(i for i in job.snapshot['instances'] if i['instanceId'] == 'monitor')
+        self.assertEqual(captured['pose']['yCm'], 75)
+        self.assertEqual(captured['attachment'], monitor['attachment'])
+        self.assertNotEqual(captured['pose']['xCm'], 540)
+        projected = next(o for o in result['objectProjection']['objects'] if o['referenceId'] == 'monitor')
+        self.assertEqual(projected['pose'], captured['pose'])
+        self.assertEqual(projected['parentReferenceId'], 'desk')
+        self.assertEqual(projected['attachment'], captured['attachment'])
+        self.assertEqual(projected['verticalIntervalCm'], {'minY': 75, 'maxY': 117})
+        camera = result['camera']
+        distance = math.hypot(captured['pose']['xCm'] - camera['xCm'], captured['pose']['zCm'] - camera['zCm'])
+        self.assertAlmostEqual(camera['pitchRad'], math.atan2(96 - camera['yCm'], distance))
+        self.assertLess(projected['boundsPixels']['minY'], 360)
+        self.assertGreater(projected['boundsPixels']['maxY'], 360)
+        self.assertEqual(serialize(scene_for_session(self.session, 'empty-room')), before)
+        self.assertEqual(list(CartItem.objects.values()), before_cart)
+        self.assertEqual(monitor['pose']['yCm'], 999)  # The input state is not rewritten.
+
+        # Moving/rotating the parent must also change the frozen child pose and
+        # image mapping, even if the raw child world pose has not been refreshed.
+        desk['pose'] = {'xCm': 350, 'zCm': 220, 'yawRad': math.pi / 2}
+        moved = request_view(state, self.session, 'moved-desktop-preview', target_id='monitor', preview=True)
+        projected = next(o for o in moved['objectProjection']['objects'] if o['referenceId'] == 'monitor')
+        self.assertAlmostEqual(projected['pose']['xCm'], 335)
+        self.assertAlmostEqual(projected['pose']['zCm'], 195)
+        self.assertEqual(projected['pose']['yCm'], 75)
+        self.assertEqual(serialize(scene_for_session(self.session, 'empty-room')), before)
+
+    def test_compartment_images_distinguish_same_xz_items_on_different_shelves(self):
+        state = self.state('empty-room')
+        state.camera = {**state.camera, 'yCm': 80, 'pitchRad': 0}
+        cabinet = {'instanceId': 'cabinet', 'productId': 'support-demo-cabinet',
+                   'pose': {'xCm': 240, 'zCm': 220, 'yawRad': 0}}
+        children = [{'instanceId': shelf + '-box', 'productId': 'support-demo-box',
+                     'pose': {'xCm': 1, 'zCm': 1, 'yawRad': 0, 'yCm': 999},
+                     'attachment': {'parentInstanceId': 'cabinet', 'profileRevision': '1',
+                         'target': {'kind': 'compartment', 'id': shelf},
+                         'localPose': {'xCm': 0, 'zCm': 2, 'yawRad': 0}}} for shelf in ('lower', 'upper')]
+        state.instances = [cabinet, *children]
+        result = request_view(state, self.session, 'shelf-preview', preview=True)
+        job = SceneCapture.objects.get(pk=result['captureId'])
+        self.assertEqual([i['pose'].get('yCm', 0) for i in job.snapshot['instances']], [0, 3, 51.5])
+        mapped = {o['referenceId']: o for o in result['objectProjection']['objects']}
+        lower, upper = mapped['lower-box'], mapped['upper-box']
+        self.assertEqual(lower['verticalIntervalCm'], {'minY': 3, 'maxY': 23})
+        self.assertEqual(upper['verticalIntervalCm'], {'minY': 51.5, 'maxY': 71.5})
+        self.assertEqual(lower['pose']['xCm'], upper['pose']['xCm'])
+        self.assertEqual(lower['pose']['zCm'], upper['pose']['zCm'])
+        self.assertLess(upper['boundsPixels']['maxY'], lower['boundsPixels']['minY'])
+        self.assertEqual(upper['attachment']['target'], {'kind': 'compartment', 'id': 'upper'})
+        self.assertEqual(result['objectProjection']['occlusion'], 'unknown')
+        self.assertEqual(scene_for_session(self.session, 'empty-room').instances, [])
+
+        # Frozen capture metadata must still match its image after profile files
+        # change. Resolution belongs to capture creation, never historical reads.
+        with patch('api.supports.profile_of', side_effect=AssertionError('Do not reinterpret a frozen capture')):
+            self.assertEqual(read_view(self.session, 'empty-room', result['captureId'])['objectProjection'], result['objectProjection'])

@@ -1,7 +1,7 @@
 // Region solver types. Pure data: no React, no renderer.
 // Everything here is in the scene's space: centimetres, origin at a floor corner, +X width, +Z depth.
 
-import type { Instance, Product, Room } from "../scene/types";
+import type { Attachment, Instance, Product, Room } from "../scene/types";
 import type { Portal } from "./floor";
 
 /** Fixed solve resolution. Deliberately NOT derived from SCENE_UNIT_CM: that setting changes how
@@ -28,7 +28,7 @@ export type FloorGrid = {
  *  Sampled at grid POINTS (x = origin + i * cellSizeCm), not cell centres, so every pose the
  *  editor's drag can snap to is exactly one sample. shape is therefore one larger than the room's
  *  cell count on each axis. free = legal, blocked = illegal, unknown = no data; only free is lit. */
-export type Mask = FloorGrid & { yawRad: number };
+export type Mask = FloorGrid & { yawRad: number; heightCm?: number; attachment?: Attachment };
 
 export type WallSide = "n" | "e" | "s" | "w";
 

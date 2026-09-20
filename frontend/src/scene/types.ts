@@ -1,4 +1,10 @@
-export type Pose = { xCm: number; zCm: number; yawRad: number };
+export type Pose = { xCm: number; zCm: number; yawRad: number; yCm?: number };
+export type Attachment = {
+  parentInstanceId: string;
+  target: { kind: "surface" | "compartment"; id: string };
+  localPose: { xCm: number; zCm: number; yawRad: number };
+  profileRevision: string;
+};
 export type FirstPersonCamera = {
   kind: "firstPerson";
   xCm: number; yCm: number; zCm: number;
@@ -53,9 +59,9 @@ export type Product = {
 };
 /** `product` is optional and additive: instances of the shared fixture products omit it, while an item
  *  from the catalogue carries its own, so a scene does not depend on shared/scene-fixtures.json. */
-export type Instance = { instanceId: string; productId: string; pose: Pose; product?: Product };
+export type Instance = { instanceId: string; productId: string; pose: Pose; product?: Product; attachment?: Attachment };
 export type SceneEdit =
   | { type: "add"; instance: Instance }
-  | { type: "setPose"; instanceId: string; pose: Pose }
+  | { type: "setPose"; instanceId: string; pose: Pose; attachment?: Attachment | null }
   | { type: "remove"; instanceId: string };
 export type CameraMode = "perspective" | "top";

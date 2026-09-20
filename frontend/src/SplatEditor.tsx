@@ -9,7 +9,7 @@ import { validatePlacement } from "./scene/placement";
 import { instanceToAdd } from "./scene/products";
 import { pieceInHand, walkKeyAction } from "./scene/walkKeys";
 import { sceneToCm } from "./scene/units";
-import type { CameraMode, FirstPersonCamera, Pose, Product } from "./scene/types";
+import type { CameraMode, FirstPersonCamera, Attachment, Pose, Product } from "./scene/types";
 import type { InteractionCallbacks, InteractionMode, InteractionState, ModelStatus, PlacementPreview } from "./scene/playcanvas/contracts";
 import type { PlayCanvasRuntime, RuntimeStatus } from "./scene/playcanvas/runtime";
 import "./splat-editor.css";
@@ -107,18 +107,19 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   const onRuntime=useCallback((handle:PlayCanvasRuntime|null)=>{runtime.current=handle;},[]);
   const getRuntime=useCallback(()=>runtime.current,[]);
   const onModelStatus=useCallback((id:string,status:ModelStatus)=>setStatuses(old=>old[id]===status?old:{...old,[id]:status}),[]);
-  const commit=useCallback(async(id:string,pose:Pose)=>{
+  const commit=useCallback(async(id:string,pose:Pose,attachment?:Attachment)=>{
     if(!snapshot)return false;
-    const result=validatePlacement(snapshot.room,snapshot.products,snapshot.instances,id,pose);
+    const result=validatePlacement(snapshot.room,snapshot.products,snapshot.instances,id,pose,attachment);
     if(!result.valid){setNotice(`${result.reason}. Position unchanged.`);return false;}
-    const accepted=await session.submit({type:"setPose",instanceId:id,pose});
+    const accepted=await session.submit({type:"setPose",instanceId:id,pose,...(attachment?{attachment}:{})});
     if(accepted)setNotice("Position saved");
     return accepted;
   },[snapshot,session.submit]);
-  const place=useCallback(async(productId:string,pose:Pose)=>{
+  const place=useCallback(async(productId:string,pose:Pose,attachment?:Attachment)=>{
     const id=crypto.randomUUID();
-    // A catalogue piece listed in the rail must carry its product, as the search panel's add does; a shared one must not.
-    const accepted=await session.submit({type:"add",instance:instanceToAdd(id,productId,pose,instances)});
+    // Keep main's catalogue identity handling and add the optional support relationship.
+    const instance = {...instanceToAdd(id,productId,pose,instances),...(attachment?{attachment}:{})};
+    const accepted=await session.submit({type:"add",instance});
     if(accepted){setPendingProductId(null);setSelectedId(null);setPanel("catalogue");setPanelOpen(false);setMode(view==="perspective"?"walk":"place");setNotice("Furniture placed");captureWalk();}
     return accepted;
   },[session.submit,view,captureWalk,instances]);
@@ -208,7 +209,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   return <main className={`splat-editor ${panelOpen?"has-panel":""}`}>
     <div className="splat-room" aria-label="First-person room editor">
       {state && <Suspense fallback={null}><PlayCanvasScene state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}
-      {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen} onCloseShelf={()=>setShopSearchOpen(false)} designMessage={session.designerMessage} onDesign={async text => { const result = await session.design(text, selectedId, getCamera()); setNotice(result.message); await refresh(); return result.message; }} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
+      {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} sceneRevision={snapshot.revision} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen} onCloseShelf={()=>setShopSearchOpen(false)} designMessage={session.designerMessage} onDesign={async text => { const result = await session.design(text, selectedId, getCamera()); setNotice(result.message); await refresh(); return result.message; }} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
       {runtimeStatus.phase!=="ready" && <div className="splat-loading" role="status">
         <div className="glass splat-loading-card"><span className="loading-orbit"/><h1>{runtimeStatus.phase==="error"?"Room unavailable":"Come on in."}</h1><p>{runtimeStatus.message}</p>
           {runtimeStatus.progress!==undefined && <progress max={1} value={runtimeStatus.progress} aria-label="Room loading progress"/>}

@@ -14,7 +14,7 @@ function footprintCorners(product: Pick<Product, "widthCm" | "depthCm">, pose: P
   const c = Math.cos(pose.yawRad), s = Math.sin(pose.yawRad);
   return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sz]) => {
     const x = sx * product.widthCm / 2, z = sz * product.depthCm / 2;
-    return new pc.Vec3(cmToScene(pose.xCm + c * x + s * z), cmToScene(height), cmToScene(pose.zCm - s * x + c * z));
+    return new pc.Vec3(cmToScene(pose.xCm + c * x + s * z), cmToScene((pose.yCm ?? 0) + height), cmToScene(pose.zCm - s * x + c * z));
   });
 }
 
@@ -110,7 +110,7 @@ export function createPlacementOverlays(runtime: { app: pc.Application; capturin
       plan.setLocalScale(cmToScene(room.widthCm), 1, cmToScene(room.depthCm));
       footprint.enabled = !!(product && preview);
       if (!product || !preview) return;
-      footprint.setLocalPosition(cmToScene(preview.pose.xCm), cmToScene(0.8), cmToScene(preview.pose.zCm));
+      footprint.setLocalPosition(cmToScene(preview.pose.xCm), cmToScene((preview.pose.yCm ?? 0) + 0.8), cmToScene(preview.pose.zCm));
       footprint.setLocalScale(cmToScene(product.widthCm), 1, cmToScene(product.depthCm));
       footprint.setLocalEulerAngles(0, preview.pose.yawRad * pc.math.RAD_TO_DEG, 0);
       fill.diffuse = new pc.Color().fromString(palette[placementTone(preview)]); fill.update();

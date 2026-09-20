@@ -19,3 +19,5 @@ import "./playcanvas/angelMotion.test";
 import "./agentMotionSnapshot.test";
 
 import "./playcanvas/materialize.test";
+
+import "./supports.test";

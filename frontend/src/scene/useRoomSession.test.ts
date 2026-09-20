@@ -363,3 +363,20 @@ test("catalogue remove and undo restore server-approved inline metadata", async 
   h.respond(2, snapshot(2, [catalogueItem])); assert.equal(await undo, true);
   assert.deepEqual(h.state().snapshot?.instances, [catalogueItem]);
 });
+
+
+test('attachment history removes children first, restores parents first, and keeps elevated poses',async t=>{
+  const h=harness();t.after(h.session.dispose);
+  const parent:Instance={instanceId:'table',productId:'support-demo-table',pose:{xCm:200,zCm:200,yawRad:0}};
+  const child:Instance={instanceId:'lamp',productId:'support-demo-lamp',pose:{xCm:200,zCm:200,yawRad:0,yCm:75},
+    attachment:{parentInstanceId:'table',profileRevision:'1',target:{kind:'surface',id:'top'},localPose:{xCm:0,zCm:0,yawRad:0}}};
+  await h.ready([parent]);
+  const add=h.session.submit({type:'add',instance:child});h.respond(1,payload(1,[parent,child]));await add;
+  const undo=h.session.undo();
+  assert.deepEqual(h.body(2).commands.map((c:SceneEdit)=>c.type==='add'?c.instance.instanceId:c.instanceId),['lamp','table','table']);
+  h.respond(2,payload(2,[parent]));await undo;
+  const redo=h.session.redo();
+  assert.deepEqual(h.body(3).commands.map((c:SceneEdit)=>c.type==='add'?c.instance.instanceId:c.instanceId),['table','table','lamp']);
+  h.respond(3,payload(3,[parent,child]));await redo;
+  assert.deepEqual(h.state().snapshot?.instances[1],child);
+});

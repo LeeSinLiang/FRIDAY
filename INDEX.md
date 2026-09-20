@@ -26,6 +26,8 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 
 - [Minimal supported placement plan](docs/frontend/3d-object/supported-placement-mvp-plan.md) — full-skyscraper test scene, explicit scale reference, floor-surface dragging, then table/cabinet placement with stable AI target references.
 
+- [Supported placement verification](docs/frontend/3d-object/supported-placement-verification.md) — inherited engine and manual-browser evidence; integrated in-app AI acceptance is tracked in the scene-designer guide.
+
 - [Supported object placement](docs/frontend/3d-object/supported-object-placement.md) — research for lamps on tables and objects inside cabinets: support metadata, cavity geometry, attachment transforms, collision rules and acceptance checks.
 
 - [Multistory GLB designer research](docs/frontend/room-capture/skyscraper-glb-research.md) — current renderer/AI input paths, measured London skyscraper floor candidates, unequal elevations, proposed integration and future screenshot acceptance checks.

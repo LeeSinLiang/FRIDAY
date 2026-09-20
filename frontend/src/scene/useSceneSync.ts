@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PRODUCTS, ROOM, ROOM_ID } from "./fixtures";
 import { clearPending, parkPending, takePending, type PendingStore } from "./pendingEdits";
+import { resolveAttachments } from "./supports";
 import { validInlineProduct } from "./products";
-import type { Instance } from "./types";
+import type { Instance, Product } from "./types";
 
 export type SyncStatus = "loading" | "saved" | "saving" | "unsaved" | "offline" | "conflict";
 type Snapshot = { instances: Instance[]; revision: number };
@@ -42,8 +43,8 @@ export const canLeaveRoom = (state: { status: SyncStatus; saveFailures?: number;
 };
 
 export function sceneFingerprint(instances: Instance[]): string {
-  return JSON.stringify(instances.map(({ instanceId, productId, pose, product }) => ({
-    instanceId, productId, pose: { xCm: pose.xCm, zCm: pose.zCm, yawRad: pose.yawRad },
+  return JSON.stringify(instances.map(({ instanceId, productId, pose, product, attachment }) => ({
+    instanceId, productId, pose: { xCm: pose.xCm, zCm: pose.zCm, yawRad: pose.yawRad, ...(pose.yCm === undefined ? {} : {yCm: pose.yCm}) }, ...(attachment ? {attachment} : {}),
     // Carried products are part of what gets saved; fixture instances serialize exactly as before.
     ...(product ? { product } : {}),
   })));
@@ -76,10 +77,11 @@ export function parseSceneSnapshot(value: unknown): Snapshot {
     ids.add(instance.instanceId);
     const carried = !known.has(instance.productId) && validInlineProduct(instance.product, instance.productId) ? instance.product : undefined;
     return { instanceId: instance.instanceId, productId: instance.productId,
-      pose: { xCm: pose.xCm as number, zCm: pose.zCm as number, yawRad: pose.yawRad as number },
+      pose: { xCm: pose.xCm as number, zCm: pose.zCm as number, yawRad: pose.yawRad as number, ...(pose.yCm === undefined ? {} : {yCm: pose.yCm as number}) },
+      ...(instance.attachment ? {attachment: instance.attachment as Instance["attachment"]} : {}),
       ...(carried ? { product: carried } : {}) };
   });
-  return { revision: data.revision as number, instances };
+  return { revision: data.revision as number, instances: resolveAttachments(instances, data.products as Product[]) };
 }
 
 function readCsrfToken(): string | null {

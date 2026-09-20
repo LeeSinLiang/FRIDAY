@@ -37,7 +37,7 @@ function spanShortfall(room: Room, product: Product, place: PlaceCm[], portals: 
 }
 
 const describeRef = (clause: PlaceCm) => clause.ref.kind === "any_wall" ? "any wall" : "id" in clause.ref && clause.ref.id ? clause.ref.id : `the ${clause.ref.kind}`;
-const WORDS: Record<PlaceCm["k"], string> = { near: "near", against: "against", distance_min: "away from", clear: "clear of", on: "on", not_blocking: "not blocking" };
+const WORDS: Record<PlaceCm["k"], string> = { near: "near", against: "against", distance_min: "away from", clear: "clear of", on: "on", inside: "inside", not_blocking: "not blocking" };
 const describe = (clause: PlaceCm) => `${clause.cm === undefined ? "" : `${round(clause.cm)} cm `}${WORDS[clause.k]} ${describeRef(clause)}`;
 
 /**
