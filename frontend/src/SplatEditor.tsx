@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import CapturePanel from "./CapturePanel";
 import { Icon } from "./Icons";
 import { useRoomSession } from "./scene/useRoomSession";
+import SplatCatalogueLayer from "./catalogue/SplatCatalogueLayer";
 import { validatePlacement } from "./scene/placement";
 import { SCENE_UNIT_CM, sceneToCm } from "./scene/units";
 import type { CameraMode, FirstPersonCamera, Pose, Product } from "./scene/types";
@@ -66,6 +67,7 @@ export default function SplatEditor() {
   const cancelPlacement=useCallback(()=>{setPendingProductId(null);setPreview(null);setMode("explore");setNotice("Placement cancelled");},[]);
   const onStatus=useCallback((status:RuntimeStatus)=>setRuntimeStatus(status),[]);
   const onRuntime=useCallback((handle:PlayCanvasRuntime|null)=>{runtime.current=handle;},[]);
+  const getRuntime=useCallback(()=>runtime.current,[]);
   const onModelStatus=useCallback((id:string,status:ModelStatus)=>setStatuses(old=>old[id]===status?old:{...old,[id]:status}),[]);
   const commit=useCallback(async(id:string,pose:Pose)=>{
     if(!snapshot)return false;
@@ -116,6 +118,7 @@ export default function SplatEditor() {
   return <main className={`splat-editor ${panel?"has-panel":""}`}>
     <div className="splat-room" aria-label="First-person room editor">
       {state && <Suspense fallback={null}><PlayCanvasScene state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}
+      {snapshot && <SplatCatalogueLayer getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice}/>}
       {runtimeStatus.phase!=="ready" && <div className="splat-loading" role="status">
         <div className="glass splat-loading-card"><span className="loading-orbit"/><h1>{runtimeStatus.phase==="error"?"Room unavailable":"Come on in."}</h1><p>{runtimeStatus.message}</p>
           {runtimeStatus.progress!==undefined && <progress max={1} value={runtimeStatus.progress} aria-label="Room loading progress"/>}

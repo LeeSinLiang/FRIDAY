@@ -17,9 +17,24 @@
     "generation": "Higgsfield image_to_3d (Meshy), single reference image, should_texture=true, enable_pbr=true, then gltf-transform optimize (--compress false, --texture-compress auto --texture-size 1024, --simplify --simplify-ratio 0.5) to bring an oversized PBR export under the 5MB budget"
   },
   "knownLimitations": [
-    "FAILS the automated check in backend/api/test_furniture_assets.py as pushed. After fitting to the correct 100cm headboard height, measured box is 180.1 x 100.0 x 219.0 cm against the real RAMNEFJÄLL Queen's 162 x 100 x 212 cm: width off by 18.1cm and depth off by 7cm, both outside the test's tolerance (~4.9cm / ~6.4cm). Single-photo reconstruction proportion error, not a units/scale bug — pushed anyway at the requester's explicit direction after being flagged.",
+    "SUPERSEDED 2026-09-20: refitted per axis at the 10% cap, see \"fit\"; it now passes the asset check with a 0.67 cm residual. Original note: FAILS the automated check in backend/api/test_furniture_assets.py as pushed. After fitting to the correct 100cm headboard height, measured box is 180.1 x 100.0 x 219.0 cm against the real RAMNEFJÄLL Queen's 162 x 100 x 212 cm: width off by 18.1cm and depth off by 7cm, both outside the test's tolerance (~4.9cm / ~6.4cm). Single-photo reconstruction proportion error, not a units/scale bug — pushed anyway at the requester's explicit direction after being flagged.",
     "Generated from a single product photo, no additional angles",
     "No manual Blender inspection/correction pass has been done",
     "Not a priority item per collaborator-handoff.md (sofa + table are); included as an additional catalogue item at the requester's direction"
-  ]
+  ],
+  "fit": {
+    "appliedBy": "scripts/fit_glb.py <model> 162 212 100",
+    "scale": [
+      1.041,
+      1.1451,
+      1.116
+    ],
+    "anisotropyPercent": 10.0,
+    "residualCm": {
+      "width": 0.67,
+      "height": -0.67,
+      "depth": 0.0
+    },
+    "note": "NOT an exact fit. As generated the model was 180.1 x 219.0 x 100.0 cm against the listing's 162 x 212 x 100 cm; reaching the listing exactly needs 11.2% anisotropy, over the 10% cap. At the cap the closest fit is 162.7 x 212.0 x 99.3 cm: 0.67 cm wide and 0.67 cm short. Accepted because under a centimetre on a queen bed frame is invisible and inside the asset check's 2 cm; recorded so nobody later reads this as exact."
+  }
 }

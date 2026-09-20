@@ -21,13 +21,19 @@ Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if
 
 ## In progress
 
-- Table asset (the other priority item) not started yet. Bookshelf and dresser assets requested but blocked on getting their source image files (didn't save to disk in this session — same issue as one earlier image).
+- Dresser (HEMNES-style black-brown) still blocked on getting a usable source image file. Bar stool, sideboard, nightstand not started (no matching stub catalogue entry, would need new listings.json rows like the bookshelf).
 
 ## Next
 
-- Table is still the one priority item from `collaborator-handoff.md` with nothing delivered.
-- **Do not merge `codex/adelle-sofa-bed-assets` into `main` as-is** — see Blockers below. Needs a `multi_image_to_3d` regeneration pass with extra angle photos before it will pass the backend suite.
-- Open both sofa and bed in Blender to inspect actual proportions against the source photos.
+- **Do not merge `codex/adelle-sofa-bed-assets`, `codex/adelle-bookshelf-coffeetable-assets`, or `codex/adelle-lisabo-hektar-stockholm-assets` into `main` as-is** — each has at least one asset failing `backend/api/test_furniture_assets.py`. See each branch's own notes doc for exact numbers.
+- Open the four failing assets (sofa, bed, coffee table, LISABO table, HEKTAR lamp — that's five, not four) in Blender to inspect real proportions against source photos, or regenerate via `multi_image_to_3d`.
+- For any future round/flat object (mirrors, wall art, rugs, clocks): inspect the raw axis assignment before fitting — see the mirror orientation bug below.
+
+## This branch (`codex/adelle-lisabo-hektar-stockholm-assets`)
+
+- Pushed model_url updates (not new listings — these four already existed as stub catalogue entries) for `ikea-702.211.42` (LISABO table), `ikea-403.608.74` (LISABO chair), `ikea-805.109.92` (HEKTAR floor lamp), `ikea-403.284.34` (STOCKHOLM mirror). Generated `should_texture=true, enable_pbr=true`, compressed via `gltf-transform` (8.3-9.9MB/28-30k tri raw → 2.0-2.5MB/11-12k tri).
+- **Chair and mirror PASS the dimension check cleanly.** Table and lamp FAIL (table width off 9.6cm vs ~4.2cm tolerance; lamp width off 72.5cm — the worst miss of any asset this session, likely the angled lamp arm's reach being captured instead of the tripod base footprint).
+- **Caught a real orientation bug on the mirror before it shipped**: raw generation put the mirror's thin axis on height instead of depth (reconstructed as a disc lying on the floor, not hanging on a wall). Fixed with a lossless -90° root-node rotation before the usual height-fit; the fix itself is not checked in (was a throwaway script), but the resulting corrected GLB is. Full writeup in `docs/frontend/3d-object/lisabo-hektar-stockholm-asset-notes.md`.
 
 ## Done
 
@@ -66,3 +72,30 @@ Appended by Saketh's agent; nothing above was changed except that your two block
 - HERRÅKRA is now a catalogue listing, `ikea-405.355.47` (710 × 660 × 730 mm, $149), and it is the item the demo hovers, because it is the one that looks like a chair. Seen in the room at true scale with "3D model loaded".
 - **Triangle budget: 29,827 is at the very top for one chair. For the sofa and table please target 10–15k.** If we end up with several assets they go through `gltf-transform` before they go in the repo.
 - Your next assets are checked automatically by the backend test suite; the rules are in `docs/frontend/3d-object/collaborator-handoff.md` under "Automated asset check".
+
+## Note from Saketh's lane — `AGENTS.md`: `main` freezes after the rehearsal (2026-09-20)
+
+Two additions, from Saketh. Please read the new "Merging close to the demo" section.
+
+- **Freeze.** Once the demo has been rehearsed end to end on the presenting machine, `main` takes only fixes to things that break that rehearsed run. No polish, no refactors. If unsure whether the freeze has started, ask before merging.
+- **Chains stop on the first failure, and a status is quoted, not remembered.** `&&` not `;`, no pipe that eats an exit code, do not trust `set -e` blindly, and paste the `Ran N tests … OK` line you actually read. The full backend suite is `manage.py test` with **no app labels** (206 tests); a label list silently skips apps.
+- **Said out loud, because this is what the freeze is for:** tonight #34 went into `main` without the suite being run and left `main` red, seven backend failures, until #37. Nobody was careless in an unusual way; it was a reasonable-looking asset PR late at night. That is exactly the change the freeze rule exists to stop from landing an hour before we present. Whoever merges runs the full suite on fresh `main` at once, and says so with the numbers.
+
+- **About #34 specifically:** nothing of yours was lost. Both listings stay in the catalogue. The two models are unlinked for now (`model_url: null`, an `unbound` reason in each `metadata.json`) because they miss their listings by 14 and 18 cm, as your own notes said, and a rendered sofa narrower than the box the fit check uses would be a visible lie. Their colours were moved onto the hero palette (`#30475e`): colour search only matches palette colours. Refit with capped non-uniform scale is on Saketh's list.
+
+## Note from Saketh's lane — #42 turned `main` red; fixed in the PR that adds this note (2026-09-20, 00:20)
+
+Adele, this is the second time tonight (#34, then #42), so plainly: **before you press Merge, run this from the repo root and read the last lines.**
+
+```
+(cd backend && OPENAI_API_KEY= COMPILE_LIVE_TEST=0 uv run python manage.py test)
+```
+
+It takes about ten seconds. It must end `OK`. After #42 it ended `FAILED (failures=2)`, and until it is green again nobody else can tell whether their own change broke something. Your asset notes already say which models miss their listing; that knowledge just has to stop the merge, or travel with an `unbound` line as below.
+
+What I did, and nothing of yours is lost:
+
+- **LISABO chair and STOCKHOLM mirror pass and stay linked.** Good models; the chair is within 1 cm on every axis.
+- **LISABO table:** 149.6 x 79.9 cm as generated against 140 x 78 cm listed. Unlinked for the moment (`model_url: null`, `unbound` reason in its `metadata.json`). It needs 6.8% non-uniform scale, inside the 10% cap Saketh set, so I am refitting it next and it comes back.
+- **HEKTAR lamp:** the arm reaches 103.5 cm sideways, and the listing's footprint is the 31 cm base, which is what the fit check uses. Rendered, the arm would pass through walls the solver thinks are clear. No scale fixes that. Unlinked, stays in the repo.
+- **How to land a model that misses:** leave the listing's `model_url` as `null` and add an `"unbound": "<why>"` line to the asset's `metadata.json`. The suite accepts that, the listing still places as a true-size stand-in, and `main` stays green. The rule the test enforces: a model either matches its listing (2 cm or 3%) or no listing links to it.

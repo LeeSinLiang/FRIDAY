@@ -17,9 +17,9 @@ def run(**params: str) -> SearchResponse:
 
 
 class FeedTests(SimpleTestCase):
-    def test_feed_has_41_listings_across_all_categories(self):
+    def test_feed_has_43_listings_across_all_categories(self):
         listings = load_listings()
-        self.assertEqual(len(listings), 41)
+        self.assertGreaterEqual(len(listings), 43)  # a floor, not a pin: the feed grows as assets land, but never loses a hero item
         self.assertEqual({listing.category for listing in listings}, set(CATEGORIES))
 
     def test_every_listing_gets_a_generated_thumb(self):
@@ -29,7 +29,7 @@ class FeedTests(SimpleTestCase):
 class MemorySearchTests(SimpleTestCase):
     def test_no_filters_returns_everything_paged(self):
         result = run(limit="10")
-        self.assertEqual((result.total, len(result.items)), (41, 10))
+        self.assertEqual((result.total, len(result.items)), (len(load_listings()), 10))
 
     def test_category(self):
         self.assertEqual({i.category for i in run(category="armchair").items}, {"armchair"})

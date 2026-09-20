@@ -1,0 +1,24 @@
+{
+  "productId": "stockholm-mirror-walnut-veneer",
+  "modelUrl": "/models/furniture/stockholm-mirror-walnut-veneer/model.glb",
+  "thumbnailUrl": "/models/furniture/stockholm-mirror-walnut-veneer/thumbnail.png",
+  "widthCm": 80,
+  "depthCm": 4,
+  "heightCm": 80,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "ikea-403.284.34",
+  "source": {
+    "product": "IKEA STOCKHOLM mirror, walnut veneer, 31.5in (403.284.34), matches the pre-existing stub catalogue entry",
+    "dimensionsVerifiedAt": "https://www.ikea.com/us/en/p/stockholm-mirror-walnut-veneer-20503793/ (80 x 4 x 80 cm)",
+    "generation": "Higgsfield image_to_3d (Meshy), single reference image, should_texture=true, enable_pbr=true, then gltf-transform optimize (--compress false, --texture-compress auto --texture-size 1024, --simplify --simplify-ratio 0.4)"
+  },
+  "knownLimitations": [
+    "Generated LYING FLAT (thin axis on Y/height instead of Z/depth) — a distinct defect from the usual proportion miss seen elsewhere this session. A round mirror photographed face-on gives the model no cue that it should hang upright, so it reconstructed it as a disc resting on the floor. Corrected with a one-off -90deg rotation about X (scripts/_rotate_tmp.py, not checked in — see delivery notes) before running the usual fit_glb.py height fit. This is a lossless root-node transform, same pattern as fit_to_height.",
+    "After the orientation fix and height fit, PASSES the automated check cleanly: measured 80.0 x 80.0 x 3.2 cm against the real 80 x 80 x 4 cm (0cm/0.8cm off, well within tolerance). The circular symmetry made this an easy fix once the orientation was caught.",
+    "Generated from a single product photo, no additional angles",
+    "No manual Blender inspection has been done beyond the orientation fix"
+  ]
+}

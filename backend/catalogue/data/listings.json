@@ -223,9 +223,9 @@
         "d": 880,
         "h": 880
       },
-      "model_url": "/models/furniture/ektorp-2-seat-sofa-hillared-dark-blue/model.glb",
+      "model_url": null,
       "colour_hex": [
-        "#39495c"
+        "#30475e"
       ],
       "materials": [
         "cotton",
@@ -246,7 +246,7 @@
       },
       "model_url": "/models/furniture/ramnefjall-bed-frame-kilanda-dark-blue-queen/model.glb",
       "colour_hex": [
-        "#233047"
+        "#30475e"
       ],
       "materials": [
         "polyester",
@@ -284,7 +284,7 @@
         "d": 500,
         "h": 790
       },
-      "model_url": null,
+      "model_url": "/models/furniture/lisabo-chair-ash/model.glb",
       "colour_hex": [
         "#d9b88a"
       ],
@@ -323,7 +323,7 @@
         "d": 780,
         "h": 740
       },
-      "model_url": null,
+      "model_url": "/models/furniture/lisabo-dining-table-ash-veneer/model.glb",
       "colour_hex": [
         "#d9b88a"
       ],
@@ -836,7 +836,7 @@
         "d": 40,
         "h": 800
       },
-      "model_url": null,
+      "model_url": "/models/furniture/stockholm-mirror-walnut-veneer/model.glb",
       "colour_hex": [
         "#7a5235"
       ],

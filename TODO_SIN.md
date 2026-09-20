@@ -270,3 +270,27 @@ Appended by Saketh's agent; nothing above was changed. Two fixes had combined in
 - 2026-09-20 (Gaussian default): Switching default room to Haussmann, adding roomId query selection with room alias retained. Copied missing licensed SOG/surface from reviewed local worktree into ignored shared assets; verified both SHA256 against source. Packaging tests/build and database migration checks pending.
 
 - Gaussian default verified: frontend scene suite and six packaging tests pass; production build passes (existing large-chunk warning). Live Vite serves restored SOG HTTP200 and proxied API health returns ok. Applied all15pending local database migrations successfully. Updated existing indexed Haussmann guide; roomId selects mesh, old room alias retained. No commit or push.
+
+## Note from Saketh's lane — small follow-up in your editor: quiet saves (2026-09-20)
+
+Not urgent, not changed by me. Context in `docs/backend/contracts/scene-api.md`, "The same principle in the PlayCanvas editor".
+
+- Catalogue placements now survive a 5xx: my layer shows the item at once and drives your existing `session.retry()` on a 0.5 s to 8 s backoff (`frontend/src/catalogue/quietSave.ts`). `useRoomSession.ts` is untouched; the mount line in `SplatEditor.tsx` gained `retry={session.retry} status={session.status}`.
+- **What lags, and is yours if you want it:** while a retry is running your header says *Disconnected* with a *Retry* button and shows the raw server message, the Objects list and layout count omit the item, and the editor is locked. For a save that fixes itself in a second or two, a quieter status (the legacy app says nothing until the second failure) would match the team rule that storage may delay a save but never refuse a placement.
+- Drags and removes inside your editor still fail outright on a 5xx. Same fix, your call.
+- Separate, already fixed on my side: the Cg Arch room's baked `scene.exposure` washed my floor overlay out to white; `regionOverlay.ts` now divides its emissive by it. If you change how exposure is applied, that line is the one to look at.
+
+## Note from Saketh's lane — `AGENTS.md`: `main` freezes after the rehearsal (2026-09-20)
+
+Two additions, from Saketh. Please read the new "Merging close to the demo" section.
+
+- **Freeze.** Once the demo has been rehearsed end to end on the presenting machine, `main` takes only fixes to things that break that rehearsed run. No polish, no refactors. If unsure whether the freeze has started, ask before merging.
+- **Chains stop on the first failure, and a status is quoted, not remembered.** `&&` not `;`, no pipe that eats an exit code, do not trust `set -e` blindly, and paste the `Ran N tests … OK` line you actually read. The full backend suite is `manage.py test` with **no app labels** (206 tests); a label list silently skips apps.
+- **Said out loud, because this is what the freeze is for:** tonight #34 went into `main` without the suite being run and left `main` red, seven backend failures, until #37. Nobody was careless in an unusual way; it was a reasonable-looking asset PR late at night. That is exactly the change the freeze rule exists to stop from landing an hour before we present. Whoever merges runs the full suite on fresh `main` at once, and says so with the numbers.
+
+## Note from Saketh's lane — the Cg Arch room now has a measured window; your bundle files are untouched (2026-09-20)
+
+- New file **`shared/rooms/cg-arch-interior/openings.json`**: one window, `w1`, north wall, measured from your model's `Room Glass Windows` node (x 8.065 to 10.865 m, sill 7.5 cm, head 212.5 cm; the node is untransformed and your manifest places the model untransformed, so cm = m x 100). `python3 scripts/room_openings.py shared/rooms/cg-arch-interior` re-derives it.
+- **I did not put it in `manifest.json` or `spatial.json`, on purpose.** `room_bundle.py` compares those byte for byte with the zip, so a new field would make `import-room.sh` fail for everyone with "Repository metadata differs". A test now fails if `openings` ever appears in either. If you would rather own openings in the manifest (and serve them on `Room`), that needs a re-packed bundle and is your call after the demo.
+- It feeds the region solver only: "by the window" now narrows the lit floor to the patch in front of the glazing. Nothing in your engine reads it.
+- For the real-GPU run: PlayCanvas 2.22.2 does support `KHR_materials_transmission` and your `requestSceneColorMap(true)` enables it. In software rendering the glazing reads as a flat pale panel. If frame rate is poor on the MacBook, that one line is the first lever; if the glass still looks flat there, a brighter emissive on that node would make the wall read as having an opening.

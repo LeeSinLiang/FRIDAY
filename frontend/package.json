@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "node scripts/test-scene.mjs && node --experimental-strip-types --test scripts/shared-room-assets.test.ts",
+    "test": "node scripts/test-scene.mjs && node --experimental-strip-types --test scripts/shared-room-assets.test.ts scripts/every-test-runs.test.ts src/auth/api.test.mjs src/auth/flow.test.mjs",
     "fixture:glb": "node scripts/generate-test-glb.mjs",
     "region:debug": "node scripts/region-debug.mjs"
   },

@@ -6,7 +6,11 @@ import { searchParams } from "../catalogue/api";
 import type { Listing } from "../lib/types";
 import { validatePlacement } from "../scene/placement";
 import type { Instance, Product, Room } from "../scene/types";
-import { listingToProduct } from "./boundary";
+import cgArch from "../../../shared/rooms/cg-arch-interior/manifest.json";
+import cgArchSpatial from "../../../shared/rooms/cg-arch-interior/spatial.json";
+import { listingToProduct, wallBounds, wallRect } from "./boundary";
+import { openingZone } from "./geometry";
+import { openingsFor } from "./roomOpenings";
 import { solve } from "./solve";
 import type { Scene } from "./types";
 
@@ -67,4 +71,88 @@ test("the overlay writes uniforms through the live material, and leaves no GPU s
   assert.match(source, /precision mediump float;/);
   for (const setting of ["minFilter = NearestFilter", "magFilter = NearestFilter", "generateMipmaps = false", "wrapS = ClampToEdgeWrapping", "wrapT = ClampToEdgeWrapping", "unpackAlignment = 1"])
     assert.ok(source.includes(setting), `texture ${setting} must be explicit`);
+});
+
+test("the PlayCanvas overlay stays outside the region module, and is the only other file that may touch a renderer for it", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(new URL("regionOverlay.ts", `file://${process.cwd()}/src/scene/playcanvas/`), "utf8");
+  assert.ok(source.includes(["from", '"playcanvas"'].join(" ")), "this is the file that imports the engine"); // spelled in two parts so the guard above does not flag this test
+  assert.match(source, /from "\.\.\/\.\.\/region\/(grid|types)"/, "it consumes the region module's mask; the dependency points one way");
+  for (const setting of ["minFilter: pc.FILTER_NEAREST", "magFilter: pc.FILTER_NEAREST", "mipmaps: false", "addressU: pc.ADDRESS_CLAMP_TO_EDGE", "addressV: pc.ADDRESS_CLAMP_TO_EDGE"])
+    assert.ok(source.includes(setting), `texture ${setting} must be explicit`);
+  assert.match(source, /!== FREE\) continue/, "only free samples are lit; unknown and blocked stay transparent");
+});
+
+const cgRoom = { ...(cgArch.room as unknown as Room), spatial: cgArchSpatial as Room["spatial"] };
+const cgScene: Scene = { room: cgRoom, products: [], instances: [] };
+
+test("a prepared room's walls are the edges of its free floor, not its modelled shell", () => {
+  assert.deepEqual([cgRoom.widthCm, cgRoom.depthCm], [1158.01, 844.01]);
+  assert.deepEqual(wallBounds(cgRoom), { minX: 787, maxX: 1121, minZ: 180, maxZ: 760 });
+  assert.deepEqual(wallRect(cgRoom, "w"), { minX: 787, maxX: 787, minZ: 180, maxZ: 760 });
+  assert.deepEqual(wallBounds(scene.room), { minX: 0, maxX: 260, minZ: 0, maxZ: 200 }); // a fixture room is itself
+});
+
+test("HERO: '5 feet from any wall' does not fit the Cg Arch living room, and says why; 3 feet does", () => {
+  const poang = listingToProduct(listing("ikea-193.025.39"));
+  const five = solve(cgScene, { product: poang }, [{ k: "distance_min", ref: { kind: "any_wall" }, mm: 1524 }]);
+  assert.deepEqual(five.legalCounts, [0, 0, 0, 0]);
+  // Measured to the 1158 x 844 shell this used to PASS, for the wrong reason.
+  assert.equal(five.whyNothingFits, "needs 373 cm of width, this room has 334 cm");
+  const three = solve(cgScene, { product: poang }, [{ k: "distance_min", ref: { kind: "any_wall" }, mm: 914 }]);
+  assert.ok(three.bestYawIndex >= 0);
+  for (const mask of three.masks) for (let iz = 0; iz < mask.shape[1]; iz++) for (let ix = 0; ix < mask.shape[0]; ix++) {
+    if (mask.data[iz * mask.shape[0] + ix] !== 1) continue;
+    const x = ix * 5, z = iz * 5, turned = Math.abs(Math.sin(mask.yawRad)) > 0.5, [ex, ez] = turned ? [41, 34] : [34, 41];
+    assert.ok(x - ex >= 787 + 91.4 - 1e-6 && x + ex <= 1121 - 91.4 + 1e-6 && z - ez >= 180 + 91.4 - 1e-6 && z + ez <= 760 - 91.4 + 1e-6, `${x},${z}`);
+  }
+});
+
+test("HERO, as spoken: '4 feet from any wall' leaves a usable region in the Cg Arch living room", () => {
+  // Chosen over 5 feet (nothing fits, 334 cm wide) and 3 feet (over a thousand positions, no visible narrowing).
+  const four = (id: string) => solve(cgScene, { product: listingToProduct(listing(id)) }, [{ k: "distance_min", ref: { kind: "any_wall" }, mm: 1219 }]).legalCounts;
+  assert.deepEqual(four("ikea-405.355.47"), [220, 265, 220, 265]); // HERRÅKRA, the one with a real model
+  assert.deepEqual(four("ikea-193.025.39"), [255, 106, 255, 106]); // POÄNG
+});
+
+const cgWithWindow: Scene = { ...cgScene, openings: openingsFor("cg-arch-interior") };
+const NEAR_W1 = { k: "near", ref: { kind: "window", id: "w1" } } as const;
+const FOUR_FEET = { k: "distance_min", ref: { kind: "any_wall" }, mm: 1219 } as const;
+
+test("the Cg Arch room's window is the one measured from its model, on the north wall, inside that wall", () => {
+  const [w1, ...others] = openingsFor("cg-arch-interior")!;
+  assert.equal(others.length, 0);
+  assert.deepEqual([w1.id, w1.kind, w1.wall, w1.startCm, w1.widthCm, w1.sillCm], ["w1", "window", "n", 19.5, 280, 7.5]);
+  const walls = wallBounds(cgRoom);
+  assert.ok(w1.startCm >= 0 && w1.startCm + w1.widthCm <= walls.maxX - walls.minX, "the window lies within its wall");
+  // Wall-relative in, scene coordinates out: x 806.5..1086.5 is where the glass node sits in the model.
+  assert.deepEqual(openingZone(cgRoom, w1, 0), { minX: 806.5, maxX: 1086.5, minZ: 180, maxZ: 180 });
+  assert.equal(openingsFor("empty-room"), undefined, "an unmeasured room says so instead of inventing a window");
+});
+
+test("HERO, whole sentence: by the window AND 4 feet from any wall, in the real room", () => {
+  const herrakra = listingToProduct(listing("ikea-405.355.47"));
+  const solution = solve(cgWithWindow, { product: herrakra }, [NEAR_W1, FOUR_FEET]);
+  assert.deepEqual(solution.dropped, [], "the room describes its window now, so no clause is set aside");
+  // By hand: 121.9 cm off every wall leaves x 945..960 (4 columns) unturned, 945..965 (5) turned; "near" reaches
+  // 75 cm past that wall's own clearance, which leaves 15 rows from the first legal one. 4 x 15 and 5 x 15.
+  assert.deepEqual(solution.legalCounts, [60, 75, 60, 75]);
+  const without = solve(cgWithWindow, { product: herrakra }, [FOUR_FEET]).legalCounts;
+  assert.deepEqual(without, [220, 265, 220, 265], "the window clause is what narrows it");
+  const mask = solution.masks[1];
+  for (let iz = 0; iz < mask.shape[1]; iz++) for (let ix = 0; ix < mask.shape[0]; ix++) {
+    if (mask.data[iz * mask.shape[0] + ix] !== 1) continue;
+    const z = mask.originCm[1] + iz * 5;
+    assert.ok(z <= 410, `a lit centre at z = ${z} is not by the window`);
+  }
+});
+
+test("a measured sill replaces the assumed one: floor-to-ceiling glass is blocked by a chair", () => {
+  const herrakra = listingToProduct(listing("ikea-405.355.47")); // 73 cm tall: under the assumed 90 cm sill, over the real 7.5 cm one
+  const blocking = [{ k: "not_blocking", ref: { kind: "window", id: "w1" } }] as const;
+  const measured = solve(cgWithWindow, { product: herrakra }, [...blocking]).legalCounts;
+  const assumed = solve({ ...cgWithWindow, openings: cgWithWindow.openings!.map(({ sillCm: _, ...o }) => o) }, { product: herrakra }, [...blocking]).legalCounts;
+  const free = solve(cgWithWindow, { product: herrakra }, []).legalCounts;
+  assert.deepEqual(assumed, free, "under an assumed 90 cm sill a 73 cm chair blocks nothing");
+  for (let turn = 0; turn < 4; turn++) assert.ok(measured[turn] < free[turn], "with the real sill the strip in front of the glass is excluded");
 });

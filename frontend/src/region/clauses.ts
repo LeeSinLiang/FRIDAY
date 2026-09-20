@@ -92,7 +92,8 @@ function ruleFor(scene: Scene, product: Product, clause: PlaceCm, target: Target
   }
   if (k === "not_blocking") {
     if (target.opening?.kind === "door") return (_, footprint) => !overlapsArea(footprint, zone(target.opening!.swingCm ?? target.opening!.widthCm));
-    if (target.opening) return product.heightCm <= WINDOW_SILL_CM + EPSILON_CM
+    // A measured sill wins over the assumption: floor-to-ceiling glazing is blocked by anything in front of it.
+    if (target.opening) return product.heightCm <= (target.opening.sillCm ?? WINDOW_SILL_CM) + EPSILON_CM
       ? () => true : (_, footprint) => !overlapsArea(footprint, zone(WINDOW_ZONE_CM));
     if (target.instanceId) return (_, footprint) => gap(footprint, target.rect) >= APPROACH_CM - EPSILON_CM;
     return "a wall cannot be blocked";

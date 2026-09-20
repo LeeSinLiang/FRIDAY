@@ -41,10 +41,10 @@ export async function writeDebugScenes(outDir: string): Promise<string[]> {
     await writeFile(file, toSvg(scene, mask, { title: `${name}: ${chair.name}, yaw ${degrees}, ${countFree(mask)} legal centres` }));
     lines.push(`${file}  ${countFree(mask)} legal centres  ${ms} ms`);
   }
-  // The demo sentence, already compiled: "a reading chair by the window, 5 feet from any wall".
+  // The demo sentence, already compiled: "a reading chair by the window, 4 feet from any wall".
   const armchair = { productId: "ikea-004.885.65", name: "EKENÄSET armchair", widthCm: 64, depthCm: 78, heightCm: 76, color: "#8a8d8f", kind: "chair" as const };
   const solution = solve(DEV_SCENE, { product: armchair }, [
-    { k: "near", ref: { kind: "window", id: "w1" } }, { k: "distance_min", ref: { kind: "any_wall" }, mm: 1524 },
+    { k: "near", ref: { kind: "window", id: "w1" } }, { k: "distance_min", ref: { kind: "any_wall" }, mm: 1219 },
   ]);
   const yaw = Math.max(solution.bestYawIndex, 0);
   const file = join(outDir, "dev-room-reading-chair.svg");

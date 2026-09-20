@@ -16,7 +16,7 @@ This layer never does geometry.
 | `backend/catalogue/dsl/schema.py` | `Program`, 7 `FindClause` + 6 `PlaceClause`, `Ref` — validating definition |
 | `frontend/src/lib/types.ts` | TypeScript mirror of `types.py` |
 | `frontend/src/lib/dsl/schema.ts` | TypeScript mirror of `dsl/schema.py` |
-| `backend/catalogue/data/listings.json` | Stub merchant feed: 41 items, real dimensions; one (HERRÅKRA) carries a `model_url`, feed-shaped (`source`, `fetched_at`) |
+| `backend/catalogue/data/listings.json` | Stub merchant feed: 43 items, real dimensions; a few carry a `model_url` (each checked against its GLB by `api/test_furniture_assets.py`), feed-shaped (`source`, `fetched_at`) |
 | `backend/catalogue/feed.py` | Reads the feed into validated `Listing`s; fills in generated thumbnails |
 | `backend/catalogue/thumbs.py` | SVG data-URI placeholder thumbnails (no image assets) |
 | `backend/catalogue/params.py` | Query params → find clauses. Pure |
@@ -157,9 +157,35 @@ The index is created by hand with the agreed mapping. `ingest` refuses to run if
 missing (exit 2), because a bulk write would auto-create it with a guessed mapping. Index name
 defaults to `listings`; override with `ELASTIC_INDEX`. Re-ingesting overwrites by listing id.
 
+### The index must agree with the files: re-ingest after every listings change
+
+Search reads the index; placement and the server's stored copy of a product read `load_catalogue()`,
+that is, the files. When they drift nothing errors. A listing that gained a `model_url` in
+`listings.json` still comes back from search without it, so its hover and its unconfirmed box have
+no model, and in the browser-authoritative `?legacy` editor it stays a grey box for good. (A stale
+index never *refuses* a placement: the server compares dimensions only and stores its own copy.)
+
+```bash
+cd backend
+uv run python -m catalogue.ingest        # after ANY change to listings.json, seed.py or the seed count
+uv run python -m catalogue.index_check   # exit 0 AGREE, 1 DISAGREE, 2 cannot proceed
+```
+
+`index_check` compares a **count and a SHA-256 over every document's canonical JSON**, reading the
+whole index by `search_after` on `id`. Count alone is not enough: a changed `model_url` leaves the
+count the same. On disagreement it names the listings and fields, for example
+`ikea-403.608.74: model_url is None in the index, '/models/…/model.glb' in the files`.
+`ELASTIC_LIVE_TEST=1 uv run python manage.py test catalogue.test_index_check` runs the same
+comparison as a test; it is skipped by default because the suite must pass offline. It is not
+possible to store the hash in the index instead, since that would mean changing the mapping.
+
+**There is one shared index, so ingest from `main`, after the merge.** Ingesting from a feature
+branch makes the index match that branch and disagree with everyone running `main`. While a
+listings change sits in an open PR the check on that branch will say DISAGREE, and that is correct.
+
 ## Catalogue size
 
-The catalogue is the 41 hero items plus `CATALOGUE_SEED_COUNT` seed listings (default 12,000),
+The catalogue is the hero items in `listings.json` (43 on 2026-09-20) plus `CATALOGUE_SEED_COUNT` seed listings (default 12,000),
 generated deterministically so the memory backend and the index always hold the same data.
 `uv run python -m catalogue.ingest` indexes all of it in about three seconds.
 

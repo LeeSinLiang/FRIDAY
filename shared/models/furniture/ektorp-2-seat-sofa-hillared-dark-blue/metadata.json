@@ -9,6 +9,7 @@
   "upAxis": "+Y",
   "frontAxis": "+Z",
   "pivot": "floor-footprint-center",
+  "unbound": "Deliberately not linked from its listing. The model is 165.0 x 99.4 x 88.0 cm; the real EKTORP is 179 x 88 x 88 cm. Matching it needs 22.6% non-uniform scale, and at the 10% cap (scripts/fit_glb.py exits 1) it is still 6.5 cm off in both width and depth. The cap is the line between 'this model is the product, slightly imprecise' and 'this is a different object stretched into the product's shape'. A 165 cm sofa labelled EKTORP is the second, in a product whose whole claim is that what you see is true to scale. The listing places as a true-size stand-in instead. To rebind: a model whose own proportions are within 10% of 179 x 88 x 88.",
   "catalogueListingId": "ikea-001.850.32",
   "source": {
     "product": "IKEA EKTORP 2-seat sofa frame (001.850.32) with Hillared dark blue cover (305.170.87)",

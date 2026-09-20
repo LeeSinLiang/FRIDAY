@@ -111,7 +111,7 @@
         {
           "id": "41b8ced7-5a80-4dca-b956-6a8b61a4440f",
           "title": "Search the catalogue using spatial constraints",
-          "done": false,
+          "done": true,
           "owner": "saketh"
         },
         {
@@ -141,13 +141,6 @@
         {
           "id": "46dd9a0d-bb2e-4ae8-8a42-e035f8199f58",
           "title": "Import CC0 GLB asset metadata into a separate Elasticsearch index",
-          "done": false,
-          "owner": "saketh",
-          "phase": "mvp"
-        },
-        {
-          "id": "5f377efe-8281-4a31-bbf1-311b0661c8af",
-          "title": "Normalize DummyJSON and WANDS reference products for Elasticsearch",
           "done": false,
           "owner": "saketh",
           "phase": "mvp"
