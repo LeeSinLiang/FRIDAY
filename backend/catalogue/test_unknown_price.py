@@ -62,7 +62,7 @@ class MemoryTests(SimpleTestCase):
         after = memory.search(self.everything, sofas, 500, 0).facets
         self.assertEqual(after.category[0].count, before.category[0].count + 1, "one more sofa matches")
         self.assertEqual(after.price_band, before.price_band, "and no band moves: the probe saw 0-10000 go from 0 to 1")
-        self.assertEqual(sum(b.count for b in after.price_band), sum(b.count for b in after.category) - 1)
+        self.assertEqual(sum(b.count for b in after.price_band), sum(has_price(l) for l in self.everything if l.category == "sofa"))
 
 
 class ElasticQueryTests(SimpleTestCase):

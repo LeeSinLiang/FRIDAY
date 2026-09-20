@@ -6,6 +6,7 @@ from catalogue import memory
 from catalogue.facets import PRICE_BANDS, facets_from_aggs
 from catalogue.feed import load_catalogue, load_listings
 from catalogue.params import parse_search_params
+from catalogue.pricing import has_price
 from catalogue.seed import PALETTE, generate
 from catalogue.types import CATEGORIES, SearchResponse, to_wire
 
@@ -42,7 +43,7 @@ class FacetTests(SimpleTestCase):
         result = run(limit="5")
         self.assertEqual(len(result.items), 5)
         self.assertEqual(sum(b.count for b in result.facets.category), result.total)
-        self.assertEqual(sum(b.count for b in result.facets.price_band), result.total)
+        self.assertEqual(sum(b.count for b in result.facets.price_band), sum(has_price(l) for l in load_catalogue()))  # an unknown price is in no band
         self.assertEqual([b.key for b in result.facets.price_band], [key for key, _, _ in PRICE_BANDS])
 
     def test_category_buckets_are_ordered_by_count_then_key(self):
@@ -74,7 +75,7 @@ class FacetTests(SimpleTestCase):
     def test_category_and_price_facets_describe_what_fits_not_the_candidates(self):
         fitted = run(fits_w_mm="600")
         self.assertEqual(sum(b.count for b in fitted.facets.category), fitted.facets.fits_room)
-        self.assertEqual(sum(b.count for b in fitted.facets.price_band), fitted.facets.fits_room)
+        self.assertEqual(sum(b.count for b in fitted.facets.price_band), sum(has_price(l) and l.dims_mm.w <= 600 for l in load_catalogue()))
 
     def test_facets_from_aggregations_without_a_gap(self):
         facets = facets_from_aggs({

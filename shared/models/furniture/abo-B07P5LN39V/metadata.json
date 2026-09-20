@@ -1,0 +1,63 @@
+{
+  "productId": "abo-B07P5LN39V",
+  "modelUrl": "/models/furniture/abo-B07P5LN39V/model.glb",
+  "widthCm": 104.1,
+  "depthCm": 88.9,
+  "heightCm": 86.4,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "abo-B07P5LN39V",
+  "matchType": "verified",
+  "priceProvenance": "placeholder",
+  "license": {
+    "name": "CC BY 4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "3D model and product data from Amazon Berkeley Objects (c) Amazon.com, licensed CC BY 4.0. Dataset built by Matthieu Guillaumin, Thomas Dideriksen, Kenan Deng, Himanshu Arora (Amazon.com), Jasmine Collins and Jitendra Malik (UC Berkeley).",
+    "changes": "Textures resized to 512 px, mesh simplified and re-saved with gltf-transform; uniform scale to the listed height. Proportions untouched."
+  },
+  "source": {
+    "dataset": "Amazon Berkeley Objects",
+    "datasetUrl": "https://amazon-berkeley-objects.s3.amazonaws.com/index.html",
+    "itemId": "B07P5LN39V",
+    "domain": "amazon.com",
+    "productName": "Amazon Brand – Rivet Emerly Modern Living Room Chair, 41\"W, Steel Grey",
+    "modelFile": "3dmodels/original/V/B07P5LN39V.glb",
+    "rawDimensions": {
+      "width": {
+        "value": 35,
+        "unit": "inches"
+      },
+      "length": {
+        "value": 41,
+        "unit": "inches"
+      },
+      "height": {
+        "value": 34,
+        "unit": "inches"
+      }
+    },
+    "axisAssignment": {
+      "w": "length",
+      "d": "width",
+      "h": "height"
+    },
+    "titleConfirms": [
+      "1041 mm W"
+    ],
+    "colour": "#7a7773",
+    "colourSource": "color_code",
+    "processing": "scripts/abo_import.py: strip cameras/lights/animations, @gltf-transform/cli@4 optimize --compress false --texture-compress auto --texture-size 512 --simplify, fit_to_height"
+  },
+  "residualCm": {
+    "width": 0.02,
+    "height": 0.0,
+    "depth": -0.01
+  },
+  "knownLimitations": [
+    "ABO scaled this model to the record's item_dimensions, so the size check cannot catch a wrong record. The product title, which states a size, is the independent witness: see source.titleConfirms.",
+    "The catalogue colour is the nearest of the 30 seed-palette colours to source.colour, not that colour itself.",
+    "price_cents is 0 because ABO has no price. 0 means unknown, not free."
+  ]
+}
