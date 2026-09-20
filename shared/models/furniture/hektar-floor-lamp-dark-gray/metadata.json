@@ -1,0 +1,23 @@
+{
+  "productId": "hektar-floor-lamp-dark-gray",
+  "modelUrl": "/models/furniture/hektar-floor-lamp-dark-gray/model.glb",
+  "thumbnailUrl": "/models/furniture/hektar-floor-lamp-dark-gray/thumbnail.png",
+  "widthCm": 31,
+  "depthCm": 31,
+  "heightCm": 181,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "ikea-805.109.92",
+  "source": {
+    "product": "IKEA HEKTAR floor lamp, dark gray (805.109.92), matches the pre-existing stub catalogue entry",
+    "dimensionsVerifiedAt": "https://www.ikea.com/us/en/p/hektar-floor-lamp-dark-gray-70216544/ (31 x 31 x 181 cm)",
+    "generation": "Higgsfield image_to_3d (Meshy), single reference image, should_texture=true, enable_pbr=true, then gltf-transform optimize (--compress false, --texture-compress auto --texture-size 1024, --simplify --simplify-ratio 0.4)"
+  },
+  "knownLimitations": [
+    "FAILS the automated check in backend/api/test_furniture_assets.py, badly, on width. After fitting to the correct 181cm height, measured box is 103.5 x 181.0 x 32.4 cm against the real 31 x 181 x 31 cm: width off by 72.5cm (tolerance ~2cm), depth passes (1.4cm off). Likely cause: the lamp's angled arm/shade reaches out much further than its actual tripod-base footprint, and single-image reconstruction appears to have captured that angled reach as the object's full width rather than the narrow base. Same single-photo class already flagged/accepted this session, but this is the largest miss of the batch; pushed anyway under the same standing direction.",
+    "Generated from a single product photo, no additional angles",
+    "No manual Blender inspection/correction pass has been done"
+  ]
+}

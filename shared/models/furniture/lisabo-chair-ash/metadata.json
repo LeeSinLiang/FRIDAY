@@ -1,0 +1,23 @@
+{
+  "productId": "lisabo-chair-ash",
+  "modelUrl": "/models/furniture/lisabo-chair-ash/model.glb",
+  "thumbnailUrl": "/models/furniture/lisabo-chair-ash/thumbnail.png",
+  "widthCm": 44,
+  "depthCm": 50,
+  "heightCm": 79,
+  "assetUnits": "meters",
+  "upAxis": "+Y",
+  "frontAxis": "+Z",
+  "pivot": "floor-footprint-center",
+  "catalogueListingId": "ikea-403.608.74",
+  "source": {
+    "product": "IKEA LISABO chair, ash (403.608.74), matches the pre-existing stub catalogue entry",
+    "dimensionsVerifiedAt": "https://www.ikea.com/us/en/p/lisabo-chair-ash-00457235/ (44 x 50 x 79 cm)",
+    "generation": "Higgsfield image_to_3d (Meshy), single reference image, should_texture=true, enable_pbr=true, then gltf-transform optimize (--compress false, --texture-compress auto --texture-size 1024, --simplify --simplify-ratio 0.4)"
+  },
+  "knownLimitations": [
+    "Passes the automated check in backend/api/test_furniture_assets.py: after fitting to the correct 79cm height, measured box is 43.2 x 79.0 x 49.6 cm against the real 44 x 79 x 50 cm (0.8cm/0.4cm off, well within the ~2cm tolerance). The one clean real-product match this batch, alongside the mirror.",
+    "Generated from a single product photo, no additional angles",
+    "No manual Blender inspection/correction pass has been done"
+  ]
+}
