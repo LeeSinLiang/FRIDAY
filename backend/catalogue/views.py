@@ -38,14 +38,16 @@ RESULTS_HEADER = "X-Search-Results"  # "with-model", "model-first" or "all": wha
 def results_mode() -> str:
     """How listings with a real 3D model are treated in what search returns. ONE LINE in .env:
 
-        SEARCH_RESULTS_REQUIRE_MODEL=1      only them (the default, also when empty or unset)
-        SEARCH_RESULTS_REQUIRE_MODEL=boost  everything, them first: the fallback if too few have models
+        SEARCH_RESULTS_REQUIRE_MODEL=boost  everything, them first (the default, also when empty or unset):
+                                            a full list with what can be placed in 3D on top, as a shop
+                                            does with what is in stock
+        SEARCH_RESULTS_REQUIRE_MODEL=1      only them
         SEARCH_RESULTS_REQUIRE_MODEL=0      everything, plain order
 
     Counting is never affected: facets, fits_room and fits_room_of cover every match in all three.
     """
-    value = os.getenv("SEARCH_RESULTS_REQUIRE_MODEL", "1").strip().lower()
-    return MODELS_ALL if value == "0" else MODELS_FIRST if value in ("boost", "first") else MODELS_ONLY
+    value = os.getenv("SEARCH_RESULTS_REQUIRE_MODEL", "").strip().lower()
+    return MODELS_ALL if value == "0" else MODELS_ONLY if value in ("1", "only") else MODELS_FIRST
 
 
 def run_search(query: SearchQuery) -> tuple[SearchResponse, str]:
