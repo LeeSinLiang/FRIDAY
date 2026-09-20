@@ -28,7 +28,24 @@ export function setFirstPersonCamera(camera: Entity, pose: FirstPersonCamera) {
   if (camera.camera) camera.camera.fov = pose.fovDeg;
 }
 
-/** Resolve after the engine confirms the camera's current splat sort and finishes drawing it. */
+type CaptureSortManager = {
+  cpuSorter: { jobsInFlight: number; pendingSorted: unknown } | null;
+  renderer: { usesGpuSort: boolean };
+  sortNeeded: boolean;
+};
+
+/** PlayCanvas 2.22.2's frame:ready omits camera-only CPU jobs. Keep this private
+ * adapter pinned with the engine: do not silently accept readiness if it changes. */
+function captureSortManager(runtime: PlayCanvasRuntime, camera: unknown, layer: unknown): CaptureSortManager | undefined {
+  const renderer = runtime.app.renderer as unknown as {
+    gsplatDirector?: { camerasMap: Map<unknown, { layersMap: Map<unknown, { gsplatManager?: CaptureSortManager }> }> };
+  };
+  // frame:ready emits CameraComponent; the director keys by its internal Camera.
+  const cameraKey = (camera as { camera?: unknown } | null)?.camera;
+  return renderer?.gsplatDirector?.camerasMap.get(cameraKey)?.layersMap.get(layer)?.gsplatManager;
+}
+
+/** Resolve after a fresh sort for the frozen camera has been applied and drawn. */
 export function waitForSplatFrame(runtime: PlayCanvasRuntime, timeoutMs = 15_000, signal?: AbortSignal): Promise<void> {
   if (runtime.disposed || signal?.aborted) return Promise.reject(new Error("Rendering was cancelled"));
   const isMesh = runtime.room?.scan?.visualFormat === "glb";
@@ -38,6 +55,7 @@ export function waitForSplatFrame(runtime: PlayCanvasRuntime, timeoutMs = 15_000
     let readyEvent: EventHandle | undefined;
     let endEvent: EventHandle | undefined;
     let settled = false;
+    const requestedSorts = new Set<CaptureSortManager>();
     const finish = (error?: Error) => {
       if (settled) return;
       settled = true;
@@ -54,8 +72,24 @@ export function waitForSplatFrame(runtime: PlayCanvasRuntime, timeoutMs = 15_000
     runtime.signal.addEventListener("abort", abort, { once: true });
     signal?.addEventListener("abort", abort, { once: true });
     if (isMesh) endEvent = runtime.app.once("frameend", () => finish());
-    else readyEvent = system!.on("frame:ready", (camera, _layer, ready, loadingCount) => {
+    else readyEvent = system!.on("frame:ready", (camera, layer, ready, loadingCount) => {
       if (camera !== runtime.camera.camera || !ready || loadingCount !== 0 || endEvent) return;
+      const manager = captureSortManager(runtime, camera, layer);
+      if (!manager) return;
+      if (!manager.renderer.usesGpuSort) {
+        const sorter = manager.cpuSorter;
+        if (!sorter || sorter.jobsInFlight !== 0 || sorter.pendingSorted) return;
+        if (!requestedSorts.has(manager)) {
+          // The engine can drop a new camera request while an older sort is busy,
+          // yet record that camera as sorted. Drain first, then force exactly one
+          // fresh request; the next ready event must see its result applied.
+          requestedSorts.add(manager);
+          manager.sortNeeded = true;
+          runtime.app.renderNextFrame = true;
+          return;
+        }
+        if (manager.sortNeeded) return;
+      }
       endEvent = runtime.app.once("frameend", () => finish());
     });
     runtime.app.renderNextFrame = true;
@@ -74,7 +108,11 @@ export function createPlayCanvasRuntime(canvas: HTMLCanvasElement, options: {
     graphicsDeviceOptions: { antialias: room.scan.visualFormat === "glb", alpha: false, powerPreference: "high-performance", preserveDrawingBuffer: false },
   });
   // Compact unified storage smears this SH2 asset at reverse headings; matched PLY/SOG captures verify large storage.
-  if (room.roomId === "haussmann-apartment") app.scene.gsplat.dataFormat = GSPLATDATA_LARGE;
+  if (room.roomId === "haussmann-apartment") {
+    app.scene.gsplat.dataFormat = GSPLATDATA_LARGE;
+    // Reuse depth order while looking around; translation still triggers sorting.
+    app.scene.gsplat.radialSorting = true;
+  }
   // The two-million-splat laptop proof sustains motion at this render resolution.
   // Agent captures still render at their independently requested pixel dimensions.
   app.graphicsDevice.maxPixelRatio = Math.min(window.devicePixelRatio || 1, room.scan.visualFormat === "glb" ? 1.5 : 1);

@@ -94,6 +94,7 @@ Every folder under `shared/models/furniture/` with a `metadata.json` is checked 
 - The GLB's bounding box matches the listing's `dims_mm / 10` within **2 cm or 3%, whichever is larger**. The tolerance is loose on purpose: the check exists to catch the 2.6× class of error (a generator that normalises to a unit cube, an export in centimetres), not to police two percent.
 - The lowest point is on y = 0 (±1 cm) and the footprint is centred (±2 cm).
 - Under 5 MB and at most 30,000 triangles. **Aim for 10–15k**: 30k is the ceiling for one item, and a furnished room has many. If several assets land, run them through `gltf-transform` before they go in the repo.
+- Every bound asset records a `matchType` in `metadata.json`: `verified` (the model IS the product, both from one source record, e.g. Amazon Berkeley Objects), `reconstructed_from_product_photo` (generated from the real product's own photo, then dimension-checked: every Meshy asset here), or `generic_visual_proxy` (a stand-in). A generic proxy may only back a synthetic listing (`source` `stub` or `seed`), never a real SKU. Added 2026-09-20.
 
 Generated models usually arrive normalised around the origin. `python3 scripts/fit_glb.py <model.glb> <height_cm>` scales one **uniformly** to its true height, centres it and stands it on the floor by adding a root node: lossless, and safe to re-run after a re-export. It never stretches a model to force its box to match.
 

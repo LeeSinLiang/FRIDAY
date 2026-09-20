@@ -9,6 +9,7 @@
   "upAxis": "+Y",
   "frontAxis": "+Z",
   "pivot": "floor-footprint-center",
+  "matchType": "generic_visual_proxy",
   "source": {
     "route": "image-to-3D",
     "provider": "Meshy multi_image_to_3d via Higgsfield",

@@ -10,6 +10,7 @@
   "frontAxis": "+Z",
   "pivot": "floor-footprint-center",
   "catalogueListingId": "ikea-403.608.74",
+  "matchType": "reconstructed_from_product_photo",
   "source": {
     "product": "IKEA LISABO chair, ash (403.608.74), matches the pre-existing stub catalogue entry",
     "dimensionsVerifiedAt": "https://www.ikea.com/us/en/p/lisabo-chair-ash-00457235/ (44 x 50 x 79 cm)",

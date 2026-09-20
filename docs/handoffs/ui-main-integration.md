@@ -43,6 +43,8 @@ The four existing source commits are reference material; the first mixes backend
 
 ## 5. Ownership and completion
 
+2026-09-20 follow-up: the user requested pulling main into the existing UI branch and finishing that local merge, superseding the fresh-branch PR execution order for this local sync. The room-selection conflict combines explicit route ID with both query aliases; gallery entry remains unchanged. Upstream count-line tests leaked a partial window mock and caused seven room-session failures; descriptor-restoring cleanup plus an isolation regression resolves all seven without production event/UI changes. Full checks report backend 240 tests, OK (4 skipped); frontend 139 + 16 passed; build passed. Local browser confirmed placement and synchronized cart undo/redo. GitHub-main integration and Vercel refresh remain separate from this local merge; no push/deployment is performed by this sync.
+
 Track this under William's existing **Merge account and checkout routes with the pushed 3D editor** card (`03bc6470-6a84-48d8-ba48-1df4ed0f3277`), alongside the existing shopping/deployment and ownership cards. They remain open until integration and runtime verification actually complete. Coordinate shared-file edits with the active catalogue/renderer lanes before implementation.
 
 Success means William's current interface remains recognizable and functionally intact on current main, upstream fixes remain present, all required checks pass, and the deployed artifact—not merely a local build—matches the integrated source.

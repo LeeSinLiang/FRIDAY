@@ -9,7 +9,7 @@ const Legacy = lazy(() => import('./LegacyApp'))
 function Route() {
   const query = new URLSearchParams(location.search)
   if (query.has('legacy') || query.has('testAssets')) return <Legacy/>
-  if (location.pathname === '/' && query.has('room')) return <Editor/>
+  if (location.pathname === '/' && (query.has('roomId') || query.has('room'))) return <Editor/>
   if (location.pathname === '/') { location.replace('/rooms'); return null }
   if (location.pathname === '/rooms') return <RoomSelection/>
   if (location.pathname === '/cart' || location.pathname === '/checkout' || location.pathname.startsWith('/account')) return <Account/>

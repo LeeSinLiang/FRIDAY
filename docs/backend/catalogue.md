@@ -183,6 +183,17 @@ possible to store the hash in the index instead, since that would mean changing 
 branch makes the index match that branch and disagree with everyone running `main`. While a
 listings change sits in an open PR the check on that branch will say DISAGREE, and that is correct.
 
+## Search counts everything and returns what can be placed
+
+`GET /api/search` **aggregates over the whole catalogue and returns only listings that have a `model_url`.** The facets, `fits_room` and `fits_room_of` are computed over every match, so "524 of 1,006 armchairs fit your room" is a statement about 12,000 listings and does not shrink. Only `items` and `total` are narrowed: `total` is the number of listings that can be returned and paged through, always equal to what paging over `items` yields.
+
+- In Elasticsearch the narrowing is `post_filter`, which runs after aggregation: `{"exists": {"field": "model_url"}}`, combined with the width gap when there is one. `model_url` is mapped `keyword` with `index: false`, but doc values are on, so `exists` works on it. The memory backend filters after faceting, and the two agree.
+- **One line to flip back:** `SEARCH_RESULTS_REQUIRE_MODEL=0` in `.env`. Default is ON; empty counts as ON. Every response says which applied in `X-Search-Results: with-model | all`.
+- Every match is still countable from the response without a new field: the category facet sums to it. The catalogue panel uses that to read "392 matches in the catalogue · 1 ready in 3D".
+- The pure functions (`memory.search`, `es.search`, `to_es_query`) take `models_only` and default to `False`; the flag is read once, in `catalogue/views.py`.
+
+On 2026-09-20 five listings have models (mirror, chair, armchair, table, bed), so the hero sentence (an armchair under $400) returns **one** hit. The list reads as a store once there are about ten armchairs with models under $400; that is the asset lane's target, and nothing here needs to change when they land, apart from a re-ingest.
+
 ## Catalogue size
 
 The catalogue is the hero items in `listings.json` (43 on 2026-09-20) plus `CATALOGUE_SEED_COUNT` seed listings (default 12,000),

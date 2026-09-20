@@ -2,6 +2,7 @@
 // Everything here is in the scene's space: centimetres, origin at a floor corner, +X width, +Z depth.
 
 import type { Instance, Product, Room } from "../scene/types";
+import type { Portal } from "./floor";
 
 /** Fixed solve resolution. Deliberately NOT derived from SCENE_UNIT_CM: that setting changes how
  *  big things are drawn, and must never change whether a chair fits. */
@@ -52,6 +53,8 @@ export type Scene = {
   products: Product[];
   instances: Instance[];
   openings?: Opening[];
+  /** Stretches of the floor's boundary that are open, not solid. Authored per room; absent means every edge is a wall. */
+  portals?: Portal[];
   /** Static obstacles and unobserved floor from a reconstructed room, as cell AREAS. */
   occupancy?: FloorGrid;
 };

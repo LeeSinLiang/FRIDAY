@@ -35,6 +35,14 @@ const size = (listing: Listing) => `${listing.dims_mm.w / 10} × ${listing.dims_
 const DEV = new URLSearchParams(window.location.search).has("dev");
 const TURNS = ["back to the north wall", "back to the west wall", "back to the south wall", "back to the east wall"];
 
+/** "392 in the catalogue · 1 ready in 3D" when search returned fewer than it counted; the plain count otherwise. */
+export function countLine(total: number, matches: number | null, shown: number): string {
+  const plural = (n: number) => `${n.toLocaleString()} match${n === 1 ? "" : "es"}`;
+  const showing = total > shown ? `, showing ${shown}` : "";
+  if (matches === null || matches <= total) return `${plural(total)}${showing}`;
+  return `${plural(matches)} in the catalogue · ${total === 0 ? "none has a 3D model yet" : `${total.toLocaleString()} ready in 3D${showing}`}`;
+}
+
 function Status({ region, yawIndex, armed }: { region: Region | null; yawIndex: number; armed: boolean }) {
   if (!region) return <p className="shelf-status">Hover a piece to see where it fits.</p>;
   const { solution, product } = region;
@@ -55,6 +63,9 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
   const [compiled, setCompiled] = useState<Compiled | null>(null);
   const [items, setItems] = useState<Listing[]>([]);
   const [total, setTotal] = useState<number | null>(null);
+  // Every match in the catalogue, which can be far more than what is returned: search counts all
+  // 12,000 listings and returns only the ones that can be placed as a real 3D model.
+  const [matches, setMatches] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const request = useRef<AbortController | null>(null);
@@ -72,6 +83,7 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
       const result = await compileSentence(text, controller.signal);
       const found = await searchCatalogue(result.program.find, controller.signal);
       setCompiled(result); setItems(found.items); setTotal(found.total); setError("");
+      setMatches(found.facets ? found.facets.category.reduce((sum, bucket) => sum + bucket.count, 0) : null);
       onHover(null); // the card under the pointer is a different listing now
       onPlace(result.program.place);
     } catch (caught) {
@@ -164,7 +176,7 @@ export default function CatalogueShelf({ region, yawIndex, armedId, disabled, ca
           </li>
         ))}
       </ul>
-      {total !== null && <p className="shelf-status">{total.toLocaleString()} match{total === 1 ? "" : "es"}{total > items.length ? `, showing ${items.length}` : ""}</p>}
+      {total !== null && <p className="shelf-status">{countLine(total, matches, items.length)}</p>}
     </aside>
   );
 }

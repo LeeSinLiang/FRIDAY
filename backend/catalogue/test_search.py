@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 from django.http import QueryDict
@@ -36,7 +37,7 @@ class MemorySearchTests(SimpleTestCase):
 
     def test_fits_w_max_narrows_armchairs(self):
         wide, narrow = run(category="armchair"), run(category="armchair", fits_w_mm="900")
-        self.assertEqual((wide.total, narrow.total), (6, 5))
+        self.assertEqual((wide.total, narrow.total), (sum(l.category == "armchair" for l in load_listings()), sum(l.category == "armchair" and l.dims_mm.w <= 900 for l in load_listings())))
         self.assertTrue(all(i.dims_mm.w <= 900 for i in narrow.items))
 
     def test_price_range(self):
@@ -93,6 +94,10 @@ class ParamTests(SimpleTestCase):
 
 class SearchEndpointTests(SimpleTestCase):
     def setUp(self):
+        # These tests are about shape and backend choice; the results filter has its own tests.
+        flag = mock.patch.dict(os.environ, {"SEARCH_RESULTS_REQUIRE_MODEL": "0"})
+        flag.start()
+        self.addCleanup(flag.stop)
         # Hero feed only, so the expected totals stay readable.
         patcher = mock.patch("catalogue.views.load_catalogue", return_value=load_listings())
         patcher.start()
@@ -103,8 +108,8 @@ class SearchEndpointTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         body = response.json()
         self.assertEqual(set(body), {"items", "total", "facets"})
-        self.assertEqual((body["facets"]["fits_room"], body["facets"]["fits_room_of"]), (5, 6))
-        self.assertEqual(body["total"], 5)
+        self.assertEqual((body["facets"]["fits_room"], body["facets"]["fits_room_of"]), (sum(l.category == "armchair" and l.dims_mm.w <= 900 for l in load_listings()), sum(l.category == "armchair" for l in load_listings())))
+        self.assertEqual(body["total"], sum(l.category == "armchair" and l.dims_mm.w <= 900 for l in load_listings()))
         SearchResponse.model_validate(body)
 
     def test_trailing_slash_and_bad_params(self):

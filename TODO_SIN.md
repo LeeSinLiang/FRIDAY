@@ -8,7 +8,9 @@ Record all agent work here when working for Sin. Include status, file paths, ver
 
 ## In progress
 
-- Gaussian room evaluation (Sin; Kanban `68a22eb5-dc7f-4cc5-8ee2-d248bd8369ee`) remains incomplete. Actual CC BY 4.0 HAUSSMANN asset is acquired and integrated as an opt-in test fixture; acquisition is no longer blocked. Final down/ceiling/window captures still smear. Keep the mesh fallback and assumed-scale label. Full-heading motion measured 23.7 FPS / p95 84.8 ms over 30 s at 1280 × 720, warm-ready 647 ms. See docs/frontend/room-capture/haussmann-apartment.md for source, transforms, geometry, coverage evidence and limitations. User authorized merging the experimental fixture and test-download note in all four TODOs; merged into local main at ae03845 after reconciling fetched origin/main; post-merge verification passed. No push.
+- 2026-09-20: Resumed Evaluate Gaussian splats and surface reconstruction on codex/haussmann-quality from main1424ac2. Parallel agents inspect capture readiness, performance and explicit metric evidence; root owns shared renderer edits and browser QA. Reproduce matched problem views before changing compression or resolution. Retain assumed-scale label until an independent dimension is established. Existing Sin Kanban card remains incomplete.
+
+- Gaussian room evaluation (Sin; Kanban `68a22eb5-dc7f-4cc5-8ee2-d248bd8369ee`) remains incomplete. Actual CC BY 4.0 HAUSSMANN asset is acquired and integrated as an opt-in test fixture; acquisition is no longer blocked. Down/ceiling/window capture smearing is fixed on codex/haussmann-quality; final full-resolution motion measured 53.5 FPS / p95 26.2 ms over 30 s at 1280 × 720, warm-ready 569 ms. Keep the mesh fallback and assumed-scale label; author page provides no usable metric calibration. See docs/frontend/room-capture/haussmann-apartment.md for source, transforms, geometry, coverage evidence and limitations. User authorized merging the experimental fixture and test-download note in all four TODOs; merged into local main at ae03845 after reconciling fetched origin/main; post-merge verification passed. No push.
 
 - Working branch is codex/gaussian-splatting, created from the merged Three.js baseline on main. The PlayCanvas migration has not started. Incoming production furniture models remain pending; user-supplied Mori OTF fonts are integrated.
 
@@ -261,6 +263,14 @@ Appended by Saketh's agent; nothing above was changed. Two fixes had combined in
 
 - 2026-09-20: Added post-download Haussmann preparation, geometry review, launch commands and browser URL to TODO_SAKETH.md, TODO_WILLIAM.md and TODO_ADELLE.md. Included saved-work prerequisite, GPU terminal requirement, local-only assets and experimental quality caveat. Verified all three command blocks and whitespace; documentation-only, no servers or runtime tests needed. Committed separately on codex/collaborator-room-setup; no push.
 
+- 2026-09-20 (Gaussian quality): Parallel capture/performance/scale agents isolated stale camera sorting and checked primary author evidence. Updated frontend/src/scene/playcanvas/runtime.ts and runtime.test.ts: wait for a fresh applied camera sort before capture, use correct internal Camera map key, and enable Haussmann-only radial sorting to avoid rotation-only resorting. Clean floor/ceiling/window contract captures verified at896×672, matched source floor/window renders retained, full-resolution30s motion53.5FPS/p95 26.2ms. No crop, decimation, sofa scaling or reduced display resolution. Scale remains unverified: source page10m is a Z-depth range, not room dimensions. Updated indexed Haussmann doc; Sin/incomplete board retained for scale. Targeted runtime tests7/7 pass; full frontend112scene+5packaging tests and TypeScript/Vite build passed (existing chunk-size warning). QAserver stopped; ports5222/8222 have no listeners. User requested this reviewed four-file commit on codex/haussmann-quality; no merge or push.
+
+- 2026-09-20 (Gaussian branch sync): User pull fetched origin/main4b3a258 but aborted in the dirty shared codex/gaussian-splatting checkout. Preserved that checkout in full and merged the fetched main into the clean codex/haussmann-quality worktree instead (0b20329). Post-merge checks passed:206backend tests with2opt-in skips,112scene+5packaging frontendtests and productionbuild. No stash/reset/clean or push; shared mesh owner notified that writes may resume.
+
+- 2026-09-20 (Gaussian default): Switching default room to Haussmann, adding roomId query selection with room alias retained. Copied missing licensed SOG/surface from reviewed local worktree into ignored shared assets; verified both SHA256 against source. Packaging tests/build and database migration checks pending.
+
+- Gaussian default verified: frontend scene suite and six packaging tests pass; production build passes (existing large-chunk warning). Live Vite serves restored SOG HTTP200 and proxied API health returns ok. Applied all15pending local database migrations successfully. Updated existing indexed Haussmann guide; roomId selects mesh, old room alias retained. No commit or push.
+
 ## Note from Saketh's lane — small follow-up in your editor: quiet saves (2026-09-20)
 
 Not urgent, not changed by me. Context in `docs/backend/contracts/scene-api.md`, "The same principle in the PlayCanvas editor".
@@ -284,3 +294,13 @@ Two additions, from Saketh. Please read the new "Merging close to the demo" sect
 - **I did not put it in `manifest.json` or `spatial.json`, on purpose.** `room_bundle.py` compares those byte for byte with the zip, so a new field would make `import-room.sh` fail for everyone with "Repository metadata differs". A test now fails if `openings` ever appears in either. If you would rather own openings in the manifest (and serve them on `Room`), that needs a re-packed bundle and is your call after the demo.
 - It feeds the region solver only: "by the window" now narrows the lit floor to the patch in front of the glazing. Nothing in your engine reads it.
 - For the real-GPU run: PlayCanvas 2.22.2 does support `KHR_materials_transmission` and your `requestSceneColorMap(true)` enables it. In software rendering the glazing reads as a flat pale panel. If frame rate is poor on the MacBook, that one line is the first lever; if the glass still looks flat there, a brighter emissive on that node would make the wall read as having an opening.
+
+## Note from Saketh's lane — CI now runs on every pull request (2026-09-20, 00:55)
+
+`.github/workflows/ci.yml` is on `main`. Every PR gets two checks within about a minute: **Backend** (`manage.py test` with no app labels, plus `manage.py check`) and **Frontend** (`npm test`, `npm run build`). No secrets, nothing to configure.
+
+- **A red X on your PR means do not press Merge.** Tonight #34 and #42 both went into `main` without the suite and left it red; each was caught only because someone happened to look. This is the thing that stops that.
+- It is **advisory**, not a required check: it will never block an emergency fix.
+- It does not replace running the suite on fresh `main` after you merge. CI tests your PR against the `main` it was cut from.
+- `npm test` is now the whole frontend suite (it used to skip the two auth test files), and the backend suite is `manage.py test` with **no labels** (`test api catalogue` skips three apps). README has the three commands.
+- When you report a result, name the command and quote its output line, e.g. "`python manage.py test` → Ran 217 tests in 6.951s / OK (skipped=3)", not "tests pass".

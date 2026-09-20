@@ -11,6 +11,7 @@
   "pivot": "floor-footprint-center",
   "unbound": "The model's arm reaches 103.5 cm sideways; the listing's footprint is the 31 cm base, which is what the fit check uses. Rendered, the arm would pass through walls and furniture the solver believes are clear. No scale fixes that, so no listing points at this model.",
   "catalogueListingId": "ikea-805.109.92",
+  "matchType": "reconstructed_from_product_photo",
   "source": {
     "product": "IKEA HEKTAR floor lamp, dark gray (805.109.92), matches the pre-existing stub catalogue entry",
     "dimensionsVerifiedAt": "https://www.ikea.com/us/en/p/hektar-floor-lamp-dark-gray-70216544/ (31 x 31 x 181 cm)",
