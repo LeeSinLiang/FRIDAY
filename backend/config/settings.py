@@ -60,7 +60,25 @@ TEMPLATES = [{
 }]
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
-DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
+# One SQLite file serves three unrelated writers: scene saves on every placement, the cache table
+# behind throttles and rate limits, and sessions, accounts and MFA. With SQLite's defaults they
+# fight over one lock and the loser gets "database is locked" at once, which the scene API turns
+# into a 503.
+#   transaction_mode IMMEDIATE  Take the write lock at BEGIN. A deferred transaction that reads and
+#                               then writes fails INSTANTLY on contention, ignoring the timeout,
+#                               because SQLite will not let it upgrade its lock. This is the fix.
+#   journal_mode WAL            Readers never block the writer, nor the writer them.
+#   timeout 20                  How long a writer queues for the lock before giving up.
+#   synchronous NORMAL          Safe with WAL; one fsync per checkpoint instead of per commit.
+DATABASES = {"default": {
+    "ENGINE": "django.db.backends.sqlite3",
+    "NAME": BASE_DIR / "db.sqlite3",
+    "OPTIONS": {
+        "transaction_mode": "IMMEDIATE",
+        "timeout": 20,
+        "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;",
+    },
+}}
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": f"django.contrib.auth.password_validation.{name}"}
     for name in [

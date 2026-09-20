@@ -52,3 +52,19 @@ test("the renderer stays in one file: nothing else in the region module imports 
   }
   assert.deepEqual(offenders, []);
 });
+
+test("the overlay writes uniforms through the live material, and leaves no GPU setting to a default", async () => {
+  // three.js clones a ShaderMaterial's uniforms. Writing to the object that was passed in changes
+  // nothing on screen: the first version did that, so its fit count changed on R and its drawing
+  // did not. This cannot be rendered under node, so it pins the source instead.
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(new URL("FloorOverlay.tsx", `file://${process.cwd()}/src/region/`), "utf8");
+  for (const uniform of ["uMask", "uShape", "uArmed"])
+    assert.match(source, new RegExp(`live\\.${uniform}\\.value\\s*=`), `${uniform} must be written via material.current.uniforms`);
+  assert.match(source, /material\.current\.uniforms\.uPulse\.value\s*=/);
+  assert.doesNotMatch(source, /initialUniforms\.\w+\.value\s*=/, "writing to the initial uniforms object never reaches the GPU");
+  assert.doesNotMatch(source, /\.uniforms\s*=(?!=)/, "replacing the uniforms object detaches the material from its program");
+  assert.match(source, /precision mediump float;/);
+  for (const setting of ["minFilter = NearestFilter", "magFilter = NearestFilter", "generateMipmaps = false", "wrapS = ClampToEdgeWrapping", "wrapT = ClampToEdgeWrapping", "unpackAlignment = 1"])
+    assert.ok(source.includes(setting), `texture ${setting} must be explicit`);
+});

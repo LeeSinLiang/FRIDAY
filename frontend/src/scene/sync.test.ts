@@ -128,14 +128,81 @@ test("sync pauses writes during dragging and retains dirty data through network 
   t.mock.timers.tick(400);
   h.requests[1].reject(new TypeError("Failed to fetch"));
   await flush();
-  assert.equal(h.state().status, "offline");
+  // A failed save is not an outage: the edit stays, the status stays calm, and the save is retried
+  // without anyone asking. (Previously this went straight to "offline" and waited for a click.)
+  assert.equal(h.state().status, "unsaved");
   assert.equal(h.state().ready, true);
   assert.equal(h.latest.current.instances[0].pose.xCm, 155);
-  h.controller.retry();
-  t.mock.timers.tick(400);
+  t.mock.timers.tick(500);
+  assert.equal(h.requests.length, 3);
   h.respond(2, 4, 155);
   await flush();
   assert.equal(h.state().status, "saved");
+});
+
+const busy = () => Response.json({ error: { code: "unavailable", message: "Scene storage is busy. Please retry." } }, { status: 503 });
+
+test("a busy server delays a save and never shows through: quiet retries with backoff, no status code, edits kept", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const h = harness();
+  t.after(() => h.controller.dispose());
+  h.respond(0, 3);
+  await flush();
+  h.edit(155);
+  t.mock.timers.tick(400);
+  const seen: string[] = [];
+  for (const [wait, expected] of [[500, "unsaved"], [1000, "unsaved"], [2000, "unsaved"], [4000, "offline"], [8000, "offline"], [8000, "offline"]] as const) {
+    h.requests[h.requests.length - 1].resolve(busy());
+    await flush();
+    seen.push(h.state().message);
+    assert.equal(h.state().status, expected);
+    assert.equal(h.latest.current.instances[0].pose.xCm, 155, "the placed item is never taken back");
+    const before = h.requests.length;
+    t.mock.timers.tick(wait - 1);
+    assert.equal(h.requests.length, before, `retry came early, before ${wait} ms`);
+    t.mock.timers.tick(1);
+    assert.equal(h.requests.length, before + 1, `no retry after ${wait} ms`);
+  }
+  assert.ok(seen.every((message) => !/\d{3}|fail|error/i.test(message)), seen.join(" | "));
+  h.respond(h.requests.length - 1, 4, 155);
+  await flush();
+  assert.equal(h.state().status, "saved");
+  // Back to normal pacing afterwards.
+  h.edit(160);
+  t.mock.timers.tick(400);
+  assert.equal(JSON.parse(String(h.requests[h.requests.length - 1].init.body)).instances[0].pose.xCm, 160);
+});
+
+test("asking to retry saves now instead of waiting out the backoff", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const h = harness();
+  t.after(() => h.controller.dispose());
+  h.respond(0, 3);
+  await flush();
+  h.edit(155);
+  t.mock.timers.tick(400);
+  for (const wait of [500, 1000, 2000]) { h.requests[h.requests.length - 1].resolve(busy()); await flush(); t.mock.timers.tick(wait); }
+  h.requests[h.requests.length - 1].resolve(busy());
+  await flush();
+  const before = h.requests.length;
+  h.controller.retry();
+  t.mock.timers.tick(400);
+  assert.equal(h.requests.length, before + 1);
+});
+
+test("a save the server REFUSES is not retried: that would loop on something that cannot succeed", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const h = harness();
+  t.after(() => h.controller.dispose());
+  h.respond(0, 3);
+  await flush();
+  h.edit(155);
+  t.mock.timers.tick(400);
+  h.requests[1].resolve(Response.json({ error: { code: "placement", message: "Outside room." } }, { status: 400 }));
+  await flush();
+  assert.equal(h.state().status, "offline");
+  t.mock.timers.tick(60000);
+  assert.equal(h.requests.length, 2);
 });
 
 test("HTTP409 never retries stale writes automatically", async (t) => {

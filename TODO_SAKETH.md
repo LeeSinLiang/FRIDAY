@@ -6,7 +6,7 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 
 ## In progress
 
-- None. Item C is in review. Next is Deepgram transcription, only on Saketh's go-ahead.
+- None. Storage work is in review. Next, in order: the merge-discipline block for `AGENTS.md` (requested mid-task, to apply at this boundary), Deepgram transcription, then wiring Adele's chair if its scale and pivot are fixed.
 
 ## Next
 
@@ -24,6 +24,14 @@ Lane: catalogue, search and the language layer. Branch: `codex/saketh-catalogue`
 For each import, verify expected/actual counts, rejected rows, stable IDs on a second run, search results, and one selected GLB through the real browser scene before marking these tasks done. No source data has been imported yet.
 
 ## Done
+
+- **Storage may delay a save, never refuse a placement (2026-09-20).** Branch `codex/saketh-storage-never-blocks`, off fresh `main` after merging PR #25 (`main`: 174 backend tests with William's accounts/Visa/checkout work in, 61 frontend tests, build OK). PR #25 first got a review fix: room switching is inert until the scene is saved.
+  - Read the other logs. William: PR #19 and #21 merged; his open items are account/checkout routes in the UI, guest-room and account scene ownership (will meet the `<session>:<room>` layout key), and the catalogue/cart contract; he added four tasks to this file's Next (Blender-MCP agent context; DummyJSON/WANDS import; CC0 GLB metadata index; product-to-GLB links), all deferred by Saketh. Adele: first asset on `codex/adelle-herrakra-chair-asset`. No file collisions with this work.
+  - **Adele's chair inspected and she has the verdict** (comment on commit `eb7b3ec`, note in `TODO_ADELLE.md`): axes, size and triangle count pass; **scale and pivot fail** (1.82 × 1.90 × 1.75 m centred on the origin). Exact fix given: scale 0.3845, lift 0.3654 m; offered to apply it losslessly on the root node. HERRÅKRA is not in the catalogue yet. Measuring script is in `.scratch/`; it becomes a real assertion when the chair is wired.
+  - SQLite: `backend/config/settings.py` now sets `transaction_mode: IMMEDIATE`, `journal_mode=WAL`, `timeout: 20`. Root cause of the 503s was deferred transactions failing instantly on lock upgrade, which ignores the busy timeout. `scripts/hammer_storage.py` (scene saves + compile throttle writes + sign-ins, concurrently): **before 2,297 of 3,297 saves were 503; after 0 of 1,733**, no 5xx anywhere.
+  - Browser: `frontend/src/scene/useSceneSync.ts` retries a transient save failure quietly with backoff (0.5 s → 8 s), never shows a status code, never takes the item back; refusals and 409 unchanged. One assertion in Sin's `sync.test.ts` updated, three tests added.
+  - Claims now have tests: the compile throttle failing open is asserted to answer 200 **and log exactly once**, both with a faked throttle and with the real cache backend raising; the overlay is asserted to write uniforms through the live material and to set every texture parameter explicitly. Shader declares `precision mediump float`; the pulse is computed in JavaScript so nothing in the shader grows with time.
+  - Verification: backend 175 tests, frontend 65 tests, build OK; overlay re-checked in headless Chrome after the shader change (0 → 212,788 lit pixels on hover). Processes stopped; 0 listeners on 8211/5211/9334; scratch under `.scratch/`.
 
 - **Item C — catalogue in the room: hover lights the floor, click places (2026-09-19).** Branch `codex/saketh-floor-overlay`.
   - Before it: PR #22 (compile tests independent of the project cache) merged, then found that my piped `git push` had been rejected because William's agent had pushed a docs commit onto that branch, so #22 merged without the fail-open throttle its description claimed. Landed it as PR #24, corrected the record on #22, and verified `main`. Runtime path verified on a fresh clone of `codex/visa-sandbox` plus the fix: `setup.sh` there creates the cache table; two real compiles wrote a throttle row to the database cache; with the table dropped compile still answered 200.

@@ -296,12 +296,25 @@ class CompileEndpointTests(SimpleTestCase):
         self.assertEqual(statuses, [200, 200, 429])
         self.assertEqual(ok.call_count, 2)
 
+    def test_a_real_cache_backend_that_raises_does_not_take_compile_down(self):
+        # The test above fakes the throttle. This one breaks the actual cache underneath it, which is
+        # what a missing cache table or a dead cache server looks like to DRF.
+        ok = mock.Mock(return_value=compile_module.CompileResult(Program(find=[], place=[]), "model", 1))
+        with mock.patch("django.core.cache.backends.locmem.LocMemCache.get", side_effect=OperationalError("no such table: friday_cache")), \
+                mock.patch("catalogue.views.compile_text", ok), self.assertLogs("catalogue.views", level="WARNING") as logs:
+            self.assertEqual(self.post({"text": "a chair"}).status_code, 200)
+        self.assertEqual(len(logs.output), 1)
+        self.assertEqual(ok.call_count, 1)
+
     def test_an_unreachable_cache_does_not_take_compile_down(self):
         ok = mock.Mock(return_value=compile_module.CompileResult(Program(find=[], place=[]), "model", 1))
         for failure in (OperationalError("no such table: friday_cache"), ConnectionRefusedError("cache server down")):
             with mock.patch("rest_framework.throttling.SimpleRateThrottle.allow_request", side_effect=failure), \
-                    mock.patch("catalogue.views.compile_text", ok):
+                    mock.patch("catalogue.views.compile_text", ok), \
+                    self.assertLogs("catalogue.views", level="WARNING") as logs:
                 self.assertEqual(self.post({"text": "a chair"}).status_code, 200, type(failure).__name__)
+            # Once per request, naming the error type and nothing else: no credentials, no SQL.
+            self.assertEqual(logs.output, [f"WARNING:catalogue.views:compile throttle unavailable, allowing the request: {type(failure).__name__}"])
         self.assertEqual(ok.call_count, 2)
 
     def test_search_is_not_throttled(self):

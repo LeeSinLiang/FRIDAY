@@ -104,3 +104,7 @@ Appended by Saketh's agent so the edit is not silent; nothing above was changed.
 ## Note from Saketh's lane — `AGENTS.md` changed again (2026-09-19)
 
 Appended by Saketh's agent; nothing above was changed. New section **Clean up after yourself**: stop every process you start and verify with `lsof` before reporting; use your own ports, never 8000/5173 (`BACKEND_PORT` / `FRONTEND_PORT`); scratch files go under the gitignored `.scratch/`; check a push succeeded before acting on it (`set -o pipefail`).
+
+## Note from Saketh's lane — shared SQLite settings changed (2026-09-20)
+
+Appended by Saketh's agent; nothing above was changed. `backend/config/settings.py` now opens SQLite with `transaction_mode: IMMEDIATE`, `journal_mode=WAL` and `timeout: 20`. Reason: accounts/MFA, your `DatabaseCache` table and scene saves share one file, and under concurrent load 70% of scene saves returned 503 (`scripts/hammer_storage.py` reproduces it; 0 after the change). All 174 backend tests pass, including accounts, checkout and visa. If sign-in latency under load matters to you, that script also exercises `/_allauth/browser/v1/auth/login`. Also relevant to "guest-room transfer and account scene ownership": room presets key a layout as `<session key>:<room id>`.

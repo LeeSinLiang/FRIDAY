@@ -8,6 +8,18 @@ type Snapshot = { instances: Instance[]; revision: number };
 type SyncState = { ready: boolean; status: SyncStatus; message: string; revision: number | null };
 type Options = { instances: Instance[]; replace: (instances: Instance[]) => void; interactionActive: boolean };
 
+const RETRY_BASE_MS = 500;
+const RETRY_MAX_MS = 8000;
+/** Failed saves before the status line admits to it. Until then it just says it is saving. */
+const QUIET_FAILURES = 4;
+
+/** A failure that can clear on its own: the server answered 5xx, typically "storage is busy". */
+class TransientError extends Error {
+  constructor(readonly status: number) { super("The server is busy."); }
+}
+const isTransient = (error: unknown) =>
+  error instanceof TransientError || (error instanceof Error && /fetch|network|load failed/i.test(error.message));
+
 export function sceneFingerprint(instances: Instance[]): string {
   return JSON.stringify(instances.map(({ instanceId, productId, pose, product }) => ({
     instanceId, productId, pose: { xCm: pose.xCm, zCm: pose.zCm, yawRad: pose.yawRad },
@@ -67,6 +79,7 @@ export function createSceneSyncController(
     let blocked: "offline" | "conflict" | null = null;
     let inFlight = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let saveFailures = 0;
     let controller: AbortController | null = null;
     const clearTimer = () => { if (timer !== undefined) clearTimeout(timer); timer = undefined; };
     const dirty = () => ready && sceneFingerprint(latest.current.instances) !== baseline;
@@ -82,8 +95,18 @@ export function createSceneSyncController(
       ready = true;
       blocked = null;
     };
-    const failed = (error: unknown) => {
+    // The room is authoritative in the browser during interaction; the server is where it durably
+    // lands. A storage problem may delay a save. It may never refuse a placement, and it never puts
+    // a status code in front of the user: a save that fails for a reason that can clear on its own
+    // (the server is busy, the network blinked) is retried quietly with backoff, for as long as it takes.
+    const savePending = (): [SyncStatus, string] => saveFailures >= QUIET_FAILURES
+      ? ["offline", "Still saving your room. It is safe in this browser."]
+      : saveFailures > 0 ? ["unsaved", "Saving your room…"]
+      : ["unsaved", latest.current.interactionActive ? "Editing · changes pending" : "Changes pending…"];
+    const saveDelay = () => saveFailures === 0 ? 400 : Math.min(RETRY_BASE_MS * 2 ** (saveFailures - 1), RETRY_MAX_MS);
+    const failed = (error: unknown, saving = false) => {
       if (disposed || (error instanceof DOMException && error.name === "AbortError")) return;
+      if (saving && ready && isTransient(error)) { saveFailures += 1; return; } // reconcile() schedules the retry
       blocked = "offline";
       publish("offline", error instanceof Error && !/fetch|network|load failed/i.test(error.message)
         ? error.message : ready ? "Cannot reach the server. Local changes are retained." : "Cannot load the saved room. Retry to connect.");
@@ -104,15 +127,16 @@ export function createSceneSyncController(
         publish("conflict", "The saved room changed elsewhere. Reload it to replace these local changes.");
         return null;
       }
+      if (response.status >= 500) throw new TransientError(response.status);
       if (!response.ok) throw Error(`Scene request failed (${response.status}). Local changes are retained.`);
       return parseSceneSnapshot(await response.json());
     };
     const reconcile = () => {
       clearTimer();
       if (disposed || !ready || inFlight || blocked) return;
-      if (!dirty()) { publish("saved", "All changes saved"); return; }
-      publish("unsaved", latest.current.interactionActive ? "Editing · changes pending" : "Changes pending…");
-      if (!latest.current.interactionActive) timer = setTimeout(() => { void save(); }, 400);
+      if (!dirty()) { saveFailures = 0; publish("saved", "All changes saved"); return; }
+      publish(...savePending());
+      if (!latest.current.interactionActive) timer = setTimeout(() => { void save(); }, saveDelay());
     };
     const save = async () => {
       clearTimer();
@@ -120,15 +144,16 @@ export function createSceneSyncController(
       inFlight = true;
       const submitted = sceneFingerprint(latest.current.instances);
       const instances = JSON.parse(submitted) as Instance[];
-      publish("saving", "Saving room…");
+      if (saveFailures === 0) publish("saving", "Saving room…");
       try {
         const snapshot = await request("PUT", { baseRevision: revision, instances });
         if (disposed || !snapshot) return;
+        saveFailures = 0;
         baseline = sceneFingerprint(snapshot.instances);
         revision = snapshot.revision;
         if (sceneFingerprint(latest.current.instances) === submitted && baseline !== submitted) replace(snapshot);
         blocked = null;
-      } catch (error) { failed(error); }
+      } catch (error) { failed(error, true); }
       finally { inFlight = false; if (!disposed && !blocked) reconcile(); }
     };
     const load = async (force: boolean) => {
@@ -158,6 +183,7 @@ export function createSceneSyncController(
       retry: () => {
         if (inFlight || blocked === "conflict") return;
         blocked = null;
+        saveFailures = 0; // a person asked: try now, not after the backoff
         if (!ready) void load(true);
         else if (dirty()) reconcile();
         else void load(false);
