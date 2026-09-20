@@ -2,6 +2,8 @@
 // North (z = 0) is drawn at the top, west (x = 0) at the left, 1 SVG unit = 1 cm.
 
 import type { Instance, Pose, Product } from "../scene/types";
+import { wallBounds } from "./boundary";
+import { openingZone } from "./geometry";
 import { FREE, UNKNOWN, type Mask, type Opening, type Scene } from "./types";
 
 const MARGIN_CM = 30;
@@ -28,17 +30,16 @@ function runs(mask: Mask, state: number, fill: string): string {
 }
 
 function openingLine(scene: Scene, opening: Opening): string {
-  const { widthCm: w, depthCm: d } = scene.room, a = opening.startCm, b = opening.startCm + opening.widthCm;
-  const [x1, z1, x2, z2] = opening.wall === "n" ? [a, 0, b, 0] : opening.wall === "s" ? [a, d, b, d]
-    : opening.wall === "w" ? [0, a, 0, b] : [w, a, w, b];
-  return `<line x1="${x1}" y1="${z1}" x2="${x2}" y2="${z2}" stroke="${COLOURS[opening.kind]}" stroke-width="10"><title>${opening.kind} ${opening.id}</title></line>`;
+  // Through openingZone, so the drawing cannot disagree with what the solver excludes.
+  const zone = openingZone(scene.room, opening, 0);
+  return `<line x1="${zone.minX}" y1="${zone.minZ}" x2="${zone.maxX}" y2="${zone.maxZ}" stroke="${COLOURS[opening.kind]}" stroke-width="10"><title>${opening.kind} ${opening.id}</title></line>`;
 }
 
 export type SvgOptions = { title?: string; candidate?: { product: Product; pose: Pose } };
 
 /** Room outline, openings, placed items, the lit region (green) and unobserved floor (amber). */
 export function toSvg(scene: Scene, mask: Mask, options: SvgOptions = {}): string {
-  const { widthCm: w, depthCm: d } = scene.room;
+  const { widthCm: w, depthCm: d } = scene.room, walls = wallBounds(scene.room);
   const product = (instance: Instance) => scene.products.find((p) => p.productId === instance.productId);
   const items = scene.instances.map((instance) => {
     const found = product(instance);
@@ -51,6 +52,6 @@ export function toSvg(scene: Scene, mask: Mask, options: SvgOptions = {}): strin
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-MARGIN_CM} ${-MARGIN_CM} ${w + 2 * MARGIN_CM} ${d + 2 * MARGIN_CM}" style="max-width:100%;height:auto">`
     + `<rect x="${-MARGIN_CM}" y="${-MARGIN_CM}" width="${w + 2 * MARGIN_CM}" height="${d + 2 * MARGIN_CM}" fill="#fff"/>${title}`
     + `<g fill-opacity="0.55" shape-rendering="crispEdges">${runs(mask, FREE, COLOURS.lit)}${runs(mask, UNKNOWN, COLOURS.unknown)}</g>`
-    + `<rect x="0" y="0" width="${w}" height="${d}" fill="none" stroke="${COLOURS.wall}" stroke-width="6"/>`
+    + `<rect x="${walls.minX}" y="${walls.minZ}" width="${walls.maxX - walls.minX}" height="${walls.maxZ - walls.minZ}" fill="none" stroke="${COLOURS.wall}" stroke-width="6"/>`
     + (scene.openings ?? []).map((opening) => openingLine(scene, opening)).join("") + items + candidate + `</svg>`;
 }
