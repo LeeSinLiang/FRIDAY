@@ -47,6 +47,7 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 | [docs/frontend/3d-object/herrakra-chair-asset-notes.md](docs/frontend/3d-object/herrakra-chair-asset-notes.md) | HERRÅKRA armchair asset delivery notes, sourcing, and known limitations vs. the handoff spec |
 | [docs/frontend/3d-object/ektorp-sofa-ramnefjall-bed-asset-notes.md](docs/frontend/3d-object/ektorp-sofa-ramnefjall-bed-asset-notes.md) | EKTORP sofa + RAMNEFJÄLL bed assets: gltf-transform compression, and a dimension-check failure pushed on purpose — read before merging |
 | [docs/frontend/3d-object/lisabo-hektar-stockholm-asset-notes.md](docs/frontend/3d-object/lisabo-hektar-stockholm-asset-notes.md) | LISABO table+chair, HEKTAR lamp, STOCKHOLM mirror: a caught-and-fixed orientation bug (mirror generated lying flat), two clean passes, two dimension-check failures |
+| [docs/frontend/3d-object/bookshelf-stockholm-table-asset-notes.md](docs/frontend/3d-object/bookshelf-stockholm-table-asset-notes.md) | Generic bookshelf (passes) + STOCKHOLM coffee table (fails dimension check, same class as the sofa/bed) — read before merging |
 | [docs/frontend/design/visual-directions.md](docs/frontend/design/visual-directions.md) | Three futuristic furniture-editor concepts, saved images, and generation prompts |
 
 ### Backend

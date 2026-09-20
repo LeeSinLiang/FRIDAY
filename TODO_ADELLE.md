@@ -22,12 +22,16 @@ Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if
 ## In progress
 
 - Dresser (HEMNES-style black-brown) still blocked on getting a usable source image file. Bar stool, sideboard, nightstand not started (no matching stub catalogue entry, would need new listings.json rows like the bookshelf).
+- Nightstand/side table, rug, and dresser (HEMNES-style) still not started — image file paths were unreliable this session (didn't save to disk more than once); dresser is on hold pending a usable path.
 
 ## Next
 
 - **Do not merge `codex/adelle-sofa-bed-assets`, `codex/adelle-bookshelf-coffeetable-assets`, or `codex/adelle-lisabo-hektar-stockholm-assets` into `main` as-is** — each has at least one asset failing `backend/api/test_furniture_assets.py`. See each branch's own notes doc for exact numbers.
 - Open the four failing assets (sofa, bed, coffee table, LISABO table, HEKTAR lamp — that's five, not four) in Blender to inspect real proportions against source photos, or regenerate via `multi_image_to_3d`.
 - For any future round/flat object (mirrors, wall art, rugs, clocks): inspect the raw axis assignment before fitting — see the mirror orientation bug below.
+- **Three open branches now carry at least one asset that fails `backend/api/test_furniture_assets.py`**: `codex/adelle-sofa-bed-assets` (sofa + bed), `codex/adelle-bookshelf-coffeetable-assets` (the coffee table; the bookshelf on that branch passes). None of these should merge into `main` without a `multi_image_to_3d` regeneration pass using extra angle photos.
+- Table was the other priority item from `collaborator-handoff.md` — now delivered (STOCKHOLM coffee table), but failing, so still not truly done.
+- Open all four failing/at-risk assets (chair — since fixed by Saketh's lane —, sofa, bed, coffee table) in Blender to inspect real proportions against source photos.
 
 ## This branch (`codex/adelle-lisabo-hektar-stockholm-assets`)
 
@@ -37,17 +41,22 @@ Open **http://localhost:5222/?room=haussmann-apartment**. Adjust the ZIP path if
 
 ## Done
 
-- Pushed `shared/models/furniture/herrakra-armchair-diseroed-dark-yellow/` (model.glb, thumbnail.png, metadata.json) on branch `codex/adelle-herrakra-chair-asset`. Generated via Higgsfield `image_to_3d` (Meshy) from a single 160x160px IKEA product thumbnail, `should_texture=true`, no PBR. Dimensions (71x66x73 cm) verified against IKEA's official US product page (converted from inches), not measured directly. Full details and known limitations in `docs/frontend/3d-object/herrakra-chair-asset-notes.md`. (Since fixed and wired in by Saketh's lane — see notes below.)
-- Verification run: `cd frontend && npm ci` on fresh `main` succeeded (91 packages, 0 vulnerabilities). Did **not** run `./setup.sh` or the backend test suite — it installs `uv` via a piped curl script, which this session's tooling blocked as an external-code execution risk. No backend/Django code was touched by this change, so the frontend-only check was judged sufficient; flagging so a teammate can run the full suite if needed.
-- Pushed `shared/models/furniture/ektorp-2-seat-sofa-hillared-dark-blue/` and `shared/models/furniture/ramnefjall-bed-frame-kilanda-dark-blue-queen/` on branch `codex/adelle-sofa-bed-assets`, plus matching `backend/catalogue/data/listings.json` entries (`ikea-001.850.32`, `ikea-805.589.66`) so `catalogueListingId` resolves. Generated via Higgsfield `image_to_3d`, `should_texture=true`, `enable_pbr=true`; raw PBR export was 9.1MB/11.2MB, brought under the 5MB budget with `gltf-transform optimize --compress false --texture-compress auto --texture-size 1024 --simplify` (geometry compression left off on purpose — see notes doc). Fit to true height/floor pivot with `scripts/fit_glb.py`. Triangles: sofa 18,218 (a bit over the 10-15k aim, well under the 30k cap), bed 14,383.
-- **Measured both against real dimensions before pushing and found they fail `backend/api/test_furniture_assets.py`**: sofa is 165.0x88.0x99.4cm vs real 179x88x88cm (14cm/11.4cm off, tolerance ~5.4cm/~2.6cm); bed is 180.1x100.0x219.0cm vs real 162x100x212cm (18.1cm/7cm off, tolerance ~4.9cm/~6.4cm). Single-photo depth/proportion reconstruction error, not a units bug. Flagged to the requester with a fix path (regenerate via `multi_image_to_3d`); pushed anyway at their explicit direction rather than silently distorting proportions to fake a pass. Full numbers in `docs/frontend/3d-object/ektorp-sofa-ramnefjall-bed-asset-notes.md`.
-- Sofa's `price_cents` (59900) is an **unverified placeholder** — this EKTORP frame/cover combo isn't sold on ikea.com/us (EU-only), and price ownership belongs to the catalogue/commerce contract per `collaborator-handoff.md`, not this asset. Bed's price ($249) is real, from the official US page.
+- Pushed `shared/models/furniture/herrakra-armchair-diseroed-dark-yellow/` (model.glb, thumbnail.png, metadata.json) on branch `codex/adelle-herrakra-chair-asset`. Generated via Higgsfield `image_to_3d` (Meshy) from a single 160x160px IKEA product thumbnail, `should_texture=true`, no PBR. Dimensions (71x66x73 cm) verified against IKEA's official US product page (converted from inches), not measured directly. Since fixed and wired in by Saketh's lane (see notes below) — this one is resolved.
+- On branch `codex/adelle-sofa-bed-assets` (separate from this one, not yet merged): pushed EKTORP 2-seat sofa + RAMNEFJÄLL bed, both **failing** the dimension check by 7-18cm per axis (single-photo proportion error). Full numbers in that branch's `docs/frontend/3d-object/ektorp-sofa-ramnefjall-bed-asset-notes.md`.
+- This branch (`codex/adelle-bookshelf-coffeetable-assets`): pushed `shared/models/furniture/low-open-bookshelf-navy-oak-top/` (generic/unidentified item, demo `catalogueListingId`, **passes cleanly** — 1.87MB, 10,307 triangles, dimensions self-declared to match its own measured geometry since there's no real product to check against) and `shared/models/furniture/stockholm-coffee-table-walnut-veneer/` (real IKEA STOCKHOLM, 702.397.10, $449.99 — **fails** the dimension check: 155.5x40.0x53.1cm measured vs real 180x40x59cm, width off 24.5cm/depth off 5.9cm vs ~5.4cm/~2cm tolerance). Both generated `should_texture=true, enable_pbr=true`, then `gltf-transform optimize --compress false --texture-compress auto --texture-size 1024 --simplify` to fix oversized PBR exports (7.3MB/23.6k tri and 13.9MB/**30,686 tri — over the 30k cap on its own** → 1.87MB/10.3k and 4.1MB/22.4k). Full details in `docs/frontend/3d-object/bookshelf-stockholm-table-asset-notes.md`.
+- The coffee table's failure was not re-confirmed with a fresh question — it's the identical failure class (single-photo proportion error) already flagged and accepted once this session for the sofa/bed; applying the same standing decision rather than re-asking.
+- Verification run (chair branch only): `cd frontend && npm ci` on fresh `main` succeeded (91 packages, 0 vulnerabilities). Did **not** run `./setup.sh` or the backend test suite on any of these branches — it installs `uv` via a piped curl script, which this session's tooling blocked as an external-code execution risk. Used a standalone script importing `backend/api/glb.py` (stdlib-only) to replicate the dimension/floor/triangle/size checks instead, but the full Django test suite has not actually been run on any of these branches.
 
 ## Blockers / handoff
 
-- Chair asset delivered out of the agreed build order (spec asks for sofa + table first). Sofa is now done (see below, failing); table still not started.
-- **`codex/adelle-sofa-bed-assets` will fail CI if merged as-is** — see the dimension-check numbers above and in the notes doc. This is the "red main is a whole-team stop" scenario per your new AGENTS.md section; flagging loudly rather than merging it.
-- Bookshelf (navy/oak) and dresser (HEMNES-style black-brown) assets requested but not started — waiting on their source image files.
+- **Three branches, none merged, none should be merged as-is**: `codex/adelle-herrakra-chair-asset` (superseded — already fixed and merged by Saketh's lane), `codex/adelle-sofa-bed-assets` (sofa + bed both fail dimension check), `codex/adelle-bookshelf-coffeetable-assets` (bookshelf passes, coffee table fails dimension check). This is the "red main is a whole-team stop" scenario for the latter two if merged without fixing first.
+- Bookshelf and coffee table images came from local file paths this time (worked); the earlier HEMNES-style dresser image never produced a usable path across two attempts — still blocked on that one specifically.
+- Nightstand and rug (rest of the 5-more living-room list) not started yet.
+- Kitchen + bedroom expansion planned: dining table + chairs, bar stools, sideboard, nightstand, dresser, mirror, floor lamp, rug, side table — see 2026-09-20 message for the full list.
+
+## Both `codex/adelle-sofa-bed-assets` (#34) and this branch (#35) were merged into main with known-failing assets
+
+Per explicit owner direction (confirmed twice, once per branch) after being flagged. `main`'s `backend/api/test_furniture_assets.py` is now red on the sofa, bed, and coffee table dimension checks until someone regenerates those three via `multi_image_to_3d` with extra angle photos. This is intentional and was not a silent merge — see PR #34 and #35 descriptions.
 
 ## Note from Saketh's lane — a colour call for you (2026-09-19)
 

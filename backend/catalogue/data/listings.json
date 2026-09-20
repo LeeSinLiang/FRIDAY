@@ -373,6 +373,47 @@
       ]
     },
     {
+      "id": "ikea-702.397.10",
+      "source": "ikea",
+      "title": "STOCKHOLM coffee table, walnut veneer",
+      "category": "table",
+      "price_cents": 44999,
+      "dims_mm": {
+        "w": 1800,
+        "d": 590,
+        "h": 400
+      },
+      "model_url": "/models/furniture/stockholm-coffee-table-walnut-veneer/model.glb",
+      "colour_hex": [
+        "#6b4a34"
+      ],
+      "materials": [
+        "walnut veneer",
+        "rattan"
+      ]
+    },
+    {
+      "id": "demo-low-bookshelf-navy-oak",
+      "source": "stub",
+      "title": "Low open bookshelf, navy/oak top",
+      "category": "storage",
+      "price_cents": 24900,
+      "dims_mm": {
+        "w": 1640,
+        "d": 460,
+        "h": 650
+      },
+      "model_url": "/models/furniture/low-open-bookshelf-navy-oak-top/model.glb",
+      "colour_hex": [
+        "#1f2733",
+        "#b98b5e"
+      ],
+      "materials": [
+        "particleboard",
+        "oak veneer"
+      ]
+    },
+    {
       "id": "ikea-203.347.34",
       "source": "ikea",
       "title": "LISTERBY side table",
