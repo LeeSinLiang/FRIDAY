@@ -2,7 +2,7 @@
 
 ## Implemented flow
 
-`/` redirects to `/rooms`; `/room/:roomId` opens the guest editor. Existing query-based room and `?legacy` URLs remain available. `shared/public-rooms.json` is the gallery/deployment allowlist; only the tracked empty room is currently public-ready. Its gallery image is an illustration. The renderer is lazy-loaded after selecting a room.
+`/` redirects to `/rooms`; `/room/:roomId` opens the guest editor. Existing query-based room and `?legacy` URLs remain available. `shared/public-rooms.json` is the gallery/deployment allowlist; the tracked empty room and licensed London skyscraper are public-ready. Their gallery images are illustrations. The skyscraper uses the existing floor arrows for its 32 prepared contexts; see [floor support](room-capture/skyscraper-glb-test.md). The renderer is lazy-loaded after selecting a room.
 
 Catalogue selection previews furniture. Click legal floor or use **Preview a fitting position**, adjust X/Z/rotation, then **Confirm placement**. No account is required. Unmapped or unpriced products are disabled. The fixture-only product buttons remain available only in legacy editor mode.
 
@@ -31,7 +31,7 @@ Two Vercel projects in `williamxu070s-projects`:
 
 Both projects are configured to include source files outside their root. `.vercelignore` excludes local environments, databases, keys, runtime files and scratch data from uploads. Python function exclusions separately omit large visual assets. Hosted room and catalogue loading verified the packaged metadata successfully.
 
-Vercel flattens the Python project root to `/var/task`. `backend/build.py` copies the room allowlist, scene fixtures, public room manifest/spatial metadata and furniture metadata into generated `runtime_shared/`; `api/shared_data.py` selects that location only on Vercel. No GLB, splat or private runtime data enters that package. Reading `BASE_DIR.parent/shared` on Vercel is incorrect even when monorepo source access is enabled.
+Vercel flattens the Python project root to `/var/task`. `backend/build.py` copies the room allowlist, scene fixtures, public room and declared building-floor manifest/spatial metadata and furniture metadata into generated `runtime_shared/`; `api/shared_data.py` selects that location only on Vercel. No GLB, splat or private runtime data enters that package. Reading `BASE_DIR.parent/shared` on Vercel is incorrect even when monorepo source access is enabled.
 
 Backend variables: `DATABASE_URL`, unique `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=false`, `DJANGO_ALLOWED_HOSTS`, fresh persistent `MFA_ENCRYPTION_KEY`, `FRONTEND_ORIGIN`, exact `CSRF_TRUSTED_ORIGINS`, SMTP settings, and optional `VISA_CREDENTIALS_JSON`. Disable local inbox/tester. Do not move the local account database or its MFA key to hosting. Inline Visa JSON uses the same credential keys as local configuration, but includes PEM text instead of filesystem paths. Sending remains disabled without valid sandbox credentials.
 
@@ -99,3 +99,23 @@ PR [#79](https://github.com/LeeSinLiang/hackmit2026/pull/79) merged the persiste
 | [Production](https://friday-hackmit.vercel.app/room/empty-room) | `dpl_6qmdKhcAwomkFpFAXEy4RQ75KfHk` | `dpl_6JkuqjxPqM4JGLkPRUmP8fjDChAw` | `90d3b365dcc71c8844fb2514a3fbbdfb17c5733077b667d69f9ced1a948e7109` |
 
 Both deployments reported `READY`. The public room route showed the collapsed edge chevron, no Add furniture button, and Rooms/Cart; clicking the chevron opened the sofa catalogue and clicking again restored the compact view. The frontend DOM `data-build`, direct API `X-Friday-Build`, and frontend `/api/health` rewrite all matched the fresh `main` source identity; both health routes returned HTTP 200. The post-merge checks reported `Ran 263 tests in 8.829s / OK (skipped=5)`, frontend `tests 142 / pass 142 / fail 0`, auth `tests 16 / pass 16 / fail 0`, board `tests 6 / pass 6 / fail 0`, and Vite `built in 2.47s`. The canonical local browser also verified keyboard Enter, hidden-panel `aria-hidden`/`inert`, retained category/favorite and live search. Narrow breakpoint CSS was reviewed without a resized browser replay. The Git connection blocker in issue #74 still applies to future merges.
+
+### Category rail and gravity release — 2026-09-20
+
+PR [#83](https://github.com/LeeSinLiang/hackmit2026/pull/83) replaced the lone collapsed tab with a slim rounded category rail and circular chevron; choosing a category expands its content. PR [#84](https://github.com/LeeSinLiang/hackmit2026/pull/84) added Space jumping, gravity, and standing or walking on the dimensioned tops of placed furniture. PR [#85](https://github.com/LeeSinLiang/hackmit2026/pull/85) added an input-level PlayCanvas test that jumps onto a sofa, stays on top, then walks off and falls. The latest source commit is `68367e8c1efd879e627f7c585dabac1a0876d6a9`.
+
+| Environment | Frontend deployment | API deployment | Runtime source identity |
+| --- | --- | --- | --- |
+| [Production room](https://friday-hackmit.vercel.app/room/empty-room) | `dpl_6YBeLyktFyhg6YeBcbzEvkxGiP9Z` | `dpl_8KMxQysWYwH5cn9pCVahQdp9vBgG` | `c0de19855603d17b57abc20f8a5ef70fac7743e066171e2d4575d1e361a6f383` |
+
+Both deployments reported `READY`. Direct API health and the frontend rewrite returned HTTP 200 with the same `X-Friday-Build` as the hosted frontend `data-build`. The public room loaded with Rooms/Cart, the compact category rail, and the Space hint. Hosted browser checks opened Chairs from the rail, saw the camera rise during Space and return under gravity, and preserved the visible room controls. Fresh `main` after #85 reported `Ran 263 tests in 8.347s / OK (skipped=5)`, frontend `tests 147 / pass 147 / fail 0`, auth `tests 16 / pass 16 / fail 0`, and Vite `built in 2.56s`. The sofa-top route is backed by an input-level PlayCanvas event/frame test; a full browser furniture-placement-and-landing replay was not completed. Product dimensions define conservative solid boxes rather than exact cushion mesh collision, and fixed scanned obstacles remain full-height blockers because their heights are not recorded. The Git connection blocker in issue #74 still applies to future merges.
+
+### Latest combined main production refresh — 2026-09-20
+
+The teammate's [skyscraper-room PR #86](https://github.com/LeeSinLiang/hackmit2026/pull/86) merged while the release record was in CI, changing runnable frontend and backend sources. The pair below refreshes production from the resulting `main` commit `e2ae0a80575b7f370e21318cba30d3597bfa3edf` rather than leaving the earlier rail/jump artifact as the active release.
+
+| Environment | Frontend deployment | API deployment | Runtime source identity |
+| --- | --- | --- | --- |
+| [Production room](https://friday-hackmit.vercel.app/room/empty-room) | `dpl_4HpXref96fRAM8KVdoWx7JMbATAR` | `dpl_AvfZTu6JmRbtUkUPz1N8XAQ2DU35` | `c0b5858f4ea335ca209a4040d6ec1cb957605ac5434fa2199971ad9b7616f19c` |
+
+Both deployments reported `READY`. Direct and rewritten API health returned HTTP 200 with the same `X-Friday-Build` as the hosted frontend `data-build`. The public empty-room route loaded with Rooms/Cart and the compact category rail; choosing Chairs opened the category, and Space raised the camera while gravity returned it to floor height. The full suite on fresh combined `main` reported `Ran 267 tests in 9.602s / OK (skipped=5)`, frontend `tests 152 / pass 152 / fail 0`, auth `tests 18 / pass 18 / fail 0`, board `tests 6 / pass 6 / fail 0`, and Vite `built in 3.03s`. The input-level sofa-top test remains part of that passing suite; the full browser placement-and-landing limit above still applies. Git-triggered Vercel deployment remains blocked by issue #74.

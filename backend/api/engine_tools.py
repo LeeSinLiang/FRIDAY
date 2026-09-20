@@ -9,7 +9,7 @@ import uuid
 from django.db import OperationalError
 
 from .capture_service import enqueue_capture, get_capture, metadata
-from .scene_service import SceneError, attempt_placement
+from .scene_service import SceneError, attempt_placement, scene_for_session, serialize
 
 
 def _result(operation):
@@ -32,6 +32,16 @@ def try_place(session_key, instance, base_revision, command_id, dry_run=False, r
         'instance': instance, 'baseRevision': base_revision,
         'commandId': command_id, 'dryRun': dry_run,
     }, room_id))
+
+
+def get_scene_context(session_key, room_id='demo-room'):
+    """Read authoritative dimensions, floor references, objects and geometry revision.
+
+    The request adapter supplies session_key, as with try_place. Prepared building
+    floors expose room.scan.building; poses remain centimetres in that floor's
+    local frame. This does not install a tool into the separate shopping agent.
+    """
+    return _result(lambda: {'ok': True, **serialize(scene_for_session(session_key, room_id))})
 
 
 def request_scene_capture(session_key, base_revision, request_id, view='perspective', camera=None, width=1024, height=768, room_id='demo-room', representation=None):

@@ -38,15 +38,30 @@ async function roomFiles(name: string, assetRoot = root): Promise<Map<string, st
   if (manifest.room?.roomId !== name || typeof manifest.spatialFile !== "string" || typeof manifest.room?.scan?.visualUrl !== "string")
     throw Error(`Invalid prepared room manifest: ${manifestPath}`);
   const roomPrefix = `${prefix}${name}/`;
+  // Reviewed floor contexts may share exactly one canonical visual asset. Metadata
+  // and collision files still belong to their own room; aliases cannot chain.
+  let sharedVisual: string | undefined;
+  if (manifest.sharedVisualRoomId !== undefined) {
+    const owner = manifest.sharedVisualRoomId;
+    if (typeof owner !== "string" || !roomId.test(owner) || owner === name)
+      throw Error("Invalid shared visual owner");
+    const { actual: ownerPath } = await checkedFile(resolve(assetRoot, owner, "manifest.json"), assetRoot);
+    const canonical = JSON.parse(await readFile(ownerPath, "utf8"));
+    if (canonical.room?.roomId !== owner || canonical.sharedVisualRoomId !== undefined ||
+      canonical.room?.scan?.visualUrl !== manifest.room.scan.visualUrl ||
+      !manifest.room.scan.visualUrl.startsWith(`${prefix}${owner}/assets/`))
+      throw Error("Invalid shared visual reference");
+    sharedVisual = manifest.room.scan.visualUrl;
+  }
   const files = new Map<string, string>();
   const urls = [`${roomPrefix}manifest.json`, `${roomPrefix}license.txt`, `${roomPrefix}${manifest.spatialFile}`,
     manifest.room.scan.visualUrl, ...(manifest.room.scan.surfaceUrl === undefined ? [] : [manifest.room.scan.surfaceUrl])];
   for (const url of urls) {
-    if (typeof url !== "string" || !url.startsWith(roomPrefix) || /[\\?#%]/.test(url) ||
+    if (typeof url !== "string" || (!url.startsWith(roomPrefix) && url !== sharedVisual) || /[\\?#%]/.test(url) ||
       url.slice(1).split("/").some(part => !part || part.startsWith(".")) || !mime[extname(url)] || basename(url).toLowerCase() === "preparation.json")
       throw Error(`Invalid runtime room asset reference: ${String(url)}`);
     const path = resolve(assetRoot, url.slice(prefix.length));
-    if (!inside(resolve(assetRoot, name), path)) throw Error(`Room asset must belong to ${name}: ${url}`);
+    if (!inside(resolve(assetRoot, name), path) && url !== sharedVisual) throw Error(`Room asset must belong to ${name}: ${url}`);
     files.set(url, path);
   }
   return files;
@@ -65,7 +80,7 @@ export async function inspectRoomPackages(assetRoot = root) {
     for (const [url, path] of files) {
       try { await checkedFile(path, assetRoot); }
       catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT" && url.startsWith(`${prefix}${room.name}/assets/`)) missing.push(url);
+        if ((error as NodeJS.ErrnoException).code === "ENOENT" && /^\/rooms\/[^/]+\/assets\//.test(url)) missing.push(url);
         else throw error;
       }
     }
@@ -119,10 +134,13 @@ export function sharedRoomAssets(): Plugin {
       });
     },
     async generateBundle() {
+      const emitted = new Set<string>();
       for (const files of prepared.packages.values()) {
         for (const [url, path] of files) {
+          if (emitted.has(url)) continue;
           const { actual } = await checkedFile(path);
           this.emitFile({ type: "asset", fileName: url.slice(1), source: await readFile(actual) });
+          emitted.add(url);
         }
       }
     },

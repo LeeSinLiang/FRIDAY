@@ -3,7 +3,8 @@ import { Icon } from "./Icons";
 import FurnitureCatalogue from "./FurnitureCatalogue";
 import FloorMap from "./scene/FloorMap";
 import SplatCatalogueLayer from "./catalogue/SplatCatalogueLayer";
-import { useRoomSession } from "./scene/useRoomSession";
+import { useRoomSession, type RoomSnapshot } from "./scene/useRoomSession";
+import { initialRoom } from "./scene/buildingFloors";
 import { validatePlacement } from "./scene/placement";
 import { sceneToCm } from "./scene/units";
 import type { CameraMode, FirstPersonCamera, Pose, Product } from "./scene/types";
@@ -62,17 +63,30 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   const selectingUnderLock=useRef(false);
   const roomParams = new URLSearchParams(window.location.search);
   const requestedRoom = roomId ?? roomParams.get("roomId") ?? roomParams.get("room");
-  const defaultRoom = "haussmann-apartment";
-  const session=useRoomSession(requestedRoom === "haussmann-apartment" || requestedRoom === "studio-11" || requestedRoom === "empty-room" || requestedRoom === "cg-arch-interior" || requestedRoom === "cg-arch-lightmapper-proof" ? requestedRoom : defaultRoom,active || !!pendingProductId);
-  const snapshot=session.snapshot;
+  const [activeRoomId,setActiveRoomId]=useState(()=>initialRoom(requestedRoom,roomParams.get("floor")));
+  const session=useRoomSession(activeRoomId,active || !!pendingProductId);
+  // Keep the building mounted while fetching the next independent floor layout.
+  const previousSnapshot=useRef<RoomSnapshot|null>(null);
+  if(session.snapshot)previousSnapshot.current=session.snapshot;
+  const snapshot=session.snapshot ?? previousSnapshot.current;
   const room=snapshot?.room;
   const products=snapshot?.products ?? [];
   const instances=snapshot?.instances ?? [];
   const selected=instances.find(i=>i.instanceId===selectedId);
   const product=products.find(p=>p.productId===(pendingProductId ?? selected?.productId));
-  const ready=runtimeStatus.phase==="ready" && session.status==="ready";
+  const ready=runtimeStatus.phase==="ready" && session.status==="ready" && room?.roomId===activeRoomId;
   useEffect(() => { onObservationReady?.(ready); }, [ready, onObservationReady]);
   const locked=active || session.status==="saving";
+  const changeFloor=(nextRoomId:string)=>{
+    const building=room?.scan?.building;
+    const next=building?.levels.find(level=>level.roomId===nextRoomId);
+    if(!next||!ready||locked||pendingProductId||runtime.current?.capturing)return;
+    if(document.pointerLockElement===runtime.current?.canvas)document.exitPointerLock();
+    setSelectedId(null);setPreview(null);setMode("explore");setPanel("catalogue");setShopSearchOpen(false);
+    setActiveRoomId(next.roomId);
+    const url=new URL(window.location.href);url.searchParams.set("floor",next.floorId);
+    window.history.replaceState(null,"",url);
+  };
   const captureWalk=useCallback((fromFloorPlan=false)=>{
     const canvas=runtime.current?.canvas;
     if(!canvas||(view!=="perspective"&&!fromFloorPlan)||navigator.userActivation?.isActive===false)return;
@@ -187,7 +201,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
   return <main className={`splat-editor ${panelOpen?"has-panel":""}`}>
     <div className="splat-room" aria-label="First-person room editor">
       {state && <Suspense fallback={null}><PlayCanvasScene state={state} callbacks={callbacks} resetKey={resetKey} onStatus={onStatus} onRuntime={onRuntime}/></Suspense>}
-      {snapshot && <SplatCatalogueLayer getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen} onCloseShelf={()=>setShopSearchOpen(false)} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
+      {snapshot?.room.roomId===activeRoomId && <SplatCatalogueLayer key={snapshot.room.roomId} getRuntime={getRuntime} room={snapshot.room} products={snapshot.products} instances={snapshot.instances} ready={ready} locked={locked} submit={session.submit} retry={session.retry} status={session.status} onNotice={setNotice} shopping={shopping} showShelf={shopSearchOpen} onCloseShelf={()=>setShopSearchOpen(false)} confirm={async instance => {const ok = await session.confirm(instance,cart?.revision ?? -1); await refresh(); return ok;}}/>}
       {runtimeStatus.phase!=="ready" && <div className="splat-loading" role="status">
         <div className="glass splat-loading-card"><span className="loading-orbit"/><h1>{runtimeStatus.phase==="error"?"Room unavailable":"Come on in."}</h1><p>{runtimeStatus.message}</p>
           {runtimeStatus.progress!==undefined && <progress max={1} value={runtimeStatus.progress} aria-label="Room loading progress"/>}
@@ -237,7 +251,7 @@ export default function SplatEditor({roomId, shopping = false, observation = fal
       <div className="splat-room-note"><span>{room?.roomId === "cg-arch-lightmapper-proof" ? "Lighting proof · partial room" : room?.roomId === "cg-arch-interior" ? "Living-room placement zone" : room?.scan?.visualFormat === "glb" ? "Authored room · exact dimensions" : "Test room · assumed scale"}</span><label><input type="checkbox" checked={showSurface} onChange={e=>setShowSurface(e.target.checked)} disabled={!ready||locked}/>Surface reference</label>{showSurface&&surfaceNote&&<p>{surfaceNote}</p>}</div>
       </>}
     </aside>
-    {room&&view==="perspective"&&<FloorMap room={room} getCamera={getCamera}/>}
+    {room&&view==="perspective"&&<FloorMap room={room} getCamera={getCamera} onFloorChange={changeFloor} floorChangeDisabled={!ready||locked||!!pendingProductId}/>}
     {view==="top"&&room?.scan&&<div className="splat-bottom-left"><p className="splat-attribution"><a href={room.scan.attribution.url} target="_blank" rel="noreferrer">{room.scan.attribution.title} · {room.scan.attribution.author}</a><span> · </span><a href={room.scan.attribution.licenseUrl} target="_blank" rel="noreferrer">{room.scan.attribution.license}</a></p></div>}
     <div className="splat-bottom-center"><p className="glass splat-help" aria-live="polite">{notice || (session.status!=="ready"&&session.status!=="loading"?session.message:help)}</p><nav className="glass splat-edit-tools" aria-label="Furniture tools">
       <button aria-pressed={mode==="place"} disabled={!ready||locked||!selected||!!pendingProductId} onClick={()=>setMode("place")}><Icon name="move" size={18}/>Move</button>

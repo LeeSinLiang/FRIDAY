@@ -80,3 +80,32 @@ test("dangling symlink downloads fail rather than silently selecting fallback", 
   await symlink(join(root, "nonexistent.glb"), join(root, "cg-arch-interior", "assets", "room.glb"));
   await assert.rejects(inspectRoomPackages(root), /Unsafe room asset/);
 }));
+
+test("floor aliases share only the canonical visual and remain optional without the download", async () => fixture(async root => {
+  await room(root, "tower", true, false);
+  await room(root, "floor", true, false);
+  const writeAlias = async (owner: string, visualUrl: string) => writeFile(join(root, "floor", "manifest.json"), JSON.stringify({
+    room: { roomId: "floor", scan: { visualUrl } }, spatialFile: "spatial.json", sharedVisualRoomId: owner,
+  }));
+  await writeAlias("tower", "/rooms/tower/assets/room.glb");
+  assert.equal((await inspectRoomPackages(root)).packages.has("floor"), false);
+  await room(root, "tower", true, true);
+  const files = (await inspectRoomPackages(root)).packages.get("floor")!;
+  assert.equal(files.get("/rooms/tower/assets/room.glb"), join(root, "tower/assets/room.glb"));
+  assert.equal(files.has("/rooms/tower/spatial.json"), false);
+  await writeAlias("tower", "/rooms/tower/assets/private.glb");
+  await assert.rejects(inspectRoomPackages(root), /Invalid shared visual reference/);
+  await writeAlias("../tower", "/rooms/tower/assets/room.glb");
+  await assert.rejects(inspectRoomPackages(root), /Invalid shared visual owner/);
+}));
+
+test("shared visual aliases cannot chain or bypass symlink checks", async () => fixture(async root => {
+  await room(root, "tower", true, true);
+  await room(root, "floor", true, false);
+  await writeFile(join(root, "floor/manifest.json"), JSON.stringify({room: {roomId: "floor", scan: {visualUrl: "/rooms/tower/assets/room.glb"}}, spatialFile: "spatial.json", sharedVisualRoomId: "tower"}));
+  await rm(join(root, "tower/assets/room.glb"));
+  await symlink(join(root, "empty-room/room.glb"), join(root, "tower/assets/room.glb"));
+  await assert.rejects(inspectRoomPackages(root), /Unsafe room asset/);
+  await writeFile(join(root, "tower/manifest.json"), JSON.stringify({room: {roomId: "tower", scan: {visualUrl: "/rooms/tower/assets/room.glb"}}, spatialFile: "spatial.json", sharedVisualRoomId: "floor"}));
+  await assert.rejects(inspectRoomPackages(root), /Invalid shared visual reference/);
+}));

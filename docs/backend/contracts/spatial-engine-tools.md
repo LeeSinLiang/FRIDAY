@@ -40,6 +40,10 @@ else:
 
 Functions return `ok: false` with a machine-readable error and explanatory message for expected validation/storage failures. `read_scene_capture` returns `ok: true` while pending/rendering; that is not image completion. Failed captures return `ok: false`. The ready result includes dimensions, view, camera, revision, `modelWarnings`, and a session-protected `imageUrl`; `include_image=True` adds the PNG data URL. The image URL alone cannot be fetched by a remote model without the browser session. The team's SDK adapter must supply the actual image bytes/data URL as image content, not paste a URL into a text-only tool response.
 
+## Current scene references
+
+`get_scene_context(session_key, room_id="demo-room")` returns `ok`, authoritative `room`, `products`, `instances`, `revision` and `geometryRevision`, using the same trusted-session boundary as placement. Prepared skyscraper floors also expose `room.scan.building` with building/floor/surface IDs, source origin, hash and clearance. Poses are centimetres in the active floor frame. See the [skyscraper test](../../frontend/room-capture/skyscraper-glb-test.md). This reader is SDK-independent and is not automatically installed into the shopping compiler.
+
 ## Prepared Studio 11 room
 
 All HTTP paths below accept `?roomId=studio-11`; without it they use the legacy empty `demo-room`. All three Python adapters accept `room_id="studio-11"`. Always use the same room for placement, capture creation and polling. Room ID selects a known prepared fixture; it does not grant access to another session.

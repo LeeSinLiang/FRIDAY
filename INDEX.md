@@ -20,6 +20,14 @@ Put new Markdown notes and documentation in an appropriate topic folder under `d
 ### Frontend
 
 - [AI furniture movers](docs/frontend/angel-movers/README.md) — approved halo-blob concept, AI moves, user-add choreography and rendering integration.
+- [Full skyscraper GLB test](docs/frontend/room-capture/skyscraper-glb-test.md) — preserved complete building, 32 measured floor contexts, existing floor arrows, public gallery/deployment, reference placement and agent context reader.
+
+- [Minimal supported placement plan](docs/frontend/3d-object/supported-placement-mvp-plan.md) — full-skyscraper test scene, explicit scale reference, floor-surface dragging, then table/cabinet placement with stable AI target references.
+
+- [Supported object placement](docs/frontend/3d-object/supported-object-placement.md) — research for lamps on tables and objects inside cabinets: support metadata, cavity geometry, attachment transforms, collision rules and acceptance checks.
+
+- [Multistory GLB designer research](docs/frontend/room-capture/skyscraper-glb-research.md) — current renderer/AI input paths, measured London skyscraper floor candidates, unequal elevations, proposed integration and future screenshot acceptance checks.
+
 - [Room, cart and Vercel release](docs/frontend/room-cart-deployment.md) — guest shopping routes, atomic cart/scene persistence, account handoff, deployment configuration and remaining release gates.
 
 - [Team room setup](docs/frontend/room-capture/team-room-setup.md) — one-command checked import of the prepared room, packaging and sharing instructions.

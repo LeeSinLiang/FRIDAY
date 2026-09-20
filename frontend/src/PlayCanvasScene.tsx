@@ -4,6 +4,8 @@ import { createPlayCanvasRuntime, type PlayCanvasRuntime, type RuntimeStatus } f
 import { createSceneInteraction } from "./scene/playcanvas/interaction";
 import PlayCanvasCapture from "./scene/PlayCanvasCapture";
 import PerformancePanel from "./scene/playcanvas/PerformancePanel";
+import { roomVisualKey } from "./scene/buildingFloors";
+import { switchBuildingFloor } from "./scene/playcanvas/buildingFloor";
 
 type Props = {captureEnabled?:boolean;state:InteractionState;callbacks:InteractionCallbacks;resetKey:number;onStatus:(status:RuntimeStatus)=>void;onRuntime:(runtime:PlayCanvasRuntime|null)=>void};
 export default function PlayCanvasScene(props:Props) {
@@ -14,7 +16,9 @@ export default function PlayCanvasScene(props:Props) {
   const controller=useRef<ReturnType<typeof createSceneInteraction>|null>(null);
   const [runtime,setRuntime]=useState<PlayCanvasRuntime|null>(null);
   const [ready,setReady]=useState(false);
+  const [boundRoomKey,setBoundRoomKey]=useState("");
   const roomKey=`${props.state.room.roomId}:${props.state.room.revision}:${props.state.room.scan?.geometryRevision}:${props.state.room.scan?.visualUrl}`;
+  const visualKey=roomVisualKey(props.state.room);
   useEffect(()=>{
     if (!canvas.current) return;
     let cancelled=false;
@@ -30,8 +34,27 @@ export default function PlayCanvasScene(props:Props) {
       }});
       const instance=handle;
       setRuntime(instance);latest.current.onRuntime(instance);
-      void instance.ready.then(()=>{
-      if(cancelled)return;
+      void instance.ready.catch(error=>{if(!cancelled)latest.current.onStatus({phase:"error",message:error instanceof Error ? error.message : "The room could not render."});});
+    } catch(error) {
+      latest.current.onStatus({phase:"error",message:error instanceof Error ? error.message : "The room could not render."});
+    }
+    });
+    return()=>{
+      cancelled=true;controller.current?.dispose();controller.current=null;
+      handle?.dispose();latest.current.onRuntime(null);
+    };
+  },[visualKey]);
+  useEffect(()=>{
+    if(!ready||!runtime||runtime.disposed)return;
+    let cancelled=false;
+    const bind=()=>{
+      // An aborted capture restores its camera before changing the floor transform.
+      if(cancelled||runtime.disposed||runtime.capturing)return;
+      runtime.app.off("update",bind);
+      try {
+      controller.current?.dispose();controller.current=null;
+      if(runtime.room.roomId!==latest.current.state.room.roomId)
+        switchBuildingFloor(runtime,latest.current.state.room);
       const forward:InteractionCallbacks={
         onSelect:id=>latest.current.callbacks.onSelect(id),
         onCommit:(id,pose)=>latest.current.callbacks.onCommit(id,pose),
@@ -42,18 +65,16 @@ export default function PlayCanvasScene(props:Props) {
         onModelStatus:(id,status)=>latest.current.callbacks.onModelStatus(id,status),
         onSurfaceStatus:(status,message)=>latest.current.callbacks.onSurfaceStatus?.(status,message),
       };
-      controller.current=createSceneInteraction(instance,latest.current.state,forward);
-      }).catch(error=>{if(!cancelled)latest.current.onStatus({phase:"error",message:error instanceof Error ? error.message : "The room could not render."});});
-    } catch(error) {
-      latest.current.onStatus({phase:"error",message:error instanceof Error ? error.message : "The room could not render."});
-    }
-    });
-    return()=>{
-      cancelled=true;controller.current?.dispose();controller.current=null;
-      handle?.dispose();latest.current.onRuntime(null);
+      controller.current=createSceneInteraction(runtime,latest.current.state,forward);
+      setBoundRoomKey(roomKey);
+      } catch(error) {
+        latest.current.onStatus({phase:"error",message:error instanceof Error ? error.message : "The floor could not open."});
+      }
     };
-  },[roomKey]);
-  useEffect(()=>{controller.current?.update(props.state);},[props.state]);
+    runtime.app.on("update",bind);bind();
+    return()=>{cancelled=true;runtime.app.off("update",bind);};
+  },[ready,runtime,roomKey]);
+  useEffect(()=>{if(runtime?.room.roomId===props.state.room.roomId)controller.current?.update(props.state);},[props.state,runtime,boundRoomKey]);
   useEffect(()=>{controller.current?.resetView();},[props.resetKey]);
-  return <><canvas ref={canvas} className="splat-canvas" aria-label="Interactive room. Click or press F to capture the pointer for Walk; press F or Escape to exit." tabIndex={0}/><PlayCanvasCapture runtime={runtime} enabled={ready && props.captureEnabled !== false}/>{perfEnabled && runtime && <PerformancePanel runtime={runtime} startedAt={startedAt.current}/>}</>;
+  return <><canvas ref={canvas} className="splat-canvas" aria-label="Interactive room. Click or press F to capture the pointer for Walk; press F or Escape to exit." tabIndex={0}/><PlayCanvasCapture key={roomKey} runtime={runtime} enabled={ready&&boundRoomKey===roomKey&&props.captureEnabled!==false}/>{perfEnabled && runtime && <PerformancePanel runtime={runtime} startedAt={startedAt.current}/>}</>;
 }

@@ -1,3 +1,14 @@
 [
-  {"id":"empty-room","title":"The light-filled studio","description":"An open room, ready for your first arrangement.","thumbnail":"/room-previews/empty-room.svg"}
+  {
+    "id": "empty-room",
+    "title": "The light-filled studio",
+    "description": "An open room, ready for your first arrangement.",
+    "thumbnail": "/room-previews/empty-room.svg"
+  },
+  {
+    "id": "london-skyscraper-test",
+    "title": "The London skyscraper",
+    "description": "An unfurnished tower. Move between 32 floors and make each space your own.",
+    "thumbnail": "/room-previews/london-skyscraper.svg"
+  }
 ]

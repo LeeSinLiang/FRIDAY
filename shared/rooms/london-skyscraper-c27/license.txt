@@ -1,0 +1,6 @@
+[FREE] London Skyscraper by 99.Miles
+Source: https://sketchfab.com/3d-models/free-london-skyscraper-52b73f6ea18a440cb42734840d5edc72
+Licensed under Creative Commons Attribution 4.0: https://creativecommons.org/licenses/by/4.0/
+License/creator verified against the public Sketchfab v3 model API on 2026-09-20.
+Modified by William Xu: Furniture and Lobby_Furniture removed to make an unfurnished version.
+The supplied edited GLB is otherwise copied unchanged; FRIDAY does not alter its textures/materials.
