@@ -22,6 +22,7 @@
     "Measured box after the fit is 70.1 x 73.0 x 67.4 cm against the listing's 71 x 73 x 66: uniform scale only, so width and depth are within 2%, not exact."
   ],
   "catalogueListingId": "ikea-405.355.47",
+  "matchType": "reconstructed_from_product_photo",
   "fit": {
     "appliedBy": "scripts/fit_glb.py",
     "uniformScale": 0.3845,
