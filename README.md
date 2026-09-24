@@ -2,39 +2,46 @@
 
 **Furnish Rooms Intelligently. Design Around You.**
 
-### 🏆 3rd place — OpenAI “5th Teammate” Challenge · HackMIT 2026
+🏆 **3rd place · OpenAI’s “5th Teammate” Challenge · HackMIT 2026 at MIT**
 
-**An AI design teammate that works inside your room.**
-
-FRIDAY turns a conversation into a furnished, editable 3D space. Walk through an immersive room, describe the look you want, and work with an AI teammate that finds furniture, reasons about placement, and builds designs you can compare and refine.
+FRIDAY is a spatial analysis engine and agent harness for furnishing rooms with AI. Describe the space you want, compare designs in 3D, and ask GPT to find furniture, check how it fits, and adjust the arrangement.
 
 ![FRIDAY furnishing the Haussmann apartment, with three bedroom designs under the demo’s $1,200 budget](docs/assets/friday-room-design.png)
 
-*A $1,200 brief. Three design directions. One room to explore and make your own.*
+*Three bedroom designs in the Haussmann apartment, ready to compare and refine.*
 
-## From a conversation to a furnished room
+## Why we built it
+
+Furnishing a space means keeping track of layouts, measurements, budgets, and product listings at the same time. A piece can look right on its own and still block a doorway or leave too little room beside a bed. Those decisions multiply across an entire floor or building.
+
+FRIDAY brings product search and spatial reasoning into the room. The agent works with object dimensions, placement tools, and rendered views, so you can spend more time deciding how the space should look and feel.
+
+## Design a room with FRIDAY
 
 > “Hey Friday, I have a $1,200 budget. Can you help me design my room?”
 
-1. **Step into the space.** Explore a prepared room, walk through it in first person, or switch to the floor-plan view.
-2. **Describe your idea.** Use text or voice to ask for a warm bedroom, a different sofa, or a new arrangement.
-3. **Compare three directions.** The bedroom demo creates three five-piece designs, checked against its $1,200 budget. Preview each design in the room.
-4. **Refine it together.** Ask for a brown sofa or move a lamp beside the sofa. Refine the active draft while keeping the alternatives available.
-5. **Make the choice.** Lock in a design, review its furniture in the cart, and explicitly approve the account- and MFA-protected Visa sandbox checkout.
+1. **Explore the room.** Walk through a prepared 3D environment or switch to a floor-plan view.
+2. **Describe what you want.** Give FRIDAY a design brief through text or voice.
+3. **Compare designs.** The bedroom workflow produces three five-piece arrangements within its $1,200 demo budget. Preview each one in the room.
+4. **Refine your choice.** Ask for a brown sofa or move a lamp beside it. Changes apply to the selected draft, leaving the alternatives available.
+5. **Review the furniture.** Lock in a design and review its cart. Visa sandbox checkout requires explicit approval and account MFA.
 
-Furniture discovery, spatial decisions, and cart review stay connected throughout the experience.
+The gallery includes the Haussmann apartment, a light-filled studio, and the London skyscraper. Rooms combine Gaussian splats or meshes with editable GLB furniture; available entries depend on packaged or downloadable assets.
 
-## An agent that can act on its ideas
+## Give the agent spatial context
 
-FRIDAY connects the **OpenAI Agents SDK** to tools that operate on the room itself:
+The **OpenAI Agents SDK** connects GPT to a set of scene and catalogue tools:
 
-- **Understand the scene.** Inspect existing objects, their dimensions and positions, and the space around them.
-- **Find the right pieces.** Search a model-backed furniture catalogue and use product metadata to inform the design.
-- **Reason about placement.** Measure clearances and position furniture relative to other objects. Geometry checks validate supported placements before scene changes are committed.
-- **See the result.** Request rendered screenshots from the open editor for visual feedback, tied to the scene revision.
-- **Keep the design editable.** Stage changes, refine a selected draft, and save accepted arrangements while preserving the shopper’s control over the final choice.
+| Capability | What the agent can do |
+| --- | --- |
+| Scene inspection | Read object identities, dimensions, positions, and the current selection |
+| Product discovery | Search the furniture catalogue for items with usable 3D models |
+| Spatial analysis | Measure clearances and place objects relative to existing furniture |
+| Placement validation | Check supported placements against geometry before committing changes |
+| Visual feedback | Request screenshots from the open editor, tied to the scene revision |
+| Design refinement | Stage edits, revise the selected draft, and save accepted arrangements |
 
-The experience combines Gaussian-splat and mesh environments with editable GLB furniture. The public room gallery includes the Haussmann apartment, a light-filled studio, and the London skyscraper, subject to asset availability.
+Natural-language search requests are compiled into a structured constraint language (DSL). Elasticsearch applies text queries and deterministic filters for supported requirements such as price, material, and dimensions. The designer also searches a local model catalogue when choosing furniture for scene edits.
 
 ## How it works
 
@@ -54,7 +61,7 @@ The browser renders the room, handles interactive placement, and supplies screen
 | Speech | Browser speech recognition or server-side OpenAI / Deepgram transcription; Deepgram spoken replies |
 | Identity and checkout | django-allauth, authenticator MFA, Visa IDX sandbox |
 
-Catalogue search can use Elasticsearch; the designer’s model-search tool also has its own local catalogue path. See the [system architecture](docs/architecture/system.md) and [scene designer guide](docs/backend/scene-designer/README.md) for the detailed boundaries.
+See the [system architecture](docs/architecture/system.md) for the full data flow and the [scene designer guide](docs/backend/scene-designer/README.md) for agent tools and scene validation.
 
 ## Local setup
 
@@ -129,10 +136,10 @@ Add Python dependencies with `uv add` from `backend/` and frontend dependencies 
 | `frontend/src/App.tsx` | Entrance, gallery, room, account, cart, and checkout routing |
 | `frontend/src/SplatEditor.tsx` | Active room editor and design interaction |
 | `frontend/src/scene/` | Spatial tools, room state, design UI, and PlayCanvas integration |
-| `frontend/src/shopping/`, `auth/`, `checkout/` | Shopping, identity, approval, and receipt UI |
+| `frontend/src/{shopping,auth,checkout}/` | Shopping, identity, approval, and receipt UI |
 | `backend/api/` | Saved scenes, geometry validation, designer jobs, and agent tools |
 | `backend/catalogue/` | Product search, language constraints, and speech endpoints |
-| `backend/shopping/`, `accounts/`, `checkout/`, `visa/` | Cart persistence, identity, MFA, and sandbox transactions |
+| `backend/{shopping,accounts,checkout,visa}/` | Cart persistence, identity, MFA, and sandbox transactions |
 | `backend/config/` | Django settings and routing |
 | `shared/` | Room manifests, spatial metadata, furniture models, and asset credits |
 | `scripts/` | Local launcher, asset preparation, validation, and release utilities |
@@ -141,11 +148,9 @@ Add Python dependencies with `uv add` from `backend/` and frontend dependencies 
 
 The development frontend proxies `/api` and `/_allauth` requests to Django. Production needs equivalent routing; Vite’s development proxy is not included in the build. The repository includes separate frontend and backend Vercel configurations; follow the [deployment guide](docs/frontend/room-cart-deployment.md) for environment settings, migrations, and paired release verification.
 
-## Prototype boundaries
+## Documentation
 
-- **Geometry depends on calibration.** Placement checks use supplied spatial metadata and dimensions. A visually convincing scan does not establish measured accuracy, and demo rooms may use assumed scale.
-- **The bedroom demo uses a fixed $1,200 budget.** Its three designs each contain five pieces. Some catalogue prices are synthetic; totals do not establish real retail pricing. Visa sandbox responses are not real purchases, merchant orders, or settlement.
-- **Asset and browser support matter.** Large rooms can require a substantial initial download; voice and rendering behavior depend on the device and browser. Agent screenshot requests need an open editor.
-- **Room reconstruction is experimental.** The separate phone-video pipeline is not an integrated upload-to-room service. Automatic floor-plan ingestion described in the original proposal is not part of the current application workflow.
-
-For more detail, start with the [documentation index](INDEX.md), [scene designer guide](docs/backend/scene-designer/README.md), or [account and checkout guide](docs/account-mfa-checkout.md).
+- [Documentation index](INDEX.md) — all feature guides and project notes
+- [Scene designer](docs/backend/scene-designer/README.md) — agent tools, placement, and visual feedback
+- [Accounts and checkout](docs/account-mfa-checkout.md) — verification, MFA, and sandbox approval
+- [Deployment](docs/frontend/room-cart-deployment.md) — environment configuration and release workflow
